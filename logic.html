@@ -1,0 +1,39 @@
+<html>
+    <head>
+        <title>Logic simulator</title>
+        <style>
+            html {
+                background-color: black;
+                color: white;
+            }
+            #schematic {
+                background-size: 25px 25px;
+                background-image: radial-gradient(circle, #bbb 1px, rgba(0, 0, 0, 0) 1px);
+                width: 1000px;
+                height: 1000px;
+            }
+            .component {
+                position: absolute;
+                z-index: 9;
+                background-color: #226688;
+                text-align: center;
+                border: 1px solid #d3d3d3;
+                color: #ffffff;
+                cursor: default;
+            }
+        </style>
+    </head>
+    <body>
+        <button id="atrue">a:true</button>
+        <button id="afalse">a:false</button><br>
+        <button id="btrue">b:true</button>
+        <button id="bfalse">b:false</button>
+
+        <div id="data" style="margin-top: 10px"></div>
+
+        <div id="schematic"></div>
+
+        <script src="logic/component.js"></script>
+        <script src="logic/main.js"></script>
+    </body>
+</html>
