@@ -7,20 +7,43 @@
                 color: white;
             }
             #schematic {
-                background-size: 25px 25px;
+                background-size: 20px 20px;
                 background-image: radial-gradient(circle, #bbb 1px, rgba(0, 0, 0, 0) 1px);
                 width: 1000px;
                 height: 1000px;
+                position: relative;
             }
             .component {
-                position: absolute;
-                z-index: 9;
-                background-color: #226688;
-                text-align: center;
-                border: 1px solid #d3d3d3;
-                color: #ffffff;
+                z-index: 10;
+                position: relative;
+                background-color: transparent;
                 cursor: default;
+                box-sizing: border-box;
             }
+            .component-inner {
+                z-index: 11;
+                position: absolute;
+                background-color: #226688;
+                border: 1px solid #888;
+                color: #ffffff;
+                text-align: center;
+                box-sizing: border-box;
+                margin: 5px;
+                width: calc(100% - 10px);
+                height: calc(100% - 10px);
+            }
+            .component-inner:hover {
+                border: 1px solid #fff;
+            }
+            .component-port {
+                z-index: 12;
+                position: absolute;
+                background-color: #888;
+            }
+            .component-port:hover {
+                background-color: #fff;
+            }
+
         </style>
     </head>
     <body>

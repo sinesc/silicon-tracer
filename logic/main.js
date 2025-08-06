@@ -22,13 +22,12 @@ d.b = init();
 d.x1 = init();
 
 setInterval(function() {
-
     d.x1 = nor(d.a, d.x2);
     d.x2 = nor(d.b, d.x1);
-
-
     document.querySelector('#data').innerHTML = 'a: ' + d.a + '<br>b: ' + d.b + '<br>x1: ' + d.x1 + '<br>x2: ' + d.x2;
+}, 500);
 
-}, 100);
 
-let test = new Component(10, 10);
+
+let test1 = new Component('Gate', 0, 0, { left: [ "a", "b" ], right: [ "q" ], top: [ "x", "y" ], bottom: [ "g" ] });
+let test2 = new Component('Bait', 0, 0, { left: [ "a" ], right: [ "q", "r", "s" ], top: [ "x" ], bottom: [ "g", "h", "i", "j" ] });
