@@ -1,43 +1,49 @@
 class Component {
 
-    gridSpacing = 20;
-    portSize = 10;
+    portSize = 12;
     margin = 5;
 
+    grid;
     element;
     inner;
+
     ports;
 
-    prevX = 0;
-    prevY = 0;
+    dragOffsetX;
+    dragOffsetY;
 
-    constructor(label, x, y, ports) {
+    constructor(grid, label, x, y, ports) {
+
+        this.grid = new WeakRef(grid);
         this.element = document.createElement('div');
         this.element.classList.add('component');
+
         this.inner = document.createElement('div');
         this.inner.innerHTML = label;
         this.inner.onmousedown = this.dragStart.bind(this);
         this.inner.classList.add('component-inner');
         this.element.appendChild(this.inner);
 
-        document.getElementById('schematic').appendChild(this.element);
+        grid.element.appendChild(this.element);
         this.setPorts(ports);
+        this.setPosition(x, y);
     }
 
     setPorts(ports) {
-        this.ports = ports;
-        let width = Math.max((ports.top.length + 1) * this.gridSpacing, (ports.bottom.length + 1) * this.gridSpacing);
-        let height = Math.max((ports.left.length + 1) * this.gridSpacing, (ports.right.length + 1) * this.gridSpacing);
+        this.ports = { left: [], right: [], top: [], bottom: [], ...ports };
+        let spacing = this.grid.deref()?.spacing ?? 1;
+        let width = Math.max(spacing * 2, (this.ports.top.length + 1) * spacing, (this.ports.bottom.length + 1) * spacing);
+        let height = Math.max(spacing * 2, (this.ports.left.length + 1) * spacing, (this.ports.right.length + 1) * spacing);
         if (isNaN(width) || isNaN(height)) {
             throw 'Component: width/height must be known before setting ports';
         }
         this.setDimensions(width, height);
-        let offset = this.gridSpacing - (this.portSize / 2);
-        for (const [side, labels] of Object.entries(ports)) {
+        let offset = spacing - (this.portSize / 2);
+        for (const [side, labels] of Object.entries(this.ports)) {
             let x = side !== 'right' ? (side !== 'left' ? offset : 0) : width - this.portSize;
             let y = side !== 'bottom' ? (side !== 'top' ? offset : 0) : height - this.portSize;
-            let stepX = side === 'left' || side === 'right' ? 0 : this.gridSpacing;
-            let stepY = side === 'top' || side === 'bottom' ? 0 : this.gridSpacing;
+            let stepX = side === 'left' || side === 'right' ? 0 : spacing;
+            let stepY = side === 'top' || side === 'bottom' ? 0 : spacing;
             for (const label of labels) {
                 let port = document.createElement('div');
                 port.classList.add('component-port');
@@ -71,32 +77,24 @@ class Component {
         this.element.style.top = y + "px";
     }
 
-    gridAlign() {
-        const y = Math.round(this.element.offsetTop / this.gridSpacing) * this.gridSpacing + 0.5 * this.gridSpacing;
-        const x = Math.round(this.element.offsetLeft / this.gridSpacing) * this.gridSpacing + 0.5 * this.gridSpacing;
-        this.setPosition(x, y);
-    }
-
     dragStart(e) {
         e.preventDefault();
-        this.prevX = e.clientX;
-        this.prevY = e.clientY;
+        let [ x, y ] = this.position();
+        this.dragOffsetX = e.clientX - x;
+        this.dragOffsetY = e.clientY - y;
         document.onmousemove = this.dragMove.bind(this);
         document.onmouseup = this.dragStop.bind(this);
     }
 
     dragMove(e) {
         e.preventDefault();
-        let posX = this.prevX - e.clientX;
-        let posY = this.prevY - e.clientY;
-        this.prevX = e.clientX;
-        this.prevY = e.clientY;
-        this.setPosition(this.element.offsetLeft - posX, this.element.offsetTop - posY);
+        this.setPosition(e.clientX - this.dragOffsetX, e.clientY - this.dragOffsetY);
     }
 
     dragStop() {
         document.onmouseup = null;
         document.onmousemove = null;
-        this.gridAlign();
+        let [ x, y ] = this.grid.deref()?.align(...this.position());
+        this.setPosition(x, y);
     }
 }

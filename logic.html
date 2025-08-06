@@ -6,12 +6,11 @@
                 background-color: black;
                 color: white;
             }
-            #schematic {
+            .grid {
                 background-size: 20px 20px;
-                background-image: radial-gradient(circle, #bbb 1px, rgba(0, 0, 0, 0) 1px);
-                width: 1000px;
-                height: 1000px;
+                background-image: radial-gradient(circle, #888 1px, rgba(0, 0, 0, 0) 1px);
                 position: relative;
+                overflow: hidden;
             }
             .component {
                 z-index: 10;
@@ -23,8 +22,10 @@
             .component-inner {
                 z-index: 11;
                 position: absolute;
-                background-color: #226688;
-                border: 1px solid #888;
+                background-color: #444;
+                border: 1px solid #222;
+                transition: border-color 0.1s;
+                border-radius: 3px;
                 color: #ffffff;
                 text-align: center;
                 box-sizing: border-box;
@@ -39,23 +40,23 @@
                 z-index: 12;
                 position: absolute;
                 background-color: #888;
+                border-radius: 3px;
             }
             .component-port:hover {
                 background-color: #fff;
             }
-
         </style>
     </head>
     <body>
+        <!--
         <button id="atrue">a:true</button>
         <button id="afalse">a:false</button><br>
         <button id="btrue">b:true</button>
         <button id="bfalse">b:false</button>
-
         <div id="data" style="margin-top: 10px"></div>
+        -->
 
-        <div id="schematic"></div>
-
+        <script src="logic/grid.js"></script>
         <script src="logic/component.js"></script>
         <script src="logic/main.js"></script>
     </body>
