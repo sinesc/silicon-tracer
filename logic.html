@@ -5,6 +5,7 @@
             html {
                 background-color: black;
                 color: white;
+                font-family: sans-serif;
             }
             .grid {
                 background-size: 20px 20px;
@@ -14,7 +15,7 @@
             }
             .component {
                 z-index: 10;
-                position: relative;
+                position: absolute;
                 background-color: transparent;
                 cursor: default;
                 box-sizing: border-box;
@@ -24,7 +25,7 @@
                 position: absolute;
                 background-color: #444;
                 border: 1px solid #222;
-                transition: border-color 0.1s;
+                transition: border-color 0.15s;
                 border-radius: 3px;
                 color: #ffffff;
                 text-align: center;
@@ -32,6 +33,7 @@
                 margin: 5px;
                 width: calc(100% - 10px);
                 height: calc(100% - 10px);
+                overflow: hidden;
             }
             .component-inner:hover {
                 border: 1px solid #fff;
@@ -44,17 +46,16 @@
             }
             .component-port:hover {
                 background-color: #fff;
+                transition: background-color 0.15s;
             }
         </style>
     </head>
     <body>
-        <!--
         <button id="atrue">a:true</button>
         <button id="afalse">a:false</button><br>
         <button id="btrue">b:true</button>
         <button id="bfalse">b:false</button>
         <div id="data" style="margin-top: 10px"></div>
-        -->
 
         <script src="logic/grid.js"></script>
         <script src="logic/component.js"></script>

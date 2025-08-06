@@ -29,6 +29,6 @@ setInterval(function() {
 
 let grid = new Grid(document.body, 2000, 1000);
 let test1 = new Component(grid, 'Gate', 0, 0, { left: [ "a", "b" ], right: [ "q" ], top: [ "x", "y" ], bottom: [ "g" ] });
-let test2 = new Component(grid, 'Bait', 0, 0, { left: [ "a" ], right: [ "q", "r", "s" ], top: [ "x" ], bottom: [ "g", "h", "i", "j" ] });
-let test3 = new Component(grid, 'Meh', 0, 0, { left: [ "a", "b", "c", "d", "e" ], right: [ "q", "r", "s" ] });
-let test4 = new Component(grid, 'Meh', 0, 0, { top: [ "a", "b", "c", "d", "e" ], bottom: [ "q", "r", "s" ] });
+let test2 = new Component(grid, 'Bait', 0, 100, { left: [ "a" ], right: [ "q", "r", "s" ], top: [ "x" ], bottom: [ "g", "h", "i", "j" ] });
+let test3 = new Component(grid, 'Meh way to long of a name', 0, 200, { left: [ "a", "b", "c", "d", "e" ], right: [ "q", "r", "s" ] });
+let test4 = new Component(grid, 'Meh way to long of a name', 0, 350, { top: [ "a", "b", "c", "d", "e" ], bottom: [ "q", "r", "s" ] });

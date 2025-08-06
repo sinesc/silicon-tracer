@@ -34,9 +34,6 @@ class Component {
         let spacing = this.grid.deref()?.spacing ?? 1;
         let width = Math.max(spacing * 2, (this.ports.top.length + 1) * spacing, (this.ports.bottom.length + 1) * spacing);
         let height = Math.max(spacing * 2, (this.ports.left.length + 1) * spacing, (this.ports.right.length + 1) * spacing);
-        if (isNaN(width) || isNaN(height)) {
-            throw 'Component: width/height must be known before setting ports';
-        }
         this.setDimensions(width, height);
         let offset = spacing - (this.portSize / 2);
         for (const [side, labels] of Object.entries(this.ports)) {
@@ -65,7 +62,14 @@ class Component {
     setDimensions(width, height) {
         this.element.style.width = width + "px";
         this.element.style.height = height + "px";
-        this.inner.style.lineHeight = (height - (this.margin * 2)) + "px";
+        if (width < height && width < 200) {
+            this.inner.style.lineHeight = (width - (this.margin * 2)) + "px";
+            this.inner.style.writingMode = 'vertical-rl';
+        } else {
+            this.inner.style.lineHeight = (height - (this.margin * 2)) + "px";
+            this.inner.style.writingMode = 'horizontal-tb';
+        }
+
     }
 
     position() {
