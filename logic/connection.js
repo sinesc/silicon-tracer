@@ -1,22 +1,13 @@
-class Connection {
+class Connection extends GridElement {
 
     thickness = 6;
 
-    grid;
     elementH;
     elementV;
 
-    x;
-    y;
-    width;
-    height;
-
-    dragOffsetX;
-    dragOffsetY;
-
     constructor(grid, x1, y1, x2, y2) {
 
-        this.grid = new WeakRef(grid);
+        super(grid);
 
         [ x1, y1 ] = grid.align(x1, y1);
         [ x2, y2 ] = grid.align(x2, y2);
@@ -24,6 +15,7 @@ class Connection {
         this.setPosition(x1, y1);
         this.setDimensions(x2 - x1, y2 - y1);
 
+        // todo dynamically do this in draw
         if (x1 !== x2) {
             this.elementH = document.createElement('div');
             this.elementH.classList.add('connection');
@@ -64,23 +56,5 @@ class Connection {
             this.elementV.style.top = y + "px";
             this.elementV.style.height = height + "px";
         }
-    }
-
-    position() {
-        return [ this.x, this.y ];
-    }
-
-    setPosition(x, y) {
-        this.x = x;
-        this.y = y;
-    }
-
-    dimensions() {
-        return [ this.width, this.height ];
-    }
-
-    setDimensions(width, height) {
-        this.width = width;
-        this.height = height;
     }
 }

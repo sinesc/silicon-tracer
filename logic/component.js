@@ -1,47 +1,45 @@
-class Component {
+class Component extends GridElement {
 
     dragAligned = false;
     portSize = 10;
     innerMargin = 5;
 
-    grid;
     element;
     inner;
-
     ports;
-
-    dragOffsetX;
-    dragOffsetY;
 
     constructor(grid, label, x, y, ports) {
 
-        this.grid = new WeakRef(grid);
+        super(grid);
+        this.ports = { left: [], right: [], top: [], bottom: [], ...ports };
+
+        [ x, y ] = grid.align(x, y);
+        this.setPosition(x, y);
+
+        // compute dimensions from ports
+        let width = Math.max(grid.spacing * 2, (this.ports.top.length + 1) * grid.spacing, (this.ports.bottom.length + 1) * grid.spacing);
+        let height = Math.max(grid.spacing * 2, (this.ports.left.length + 1) * grid.spacing, (this.ports.right.length + 1) * grid.spacing);
+        this.setDimensions(width, height);
+
+        // container
         this.element = document.createElement('div');
         this.element.classList.add('component');
 
+        // inner area with label
         this.inner = document.createElement('div');
         this.inner.innerHTML = label;
         this.inner.onmousedown = this.dragStart.bind(this);
         this.inner.classList.add('component-inner');
         this.element.appendChild(this.inner);
 
-        grid.element.appendChild(this.element);
-        this.setPorts(ports);
-        this.setPosition(x, y, true);
-    }
+        // ports
+        let portOffset = this.grid.spacing - (this.portSize / 2);
 
-    setPorts(ports) {
-        this.ports = { left: [], right: [], top: [], bottom: [], ...ports };
-        let spacing = this.grid.deref()?.spacing ?? 1;
-        let width = Math.max(spacing * 2, (this.ports.top.length + 1) * spacing, (this.ports.bottom.length + 1) * spacing);
-        let height = Math.max(spacing * 2, (this.ports.left.length + 1) * spacing, (this.ports.right.length + 1) * spacing);
-        this.setDimensions(width, height);
-        let offset = spacing - (this.portSize / 2);
         for (const [side, labels] of Object.entries(this.ports)) {
-            let x = side !== 'right' ? (side !== 'left' ? offset : 0) : width - this.portSize;
-            let y = side !== 'bottom' ? (side !== 'top' ? offset : 0) : height - this.portSize;
-            let stepX = side === 'left' || side === 'right' ? 0 : spacing;
-            let stepY = side === 'top' || side === 'bottom' ? 0 : spacing;
+            let x = side !== 'right' ? (side !== 'left' ? portOffset : 0) : this.width - this.portSize;
+            let y = side !== 'bottom' ? (side !== 'top' ? portOffset : 0) : this.height - this.portSize;
+            let stepX = side === 'left' || side === 'right' ? 0 : this.grid.spacing;
+            let stepY = side === 'top' || side === 'bottom' ? 0 : this.grid.spacing;
             for (const label of labels) {
                 if (label !== null) {
                     let port = document.createElement('div');
@@ -56,54 +54,28 @@ class Component {
                 y += stepY;
             }
         }
+
+        grid.element.appendChild(this.element);
+
+        this.render();
     }
 
-    dimensions() {
-        return [ parseInt(this.element.style.width.replace('px', '')), parseInt(this.element.style.height.replace('px', '')) ];
-    }
+    render() {
+        this.element.style.left = this.x + "px";
+        this.element.style.top = this.y + "px";
+        this.element.style.width = this.width + "px";
+        this.element.style.height = this.height + "px";
 
-    setDimensions(width, height) {
-        this.element.style.width = width + "px";
-        this.element.style.height = height + "px";
-        if (width < height && width < 200) {
-            this.inner.style.lineHeight = (width - (this.innerMargin * 2)) + "px";
+        if (this.width < this.height && this.width < 200) {
+            this.inner.style.lineHeight = (this.width - (this.innerMargin * 2)) + "px";
             this.inner.style.writingMode = 'vertical-rl';
         } else {
-            this.inner.style.lineHeight = (height - (this.innerMargin * 2)) + "px";
+            this.inner.style.lineHeight = (this.height - (this.innerMargin * 2)) + "px";
             this.inner.style.writingMode = 'horizontal-tb';
         }
-
     }
 
-    position() {
-        return [ parseInt(this.element.style.left.replace('px', '')), parseInt(this.element.style.top.replace('px', '')) ];
-    }
-
-    setPosition(x, y, aligned) {
-        if (aligned) {
-            [ x, y ] = this.grid.deref()?.align(x, y);
-        }
-        this.element.style.left = x + "px";
-        this.element.style.top = y + "px";
-    }
-
-    dragStart(e) {
-        e.preventDefault();
-        let [ x, y ] = this.position();
-        this.dragOffsetX = e.clientX - x;
-        this.dragOffsetY = e.clientY - y;
-        document.onmousemove = this.dragMove.bind(this);
-        document.onmouseup = this.dragStop.bind(this);
-    }
-
-    dragMove(e) {
-        e.preventDefault();
-        this.setPosition(e.clientX - this.dragOffsetX, e.clientY - this.dragOffsetY, this.dragAligned);
-    }
-
-    dragStop() {
-        document.onmouseup = null;
-        document.onmousemove = null;
-        this.setPosition(...this.position(), true);
+    dragTo(x, y, done) {
+        this.setPosition(x, y, this.dragAligned || done);
     }
 }
