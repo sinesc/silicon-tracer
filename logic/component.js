@@ -1,7 +1,8 @@
 class Component {
 
-    portSize = 12;
-    margin = 5;
+    dragAligned = false;
+    portSize = 10;
+    innerMargin = 5;
 
     grid;
     element;
@@ -26,7 +27,7 @@ class Component {
 
         grid.element.appendChild(this.element);
         this.setPorts(ports);
-        this.setPosition(x, y);
+        this.setPosition(x, y, true);
     }
 
     setPorts(ports) {
@@ -42,13 +43,15 @@ class Component {
             let stepX = side === 'left' || side === 'right' ? 0 : spacing;
             let stepY = side === 'top' || side === 'bottom' ? 0 : spacing;
             for (const label of labels) {
-                let port = document.createElement('div');
-                port.classList.add('component-port');
-                port.style.left = x + "px";
-                port.style.top = y + "px";
-                port.style.width = this.portSize + "px";
-                port.style.height = this.portSize + "px";
-                this.element.appendChild(port);
+                if (label !== null) {
+                    let port = document.createElement('div');
+                    port.classList.add('component-port');
+                    port.style.left = x + "px";
+                    port.style.top = y + "px";
+                    port.style.width = this.portSize + "px";
+                    port.style.height = this.portSize + "px";
+                    this.element.appendChild(port);
+                }
                 x += stepX;
                 y += stepY;
             }
@@ -63,10 +66,10 @@ class Component {
         this.element.style.width = width + "px";
         this.element.style.height = height + "px";
         if (width < height && width < 200) {
-            this.inner.style.lineHeight = (width - (this.margin * 2)) + "px";
+            this.inner.style.lineHeight = (width - (this.innerMargin * 2)) + "px";
             this.inner.style.writingMode = 'vertical-rl';
         } else {
-            this.inner.style.lineHeight = (height - (this.margin * 2)) + "px";
+            this.inner.style.lineHeight = (height - (this.innerMargin * 2)) + "px";
             this.inner.style.writingMode = 'horizontal-tb';
         }
 
@@ -76,7 +79,10 @@ class Component {
         return [ parseInt(this.element.style.left.replace('px', '')), parseInt(this.element.style.top.replace('px', '')) ];
     }
 
-    setPosition(x, y) {
+    setPosition(x, y, aligned) {
+        if (aligned) {
+            [ x, y ] = this.grid.deref()?.align(x, y);
+        }
         this.element.style.left = x + "px";
         this.element.style.top = y + "px";
     }
@@ -92,13 +98,12 @@ class Component {
 
     dragMove(e) {
         e.preventDefault();
-        this.setPosition(e.clientX - this.dragOffsetX, e.clientY - this.dragOffsetY);
+        this.setPosition(e.clientX - this.dragOffsetX, e.clientY - this.dragOffsetY, this.dragAligned);
     }
 
     dragStop() {
         document.onmouseup = null;
         document.onmousemove = null;
-        let [ x, y ] = this.grid.deref()?.align(...this.position());
-        this.setPosition(x, y);
+        this.setPosition(...this.position(), true);
     }
 }

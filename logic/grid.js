@@ -1,12 +1,13 @@
 class Grid {
 
-    spacing = 20;
+    spacing = 15;
 
     element;
 
     constructor(parent, width, height) {
         this.element = document.createElement('div');
         this.element.classList.add('grid');
+        this.element.style.backgroundSize = this.spacing + 'px ' + this.spacing + 'px';
         this.element.onmousedown = this.dragStart.bind(this);
 
         parent.appendChild(this.element);

@@ -28,7 +28,15 @@ setInterval(function() {
 
 
 let grid = new Grid(document.body, 2000, 1000);
-let test1 = new Component(grid, 'Gate', 0, 0, { left: [ "a", "b" ], right: [ "q" ], top: [ "x", "y" ], bottom: [ "g" ] });
-let test2 = new Component(grid, 'Bait', 0, 100, { left: [ "a" ], right: [ "q", "r", "s" ], top: [ "x" ], bottom: [ "g", "h", "i", "j" ] });
-let test3 = new Component(grid, 'Meh way to long of a name', 0, 200, { left: [ "a", "b", "c", "d", "e" ], right: [ "q", "r", "s" ] });
-let test4 = new Component(grid, 'Meh way to long of a name', 0, 350, { top: [ "a", "b", "c", "d", "e" ], bottom: [ "q", "r", "s" ] });
+
+let component1 = new Component(grid, 'Gate', 50, 0, { left: [ "a", "b" ], right: [ "q" ], top: [ "x", "y" ], bottom: [ "g" ] });
+let component2 = new Component(grid, 'Bait', 100, 100, { left: [ "a" ], right: [ "q", "r", "s" ], top: [ "x" ], bottom: [ "g", "h", "i", "j" ] });
+let component3 = new Component(grid, 'Meh way to long of a name', 30, 200, { left: [ "a", "b", "c", "d", "e" ], right: [ "q", "r", "s" ] });
+let component4 = new Component(grid, 'Meh way to long of a name', 200, 450, { top: [ "a", "b", "c", "d", "e" ], bottom: [ "q", "r", "s" ] });
+
+let component5 = new Component(grid, 'Gate', 500, 500, { left: [ "a", null, "b" ], right: [ null, "q", null ] });
+
+
+let connection1 = new Connection(grid, 300, 300, 600, 600);
+let connection2 = new Connection(grid, 200, 200, 200, 600);
+let connection3 = new Connection(grid, 700, 400, 900, 400);

@@ -7,12 +7,19 @@
                 color: white;
                 font-family: sans-serif;
             }
+            h1 {
+                font-variant: small-caps;
+                /*text-shadow: red 3px 3px;*/
+                text-shadow:#fc0 1px 0 10px;
+                text-decoration: underline;
+            }
+            /* grid */
             .grid {
-                background-size: 20px 20px;
                 background-image: radial-gradient(circle, #888 1px, rgba(0, 0, 0, 0) 1px);
                 position: relative;
                 overflow: hidden;
             }
+            /* component */
             .component {
                 z-index: 10;
                 position: absolute;
@@ -30,7 +37,7 @@
                 color: #ffffff;
                 text-align: center;
                 box-sizing: border-box;
-                margin: 5px;
+                margin: 5px; /* fixme: needs to match component, should just be set there */
                 width: calc(100% - 10px);
                 height: calc(100% - 10px);
                 overflow: hidden;
@@ -48,9 +55,20 @@
                 background-color: #fff;
                 transition: background-color 0.15s;
             }
+            /* connection */
+            .connection {
+                z-index: 10;
+                position: absolute;
+                background-color: #afa;
+                border: 2px solid #8a8;
+                border-radius: 3px;
+                box-sizing: border-box;
+            }
+
         </style>
     </head>
     <body>
+        <h1>Silicon Runner</h1>
         <button id="atrue">a:true</button>
         <button id="afalse">a:false</button><br>
         <button id="btrue">b:true</button>
@@ -58,6 +76,7 @@
         <div id="data" style="margin-top: 10px"></div>
 
         <script src="logic/grid.js"></script>
+        <script src="logic/connection.js"></script>
         <script src="logic/component.js"></script>
         <script src="logic/main.js"></script>
     </body>
