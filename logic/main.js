@@ -27,7 +27,7 @@ setInterval(function() {
 */
 
 
-let grid = new Grid(document.body, 2000, 1000);
+let grid = new Grid(document.querySelector('#grid'));
 
 let component1 = new Component(grid, 'Gate', 50, 0, { left: [ "a", "b" ], right: [ "q" ], top: [ "x", "y" ], bottom: [ "g" ] });
 let component2 = new Component(grid, 'Bait', 100, 100, { left: [ "a" ], right: [ "q", "r", "s" ], top: [ "x" ], bottom: [ "g", "h", "i", "j" ] });

@@ -9,8 +9,10 @@ class Connection extends GridElement {
         super(grid);
         [ x1, y1 ] = grid.align(x1, y1);
         [ x2, y2 ] = grid.align(x2, y2);
-        this.setPosition(x1, y1);
-        this.setDimensions(x2 - x1, y2 - y1);
+        this.x = x1;
+        this.y = y1;
+        this.width = x2 - x1;
+        this.height = y2 - y1;
         this.render();
     }
 
@@ -44,8 +46,8 @@ class Connection extends GridElement {
         }
 
         //TODO: offset by grid origin
-        let x = this.x - this.thickness / 2;
-        let y = this.y - this.thickness / 2;
+        let x = this.offsetX - this.thickness / 2;
+        let y = this.offsetY - this.thickness / 2;
         let width = this.width + this.thickness;
         let height = this.height + this.thickness;
         if (this.elementH) {

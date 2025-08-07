@@ -18,6 +18,8 @@
                 background-image: radial-gradient(circle, #888 1px, rgba(0, 0, 0, 0) 1px);
                 position: relative;
                 overflow: hidden;
+                width: 100%;
+                height: 100%;
             }
             /* component */
             .component {
@@ -59,8 +61,8 @@
             .connection {
                 z-index: 10;
                 position: absolute;
-                background-color: #afa;
-                border: 2px solid #8a8;
+                background-color: rgb(76, 136, 76);
+                border: 2px solid rgb(54, 83, 54);
                 border-radius: 3px;
                 box-sizing: border-box;
             }
@@ -75,6 +77,8 @@
         <button id="bfalse">b:false</button>
         <div id="data" style="margin-top: 10px"></div>
 
+
+        <div id="grid" style="width: 2000px; height: 1000px;"></div>
         <script src="logic/grid.js"></script>
         <script src="logic/connection.js"></script>
         <script src="logic/component.js"></script>

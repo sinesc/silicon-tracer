@@ -13,13 +13,11 @@ class Component extends GridElement {
         super(grid);
         this.ports = { left: [], right: [], top: [], bottom: [], ...ports };
 
-        [ x, y ] = grid.align(x, y);
-        this.setPosition(x, y);
+        [ this.x, this.y ] = grid.align(x, y);
 
         // compute dimensions from ports
-        let width = Math.max(grid.spacing * 2, (this.ports.top.length + 1) * grid.spacing, (this.ports.bottom.length + 1) * grid.spacing);
-        let height = Math.max(grid.spacing * 2, (this.ports.left.length + 1) * grid.spacing, (this.ports.right.length + 1) * grid.spacing);
-        this.setDimensions(width, height);
+        this.width = Math.max(grid.spacing * 2, (this.ports.top.length + 1) * grid.spacing, (this.ports.bottom.length + 1) * grid.spacing);
+        this.height = Math.max(grid.spacing * 2, (this.ports.left.length + 1) * grid.spacing, (this.ports.right.length + 1) * grid.spacing);
 
         // container
         this.element = document.createElement('div');
@@ -66,8 +64,8 @@ class Component extends GridElement {
     }
 
     render() {
-        this.element.style.left = this.x + "px";
-        this.element.style.top = this.y + "px";
+        this.element.style.left = this.offsetX + "px";
+        this.element.style.top = this.offsetY + "px";
         this.element.style.width = this.width + "px";
         this.element.style.height = this.height + "px";
 
