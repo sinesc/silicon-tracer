@@ -40,16 +40,16 @@ class Connection extends GridElement {
             this.elementV.style.minWidth = this.thickness + 'px';
             this.elementV.style.minHeight = this.thickness + 'px';
             grid.element.appendChild(this.elementV);
-        } else if (this.width === 0 && this.elementV) {
+        } else if (this.height === 0 && this.elementV) {
             this.elementV.remove();
             this.elementV = null;
         }
 
-        //TODO: offset by grid origin
         let x = this.offsetX - this.thickness / 2;
         let y = this.offsetY - this.thickness / 2;
         let width = this.width + this.thickness;
         let height = this.height + this.thickness;
+
         if (this.elementH) {
             this.elementH.style.left = x + "px";
             this.elementH.style.top = y + "px";
