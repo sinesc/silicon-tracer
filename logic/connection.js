@@ -6,36 +6,43 @@ class Connection extends GridElement {
     elementV;
 
     constructor(grid, x1, y1, x2, y2) {
-
         super(grid);
-
         [ x1, y1 ] = grid.align(x1, y1);
         [ x2, y2 ] = grid.align(x2, y2);
-
         this.setPosition(x1, y1);
         this.setDimensions(x2 - x1, y2 - y1);
+        this.render();
+    }
 
-        // todo dynamically do this in draw
-        if (x1 !== x2) {
+    onDrag(x, y, done) {
+        this.setPosition(x, y, done);
+    }
+
+    render() {
+
+        if (this.width > 0 && !this.elementH) {
             this.elementH = document.createElement('div');
             this.elementH.classList.add('connection');
             this.elementH.style.minWidth = this.thickness + 'px';
             this.elementH.style.minHeight = this.thickness + 'px';
+            this.registerDrag(this.elementH);
             grid.element.appendChild(this.elementH);
+        } else if (this.width === 0 && this.elementH) {
+            this.elementH.remove();
+            this.elementH = null;
         }
 
-        if (y1 !== y2) {
+        if (this.height > 0 && !this.elementV) {
             this.elementV = document.createElement('div');
             this.elementV.classList.add('connection');
             this.elementV.style.minWidth = this.thickness + 'px';
             this.elementV.style.minHeight = this.thickness + 'px';
             grid.element.appendChild(this.elementV);
+        } else if (this.width === 0 && this.elementV) {
+            this.elementV.remove();
+            this.elementV = null;
         }
 
-        this.render();
-    }
-
-    render() {
         //TODO: offset by grid origin
         let x = this.x - this.thickness / 2;
         let y = this.y - this.thickness / 2;

@@ -53,16 +53,13 @@ class GridElement {
     width;
     height;
 
-    dragOffsetX;
-    dragOffsetY;
-
     constructor(grid) {
         this.grid = grid;
     }
 
     render() { }
 
-    dragTo(x, y, done) { }
+    onDrag(x, y, done, ...args) { }
 
     position() {
         return [ this.x, this.y ];
@@ -85,24 +82,28 @@ class GridElement {
         this.height = height;
     }
 
-    dragStart(e) {
-        e.preventDefault();
-        this.dragOffsetX = e.clientX - this.x;
-        this.dragOffsetY = e.clientY - this.y;
-        document.onmousemove = this.dragMove.bind(this);
-        document.onmouseup = this.dragStop.bind(this);
+    registerDrag(element, ...args) {
+        element.onmousedown = this.dragStart.bind(this, args);
     }
 
-    dragMove(e) {
+    dragStart(args, e) {
         e.preventDefault();
-        this.dragTo(e.clientX - this.dragOffsetX, e.clientY - this.dragOffsetY, false);
+        let dragOffsetX = e.clientX - this.x;
+        let dragOffsetY = e.clientY - this.y;
+        document.onmousemove = this.dragMove.bind(this, args, dragOffsetX, dragOffsetY);
+        document.onmouseup = this.dragStop.bind(this, args, dragOffsetX, dragOffsetY);
+    }
+
+    dragMove(args, dragOffsetX, dragOffsetY, e) {
+        e.preventDefault();
+        this.onDrag(e.clientX - dragOffsetX, e.clientY - dragOffsetY, false, ...args);
         this.render();
     }
 
-    dragStop(e) {
+    dragStop(args, dragOffsetX, dragOffsetY, e) {
         document.onmouseup = null;
         document.onmousemove = null;
-        this.dragTo(e.clientX - this.dragOffsetX, e.clientY - this.dragOffsetY, true);
+        this.onDrag(e.clientX - dragOffsetX, e.clientY - dragOffsetY, true, ...args);
         this.render();
     }
 }

@@ -28,8 +28,9 @@ class Component extends GridElement {
         // inner area with label
         this.inner = document.createElement('div');
         this.inner.innerHTML = label;
-        this.inner.onmousedown = this.dragStart.bind(this);
         this.inner.classList.add('component-inner');
+        this.registerDrag(this.inner);
+
         this.element.appendChild(this.inner);
 
         // ports
@@ -60,6 +61,10 @@ class Component extends GridElement {
         this.render();
     }
 
+    onDrag(x, y, done) {
+        this.setPosition(x, y, this.dragAligned || done);
+    }
+
     render() {
         this.element.style.left = this.x + "px";
         this.element.style.top = this.y + "px";
@@ -73,9 +78,5 @@ class Component extends GridElement {
             this.inner.style.lineHeight = (this.height - (this.innerMargin * 2)) + "px";
             this.inner.style.writingMode = 'horizontal-tb';
         }
-    }
-
-    dragTo(x, y, done) {
-        this.setPosition(x, y, this.dragAligned || done);
     }
 }
