@@ -1,8 +1,8 @@
 class Grid {
 
-    originalSpacing = 15;
-    spacing = this.originalSpacing;
+    spacing = 15;
 
+    zoom = 1.0;
     offsetX = 0;
     offsetY = 0;
     element;
@@ -13,10 +13,26 @@ class Grid {
         this.element = document.createElement('div');
         this.element.classList.add('grid');
         this.element.onmousedown = this.dragStart.bind(this);
-        this.element.onwheel = this.zoom.bind(this);
+        this.element.onwheel = this.wheelZoom.bind(this);
+
+this.inner = document.createElement('div');
+this.element.appendChild(this.inner);
+document.onmousemove = this.coords.bind(this);
 
         parent.appendChild(this.element);
         this.render();
+    }
+
+    coords(e) {
+        let mouseX = e.clientX - this.element.offsetLeft;
+        let mouseY = e.clientY - this.element.offsetTop;
+
+        let mouseRealX = -this.offsetX + mouseX / this.zoom;
+        let mouseRealY = -this.offsetY + mouseY / this.zoom;
+
+        this.inner.innerHTML =
+            'pix: x: ' + mouseX + ' y: ' +  mouseY +
+            '<br><b>spc: x: ' + Math.round(mouseRealX) + ' y: ' + Math.round(mouseRealY) + ' zoom: ' + this.zoom + '</b>';
     }
 
     register(component) {
@@ -24,9 +40,15 @@ class Grid {
     }
 
     render() {
-        this.element.style.backgroundSize = this.spacing + 'px ' + this.spacing + 'px';
-        this.element.style.backgroundPositionX = (this.offsetX % this.spacing) + 'px';
-        this.element.style.backgroundPositionY = (this.offsetY % this.spacing) + 'px';
+
+        let spacing = this.spacing * this.zoom;
+        let offsetX = this.offsetX * this.zoom;
+        let offsetY = this.offsetY * this.zoom;
+
+        this.element.style.backgroundSize = spacing + 'px ' + spacing + 'px';
+        this.element.style.backgroundPositionX = (offsetX % spacing) + 'px';
+        this.element.style.backgroundPositionY = (offsetY % spacing) + 'px';
+
         for (let i = 0; i < this.components.length; ++i) {
             let component = this.components[i].deref();
             if (component) {
@@ -43,35 +65,29 @@ class Grid {
         }
     }
 
-    get zoomFactor() {
-        return this.spacing / this.originalSpacing;
-    }
-
     align(x, y) {
         return [
             Math.ceil(x / this.spacing) * this.spacing - 0.5 * this.spacing,
             Math.ceil(y / this.spacing) * this.spacing - 0.5 * this.spacing
         ];
-
     }
 
-    zoom(e) {
-        let delta = Math.round(e.deltaY / 120);
-
-        let prevFactor = this.spacing / this.originalSpacing;
-        this.spacing = Math.max(10, this.spacing - delta);
-        let factor = this.spacing / this.originalSpacing;
+    wheelZoom(e) {
+        let delta = e.deltaY / 120;
 
         let mouseX = e.clientX - this.element.offsetLeft;
         let mouseY = e.clientY - this.element.offsetTop;
-        let mouseRatioX = mouseX / this.element.offsetWidth;
-        let mouseRatioY = mouseY / this.element.offsetHeight;
 
-        let offsetX = Math.round( (0.5 - mouseRatioX) * (factor - prevFactor) * this.offsetX );
-        let offsetY = Math.round( (0.5 - mouseRatioY) * (factor - prevFactor) * this.offsetY );
+        let mouseRealX = -this.offsetX + mouseX / this.zoom;
+        let mouseRealY = -this.offsetY + mouseY / this.zoom;
 
-        this.offsetX += offsetX;
-        this.offsetY += offsetY;
+        this.zoom -= delta * 0.25;
+
+        let mouseRealXAfter = -this.offsetX + mouseX / this.zoom;
+        let mouseRealYAfter = -this.offsetY + mouseY / this.zoom;
+
+        this.offsetX -= mouseRealX - mouseRealXAfter;
+        this.offsetY -= mouseRealY - mouseRealYAfter;
 
         this.render();
     }
@@ -99,6 +115,7 @@ class Grid {
     dragStop(e) {
         document.onmouseup = null;
         document.onmousemove = null;
+document.onmousemove = this.coords.bind(this);
     }
 }
 
@@ -120,12 +137,20 @@ class GridElement {
 
     onDrag(x, y, done, ...args) { }
 
-    get offsetX() {
-        return this.x * this.grid.zoomFactor + this.grid.offsetX;
+    get visualX() {
+        return (this.x + this.grid.offsetX) * this.grid.zoom;
     }
 
-    get offsetY() {
-        return this.y * this.grid.zoomFactor + this.grid.offsetY;
+    get visualY() {
+        return (this.y + this.grid.offsetY) * this.grid.zoom;
+    }
+
+    get visualWidth() {
+        return this.width * this.grid.zoom;
+    }
+
+    get visualHeight() {
+        return this.height * this.grid.zoom;
     }
 
     setPosition(x, y, aligned) {

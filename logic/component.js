@@ -28,7 +28,7 @@ class Component extends GridElement {
         this.element.appendChild(this.inner);
 
         // ports
-        for (const [side, items] of Object.entries(this.ports)) {
+        /*for (const [side, items] of Object.entries(this.ports)) {
             for (const item of items) {
                 if (item[0] !== null) {
                     let port = document.createElement('div');
@@ -38,7 +38,7 @@ class Component extends GridElement {
                 }
             }
         }
-
+        */
         grid.element.appendChild(this.element);
         this.render();
     }
@@ -54,6 +54,7 @@ class Component extends GridElement {
         this.height = Math.max(grid.spacing * 2, (this.ports.left.length + 1) * grid.spacing, (this.ports.right.length + 1) * grid.spacing);
 
         // update ports
+        /*
         let portOffset = this.grid.spacing - (this.portSize / 2);
 
         for (const [side, items] of Object.entries(this.ports)) {
@@ -72,17 +73,18 @@ class Component extends GridElement {
                 y += stepY;
             }
         }
+        */
 
-        this.element.style.left = this.offsetX + "px";
-        this.element.style.top = this.offsetY + "px";
-        this.element.style.width = this.width + "px";
-        this.element.style.height = this.height + "px";
+        this.element.style.left = this.visualX + "px";
+        this.element.style.top = this.visualY + "px";
+        this.element.style.width = this.visualWidth + "px";
+        this.element.style.height = this.visualHeight + "px";
 
-        if (this.width < this.height && this.width < 200) {
-            this.inner.style.lineHeight = (this.width - (this.innerMargin * 2)) + "px";
+        if (this.width < this.height && this.visualWidth < 200) {
+            this.inner.style.lineHeight = (this.visualWidth - (this.innerMargin * 2)) + "px";
             this.inner.style.writingMode = 'vertical-rl';
         } else {
-            this.inner.style.lineHeight = (this.height - (this.innerMargin * 2)) + "px";
+            this.inner.style.lineHeight = (this.visualHeight - (this.innerMargin * 2)) + "px";
             this.inner.style.writingMode = 'horizontal-tb';
         }
     }
