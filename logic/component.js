@@ -11,13 +11,9 @@ class Component extends GridElement {
     constructor(grid, label, x, y, ports) {
 
         super(grid);
-        this.ports = { left: [], right: [], top: [], bottom: [], ...ports };
+        this.ports = { left: [], right: [], top: [], bottom: [], ...ports }.map((side) => side.map((label) => [ label, null ]));
 
         [ this.x, this.y ] = grid.align(x, y);
-
-        // compute dimensions from ports
-        this.width = Math.max(grid.spacing * 2, (this.ports.top.length + 1) * grid.spacing, (this.ports.bottom.length + 1) * grid.spacing);
-        this.height = Math.max(grid.spacing * 2, (this.ports.left.length + 1) * grid.spacing, (this.ports.right.length + 1) * grid.spacing);
 
         // container
         this.element = document.createElement('div');
@@ -32,30 +28,18 @@ class Component extends GridElement {
         this.element.appendChild(this.inner);
 
         // ports
-        let portOffset = this.grid.spacing - (this.portSize / 2);
-
-        for (const [side, labels] of Object.entries(this.ports)) {
-            let x = side !== 'right' ? (side !== 'left' ? portOffset : 0) : this.width - this.portSize;
-            let y = side !== 'bottom' ? (side !== 'top' ? portOffset : 0) : this.height - this.portSize;
-            let stepX = side === 'left' || side === 'right' ? 0 : this.grid.spacing;
-            let stepY = side === 'top' || side === 'bottom' ? 0 : this.grid.spacing;
-            for (const label of labels) {
-                if (label !== null) {
+        for (const [side, items] of Object.entries(this.ports)) {
+            for (const item of items) {
+                if (item[0] !== null) {
                     let port = document.createElement('div');
                     port.classList.add('component-port');
-                    port.style.left = x + "px";
-                    port.style.top = y + "px";
-                    port.style.width = this.portSize + "px";
-                    port.style.height = this.portSize + "px";
                     this.element.appendChild(port);
+                    item[1] = port;
                 }
-                x += stepX;
-                y += stepY;
             }
         }
 
         grid.element.appendChild(this.element);
-
         this.render();
     }
 
@@ -64,6 +48,31 @@ class Component extends GridElement {
     }
 
     render() {
+
+        // compute dimensions from ports
+        this.width = Math.max(grid.spacing * 2, (this.ports.top.length + 1) * grid.spacing, (this.ports.bottom.length + 1) * grid.spacing);
+        this.height = Math.max(grid.spacing * 2, (this.ports.left.length + 1) * grid.spacing, (this.ports.right.length + 1) * grid.spacing);
+
+        // update ports
+        let portOffset = this.grid.spacing - (this.portSize / 2);
+
+        for (const [side, items] of Object.entries(this.ports)) {
+            let x = side !== 'right' ? (side !== 'left' ? portOffset : 0) : this.width - this.portSize;
+            let y = side !== 'bottom' ? (side !== 'top' ? portOffset : 0) : this.height - this.portSize;
+            let stepX = side === 'left' || side === 'right' ? 0 : this.grid.spacing;
+            let stepY = side === 'top' || side === 'bottom' ? 0 : this.grid.spacing;
+            for (const [ label, port ] of items) {
+                if (port !== null) {
+                    port.style.left = x + "px";
+                    port.style.top = y + "px";
+                    port.style.width = this.portSize + "px";
+                    port.style.height = this.portSize + "px";
+                }
+                x += stepX;
+                y += stepY;
+            }
+        }
+
         this.element.style.left = this.offsetX + "px";
         this.element.style.top = this.offsetY + "px";
         this.element.style.width = this.width + "px";
