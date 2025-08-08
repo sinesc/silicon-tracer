@@ -27,12 +27,12 @@ document.onmousemove = this.coords.bind(this);
         let mouseX = e.clientX - this.element.offsetLeft;
         let mouseY = e.clientY - this.element.offsetTop;
 
-        let mouseRealX = -this.offsetX + mouseX / this.zoom;
-        let mouseRealY = -this.offsetY + mouseY / this.zoom;
+        let mouseGridX = -this.offsetX + mouseX / this.zoom;
+        let mouseGridY = -this.offsetY + mouseY / this.zoom;
 
         this.inner.innerHTML =
             'pix: x: ' + mouseX + ' y: ' +  mouseY +
-            '<br><b>spc: x: ' + Math.round(mouseRealX) + ' y: ' + Math.round(mouseRealY) + ' zoom: ' + this.zoom + '</b>';
+            '<br><b>spc: x: ' + Math.round(mouseGridX) + ' y: ' + Math.round(mouseGridY) + ' zoom: ' + this.zoom + '</b>';
     }
 
     register(component) {
@@ -73,21 +73,28 @@ document.onmousemove = this.coords.bind(this);
     }
 
     wheelZoom(e) {
+        // my mouse has a delta of 120, not sure if this is always the case
         let delta = e.deltaY / 120;
 
+        // mouse pixel coordinates within grid view element
         let mouseX = e.clientX - this.element.offsetLeft;
         let mouseY = e.clientY - this.element.offsetTop;
 
-        let mouseRealX = -this.offsetX + mouseX / this.zoom;
-        let mouseRealY = -this.offsetY + mouseY / this.zoom;
+        // compute mouse on-grid coordinates
+        let mouseGridX = -this.offsetX + mouseX / this.zoom;
+        let mouseGridY = -this.offsetY + mouseY / this.zoom;
 
-        this.zoom -= delta * 0.25;
+        // apply zoom in 25% steps
+        delta *= 0.25;
+        this.zoom = Math.max(0.25, delta > 0 ? this.zoom * (1 - delta) : this.zoom / (1 + delta));
 
-        let mouseRealXAfter = -this.offsetX + mouseX / this.zoom;
-        let mouseRealYAfter = -this.offsetY + mouseY / this.zoom;
+        // compute new mouse on-grid coordinates after the zoom
+        let mouseGridXAfter = -this.offsetX + mouseX / this.zoom;
+        let mouseGridYAfter = -this.offsetY + mouseY / this.zoom;
 
-        this.offsetX -= mouseRealX - mouseRealXAfter;
-        this.offsetY -= mouseRealY - mouseRealYAfter;
+        // move grid to compensate so that the point we zoomed into is still at the cursor
+        this.offsetX -= mouseGridX - mouseGridXAfter;
+        this.offsetY -= mouseGridY - mouseGridYAfter;
 
         this.render();
     }
@@ -107,8 +114,8 @@ document.onmousemove = this.coords.bind(this);
         e.stopPropagation();
         let deltaX = e.clientX - dragStartX;
         let deltaY = e.clientY - dragStartY;
-        this.offsetX = originalX + deltaX;
-        this.offsetY = originalY + deltaY;
+        this.offsetX = originalX + deltaX / this.zoom;
+        this.offsetY = originalY + deltaY / this.zoom;
         this.render();
     }
 
@@ -168,8 +175,8 @@ class GridElement {
     dragStart(args, e) {
         e.preventDefault();
         e.stopPropagation();
-        let dragOffsetX = e.clientX - this.x;
-        let dragOffsetY = e.clientY - this.y;
+        let dragOffsetX = e.clientX / this.grid.zoom - this.x;
+        let dragOffsetY = e.clientY / this.grid.zoom - this.y;
         document.onmousemove = this.dragMove.bind(this, args, dragOffsetX, dragOffsetY);
         document.onmouseup = this.dragStop.bind(this, args, dragOffsetX, dragOffsetY);
     }
@@ -177,14 +184,14 @@ class GridElement {
     dragMove(args, dragOffsetX, dragOffsetY, e) {
         e.preventDefault();
         e.stopPropagation();
-        this.onDrag(e.clientX - dragOffsetX, e.clientY - dragOffsetY, false, ...args);
+        this.onDrag(e.clientX / this.grid.zoom - dragOffsetX, e.clientY / this.grid.zoom - dragOffsetY, false, ...args);
         this.render();
     }
 
     dragStop(args, dragOffsetX, dragOffsetY, e) {
         document.onmouseup = null;
         document.onmousemove = null;
-        this.onDrag(e.clientX - dragOffsetX, e.clientY - dragOffsetY, true, ...args);
+        this.onDrag(e.clientX / this.grid.zoom - dragOffsetX, e.clientY / this.grid.zoom - dragOffsetY, true, ...args);
         this.render();
     }
 }

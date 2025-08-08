@@ -27,8 +27,12 @@ class Component extends GridElement {
 
         this.element.appendChild(this.inner);
 
+        // compute dimensions from ports
+        this.width = Math.max(grid.spacing * 2, (this.ports.top.length + 1) * grid.spacing, (this.ports.bottom.length + 1) * grid.spacing);
+        this.height = Math.max(grid.spacing * 2, (this.ports.left.length + 1) * grid.spacing, (this.ports.right.length + 1) * grid.spacing);
+
         // ports
-        /*for (const [side, items] of Object.entries(this.ports)) {
+        for (const [side, items] of Object.entries(this.ports)) {
             for (const item of items) {
                 if (item[0] !== null) {
                     let port = document.createElement('div');
@@ -38,7 +42,7 @@ class Component extends GridElement {
                 }
             }
         }
-        */
+
         grid.element.appendChild(this.element);
         this.render();
     }
@@ -48,32 +52,27 @@ class Component extends GridElement {
     }
 
     render() {
-
-        // compute dimensions from ports
-        this.width = Math.max(grid.spacing * 2, (this.ports.top.length + 1) * grid.spacing, (this.ports.bottom.length + 1) * grid.spacing);
-        this.height = Math.max(grid.spacing * 2, (this.ports.left.length + 1) * grid.spacing, (this.ports.right.length + 1) * grid.spacing);
-
         // update ports
-        /*
-        let portOffset = this.grid.spacing - (this.portSize / 2);
+        let visualSpacing = this.grid.spacing * this.grid.zoom;
+        let visualPortSize = this.portSize * this.grid.zoom;
+        let visualOffset = visualSpacing - (visualPortSize / 2);
 
         for (const [side, items] of Object.entries(this.ports)) {
-            let x = side !== 'right' ? (side !== 'left' ? portOffset : 0) : this.width - this.portSize;
-            let y = side !== 'bottom' ? (side !== 'top' ? portOffset : 0) : this.height - this.portSize;
-            let stepX = side === 'left' || side === 'right' ? 0 : this.grid.spacing;
-            let stepY = side === 'top' || side === 'bottom' ? 0 : this.grid.spacing;
+            let x = side !== 'right' ? (side !== 'left' ? visualOffset : 0) : this.visualWidth - visualPortSize;
+            let y = side !== 'bottom' ? (side !== 'top' ? visualOffset : 0) : this.visualHeight - visualPortSize;
+            let stepX = side === 'left' || side === 'right' ? 0 : visualSpacing;
+            let stepY = side === 'top' || side === 'bottom' ? 0 : visualSpacing;
             for (const [ label, port ] of items) {
                 if (port !== null) {
                     port.style.left = x + "px";
                     port.style.top = y + "px";
-                    port.style.width = this.portSize + "px";
-                    port.style.height = this.portSize + "px";
+                    port.style.width = visualPortSize + "px";
+                    port.style.height = visualPortSize + "px";
                 }
                 x += stepX;
                 y += stepY;
             }
         }
-        */
 
         this.element.style.left = this.visualX + "px";
         this.element.style.top = this.visualY + "px";
