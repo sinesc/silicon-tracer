@@ -1,6 +1,6 @@
 class Connection extends GridElement {
 
-    thickness = 6;
+    thickness = 4;
 
     elementH;
     elementV;
@@ -23,7 +23,6 @@ class Connection extends GridElement {
     render() {
 
         let thickness = this.thickness * this.grid.zoom;
-        console.log(thickness);
         let x = this.visualX - thickness / 2;
         let y = this.visualY - thickness / 2;
         let width = this.visualWidth + thickness;
@@ -42,6 +41,7 @@ class Connection extends GridElement {
         if (this.height > 0 && !this.elementV) {
             this.elementV = document.createElement('div');
             this.elementV.classList.add('connection');
+            this.registerDrag(this.elementV);
             grid.element.appendChild(this.elementV);
         } else if (this.height === 0 && this.elementV) {
             this.elementV.remove();
@@ -55,8 +55,7 @@ class Connection extends GridElement {
             this.elementH.style.minWidth = thickness + 'px';
             this.elementH.style.minHeight = thickness + 'px';
             if (this.elementV) {
-                this.elementH.style.borderRight = "none";
-                this.elementV.style.left = (x + width) + "px";
+                this.elementV.style.left = (x + width - thickness) + "px";
                 this.elementV.style.top = y + "px";
                 this.elementV.style.height = height + "px";
                 this.elementV.style.minWidth = thickness + 'px';

@@ -21,21 +21,15 @@ class Grid {
         this.tooltip = document.createElement('div');
         this.tooltip.classList.add('tooltip');
         this.element.appendChild(this.tooltip);
-document.onmousemove = this.coords.bind(this);
+        document.addEventListener('mousemove', this.coords.bind(this));
 
         parent.appendChild(this.element);
         this.render();
     }
 
     coords(e) {
-        let mouseX = e.clientX - this.element.offsetLeft;
-        let mouseY = e.clientY - this.element.offsetTop;
-
-        let mouseGridX = -this.offsetX + mouseX / this.zoom;
-        let mouseGridY = -this.offsetY + mouseY / this.zoom;
-
-        this.tooltip.innerHTML =
-            'x: ' + Math.round(mouseGridX) + ' y: ' + Math.round(mouseGridY) + ' zoom: ' + this.zoom + '</b>';
+        let [ x, y ] = this.screenToGrid(e.clientX, e.clientY);
+        this.tooltip.innerHTML = 'x: ' + Math.round(x) + ' y: ' + Math.round(y) + ' zoom: ' + this.zoom + '</b>';
     }
 
     register(component) {
@@ -43,7 +37,6 @@ document.onmousemove = this.coords.bind(this);
     }
 
     render() {
-
         let spacing = this.spacing * this.zoom;
         let offsetX = this.offsetX * this.zoom;
         let offsetY = this.offsetY * this.zoom;
@@ -75,19 +68,22 @@ document.onmousemove = this.coords.bind(this);
         ];
     }
 
-    wheelZoom(e) {
-        // my mouse has a delta of 120, not sure if this is always the case
-        let delta = e.deltaY / 120;
-
+    screenToGrid(x, y) {
         // mouse pixel coordinates within grid view element
-        let mouseX = e.clientX - this.element.offsetLeft;
-        let mouseY = e.clientY - this.element.offsetTop;
-
+        let mouseX = x - this.element.offsetLeft;
+        let mouseY = y - this.element.offsetTop;
         // compute mouse on-grid coordinates
         let mouseGridX = -this.offsetX + mouseX / this.zoom;
         let mouseGridY = -this.offsetY + mouseY / this.zoom;
+        return [ mouseGridX, mouseGridY ];
+    }
 
-        // apply zoom in 25% steps
+    wheelZoom(e) {
+        // compute mouse on-grid coordinates
+        let [ mouseGridX, mouseGridY ] = this.screenToGrid(e.clientX, e.clientY);
+
+        // apply zoom in 25% steps, my mouse has a delta of 120, not sure if this is always the case
+        let delta = e.deltaY / 120;
         delta *= 0.25;
         this.zoom = Math.min(this.maxZoom, Math.max(this.minZoom, delta > 0 ? this.zoom * (1 - delta) : this.zoom / (1 + delta)));
         // round it a bit
@@ -95,8 +91,7 @@ document.onmousemove = this.coords.bind(this);
         // TODO: instead of this, define a list of good zoom levels and go up/down in the list.
 
         // compute new mouse on-grid coordinates after the zoom
-        let mouseGridXAfter = -this.offsetX + mouseX / this.zoom;
-        let mouseGridYAfter = -this.offsetY + mouseY / this.zoom;
+        let [ mouseGridXAfter, mouseGridYAfter ] = this.screenToGrid(e.clientX, e.clientY);
 
         // move grid to compensate so that the point we zoomed into is still at the cursor
         this.offsetX -= mouseGridX - mouseGridXAfter;
@@ -128,7 +123,6 @@ document.onmousemove = this.coords.bind(this);
     dragStop(e) {
         document.onmouseup = null;
         document.onmousemove = null;
-document.onmousemove = this.coords.bind(this);
     }
 }
 
