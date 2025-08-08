@@ -36,6 +36,6 @@ let component4 = new Component(grid, 'Blubb', 200, 450, { top: [ "a", "b", "c", 
 let component5 = new Component(grid, 'Gate', 500, 500, { left: [ "a", null, "b" ], right: [ null, "q", null ] });
 
 
-//let connection1 = new Connection(grid, 300, 300, 600, 600);
+let connection1 = new Connection(grid, 300, 300, 600, 600);
 let connection2 = new Connection(grid, 200, 200, 200, 600);
-//let connection3 = new Connection(grid, 700, 400, 900, 400);
+let connection3 = new Connection(grid, 700, 400, 900, 400);

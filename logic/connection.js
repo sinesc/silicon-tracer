@@ -22,11 +22,16 @@ class Connection extends GridElement {
 
     render() {
 
+        let thickness = this.thickness * this.grid.zoom;
+        console.log(thickness);
+        let x = this.visualX - thickness / 2;
+        let y = this.visualY - thickness / 2;
+        let width = this.visualWidth + thickness;
+        let height = this.visualHeight + thickness;
+
         if (this.width > 0 && !this.elementH) {
             this.elementH = document.createElement('div');
             this.elementH.classList.add('connection');
-            this.elementH.style.minWidth = this.thickness + 'px';
-            this.elementH.style.minHeight = this.thickness + 'px';
             this.registerDrag(this.elementH);
             grid.element.appendChild(this.elementH);
         } else if (this.width === 0 && this.elementH) {
@@ -37,33 +42,32 @@ class Connection extends GridElement {
         if (this.height > 0 && !this.elementV) {
             this.elementV = document.createElement('div');
             this.elementV.classList.add('connection');
-            this.elementV.style.minWidth = this.thickness + 'px';
-            this.elementV.style.minHeight = this.thickness + 'px';
             grid.element.appendChild(this.elementV);
         } else if (this.height === 0 && this.elementV) {
             this.elementV.remove();
             this.elementV = null;
         }
 
-        let x = this.offsetX - this.thickness / 2;
-        let y = this.offsetY - this.thickness / 2;
-        let width = this.width + this.thickness;
-        let height = this.height + this.thickness;
-
         if (this.elementH) {
             this.elementH.style.left = x + "px";
             this.elementH.style.top = y + "px";
             this.elementH.style.width = width + "px";
+            this.elementH.style.minWidth = thickness + 'px';
+            this.elementH.style.minHeight = thickness + 'px';
             if (this.elementV) {
                 this.elementH.style.borderRight = "none";
-                this.elementV.style.left = (x + this.width) + "px";
+                this.elementV.style.left = (x + width) + "px";
                 this.elementV.style.top = y + "px";
                 this.elementV.style.height = height + "px";
+                this.elementV.style.minWidth = thickness + 'px';
+                this.elementV.style.minHeight = thickness + 'px';
             }
         } else if (this.elementV) {
             this.elementV.style.left = x + "px";
             this.elementV.style.top = y + "px";
             this.elementV.style.height = height + "px";
+            this.elementV.style.minWidth = thickness + 'px';
+            this.elementV.style.minHeight = thickness + 'px';
         }
     }
 }

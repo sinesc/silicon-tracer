@@ -1,11 +1,14 @@
 class Grid {
 
     spacing = 15;
+    minZoom = 0.5;
+    maxZoom = 5.0;
 
     zoom = 1.0;
     offsetX = 0;
     offsetY = 0;
     element;
+    tooltip;
 
     components = [];
 
@@ -15,8 +18,9 @@ class Grid {
         this.element.onmousedown = this.dragStart.bind(this);
         this.element.onwheel = this.wheelZoom.bind(this);
 
-this.inner = document.createElement('div');
-this.element.appendChild(this.inner);
+        this.tooltip = document.createElement('div');
+        this.tooltip.classList.add('tooltip');
+        this.element.appendChild(this.tooltip);
 document.onmousemove = this.coords.bind(this);
 
         parent.appendChild(this.element);
@@ -30,9 +34,8 @@ document.onmousemove = this.coords.bind(this);
         let mouseGridX = -this.offsetX + mouseX / this.zoom;
         let mouseGridY = -this.offsetY + mouseY / this.zoom;
 
-        this.inner.innerHTML =
-            'pix: x: ' + mouseX + ' y: ' +  mouseY +
-            '<br><b>spc: x: ' + Math.round(mouseGridX) + ' y: ' + Math.round(mouseGridY) + ' zoom: ' + this.zoom + '</b>';
+        this.tooltip.innerHTML =
+            'x: ' + Math.round(mouseGridX) + ' y: ' + Math.round(mouseGridY) + ' zoom: ' + this.zoom + '</b>';
     }
 
     register(component) {
@@ -86,7 +89,10 @@ document.onmousemove = this.coords.bind(this);
 
         // apply zoom in 25% steps
         delta *= 0.25;
-        this.zoom = Math.max(0.25, delta > 0 ? this.zoom * (1 - delta) : this.zoom / (1 + delta));
+        this.zoom = Math.min(this.maxZoom, Math.max(this.minZoom, delta > 0 ? this.zoom * (1 - delta) : this.zoom / (1 + delta)));
+        // round it a bit
+        this.zoom = Math.round(this.zoom * 10) / 10;
+        // TODO: instead of this, define a list of good zoom levels and go up/down in the list.
 
         // compute new mouse on-grid coordinates after the zoom
         let mouseGridXAfter = -this.offsetX + mouseX / this.zoom;
@@ -174,6 +180,9 @@ class GridElement {
 
     dragStart(args, e) {
         e.preventDefault();
+        if (e.which !== 1) {
+            return;
+        }
         e.stopPropagation();
         let dragOffsetX = e.clientX / this.grid.zoom - this.x;
         let dragOffsetY = e.clientY / this.grid.zoom - this.y;
