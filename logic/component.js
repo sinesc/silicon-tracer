@@ -37,6 +37,12 @@ class Component extends GridElement {
                 if (item[0] !== null) {
                     let port = document.createElement('div');
                     port.classList.add('component-port');
+                    port.onmouseenter = function() {
+                        grid.setStatus('Port <b>' + item[0] + '</b> of <b>' + label + '</b>. Drag to connect.');
+                    }
+                    port.onmouseleave = function() {
+                        grid.clearStatus();
+                    }
                     this.element.appendChild(port);
                     item[1] = port;
                 }

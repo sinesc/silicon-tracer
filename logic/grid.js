@@ -1,15 +1,21 @@
 class Grid {
 
+    // would be static if they weren't so inconvenient to access
     spacing = 15;
     zoomLevels = [ 0.5, 0.65, 0.85, 1.0, 1.25, 1.50, 1.75, 2.0, 2.5, 3.0, 4.0, 5.0 ];
+    statusDelay = 500;
 
     zoom = 1.0;
     offsetX = 0;
     offsetY = 0;
 
     #element;
-    #tooltip;
+    #status;
     #components = [];
+    #statusMessage = null;
+    #statusTimer = null;
+    #mouseX = 0;
+    #mouseY = 0;
 
     constructor(parent) {
         this.#element = document.createElement('div');
@@ -17,10 +23,10 @@ class Grid {
         this.#element.onmousedown = this.#handleDragStart.bind(this);
         this.#element.onwheel = this.#handleZoom.bind(this);
 
-        this.#tooltip = document.createElement('div');
-        this.#tooltip.classList.add('tooltip');
-        this.#element.appendChild(this.#tooltip);
-        document.addEventListener('mousemove', this.updateTooltip.bind(this));
+        this.#status = document.createElement('div');
+        this.#status.classList.add('grid-status');
+        this.#element.appendChild(this.#status);
+        document.addEventListener('mousemove', this.#handleMouse.bind(this));
 
         parent.appendChild(this.#element);
         this.render();
@@ -93,15 +99,24 @@ class Grid {
         }
     }
 
-    // Updates the grids bottom tooltip.
-    updateTooltip(e) {
-        if (this.screenInBounds(e.clientX, e.clientY)) {
-            let [ x, y ] = this.screenToGrid(e.clientX, e.clientY);
-            this.#tooltip.innerHTML = 'x: ' + Math.round(x) + ' y: ' + Math.round(y) + ' zoom: ' + this.zoom + '</b>';
-        } else {
-            this.#tooltip.innerHTML = '<i>LMB</i>: Drag component, <i>MMB</i>: Drag grid, <i>MW</i>: Zoom grid';
+    // Sets a status message. Pass null to unset and revert back to default status.
+    setStatus(message) {
+        if (this.#statusTimer) {
+            clearTimeout(this.#statusTimer);
         }
+        this.#statusMessage = String.isString(message) ? message : null;
+        this.#updateStatus();
+    }
 
+    clearStatus(delayed = true) {
+        if (this.#statusTimer) {
+            clearTimeout(this.#statusTimer);
+        }
+        if (delayed) {
+            this.#statusTimer = setTimeout(function() { grid.setStatus(); }, this.statusDelay);
+        } else {
+            grid.setStatus();
+        }
     }
 
     // Gets the current zoom level index.
@@ -115,6 +130,26 @@ class Grid {
         this.zoom = this.zoomLevels[level];
     }
 
+    // Updates the grids bottom status.
+    #updateStatus() {
+        if (this.#statusMessage) {
+            this.#status.innerHTML = this.#statusMessage;
+        } else if (this.screenInBounds(this.#mouseX, this.#mouseY)) {
+            let [ x, y ] = this.screenToGrid(this.#mouseX, this.#mouseY);
+            this.#status.innerHTML = 'x: ' + Math.round(x) + ' y: ' + Math.round(y) + ' zoom: ' + this.zoom + '</b>';
+        } else {
+            this.#status.innerHTML = '<i>LMB</i>: Drag component, <i>MMB</i>: Drag grid, <i>MW</i>: Zoom grid';
+        }
+    }
+
+    // Called on mouse move, updates mouse coordinates and tooltip.
+    #handleMouse(e) {
+        this.#mouseX = e.clientX;
+        this.#mouseY = e.clientY;
+        this.#updateStatus();
+    }
+
+    // Called on mouse wheel change, updates zoom level.
     #handleZoom(e) {
         // compute mouse on-grid coordinates
         let [ mouseGridX, mouseGridY ] = this.screenToGrid(e.clientX, e.clientY);

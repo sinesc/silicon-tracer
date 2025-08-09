@@ -8,3 +8,7 @@ Object.defineProperty(Object.prototype, "map", {
         return result;
     }
 });
+
+String.isString = function(s) {
+    return typeof s === 'string';
+}
