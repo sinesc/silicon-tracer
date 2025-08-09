@@ -1,8 +1,7 @@
 class Grid {
 
     spacing = 15;
-    minZoom = 0.5;
-    maxZoom = 5.0;
+    zoomLevels = [ 0.5, 0.65, 0.85, 1.0, 1.25, 1.50, 1.75, 2.0, 2.5, 3.0, 4.0, 5.0 ];
 
     zoom = 1.0;
     offsetX = 0;
@@ -28,8 +27,13 @@ class Grid {
     }
 
     coords(e) {
-        let [ x, y ] = this.screenToGrid(e.clientX, e.clientY);
-        this.tooltip.innerHTML = 'x: ' + Math.round(x) + ' y: ' + Math.round(y) + ' zoom: ' + this.zoom + '</b>';
+        if (this.screenInBounds(e.clientX, e.clientY)) {
+            let [ x, y ] = this.screenToGrid(e.clientX, e.clientY);
+            this.tooltip.innerHTML = 'x: ' + Math.round(x) + ' y: ' + Math.round(y) + ' zoom: ' + this.zoom + '</b>';
+        } else {
+            this.tooltip.innerHTML = '<i>LMB</i>: Drag component, <i>MMB</i>: Drag grid, <i>MW</i>: Zoom grid';
+        }
+
     }
 
     register(component) {
@@ -61,11 +65,26 @@ class Grid {
         }
     }
 
+    // Align x/y to grid and return.
     align(x, y) {
         return [
             Math.ceil(x / this.spacing) * this.spacing - 0.5 * this.spacing,
             Math.ceil(y / this.spacing) * this.spacing - 0.5 * this.spacing
         ];
+    }
+
+    get zoomLevel() {
+        return this.zoomLevels.findIndex((z) => z === this.zoom);
+    }
+
+    set zoomLevel(level) {
+        this.zoom = this.zoomLevels[level];
+    }
+
+    screenInBounds(x, y) {
+        let ex1 = this.element.offsetLeft;
+        let ey1 = this.element.offsetTop;
+        return x >= ex1 && y >= ey1 && x <= ex1 + this.element.offsetWidth && y <= ey1 + this.element.offsetHeight;
     }
 
     screenToGrid(x, y) {
@@ -82,13 +101,8 @@ class Grid {
         // compute mouse on-grid coordinates
         let [ mouseGridX, mouseGridY ] = this.screenToGrid(e.clientX, e.clientY);
 
-        // apply zoom in 25% steps, my mouse has a delta of 120, not sure if this is always the case
-        let delta = e.deltaY / 120;
-        delta *= 0.25;
-        this.zoom = Math.min(this.maxZoom, Math.max(this.minZoom, delta > 0 ? this.zoom * (1 - delta) : this.zoom / (1 + delta)));
-        // round it a bit
-        this.zoom = Math.round(this.zoom * 10) / 10;
-        // TODO: instead of this, define a list of good zoom levels and go up/down in the list.
+        // pick next zoom level
+        this.zoomLevel = Math.max(0, Math.min(this.zoomLevels.length - 1, this.zoomLevel + (e.deltaY > 0 ? -1 : 1)));
 
         // compute new mouse on-grid coordinates after the zoom
         let [ mouseGridXAfter, mouseGridYAfter ] = this.screenToGrid(e.clientX, e.clientY);
