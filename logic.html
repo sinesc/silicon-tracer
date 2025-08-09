@@ -79,7 +79,7 @@
                 border-radius: 3px;
                 font-size: 0.8em;
                 text-align: center;
-                color: #ccc;
+                color: #ddd;
                 border: 1px solid #222;
                 box-sizing: border-box;
             }
@@ -98,6 +98,11 @@
                 border-radius: 3px;
                 box-sizing: border-box;
                 color: #ccc;
+                opacity: 0;
+                transition: opacity 0.15s;
+            }
+            .component:hover .component-port-label {
+                opacity: 1;
             }
             /* connection */
             .connection-h, .connection-v {

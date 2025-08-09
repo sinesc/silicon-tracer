@@ -141,7 +141,7 @@ class Component extends GridElement {
                     port.style.top = y + "px";
                     port.style.width = visualPortSize + "px";
                     port.style.height = visualPortSize + "px";
-                    if (this.grid.zoom >= 1.75) {
+                    if (this.grid.zoom >= 1.25 && name.length > 1) {
                         port.innerHTML = '';
                         portLabel.style.display = 'block';
                         portLabel.innerHTML = name;
@@ -175,12 +175,12 @@ class Component extends GridElement {
                         }
                     } else {
                         portLabel.style.display = 'none';
-                        if (this.grid.zoom >= 1.0) {
-                            port.style.lineHeight = visualPortSize + 'px';
-                            port.innerHTML = name.slice(0, 1);
-                        } else {
-                            port.innerHTML = '';
-                        }
+                    }
+                    if (this.grid.zoom >= 1.25) {
+                        port.style.lineHeight = visualPortSize + 'px';
+                        port.innerHTML = name.slice(0, 1);
+                    } else {
+                        port.innerHTML = '';
                     }
                 }
                 x += stepX;
