@@ -30,7 +30,7 @@ class Component extends GridElement {
         this.element.appendChild(this.inner);
 
         // compute dimensions from ports
-        this.ports = { left: [], right: [], top: [], bottom: [], ...ports }.map((side) => side.map((name) => ({ name: name, port: null, portLabel: null, x: null, y: null })));
+        this.ports = { left: [], right: [], top: [], bottom: [], ...ports }.map((side, ports) => ports.map((name) => ({ name: name, side: side, port: null, portLabel: null, x: null, y: null })));
         this.width = Math.max(grid.spacing * 2, (this.ports.top.length + 1) * grid.spacing, (this.ports.bottom.length + 1) * grid.spacing);
         this.height = Math.max(grid.spacing * 2, (this.ports.left.length + 1) * grid.spacing, (this.ports.right.length + 1) * grid.spacing);
 
@@ -76,39 +76,49 @@ class Component extends GridElement {
         return null;
     }
 
+    // Draw drop preview while moving component.
+    onMove(x, y, done) {
+        this.setPosition(x, y, this.dragAligned || done);
+        if (!done) {
+            if (!this.dropPreview) {
+                this.dropPreview = document.createElement('div');
+                this.dropPreview.classList.add('component-drop-preview');
+                this.grid.addVisual(this.dropPreview);
+            }
+            let [ alignedX, alignedY ] = this.gridAlign(this.x, this.y);
+            let [ visualX, visualY ] = this.gridToVisual(alignedX, alignedY);
+            this.dropPreview.style.left = visualX + "px";
+            this.dropPreview.style.top = visualY + "px";
+            this.dropPreview.style.width = this.visualWidth + "px";
+            this.dropPreview.style.height = this.visualHeight + "px";
+        } else {
+            this.grid.removeVisual(this.dropPreview);
+            this.dropPreview = null;
+        }
+    }
+
+    // Create connection from port.
+    onConnect(x, y, name, done) {
+        let port = this.portByName(name);
+        if (!this.dragConnection) {
+            let ordering = port.side === 'top' || port.side === 'bottom' ? 'vh' : 'hv';
+            this.dragConnection = new Connection(this.grid, this.x + port.x, this.y + port.y, x + port.x, y + port.y, ordering); // TODO: unclear why I needed to add port.x/y to the target coordinate, it should just be the mouse coordinate x/y //FIXME: got it: it's the dragOffset from GridElement::handleDragMove to keep the component fixed relative to the mouse. it should be computed only for the component case
+            this.dragConnection.render();
+        } else if (!done) {
+            this.dragConnection.setEndpoints(this.x + port.x, this.y + port.y, x + port.x, y + port.y, true); // TODO: unclear why I needed to add port.x/y to the target coordinate, it should just be the mouse coordinate x/y
+            this.dragConnection.render();
+        } else {
+            this.dragConnection = null;
+        }
+
+    }
+
+    // Called while a registered visual is being dragged.
     onDrag(x, y, done, what) {
         if (what.type === 'component') {
-            // move component
-            this.setPosition(x, y, this.dragAligned || done);
-            if (!done) {
-                if (!this.dropPreview) {
-                    this.dropPreview = document.createElement('div');
-                    this.dropPreview.classList.add('component-drop-preview');
-                    this.grid.addVisual(this.dropPreview);
-                }
-                let [ alignedX, alignedY ] = this.gridAlign(this.x, this.y);
-                let [ visualX, visualY ] = this.gridToVisual(alignedX, alignedY);
-                this.dropPreview.style.left = visualX + "px";
-                this.dropPreview.style.top = visualY + "px";
-                this.dropPreview.style.width = this.visualWidth + "px";
-                this.dropPreview.style.height = this.visualHeight + "px";
-            } else {
-                this.grid.removeVisual(this.dropPreview);
-                this.dropPreview = null;
-            }
+            this.onMove(x, y, done);
         } else if (what.type === 'port') {
-            // create connection from port
-            let port = this.portByName(what.name);
-            if (!this.dragConnection) {
-                this.dragConnection = new Connection(this.grid, this.x + port.x, this.y + port.y, x + port.x, y + port.y); // TODO: unclear why I needed to add port.x/y to the target coordinate, it should just be the mouse coordinate x/y //FIXME: got it: it's the dragOffset from GridElement::handleDragMove to keep the component fixed relative to the mouse. it should be computed only for the component case
-                this.dragConnection.render();
-            } else if (!done) {
-                console.log(this.x + port.x, this.y + port.y, x, y);
-                this.dragConnection.setEndpoints(this.x + port.x, this.y + port.y, x + port.x, y + port.y, true); // TODO: unclear why I needed to add port.x/y to the target coordinate, it should just be the mouse coordinate x/y
-                this.dragConnection.render();
-            } else {
-                this.dragConnection = null;
-            }
+            this.onConnect(x, y, what.name, done);
         }
     }
 

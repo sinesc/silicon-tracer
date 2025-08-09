@@ -3,7 +3,7 @@ Object.defineProperty(Object.prototype, "map", {
     value: function(c) {
         let result = Object.create(this);
         for ([ k, v ] of Object.entries(this)) {
-            result[k] = c(v);
+            result[k] = c(k, v);
         }
         return result;
     }
