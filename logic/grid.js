@@ -11,8 +11,6 @@ class Grid {
 
     #element;
     #status;
-    #tooltip;
-    #tooltipTimer
     #components = [];
     #statusMessage = null;
     #statusTimer = null;
@@ -28,11 +26,6 @@ class Grid {
         this.#status = document.createElement('div');
         this.#status.classList.add('grid-status');
         this.#element.appendChild(this.#status);
-
-        this.#tooltip = document.createElement('div');
-        this.#tooltip.classList.add('grid-tooltip');
-        this.#tooltip.style.display = 'none';
-        this.#element.appendChild(this.#tooltip);
 
         document.addEventListener('mousemove', this.#handleMouse.bind(this));
         parent.appendChild(this.#element);
@@ -86,6 +79,13 @@ class Grid {
         let offsetX = this.offsetX * this.zoom;
         let offsetY = this.offsetY * this.zoom;
 
+        if (this.zoom < 1.0) {
+            // hack to avoid grid becoming to bright at lower zoom
+            this.#element.style.backgroundImage = 'radial-gradient(circle, #555 1px, #000 1px)';
+        } else {
+            this.#element.style.backgroundImage = 'radial-gradient(circle, #888 1px, #000 1px)';
+        }
+
         this.#element.style.backgroundSize = spacing + 'px ' + spacing + 'px';
         this.#element.style.backgroundPositionX = (offsetX % spacing) + 'px';
         this.#element.style.backgroundPositionY = (offsetY % spacing) + 'px';
@@ -103,36 +103,6 @@ class Grid {
                     this.#components.pop()
                 }
             }
-        }
-    }
-
-    // Sets a tooltip message. Pass null to unset and revert back to default tooltip.
-    showTooltip(x, y, orientation, message) {
-        if (this.#tooltipTimer) {
-            clearTimeout(this.#tooltipTimer);
-        }
-        let style = this.#tooltip.style;
-        style.display = 'block';
-        style.left = x + 'px';
-        style.top = y + 'px';
-
-        if (orientation === 'top' || orientation === 'bottom') {
-            style.writingMode = 'vertical-rl';
-        } else {
-            style.writingMode = 'horizontal-tb';
-        }
-
-        this.#tooltip.innerHTML = message;
-    }
-
-    hideTooltip(delayed = true) {
-        if (this.#tooltipTimer) {
-            clearTimeout(this.#tooltipTimer);
-        }
-        if (delayed) {
-            this.#tooltipTimer = setTimeout(() => this.#tooltip.style.display = 'none', this.statusDelay);
-        } else {
-            this.#tooltip.style.display = 'none';
         }
     }
 

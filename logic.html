@@ -15,7 +15,7 @@
             }
             /* grid */
             .grid {
-                background-image: radial-gradient(circle, #888 1px, rgba(0, 0, 0, 0) 1px);
+                /*background-image: radial-gradient(circle, #888 1px, #000 1px);  in JS to avoid looking to bright on low zoom */
                 position: relative;
                 overflow: hidden;
                 width: 100%;
@@ -27,8 +27,8 @@
                 bottom: 0;
                 right: 0;
                 padding: 5px;
-                background-color: rgba(0, 0, 0, 50%);
-                border: 1px solid #444;
+                background-color: #00000038;
+                border: 1px solid #4444448a;
                 border-radius: 3px;;
             }
             .grid-tooltip {
@@ -41,14 +41,14 @@
             }
             /* component */
             .component {
-                z-index: 10;
+                z-index: 11;
                 position: absolute;
                 background-color: transparent;
                 cursor: default;
                 box-sizing: border-box;
             }
             .component-inner {
-                z-index: 11;
+                z-index: 12;
                 position: absolute;
                 background-color: #444;
                 border: 1px solid #222;
@@ -61,28 +61,34 @@
                 width: calc(100% - 10px);
                 height: calc(100% - 10px);
                 overflow: hidden;
+                text-shadow: 1px 1px 2px black;
             }
             .component-inner:hover {
                 border: 1px solid #fff;
             }
             .component-port {
-                z-index: 13;
+                z-index: 14;
                 position: absolute;
-                background-color: #888;
+                background-color: #6d6d6d;
                 border-radius: 3px;
+                font-size: 0.8em;
+                text-align: center;
+                color: #ccc;
             }
             .component-port:hover {
-                background-color: #fff;
+                background-color: #aaa;
                 transition: background-color 0.15s;
             }
             .component-port-label {
-                z-index: 12;
+                pointer-events: none;
+                z-index: 13;
                 position: absolute;
                 white-space: nowrap;
-                background-color: rgba(0, 0, 0, 50%);
-                border: 1px solid #444;
+                background-color: #00000038;
+                border: 1px solid #4444448a;
                 border-radius: 3px;
                 box-sizing: border-box;
+                color: #ccc;
             }
             /* connection */
             .connection {

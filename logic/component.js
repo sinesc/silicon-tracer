@@ -39,11 +39,9 @@ class Component extends GridElement {
                     port.classList.add('component-port');
                     port.onmouseenter = () => {
                         grid.setStatus('Port <b>' + item[0] + '</b> of <b>' + label + '</b>. Drag to connect.');
-                        //grid.showTooltip(port.offsetLeft + this.element.offsetLeft, port.offsetTop + this.element.offsetTop, side, 'blabla' + item[0]);
                     }
                     port.onmouseleave = function() {
                         grid.clearStatus();
-                        //grid.hideTooltip();
                     }
                     this.element.appendChild(port);
                     let portLabel = document.createElement('div');
@@ -83,33 +81,31 @@ class Component extends GridElement {
                     port.style.width = visualPortSize + "px";
                     port.style.height = visualPortSize + "px";
                     if (this.grid.zoom >= 1.75) {
+                        port.innerHTML = '';
                         portLabel.style.display = 'block';
-                        portLabel.innerHTML = side + ' ' + label;
+                        portLabel.innerHTML = label;
+                        portLabel.style.lineHeight = visualLabelLineHeight + 'px';
                         if (side === 'bottom') {
                             portLabel.style.writingMode = 'vertical-rl';
-                            portLabel.style.lineHeight = visualLabelLineHeight + 'px';
                             portLabel.style.left = (x - visualLabelPadding) + "px";
-                            portLabel.style.top = y + ( - visualLabelPadding) + "px";
+                            portLabel.style.top = (y - visualLabelPadding) + "px";
                             portLabel.style.paddingBottom = visualLabelPadding + "px";
                             portLabel.style.paddingTop = visualLabelLineHeight + "px";
                             portLabel.style.width = visualLabelLineHeight + "px";
                         } else if (side === 'top') {
                             portLabel.style.writingMode = 'sideways-lr';
-                            portLabel.style.lineHeight = visualLabelLineHeight + 'px';
                             portLabel.style.left = (x - visualLabelPadding) + "px";
                             portLabel.style.bottom = (this.visualHeight - visualPortSize - visualLabelPadding) + "px";
                             portLabel.style.paddingBottom = visualLabelLineHeight + "px";
                             portLabel.style.paddingTop = visualLabelPadding + "px";
                             portLabel.style.width = visualLabelLineHeight + "px";
                         } else if (side === 'left') {
-                            portLabel.style.lineHeight = visualLabelLineHeight + 'px';
                             portLabel.style.right = (this.visualWidth - visualPortSize - visualLabelPadding) + "px";
                             portLabel.style.top = (y - visualLabelPadding) + "px";
                             portLabel.style.paddingLeft = visualLabelPadding + "px";
                             portLabel.style.paddingRight = visualLabelLineHeight + "px";
                             portLabel.style.height = visualLabelLineHeight + "px";
                         } else if (side === 'right') {
-                            portLabel.style.lineHeight = visualLabelLineHeight + 'px';
                             portLabel.style.left = (x - visualLabelPadding) + "px";
                             portLabel.style.top = (y - visualLabelPadding) + "px";
                             portLabel.style.paddingLeft = visualLabelLineHeight + "px";
@@ -118,6 +114,12 @@ class Component extends GridElement {
                         }
                     } else {
                         portLabel.style.display = 'none';
+                        if (this.grid.zoom >= 1.0) {
+                            port.style.lineHeight = visualPortSize + 'px';
+                            port.innerHTML = label.slice(0, 1);
+                        } else {
+                            port.innerHTML = '';
+                        }
                     }
                 }
                 x += stepX;
