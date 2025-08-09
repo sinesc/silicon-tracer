@@ -27,15 +27,15 @@ setInterval(function() {
 */
 
 
-let grid = new Grid(document.querySelector('#grid'));
+let grid2 = new Grid(document.querySelector('#grid'));
 
-let component1 = new Component(grid, 'Gate', 50, 50, { left: [ "a", "b" ], right: [ "q" ], top: [ "x", "y" ], bottom: [ "g" ] });
-let component2 = new Component(grid, 'Bait', 100, 100, { left: [ "a" ], right: [ "q", "r", "s" ], top: [ "x" ], bottom: [ "g", "h", "i", "j" ] });
-let component3 = new Component(grid, 'Bleeep', 30, 200, { left: [ "a", "b", "c", "d", "e" ], right: [ "q", "r", "s" ] });
-let component4 = new Component(grid, 'Blubb', 200, 450, { top: [ "a", "b", "c", "d", "e" ], bottom: [ "q", "r", "s" ] });
-let component5 = new Component(grid, 'Gate', 500, 500, { left: [ "a", null, "b" ], right: [ null, "q", null ] });
+let component1 = new Component(grid2, 'Gate', 50, 50, { left: [ "a", "b" ], right: [ "q" ], top: [ "x", "y" ], bottom: [ "g" ] });
+let component2 = new Component(grid2, 'Bait', 100, 100, { left: [ "a" ], right: [ "q", "r", "s" ], top: [ "x" ], bottom: [ "g", "h", "i", "j" ] });
+let component3 = new Component(grid2, 'Bleeep', 30, 200, { left: [ "a", "b", "c", "d", "e" ], right: [ "q", "r", "s" ] });
+let component4 = new Component(grid2, 'Blubb', 200, 450, { top: [ "a", "b", "c", "d", "e" ], bottom: [ "q", "r", "s" ] });
+let component5 = new Component(grid2, 'Gate', 500, 500, { left: [ "a", null, "b" ], right: [ null, "q", null ] });
 
 
-let connection1 = new Connection(grid, 300, 300, 600, 600);
-let connection2 = new Connection(grid, 200, 200, 200, 600);
-let connection3 = new Connection(grid, 700, 400, 900, 400);
+let connection1 = new Connection(grid2, 300, 300, 600, 600);
+let connection2 = new Connection(grid2, 200, 200, 200, 600);
+let connection3 = new Connection(grid2, 700, 400, 900, 400);

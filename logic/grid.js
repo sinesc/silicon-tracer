@@ -11,6 +11,8 @@ class Grid {
 
     #element;
     #status;
+    #tooltip;
+    #tooltipTimer
     #components = [];
     #statusMessage = null;
     #statusTimer = null;
@@ -26,8 +28,13 @@ class Grid {
         this.#status = document.createElement('div');
         this.#status.classList.add('grid-status');
         this.#element.appendChild(this.#status);
-        document.addEventListener('mousemove', this.#handleMouse.bind(this));
 
+        this.#tooltip = document.createElement('div');
+        this.#tooltip.classList.add('grid-tooltip');
+        this.#tooltip.style.display = 'none';
+        this.#element.appendChild(this.#tooltip);
+
+        document.addEventListener('mousemove', this.#handleMouse.bind(this));
         parent.appendChild(this.#element);
         this.render();
     }
@@ -99,6 +106,36 @@ class Grid {
         }
     }
 
+    // Sets a tooltip message. Pass null to unset and revert back to default tooltip.
+    showTooltip(x, y, orientation, message) {
+        if (this.#tooltipTimer) {
+            clearTimeout(this.#tooltipTimer);
+        }
+        let style = this.#tooltip.style;
+        style.display = 'block';
+        style.left = x + 'px';
+        style.top = y + 'px';
+
+        if (orientation === 'top' || orientation === 'bottom') {
+            style.writingMode = 'vertical-rl';
+        } else {
+            style.writingMode = 'horizontal-tb';
+        }
+
+        this.#tooltip.innerHTML = message;
+    }
+
+    hideTooltip(delayed = true) {
+        if (this.#tooltipTimer) {
+            clearTimeout(this.#tooltipTimer);
+        }
+        if (delayed) {
+            this.#tooltipTimer = setTimeout(() => this.#tooltip.style.display = 'none', this.statusDelay);
+        } else {
+            this.#tooltip.style.display = 'none';
+        }
+    }
+
     // Sets a status message. Pass null to unset and revert back to default status.
     setStatus(message) {
         if (this.#statusTimer) {
@@ -113,9 +150,9 @@ class Grid {
             clearTimeout(this.#statusTimer);
         }
         if (delayed) {
-            this.#statusTimer = setTimeout(function() { grid.setStatus(); }, this.statusDelay);
+            this.#statusTimer = setTimeout(() => this.setStatus(), this.statusDelay);
         } else {
-            grid.setStatus();
+            this.setStatus();
         }
     }
 
@@ -153,18 +190,15 @@ class Grid {
     #handleZoom(e) {
         // compute mouse on-grid coordinates
         let [ mouseGridX, mouseGridY ] = this.screenToGrid(e.clientX, e.clientY);
-
         // pick next zoom level
         this.zoomLevel = this.zoomLevel + (e.deltaY > 0 ? -1 : 1);
-
         // compute new mouse on-grid coordinates after the zoom
         let [ mouseGridXAfter, mouseGridYAfter ] = this.screenToGrid(e.clientX, e.clientY);
-
         // move grid to compensate so that the point we zoomed into is still at the cursor
         this.offsetX -= mouseGridX - mouseGridXAfter;
         this.offsetY -= mouseGridY - mouseGridYAfter;
-
         this.render();
+        this.#updateStatus();
     }
 
     #handleDragStart(e) {
