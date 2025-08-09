@@ -23,6 +23,8 @@ class Component extends GridElement {
         this.inner = document.createElement('div');
         this.inner.innerHTML = label;
         this.inner.classList.add('component-inner');
+        this.inner.onmouseenter = () => grid.setStatus('Component <b>' + label + '</b>. Drag to move.');
+        this.inner.onmouseleave = () => grid.clearStatus();
         this.registerDrag(this.inner);
 
         this.element.appendChild(this.inner);
@@ -37,12 +39,8 @@ class Component extends GridElement {
                 if (item[0] !== null) {
                     let port = document.createElement('div');
                     port.classList.add('component-port');
-                    port.onmouseenter = () => {
-                        grid.setStatus('Port <b>' + item[0] + '</b> of <b>' + label + '</b>. Drag to connect.');
-                    }
-                    port.onmouseleave = function() {
-                        grid.clearStatus();
-                    }
+                    port.onmouseenter = () => grid.setStatus('Port <b>' + item[0] + '</b> of <b>' + label + '</b>. Drag to connect.');
+                    port.onmouseleave = () => grid.clearStatus();
                     this.element.appendChild(port);
                     let portLabel = document.createElement('div');
                     portLabel.classList.add('component-port-label');
