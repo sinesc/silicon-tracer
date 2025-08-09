@@ -5,7 +5,7 @@ class Grid {
     zoomLevels = [ 0.5, 0.65, 0.85, 1.0, 1.25, 1.50, 1.75, 2.0, 2.5, 3.0, 4.0, 5.0 ];
     statusDelay = 500;
 
-    zoom = 1.0;
+    zoom = 1.25;
     offsetX = 0;
     offsetY = 0;
 

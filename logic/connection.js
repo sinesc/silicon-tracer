@@ -20,6 +20,17 @@ class Connection extends GridElement {
         this.setPosition(x, y, done);
     }
 
+    setEndpoints(x1, y1, x2, y2, aligned) {
+        if (aligned) {
+            [ x1, y1 ] = this.grid.align(x1, y1);
+            [ x2, y2 ] = this.grid.align(x2, y2);
+        }
+        this.x = x1;
+        this.y = y1;
+        this.width = x2 - x1;
+        this.height = y2 - y1;
+    };
+
     render() {
 
         let thickness = this.thickness * this.grid.zoom;
