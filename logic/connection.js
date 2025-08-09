@@ -7,8 +7,8 @@ class Connection extends GridElement {
 
     constructor(grid, x1, y1, x2, y2) {
         super(grid);
-        [ x1, y1 ] = grid.align(x1, y1);
-        [ x2, y2 ] = grid.align(x2, y2);
+        [ x1, y1 ] = this.gridAlign(x1, y1);
+        [ x2, y2 ] = this.gridAlign(x2, y2);
         this.x = x1;
         this.y = y1;
         this.width = x2 - x1;
@@ -22,8 +22,8 @@ class Connection extends GridElement {
 
     setEndpoints(x1, y1, x2, y2, aligned) {
         if (aligned) {
-            [ x1, y1 ] = this.grid.align(x1, y1);
-            [ x2, y2 ] = this.grid.align(x2, y2);
+            [ x1, y1 ] = this.gridAlign(x1, y1);
+            [ x2, y2 ] = this.gridAlign(x2, y2);
         }
         this.x = x1;
         this.y = y1;

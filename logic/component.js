@@ -6,13 +6,14 @@ class Component extends GridElement {
 
     element;
     inner;
+    dropPreview;
     ports;
     dragConnection = null;
 
     constructor(grid, name, x, y, ports) {
 
         super(grid);
-        [ this.x, this.y ] = grid.align(x, y);
+        [ this.x, this.y ] = this.gridAlign(x, y);
 
         // container
         this.element = document.createElement('div');
@@ -79,6 +80,22 @@ class Component extends GridElement {
         if (what.type === 'component') {
             // move component
             this.setPosition(x, y, this.dragAligned || done);
+            if (!done) {
+                if (!this.dropPreview) {
+                    this.dropPreview = document.createElement('div');
+                    this.dropPreview.classList.add('component-drop-preview');
+                    this.grid.addVisual(this.dropPreview);
+                }
+                let [ alignedX, alignedY ] = this.gridAlign(this.x, this.y);
+                let [ visualX, visualY ] = this.gridToVisual(alignedX, alignedY);
+                this.dropPreview.style.left = visualX + "px";
+                this.dropPreview.style.top = visualY + "px";
+                this.dropPreview.style.width = this.visualWidth + "px";
+                this.dropPreview.style.height = this.visualHeight + "px";
+            } else {
+                this.grid.removeVisual(this.dropPreview);
+                this.dropPreview = null;
+            }
         } else if (what.type === 'port') {
             // create connection from port
             let port = this.portByName(what.name);

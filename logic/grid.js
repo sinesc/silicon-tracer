@@ -47,14 +47,6 @@ class Grid {
         element.remove();
     }
 
-    // Utility function to align given x/y to grid coordinates and return them.
-    align(x, y) {
-        return [
-            Math.ceil(x / this.spacing) * this.spacing - 0.5 * this.spacing,
-            Math.ceil(y / this.spacing) * this.spacing - 0.5 * this.spacing
-        ];
-    }
-
     // Returns whether the given screen coordinates are within the bounds of the grid.
     screenInBounds(x, y) {
         let ex1 = this.#element.offsetLeft;
@@ -62,7 +54,7 @@ class Grid {
         return x >= ex1 && y >= ey1 && x <= ex1 + this.#element.offsetWidth && y <= ey1 + this.#element.offsetHeight;
     }
 
-    // Convers screen coordinates to in-simulation/on-grid coordinates.
+    // Converts screen coordinates to in-simulation/on-grid coordinates.
     screenToGrid(x, y) {
         // mouse pixel coordinates within grid view element
         let mouseX = x - this.#element.offsetLeft;
@@ -231,9 +223,25 @@ class GridElement {
         return this.height * this.grid.zoom;
     }
 
+    // Utility function to align given x/y to grid coordinates and return them.
+    gridAlign(x, y) {
+        return [
+            Math.ceil(x / this.grid.spacing) * this.grid.spacing - 0.5 * this.grid.spacing,
+            Math.ceil(y / this.grid.spacing) * this.grid.spacing - 0.5 * this.grid.spacing
+        ];
+    }
+
+    // Converts in-simulation/on-grid to visual coordinates (for rendering).
+    gridToVisual(x, y) {
+        return [
+            (x + this.grid.offsetX) * this.grid.zoom,
+            (y + this.grid.offsetY) * this.grid.zoom
+        ];
+    }
+
     setPosition(x, y, aligned) {
         if (aligned) {
-            [ x, y ] = this.grid.align(x, y);
+            [ x, y ] = this.gridAlign(x, y);
         }
         this.x = x;
         this.y = y;
