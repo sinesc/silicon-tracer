@@ -43,7 +43,7 @@ class Component extends GridElement {
             }
         }
 
-        grid.element.appendChild(this.element);
+        grid.addVisual(this.element);
         this.render();
     }
 

@@ -32,9 +32,9 @@ class Connection extends GridElement {
             this.elementH = document.createElement('div');
             this.elementH.classList.add('connection');
             this.registerDrag(this.elementH);
-            grid.element.appendChild(this.elementH);
+            grid.addVisual(this.elementH);
         } else if (this.width === 0 && this.elementH) {
-            this.elementH.remove();
+            grid.removeVisual(this.elementH);
             this.elementH = null;
         }
 
@@ -42,9 +42,9 @@ class Connection extends GridElement {
             this.elementV = document.createElement('div');
             this.elementV.classList.add('connection');
             this.registerDrag(this.elementV);
-            grid.element.appendChild(this.elementV);
+            grid.addVisual(this.elementV);
         } else if (this.height === 0 && this.elementV) {
-            this.elementV.remove();
+            grid.removeVisual(this.elementV);
             this.elementV = null;
         }
 

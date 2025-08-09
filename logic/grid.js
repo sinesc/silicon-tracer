@@ -6,66 +6,42 @@ class Grid {
     zoom = 1.0;
     offsetX = 0;
     offsetY = 0;
-    element;
-    tooltip;
 
-    components = [];
+    #element;
+    #tooltip;
+    #components = [];
 
     constructor(parent) {
-        this.element = document.createElement('div');
-        this.element.classList.add('grid');
-        this.element.onmousedown = this.dragStart.bind(this);
-        this.element.onwheel = this.wheelZoom.bind(this);
+        this.#element = document.createElement('div');
+        this.#element.classList.add('grid');
+        this.#element.onmousedown = this.#handleDragStart.bind(this);
+        this.#element.onwheel = this.#handleZoom.bind(this);
 
-        this.tooltip = document.createElement('div');
-        this.tooltip.classList.add('tooltip');
-        this.element.appendChild(this.tooltip);
-        document.addEventListener('mousemove', this.coords.bind(this));
+        this.#tooltip = document.createElement('div');
+        this.#tooltip.classList.add('tooltip');
+        this.#element.appendChild(this.#tooltip);
+        document.addEventListener('mousemove', this.updateTooltip.bind(this));
 
-        parent.appendChild(this.element);
+        parent.appendChild(this.#element);
         this.render();
     }
 
-    coords(e) {
-        if (this.screenInBounds(e.clientX, e.clientY)) {
-            let [ x, y ] = this.screenToGrid(e.clientX, e.clientY);
-            this.tooltip.innerHTML = 'x: ' + Math.round(x) + ' y: ' + Math.round(y) + ' zoom: ' + this.zoom + '</b>';
-        } else {
-            this.tooltip.innerHTML = '<i>LMB</i>: Drag component, <i>MMB</i>: Drag grid, <i>MW</i>: Zoom grid';
-        }
-
+    // Registers a componenet with the grids renderloop. Automatically done by GridElement constructor.
+    registerComponent(component) {
+        this.#components.push(new WeakRef(component));
     }
 
-    register(component) {
-        this.components.push(new WeakRef(component));
+    // Adds a component visual element to the grid.
+    addVisual(element) {
+        this.#element.appendChild(element);
     }
 
-    render() {
-        let spacing = this.spacing * this.zoom;
-        let offsetX = this.offsetX * this.zoom;
-        let offsetY = this.offsetY * this.zoom;
-
-        this.element.style.backgroundSize = spacing + 'px ' + spacing + 'px';
-        this.element.style.backgroundPositionX = (offsetX % spacing) + 'px';
-        this.element.style.backgroundPositionY = (offsetY % spacing) + 'px';
-
-        for (let i = 0; i < this.components.length; ++i) {
-            let component = this.components[i].deref();
-            if (component) {
-                component.render();
-            } else {
-                // remove from array by replacing with last entry. afterwards next iteration has to repeat this index.
-                if (i < this.components.length - 1) {
-                    this.components[i] = this.components.pop();
-                    --i;
-                } else {
-                    this.components.pop()
-                }
-            }
-        }
+    // Removes a component visual element from the grid.
+    removeVisual(element) {
+        element.remove();
     }
 
-    // Align x/y to grid and return.
+    // Utility function to align given x/y to grid coordinates and return them.
     align(x, y) {
         return [
             Math.ceil(x / this.spacing) * this.spacing - 0.5 * this.spacing,
@@ -73,36 +49,78 @@ class Grid {
         ];
     }
 
-    get zoomLevel() {
-        return this.zoomLevels.findIndex((z) => z === this.zoom);
-    }
-
-    set zoomLevel(level) {
-        this.zoom = this.zoomLevels[level];
-    }
-
+    // Returns whether the given screen coordinates are within the bounds of the grid.
     screenInBounds(x, y) {
-        let ex1 = this.element.offsetLeft;
-        let ey1 = this.element.offsetTop;
-        return x >= ex1 && y >= ey1 && x <= ex1 + this.element.offsetWidth && y <= ey1 + this.element.offsetHeight;
+        let ex1 = this.#element.offsetLeft;
+        let ey1 = this.#element.offsetTop;
+        return x >= ex1 && y >= ey1 && x <= ex1 + this.#element.offsetWidth && y <= ey1 + this.#element.offsetHeight;
     }
 
+    // Convers screen coordinates to in-simulation/on-grid coordinates.
     screenToGrid(x, y) {
         // mouse pixel coordinates within grid view element
-        let mouseX = x - this.element.offsetLeft;
-        let mouseY = y - this.element.offsetTop;
+        let mouseX = x - this.#element.offsetLeft;
+        let mouseY = y - this.#element.offsetTop;
         // compute mouse on-grid coordinates
         let mouseGridX = -this.offsetX + mouseX / this.zoom;
         let mouseGridY = -this.offsetY + mouseY / this.zoom;
         return [ mouseGridX, mouseGridY ];
     }
 
-    wheelZoom(e) {
+    // Renders the grid and its components.
+    render() {
+        let spacing = this.spacing * this.zoom;
+        let offsetX = this.offsetX * this.zoom;
+        let offsetY = this.offsetY * this.zoom;
+
+        this.#element.style.backgroundSize = spacing + 'px ' + spacing + 'px';
+        this.#element.style.backgroundPositionX = (offsetX % spacing) + 'px';
+        this.#element.style.backgroundPositionY = (offsetY % spacing) + 'px';
+
+        for (let i = 0; i < this.#components.length; ++i) {
+            let component = this.#components[i].deref();
+            if (component) {
+                component.render();
+            } else {
+                // remove from array by replacing with last entry. afterwards next iteration has to repeat this index.
+                if (i < this.#components.length - 1) {
+                    this.#components[i] = this.#components.pop();
+                    --i;
+                } else {
+                    this.#components.pop()
+                }
+            }
+        }
+    }
+
+    // Updates the grids bottom tooltip.
+    updateTooltip(e) {
+        if (this.screenInBounds(e.clientX, e.clientY)) {
+            let [ x, y ] = this.screenToGrid(e.clientX, e.clientY);
+            this.#tooltip.innerHTML = 'x: ' + Math.round(x) + ' y: ' + Math.round(y) + ' zoom: ' + this.zoom + '</b>';
+        } else {
+            this.#tooltip.innerHTML = '<i>LMB</i>: Drag component, <i>MMB</i>: Drag grid, <i>MW</i>: Zoom grid';
+        }
+
+    }
+
+    // Gets the current zoom level index.
+    get zoomLevel() {
+        return this.zoomLevels.findIndex((z) => z === this.zoom) ?? 0;
+    }
+
+    // Sets a new zoom level index.
+    set zoomLevel(level) {
+        level = level < 0 ? 0 : (level >= this.zoomLevels.length ? this.zoomLevels.length - 1 : level);
+        this.zoom = this.zoomLevels[level];
+    }
+
+    #handleZoom(e) {
         // compute mouse on-grid coordinates
         let [ mouseGridX, mouseGridY ] = this.screenToGrid(e.clientX, e.clientY);
 
         // pick next zoom level
-        this.zoomLevel = Math.max(0, Math.min(this.zoomLevels.length - 1, this.zoomLevel + (e.deltaY > 0 ? -1 : 1)));
+        this.zoomLevel = this.zoomLevel + (e.deltaY > 0 ? -1 : 1);
 
         // compute new mouse on-grid coordinates after the zoom
         let [ mouseGridXAfter, mouseGridYAfter ] = this.screenToGrid(e.clientX, e.clientY);
@@ -114,17 +132,17 @@ class Grid {
         this.render();
     }
 
-    dragStart(e) {
+    #handleDragStart(e) {
         e.preventDefault();
         e.stopPropagation();
         if (e.which !== 2) {
             return;
         }
-        document.onmousemove = this.dragMove.bind(this, e.clientX, e.clientY, this.offsetX, this.offsetY);
-        document.onmouseup = this.dragStop.bind(this);
+        document.onmousemove = this.#handleDragMove.bind(this, e.clientX, e.clientY, this.offsetX, this.offsetY);
+        document.onmouseup = this.#handleDragStop.bind(this);
     }
 
-    dragMove(dragStartX, dragStartY, originalX, originalY, e) {
+    #handleDragMove(dragStartX, dragStartY, originalX, originalY, e) {
         e.preventDefault();
         e.stopPropagation();
         let deltaX = e.clientX - dragStartX;
@@ -134,7 +152,7 @@ class Grid {
         this.render();
     }
 
-    dragStop(e) {
+    #handleDragStop(e) {
         document.onmouseup = null;
         document.onmousemove = null;
     }
@@ -151,7 +169,7 @@ class GridElement {
 
     constructor(grid) {
         this.grid = grid;
-        grid.register(this);
+        grid.registerComponent(this);
     }
 
     render() { }
@@ -183,29 +201,29 @@ class GridElement {
     }
 
     registerDrag(element, ...args) {
-        element.onmousedown = this.dragStart.bind(this, args);
+        element.onmousedown = this.#handleDragStart.bind(this, args);
     }
 
-    dragStart(args, e) {
+    #handleDragStart(args, e) {
         e.preventDefault();
-        if (e.which !== 1) {
+        if (e.which !== 1) { // don't stop propagation for other buttons so we can drag the grid while hovering over a connection/component
             return;
         }
         e.stopPropagation();
         let dragOffsetX = e.clientX / this.grid.zoom - this.x;
         let dragOffsetY = e.clientY / this.grid.zoom - this.y;
-        document.onmousemove = this.dragMove.bind(this, args, dragOffsetX, dragOffsetY);
-        document.onmouseup = this.dragStop.bind(this, args, dragOffsetX, dragOffsetY);
+        document.onmousemove = this.#handleDragMove.bind(this, args, dragOffsetX, dragOffsetY);
+        document.onmouseup = this.#handleDragStop.bind(this, args, dragOffsetX, dragOffsetY);
     }
 
-    dragMove(args, dragOffsetX, dragOffsetY, e) {
+    #handleDragMove(args, dragOffsetX, dragOffsetY, e) {
         e.preventDefault();
         e.stopPropagation();
         this.onDrag(e.clientX / this.grid.zoom - dragOffsetX, e.clientY / this.grid.zoom - dragOffsetY, false, ...args);
         this.render();
     }
 
-    dragStop(args, dragOffsetX, dragOffsetY, e) {
+    #handleDragStop(args, dragOffsetX, dragOffsetY, e) {
         document.onmouseup = null;
         document.onmousemove = null;
         this.onDrag(e.clientX / this.grid.zoom - dragOffsetX, e.clientY / this.grid.zoom - dragOffsetY, true, ...args);
