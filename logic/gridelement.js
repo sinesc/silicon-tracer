@@ -66,23 +66,25 @@ class GridElement {
             return;
         }
         e.stopPropagation();
-        let dragOffsetX = e.clientX / this.grid.zoom - this.x;
-        let dragOffsetY = e.clientY / this.grid.zoom - this.y;
-        document.onmousemove = this.#handleDragMove.bind(this, args, dragOffsetX, dragOffsetY);
-        document.onmouseup = this.#handleDragStop.bind(this, args, dragOffsetX, dragOffsetY);
+        let [ dragStartX, dragStartY ] = this.grid.screenToGrid(e.clientX, e.clientY);
+        document.onmousemove = this.#handleDragMove.bind(this, args);
+        document.onmouseup = this.#handleDragStop.bind(this, args);
+        this.onDrag(dragStartX, dragStartY, 'start', ...args);
     }
 
-    #handleDragMove(args, dragOffsetX, dragOffsetY, e) {
+    #handleDragMove(args, e) {
         e.preventDefault();
         e.stopPropagation();
-        this.onDrag(e.clientX / this.grid.zoom - dragOffsetX, e.clientY / this.grid.zoom - dragOffsetY, false, ...args);
+        let [ dragCurrentX, dragCurrentY ] = this.grid.screenToGrid(e.clientX, e.clientY);
+        this.onDrag(dragCurrentX, dragCurrentY, 'drag', ...args);
         this.render();
     }
 
-    #handleDragStop(args, dragOffsetX, dragOffsetY, e) {
+    #handleDragStop(args, e) {
         document.onmouseup = null;
         document.onmousemove = null;
-        this.onDrag(e.clientX / this.grid.zoom - dragOffsetX, e.clientY / this.grid.zoom - dragOffsetY, true, ...args);
+        let [ dragCurrentX, dragCurrentY ] = this.grid.screenToGrid(e.clientX, e.clientY);
+        this.onDrag(dragCurrentX, dragCurrentY, 'stop', ...args);
         this.render();
     }
 }

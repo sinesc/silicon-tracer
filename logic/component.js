@@ -1,6 +1,5 @@
 class Component extends GridElement {
 
-    dragAligned = false;
     portSize = 10;
     innerMargin = 5;
 
@@ -24,7 +23,7 @@ class Component extends GridElement {
         this.inner.innerHTML = name;
         this.inner.classList.add('component-inner');
         grid.setHoverStatus(this.inner, 'Component <b>' + name + '</b>. <i>LMB</i>: Drag to move.');
-        this.registerDrag(this.inner, { type: "component" });
+        this.registerDrag(this.inner, { type: "component", grabOffsetX: null, grabOffsetY: null });
         this.element.appendChild(this.inner);
 
         // compute dimensions from ports
@@ -79,9 +78,16 @@ class Component extends GridElement {
     }
 
     // Draw drop preview while moving component.
-    onMove(x, y, done) {
-        this.setPosition(x, y, this.dragAligned || done);
-        if (!done) {
+    onMove(x, y, status, what) {
+        // get offset between component top/left and mouse grab point
+        if (status === 'start') {
+            what.grabOffsetX = x - this.x;
+            what.grabOffsetY = y - this.y;
+        }
+        // set new position, align it on stop
+        this.setPosition(x - what.grabOffsetX, y - what.grabOffsetY, status === 'stop');
+        // draw grid-aligned drop-preview outline
+        if (status !== 'stop') {
             if (!this.dropPreview) {
                 this.dropPreview = document.createElement('div');
                 this.dropPreview.classList.add('component-drop-preview');
@@ -100,14 +106,14 @@ class Component extends GridElement {
     }
 
     // Create connection from port.
-    onConnect(x, y, name, done) {
-        let port = this.portByName(name);
+    onConnect(x, y, status, what) {
+        let port = this.portByName(what.name);
         if (!this.dragConnection) {
             let ordering = port.side === 'top' || port.side === 'bottom' ? 'vh' : 'hv';
-            this.dragConnection = new Connection(this.grid, this.x + port.x, this.y + port.y, x + port.x, y + port.y, ordering); // TODO: unclear why I needed to add port.x/y to the target coordinate, it should just be the mouse coordinate x/y //FIXME: got it: it's the dragOffset from GridElement::handleDragMove to keep the component fixed relative to the mouse. it should be computed only for the component case
+            this.dragConnection = new Connection(this.grid, this.x + port.x, this.y + port.y, x, y, ordering);
             this.dragConnection.render();
-        } else if (!done) {
-            this.dragConnection.setEndpoints(this.x + port.x, this.y + port.y, x + port.x, y + port.y, true); // TODO: unclear why I needed to add port.x/y to the target coordinate, it should just be the mouse coordinate x/y
+        } else if (status !== 'stop') {
+            this.dragConnection.setEndpoints(this.x + port.x, this.y + port.y, x, y, true);
             this.dragConnection.render();
         } else {
             this.dragConnection = null;
@@ -116,11 +122,11 @@ class Component extends GridElement {
     }
 
     // Called while a registered visual is being dragged.
-    onDrag(x, y, done, what) {
+    onDrag(currentX, currentY, status, what) {
         if (what.type === 'component') {
-            this.onMove(x, y, done);
+            this.onMove(currentX, currentY, status, what);
         } else if (what.type === 'port') {
-            this.onConnect(x, y, what.name, done);
+            this.onConnect(currentX, currentY, status, what);
         }
     }
 
