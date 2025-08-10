@@ -24,6 +24,10 @@ h1 {
     overflow: hidden;
     width: 100%;
     height: 100%;
+    background-image: radial-gradient(circle, #888 1px, #000 1px);
+}
+.grid.grid-zoom-below-100 {
+    background-image: radial-gradient(circle, #555 1px, #000 1px);
 }
 .grid-status {
     z-index: 20;
@@ -102,6 +106,13 @@ h1 {
     border: 1px solid #222;
     box-sizing: border-box;
 }
+.grid-zoom-below-100 .component-port {
+    border-radius: 0;
+}
+.grid-zoom-below-85 .component-port span {
+    display: none;
+}
+
 .component-port:hover {
     background-color: #aaa;
     transition: background-color 0.15s, color 0.15s;
@@ -119,6 +130,9 @@ h1 {
     color: #ccc;
     opacity: 0;
     transition: opacity 0.15s;
+}
+.grid-zoom-below-125 .component-port-label {
+    display: none;
 }
 .component:hover .component-port-label {
     opacity: 1;

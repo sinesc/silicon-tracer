@@ -144,9 +144,8 @@ class Component extends GridElement {
                     port.style.top = y + "px";
                     port.style.width = visualPortSize + "px";
                     port.style.height = visualPortSize + "px";
-                    if (this.grid.zoom >= 1.25 && name.length > 1) {
+                    if (/*this.grid.zoom >= 1.25 &&*/ name.length > 1) {
                         port.innerHTML = '';
-                        portLabel.style.display = 'block';
                         portLabel.innerHTML = name;
                         portLabel.style.lineHeight = visualLabelLineHeight + 'px';
                         if (side === 'bottom') {
@@ -176,15 +175,11 @@ class Component extends GridElement {
                             portLabel.style.paddingRight = visualLabelPadding + "px";
                             portLabel.style.height = visualLabelLineHeight + "px";
                         }
-                    } else {
-                        portLabel.style.display = 'none';
                     }
-                    if (this.grid.zoom >= 1.25) {
+                    //if (this.grid.zoom >= 1.25) {
                         port.style.lineHeight = visualPortSize + 'px';
-                        port.innerHTML = name.slice(0, 1);
-                    } else {
-                        port.innerHTML = '';
-                    }
+                        port.innerHTML = '<span>' + name.slice(0, 1) + '</span>';
+                    //}
                 }
                 x += stepX;
                 y += stepY;
