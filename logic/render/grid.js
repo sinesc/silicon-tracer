@@ -3,7 +3,7 @@ class Grid {
     // would be static if they weren't so inconvenient to access
     debugCoords = false;
     spacing = 20;
-    zoomLevels = [ 0.5, 0.65, 0.85, 1.0, 1.25, 1.50, 1.75, 2.0, 2.5, 3.0, 4.0, 5.0 ];
+    zoomLevels = [ 0.5, 0.65, 0.85, 1.0, 1.25, 1.50, 1.75, 2.0, 2.5, 3.0 ];
     statusDelay = 500;
 
     zoom = 1.25;

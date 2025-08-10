@@ -9,9 +9,13 @@ class Component extends GridElement {
     ports;
     dragConnection = null;
 
-    constructor(grid, name, x, y, ports) {
+    circuit;
+
+    constructor(grid, name, x, y, circuit) {
 
         super(grid);
+        this.circuit = circuit;
+
         [ this.x, this.y ] = this.gridAlign(x, y);
 
         // container
@@ -27,7 +31,7 @@ class Component extends GridElement {
         this.element.appendChild(this.inner);
 
         // compute dimensions from ports
-        this.ports = { left: [], right: [], top: [], bottom: [], ...ports }.map((side, ports) => ports.map((name) => ({ name: name, side: side, port: null, portLabel: null, x: null, y: null })));
+        this.ports = { left: [], right: [], top: [], bottom: [], ...circuit.ports }.map((side, ports) => ports.map((name) => ({ name: name, side: side, port: null, portLabel: null, x: null, y: null })));
         this.width = Math.max(grid.spacing * 2, (this.ports.top.length + 1) * grid.spacing, (this.ports.bottom.length + 1) * grid.spacing);
         this.height = Math.max(grid.spacing * 2, (this.ports.left.length + 1) * grid.spacing, (this.ports.right.length + 1) * grid.spacing);
 

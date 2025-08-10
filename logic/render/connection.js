@@ -6,9 +6,13 @@ class Connection extends GridElement {
     elementV;
     ordering;
 
-    constructor(grid, x1, y1, x2, y2, ordering) {
+    net;
+
+    constructor(grid, x1, y1, x2, y2, ordering, net) {
 
         super(grid);
+        this.net = net ?? new Net();
+
         [ x1, y1 ] = this.gridAlign(x1, y1);
         [ x2, y2 ] = this.gridAlign(x2, y2);
         this.x = x1;
