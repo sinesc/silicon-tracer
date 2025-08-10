@@ -1,6 +1,7 @@
 class Grid {
 
     // would be static if they weren't so inconvenient to access
+    debugCoords = false;
     spacing = 15;
     zoomLevels = [ 0.5, 0.65, 0.85, 1.0, 1.25, 1.50, 1.75, 2.0, 2.5, 3.0, 4.0, 5.0 ];
     statusDelay = 500;
@@ -16,6 +17,7 @@ class Grid {
     #statusTimer = null;
     #mouseX = 0;
     #mouseY = 0;
+    #hoverStatusListener;
 
     constructor(parent) {
         this.#element = document.createElement('div');
@@ -27,8 +29,11 @@ class Grid {
         this.#status.classList.add('grid-status');
         this.#element.appendChild(this.#status);
 
+        this.#hoverStatusListener = new WeakMap();
+
         document.addEventListener('mousemove', this.#handleMouse.bind(this));
         parent.appendChild(this.#element);
+        this.clearStatus();
         this.render();
     }
 
@@ -45,6 +50,29 @@ class Grid {
     // Removes a component visual element from the grid.
     removeVisual(element) {
         element.remove();
+    }
+
+    // Sets a status message to be displayed while mouse-hovering the visual element.
+    // TODO: move to GridElement?
+    setHoverStatus(element, message) {
+        let existingHandler = this.#hoverStatusListener.get(element);
+        if (existingHandler) {
+            element.removeEventListener('mouseenter', existingHandler);
+            element.removeEventListener('mouseleave', existingHandler);
+        }
+        if (message) {
+            let grid = this;
+            let handler = function(e) {
+                if (e.type === 'mouseenter') {
+                    grid.setStatus(message);
+                } else {
+                    grid.clearStatus();
+                }
+            }
+            this.#hoverStatusListener.set(element, handler);
+            element.addEventListener('mouseenter', handler);
+            element.addEventListener('mouseleave', handler);
+        }
     }
 
     // Returns whether the given screen coordinates are within the bounds of the grid.
@@ -104,18 +132,27 @@ class Grid {
             clearTimeout(this.#statusTimer);
         }
         this.#statusMessage = String.isString(message) ? message : null;
-        this.#updateStatus();
+        this.#status.innerHTML = this.#statusMessage ?? '';
+        if (this.#statusMessage) {
+            this.#status.classList.remove('grid-status-faded');
+        } else if (!this.#statusMessage) {
+            // set default help text when no status message has been set for a while
+            this.#statusTimer = setTimeout(() => {
+                if (!this.#statusMessage) {
+                    this.#status.classList.remove('grid-status-faded');
+                    this.#status.innerHTML = 'Grid. <i>LMB</i>: Drag component, <i>MMB</i>: Drag grid, <i>MW</i>: Zoom grid';
+                }
+            }, 1000);
+        }
     }
 
-    clearStatus(delayed = true) {
+    // Clears the current status message.
+    clearStatus() {
         if (this.#statusTimer) {
             clearTimeout(this.#statusTimer);
         }
-        if (delayed) {
-            this.#statusTimer = setTimeout(() => this.setStatus(), this.statusDelay);
-        } else {
-            this.setStatus();
-        }
+        this.#status.classList.add('grid-status-faded');
+        this.#statusTimer = setTimeout(() => this.setStatus(), this.statusDelay);
     }
 
     // Gets the current zoom level index.
@@ -129,23 +166,14 @@ class Grid {
         this.zoom = this.zoomLevels[level];
     }
 
-    // Updates the grids bottom status.
-    #updateStatus() {
-        if (this.#statusMessage) {
-            this.#status.innerHTML = this.#statusMessage;
-        } else if (this.screenInBounds(this.#mouseX, this.#mouseY)) {
-            let [ x, y ] = this.screenToGrid(this.#mouseX, this.#mouseY);
-            this.#status.innerHTML = 'x: ' + Math.round(x) + ' y: ' + Math.round(y) + ' zoom: ' + this.zoom + '</b>';
-        } else {
-            this.#status.innerHTML = '<i>LMB</i>: Drag component, <i>MMB</i>: Drag grid, <i>MW</i>: Zoom grid';
-        }
-    }
-
     // Called on mouse move, updates mouse coordinates and tooltip.
     #handleMouse(e) {
         this.#mouseX = e.clientX;
         this.#mouseY = e.clientY;
-        this.#updateStatus();
+        if (this.debugCoords && this.#statusMessage === null && this.screenInBounds(this.#mouseX, this.#mouseY)) {
+            let [ x, y ] = this.screenToGrid(this.#mouseX, this.#mouseY);
+            this.#status.innerHTML = 'x: ' + Math.round(x) + ' y: ' + Math.round(y) + ' zoom: ' + this.zoom + '</b>';
+        }
     }
 
     // Called on mouse wheel change, updates zoom level.
@@ -160,7 +188,6 @@ class Grid {
         this.offsetX -= mouseGridX - mouseGridXAfter;
         this.offsetY -= mouseGridY - mouseGridYAfter;
         this.render();
-        this.#updateStatus();
     }
 
     #handleDragStart(e) {

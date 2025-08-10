@@ -23,10 +23,8 @@ class Component extends GridElement {
         this.inner = document.createElement('div');
         this.inner.innerHTML = name;
         this.inner.classList.add('component-inner');
-        this.inner.onmouseenter = () => grid.setStatus('Component <b>' + name + '</b>. Drag to move.');
-        this.inner.onmouseleave = () => grid.clearStatus();
+        grid.setHoverStatus(this.inner, 'Component <b>' + name + '</b>. <i>LMB</i>: Drag to move.');
         this.registerDrag(this.inner, { type: "component" });
-
         this.element.appendChild(this.inner);
 
         // compute dimensions from ports
@@ -42,18 +40,21 @@ class Component extends GridElement {
             let stepY = side === 'top' || side === 'bottom' ? 0 : grid.spacing;
             for (const item of items) {
                 if (item.name !== null) {
+                    // port itself
                     let port = document.createElement('div');
                     port.classList.add('component-port');
-                    port.onmouseenter = () => grid.setStatus('Port <b>' + item.name + '</b> of <b>' + name + '</b>. Drag to connect.');
-                    port.onmouseleave = () => grid.clearStatus();
                     this.element.appendChild(port);
+                    grid.setHoverStatus(port, 'Port <b>' + item.name + '</b> of <b>' + name + '</b>. <i>LMB</i>: Drag to connect.');
+                    // port hover label
                     let portLabel = document.createElement('div');
                     portLabel.classList.add('component-port-label');
                     this.element.appendChild(portLabel);
+                    // update this.ports with computed port properties
                     item.port = port;
                     item.portLabel = portLabel;
                     item.x = x + this.portSize / 2;
                     item.y = y + this.portSize / 2;
+                    // register a drag event for the port, will trigger onDrag with the port name
                     this.registerDrag(port, { type: "port", name: item.name });
                 }
                 x += stepX;
@@ -65,6 +66,7 @@ class Component extends GridElement {
         this.render();
     }
 
+    // Gets a port definition by its name.
     portByName(name) {
         for (const [side, items] of Object.entries(this.ports)) {
             for (const item of items) {
@@ -122,8 +124,9 @@ class Component extends GridElement {
         }
     }
 
+    // Renders the component onto the grid.
     render() {
-        // update ports
+        // render component ports
         let visualSpacing = this.grid.spacing * this.grid.zoom;
         let visualPortSize = this.portSize * this.grid.zoom;
         let visualOffset = visualSpacing - (visualPortSize / 2);
@@ -188,6 +191,7 @@ class Component extends GridElement {
             }
         }
 
+        // render component body
         this.element.style.left = this.visualX + "px";
         this.element.style.top = this.visualY + "px";
         this.element.style.width = this.visualWidth + "px";
