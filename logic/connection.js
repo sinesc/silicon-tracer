@@ -19,21 +19,39 @@ class Connection extends GridElement {
 
         this.elementH = document.createElement('div');
         this.elementH.classList.add('connection-h');
-        this.registerDrag(this.elementH);
-        this.grid.setHoverStatus(this.elementH, 'Connection. <i>LMB</i>: Drag along the normal. <i>Shift+LMB</i>: Branch off new connection.');
+        this.registerDrag(this.elementH, { ordering: 'vh' });
+        this.grid.setHoverStatus(this.elementH, 'Connection. <i>LMB</i>: Branch off new connection. <i>Shift+LMB</i>: Drag along the normal.');
         this.grid.addVisual(this.elementH);
 
         this.elementV = document.createElement('div');
         this.elementV.classList.add('connection-v');
-        this.registerDrag(this.elementV);
-        this.grid.setHoverStatus(this.elementV, 'Connection. <i>LMB</i>: Drag along the normal. <i>Shift+LMB</i>: Branch off new connection.');
+        this.registerDrag(this.elementV, { ordering: 'hv' });
+        this.grid.setHoverStatus(this.elementV, 'Connection. <i>LMB</i>: Branch off new connection. <i>Shift+LMB</i>: Drag along the normal.');
         this.grid.addVisual(this.elementV);
 
         this.render();
     }
 
-    onDrag(x, y, done) {
-        this.setPosition(x, y, done);
+    // Create connection from port.
+    onConnect(x, y, status, what) {
+        if (status === 'start') {
+            what.startX = x;
+            what.startY = y;
+        }
+        if (!this.dragConnection) {
+            this.dragConnection = new Connection(this.grid, what.startX, what.startY, x, y, what.ordering);
+            this.dragConnection.render();
+        } else if (status !== 'stop') {
+            this.dragConnection.setEndpoints(what.startX, what.startY, x, y, true);
+            this.dragConnection.render();
+        } else {
+            this.dragConnection = null;
+        }
+    }
+
+    // Called while a registered visual is being dragged.
+    onDrag(x, y, status, what) {
+        this.onConnect(x, y, status, what);
     }
 
     setEndpoints(x1, y1, x2, y2, aligned) {

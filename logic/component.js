@@ -122,11 +122,11 @@ class Component extends GridElement {
     }
 
     // Called while a registered visual is being dragged.
-    onDrag(currentX, currentY, status, what) {
+    onDrag(x, y, status, what) {
         if (what.type === 'component') {
-            this.onMove(currentX, currentY, status, what);
+            this.onMove(x, y, status, what);
         } else if (what.type === 'port') {
-            this.onConnect(currentX, currentY, status, what);
+            this.onConnect(x, y, status, what);
         }
     }
 
