@@ -30,7 +30,7 @@ setInterval(function() {
 let grid2 = new Grid(document.querySelector('#grid'));
 
 let component1 = new Component(grid2, 'Gate', 250, 50, { left: [ "a", "b" ], right: [ "q" ], top: [ "xuper", "y" ], bottom: [ "g" ] });
-let component2 = new Component(grid2, 'Bait', 300, 100, { left: [ "a bit long" ], right: [ "quite long", "really very long", "short" ], top: [ "x" ], bottom: [ "great", "h", "i", "j" ] });
+let component2 = new Component(grid2, 'Bait', 500, 100, { left: [ "a bit long" ], right: [ "quite long", "really very long", "short" ], top: [ "x" ], bottom: [ "great", "h", "i", "j" ] });
 let component3 = new Component(grid2, 'Bleeep', 330, 200, { left: [ "a", "b", "c", "d", "e" ], right: [ "q", "r", "s" ] });
 let component4 = new Component(grid2, 'Blubb', 500, 450, { top: [ "a", "be long", "c", "duh", "e" ], bottom: [ "q", "r", "s" ] });
 let component5 = new Component(grid2, 'Gate', 800, 500, { left: [ "a", null, "b" ], right: [ null, "q", null ] });

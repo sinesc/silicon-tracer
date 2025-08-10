@@ -1,6 +1,6 @@
 class Component extends GridElement {
 
-    portSize = 10;
+    portSize = 14;
     innerMargin = 5;
 
     element;
