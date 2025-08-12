@@ -186,6 +186,8 @@ class Grid {
 
     // Called on mouse wheel change, updates zoom level.
     #handleZoom(e) {
+        e.preventDefault();
+        e.stopPropagation();
         // compute mouse on-grid coordinates
         let [ mouseGridX, mouseGridY ] = this.screenToGrid(e.clientX, e.clientY);
         // pick next zoom level
