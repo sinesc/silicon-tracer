@@ -48,6 +48,7 @@ class GridElement {
         ];
     }
 
+    // Sets the optionally aligned component position.
     setPosition(x, y, aligned) {
         if (aligned) {
             [ x, y ] = this.gridAlign(x, y);
@@ -56,8 +57,14 @@ class GridElement {
         this.y = y;
     }
 
+    // Registers a drag event source with optional additional arguments to pass with each event to onDrag().
     registerDrag(element, ...args) {
         element.onmousedown = this.#handleDragStart.bind(this, args);
+    }
+
+    // Trigger component drag (e.g. when dragging from template into the grid).
+    dragStart(e, ...args) {
+        this.#handleDragStart(args, e);
     }
 
     #handleDragStart(args, e) {

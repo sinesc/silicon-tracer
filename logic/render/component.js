@@ -85,8 +85,8 @@ class Component extends GridElement {
     onMove(x, y, status, what) {
         // get offset between component top/left and mouse grab point
         if (status === 'start') {
-            what.grabOffsetX = x - this.x;
-            what.grabOffsetY = y - this.y;
+            what.grabOffsetX ??= x - this.x;
+            what.grabOffsetY ??= y - this.y;
         }
         // set new position, align it on stop
         this.setPosition(x - what.grabOffsetX, y - what.grabOffsetY, status === 'stop');

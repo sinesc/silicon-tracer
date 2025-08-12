@@ -8,12 +8,38 @@ html {
     color: white;
     font-family: sans-serif;
 }
-h1 {
+#header h1, #toolbar, #toolbar .toolbar-button {
+    display: inline-block;
+}
+#header h1 {
     font-variant: small-caps;
-    /*text-shadow: red 3px 3px;*/
     text-shadow:#fc0 1px 0 10px;
     text-decoration: underline;
+    margin-top: 0;
+    margin-bottom: 5px;
 }
+#toolbar {
+    margin-left: 10px;
+}
+#toolbar .toolbar-button {
+    cursor: default;
+    background-color: #444;
+    border: 1px solid #222;
+    transition: border-color 0.15s;
+    border-radius: 3px;
+    color: #ffffff;
+    text-align: center;
+    box-sizing: border-box;
+    margin: 5px; /* fixme: needs to match component, should just be set there */
+    text-shadow: 1px 1px 2px black;
+    font-size: 0.8em;
+    min-width: 50px;
+    line-height: 2;
+}
+#toolbar .toolbar-button:hover {
+    border: 1px solid #fff;
+}
+
 
 /*
  * grid
