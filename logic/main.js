@@ -1,14 +1,9 @@
 
+// test flipflop
+
 let c = new Compilable();
 
-c.ioDecl('a1', 'i')
-c.ioDecl('b1', 'i');
-c.ioDecl('q1', 'o');
 c.gateDecl('nor', [ 'a1', 'b1' ], 'q1');
-
-c.ioDecl('a2', 'i')
-c.ioDecl('b2', 'i');
-c.ioDecl('q2', 'o');
 c.gateDecl('nor', [ 'a2', 'b2' ], 'q2');
 
 let set = c.netDecl([ 'a1' ]);
@@ -21,10 +16,12 @@ c.compile();
 let mem = new Uint8Array(20);
 
 // ui stuff
+
 document.querySelector('#atrue').addEventListener('click', () => c.setNet(mem, set, 1));
 document.querySelector('#afalse').addEventListener('click', () => c.setNet(mem, set, 0));
 document.querySelector('#btrue').addEventListener('click', () => c.setNet(mem, reset, 1));
 document.querySelector('#bfalse').addEventListener('click', () => c.setNet(mem, reset, 0));
+
 setInterval(function() {
     c.simulate(mem);
     c.simulate(mem);
