@@ -1,30 +1,42 @@
 
-/*
-let and = (a, b) => a && b;
-let or = (a, b) => (a || b);
-let not = (a) => !a;
-let nand = (a, b) => !(a && b);
-let nor = (a, b) => !(a || b);
+let c = new Compilable();
 
-let init = () => Math.random() > 0.5 ? true : false;
+c.ioDecl('a1', 'i')
+c.ioDecl('b1', 'i');
+c.ioDecl('q1', 'o');
+c.gateDecl('nor', [ 'a1', 'b1' ], 'q1');
 
-let d = {};
+c.ioDecl('a2', 'i')
+c.ioDecl('b2', 'i');
+c.ioDecl('q2', 'o');
+c.gateDecl('nor', [ 'a2', 'b2' ], 'q2');
 
-document.querySelector('#atrue').addEventListener('click', () => d.a = true);
-document.querySelector('#afalse').addEventListener('click', () => d.a = false);
-document.querySelector('#btrue').addEventListener('click', () => d.b = true);
-document.querySelector('#bfalse').addEventListener('click', () => d.b = false);
+let set = c.netDecl([ 'a1' ]);
+let reset = c.netDecl([ 'a2' ]);
+let out1 = c.netDecl([ 'q1', 'b2' ]);
+let out2 = c.netDecl([ 'q2', 'b1' ]);
 
-d.a = init();
-d.b = init();
-d.x1 = init();
+c.compile();
 
+let mem = new Uint8Array(20);
+
+// ui stuff
+document.querySelector('#atrue').addEventListener('click', () => c.setNet(mem, set, 1));
+document.querySelector('#afalse').addEventListener('click', () => c.setNet(mem, set, 0));
+document.querySelector('#btrue').addEventListener('click', () => c.setNet(mem, reset, 1));
+document.querySelector('#bfalse').addEventListener('click', () => c.setNet(mem, reset, 0));
 setInterval(function() {
-    d.x1 = nor(d.a, d.x2);
-    d.x2 = nor(d.b, d.x1);
-    document.querySelector('#data').innerHTML = 'a: ' + d.a + '<br>b: ' + d.b + '<br>x1: ' + d.x1 + '<br>x2: ' + d.x2;
-}, 500);
-*/
+    c.simulate(mem);
+    c.simulate(mem);
+    c.simulate(mem);
+    document.querySelector('#data').innerHTML = 'set: ' + c.getNet(mem, set) + '<br>reset: ' + c.getNet(mem, reset) + '<br>out1: ' + c.getNet(mem, out1) + '<br>out2: ' + c.getNet(mem, out2);
+}, 50);
+
+
+
+
+
+
 
 let circuit1 = new Circuit('Gate', { left: [ "a", "b" ], right: [ "q" ], top: [ "xuper", "y" ], bottom: [ "g" ] });
 let circuit2 = new Circuit('Bait', { left: [ "a bit long" ], right: [ "quite long", "really very long", "short" ], top: [ "x" ], bottom: [ "great", "h", "i", "j" ] });
