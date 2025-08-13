@@ -19,7 +19,6 @@ class Component extends GridElement {
         super(grid);
         this.circuit = circuit;
         this.rotation = rotation % 4;
-        //Component.rotationMap ??= Component.#buildRotationMap();
 
         [ this.x, this.y ] = this.gridAlign(x, y);
 
@@ -36,53 +35,41 @@ class Component extends GridElement {
         this.registerDrag(this.inner, { type: "component", grabOffsetX: null, grabOffsetY: null });
         this.element.appendChild(this.inner);
 
-        // compute dimensions from ports
-        this.ports = { left: [], right: [], top: [], bottom: [], ...circuit.ports }.map((side, ports) => ports.map((name) => ({ name: name, side: side, port: null, portLabel: null, x: null, y: null })));
-
-        let ports = this.rotatedPorts();
-        this.width = Math.max(grid.spacing * 2, (ports.top.length + 1) * grid.spacing, (ports.bottom.length + 1) * grid.spacing);
-        this.height = Math.max(grid.spacing * 2, (ports.left.length + 1) * grid.spacing, (ports.right.length + 1) * grid.spacing);
+        // ensure ports are completely defined
+        this.ports = { left: [], right: [], top: [], bottom: [], ...circuit.ports }.map((side, ports) => ports.map((name) => ({ name: name, port: null, portLabel: null, x: null, y: null })));
 
         // ports
-        for (const [side, items] of Object.entries(ports)) {
-            let x = side !== 'right' ? (side !== 'left' ? this.portSize / 2 : 0) : this.width - this.portSize;
-            let y = side !== 'bottom' ? (side !== 'top' ? this.portSize / 2 : 0) : this.height - this.portSize;
-            let stepX = side === 'left' || side === 'right' ? 0 : grid.spacing;
-            let stepY = side === 'top' || side === 'bottom' ? 0 : grid.spacing;
-            for (const item of items) {
-                if (item.name !== null) {
-                    // port itself
-                    let port = document.createElement('div');
-                    port.classList.add('component-port');
-                    this.element.appendChild(port);
-                    this.setHoverMessage(port, 'Port <b>' + item.name + '</b> of <b>' + name + '</b>. <i>LMB</i>: Drag to connect.');
-                    // port hover label
-                    let portLabel = document.createElement('div');
-                    portLabel.classList.add('component-port-label');
-                    this.element.appendChild(portLabel);
-                    // update this.ports with computed port properties
-                    item.port = port;
-                    item.portLabel = portLabel;
-                    item.x = x + this.portSize / 2;
-                    item.y = y + this.portSize / 2;
-                    // register a drag event for the port, will trigger onDrag with the port name
-                    this.registerDrag(port, { type: "port", name: item.name });
-                }
-                x += stepX;
-                y += stepY;
-            }
-        }
+        let ports = this.#rotatedPorts();
+        this.#updateDimensions(ports);
+        this.#iterPorts(ports, (item, side, x, y) => {
+            let port = document.createElement('div');
+            port.classList.add('component-port');
+            this.element.appendChild(port);
+            this.setHoverMessage(port, 'Port <b>' + item.name + '</b> of <b>' + name + '</b>. <i>LMB</i>: Drag to connect.');
+            // port hover label
+            let portLabel = document.createElement('div');
+            portLabel.classList.add('component-port-label');
+            this.element.appendChild(portLabel);
+            // update this.ports with computed port properties
+            item.port = port;
+            item.portLabel = portLabel;
+            item.x = x + this.portSize / 2;
+            item.y = y + this.portSize / 2;
+            // register a drag event for the port, will trigger onDrag with the port name
+            this.registerDrag(port, { type: "port", name: item.name });
+        });
 
         grid.addVisual(this.element);
         this.render();
     }
 
-    // Gets a port definition by its name.
+    // Gets a port side+definition by its name.
     portByName(name) {
-        for (const [side, items] of Object.entries(this.ports)) {
+        let ports = this.#rotatedPorts();
+        for (const [side, items] of Object.entries(ports)) {
             for (const item of items) {
                 if (item.name === name) {
-                    return item;
+                    return [ side, item ];
                 }
             }
         }
@@ -93,8 +80,14 @@ class Component extends GridElement {
     onHotkey(element, key, status) {
         if (key === 'r') {
             this.rotation = (this.rotation + 1) % 4;
+            let ports = this.#rotatedPorts();
             this.x += (this.width - this.height) / 2;
             this.y -= (this.width - this.height) / 2;
+            this.#updateDimensions(ports);
+            this.#iterPorts(ports, (item, side, x, y) => {
+                item.x = x + this.portSize / 2;
+                item.y = y + this.portSize / 2;
+            });
             this.render();
         }
     }
@@ -131,9 +124,10 @@ class Component extends GridElement {
 
     // Create connection from port.
     onConnect(x, y, status, what) {
-        let port = this.portByName(what.name);
+        let [ side, port ] = this.portByName(what.name);
         if (!this.dragConnection) {
-            let ordering = port.side === 'top' || port.side === 'bottom' ? 'vh' : 'hv';
+            console.log(side);
+            let ordering = side === 'top' || side === 'bottom' ? 'vh' : 'hv';
             this.dragConnection = new Connection(this.grid, this.x + port.x, this.y + port.y, x, y, ordering);
             this.dragConnection.render();
         } else if (status !== 'stop') {
@@ -157,68 +151,78 @@ class Component extends GridElement {
     // Renders the component onto the grid.
     render() {
         // render component ports
-        let visualSpacing = this.grid.spacing * this.grid.zoom;
         let visualPortSize = this.portSize * this.grid.zoom;
-        let visualOffset = visualSpacing - (visualPortSize / 2);
         let visualLabelPadding = 1 * this.grid.zoom;
         let visualLabelLineHeight = visualPortSize + 2 * visualLabelPadding;
-        let ports = this.rotatedPorts();
+        let ports = this.#rotatedPorts();
 
-        this.width = Math.max(this.grid.spacing * 2, (ports.top.length + 1) * this.grid.spacing, (ports.bottom.length + 1) * this.grid.spacing);
-        this.height = Math.max(this.grid.spacing * 2, (ports.left.length + 1) * this.grid.spacing, (ports.right.length + 1) * this.grid.spacing);
-
-        for (const [side, items] of Object.entries(ports)) {
-            let x = side !== 'right' ? (side !== 'left' ? visualOffset : 0) : this.visualWidth - visualPortSize;
-            let y = side !== 'bottom' ? (side !== 'top' ? visualOffset : 0) : this.visualHeight - visualPortSize;
-            let stepX = side === 'left' || side === 'right' ? 0 : visualSpacing;
-            let stepY = side === 'top' || side === 'bottom' ? 0 : visualSpacing;
-            for (const { name, port, portLabel } of items) {
-                if (port !== null) {
-                    port.style.left = x + "px";
-                    port.style.top = y + "px";
-                    port.style.width = visualPortSize + "px";
-                    port.style.height = visualPortSize + "px";
-                    if (/*this.grid.zoom >= 1.25 &&*/ name.length > 1) {
-                        port.innerHTML = '';
-                        portLabel.innerHTML = name;
-                        portLabel.style.lineHeight = visualLabelLineHeight + 'px';
-                        if (side === 'bottom') {
-                            portLabel.style.writingMode = 'vertical-rl';
-                            portLabel.style.left = (x - visualLabelPadding) + "px";
-                            portLabel.style.top = (y - visualLabelPadding) + "px";
-                            portLabel.style.paddingBottom = visualLabelPadding + "px";
-                            portLabel.style.paddingTop = visualLabelLineHeight + "px";
-                            portLabel.style.width = visualLabelLineHeight + "px";
-                        } else if (side === 'top') {
-                            portLabel.style.writingMode = 'sideways-lr';
-                            portLabel.style.left = (x - visualLabelPadding) + "px";
-                            portLabel.style.bottom = (this.visualHeight - visualPortSize - visualLabelPadding) + "px";
-                            portLabel.style.paddingBottom = visualLabelLineHeight + "px";
-                            portLabel.style.paddingTop = visualLabelPadding + "px";
-                            portLabel.style.width = visualLabelLineHeight + "px";
-                        } else if (side === 'left') {
-                            portLabel.style.right = (this.visualWidth - visualPortSize - visualLabelPadding) + "px";
-                            portLabel.style.top = (y - visualLabelPadding) + "px";
-                            portLabel.style.paddingLeft = visualLabelPadding + "px";
-                            portLabel.style.paddingRight = visualLabelLineHeight + "px";
-                            portLabel.style.height = visualLabelLineHeight + "px";
-                        } else if (side === 'right') {
-                            portLabel.style.left = (x - visualLabelPadding) + "px";
-                            portLabel.style.top = (y - visualLabelPadding) + "px";
-                            portLabel.style.paddingLeft = visualLabelLineHeight + "px";
-                            portLabel.style.paddingRight = visualLabelPadding + "px";
-                            portLabel.style.height = visualLabelLineHeight + "px";
-                        }
-                    }
-                    //if (this.grid.zoom >= 1.25) {
-                        port.style.lineHeight = visualPortSize + 'px';
-                        port.innerHTML = '<span>' + name.slice(0, 1) + '</span>';
-                    //}
+        this.#iterPorts(ports, ({ name, port, portLabel }, side, x, y) => {
+            x *= this.grid.zoom;
+            y *= this.grid.zoom;
+            port.style.left = x + "px";
+            port.style.top = y + "px";
+            port.style.width = visualPortSize + "px";
+            port.style.height = visualPortSize + "px";
+            if (/*this.grid.zoom >= 1.25 &&*/ name.length > 1) {
+                port.innerHTML = '';
+                portLabel.innerHTML = name;
+                let style = portLabel.style;
+                style.lineHeight = visualLabelLineHeight + 'px';
+                if (side === 'bottom') {
+                    style.writingMode = 'vertical-rl';
+                    style.left = (x - visualLabelPadding) + "px";
+                    style.top = (y - visualLabelPadding) + "px";
+                    style.right = '';
+                    style.bottom = '';
+                    style.paddingLeft = '';
+                    style.paddingTop = visualLabelLineHeight + "px";
+                    style.paddingRight = '';
+                    style.paddingBottom = visualLabelPadding + "px";
+                    style.width = visualLabelLineHeight + "px";
+                    style.height = '';
+                } else if (side === 'top') {
+                    style.writingMode = 'sideways-lr';
+                    style.left = (x - visualLabelPadding) + "px";
+                    style.top = '';
+                    style.right = '';
+                    style.bottom = (this.visualHeight - visualPortSize - visualLabelPadding) + "px";
+                    style.paddingLeft = '';
+                    style.paddingTop = visualLabelPadding + "px";
+                    style.paddingRight = '';
+                    style.paddingBottom = visualLabelLineHeight + "px";
+                    style.width = visualLabelLineHeight + "px";
+                    style.height = '';
+                } else if (side === 'left') {
+                    style.writingMode = 'horizontal-tb';
+                    style.left = '';
+                    style.top = (y - visualLabelPadding) + "px";
+                    style.right = (this.visualWidth - visualPortSize - visualLabelPadding) + "px";
+                    style.bottom = '';
+                    style.paddingLeft = visualLabelPadding + "px";
+                    style.paddingTop = '';
+                    style.paddingRight = visualLabelLineHeight + "px";
+                    style.paddingBottom = '';
+                    style.width = '';
+                    style.height = visualLabelLineHeight + "px";
+                } else if (side === 'right') {
+                    style.writingMode = 'horizontal-tb';
+                    style.left = (x - visualLabelPadding) + "px";
+                    style.top = (y - visualLabelPadding) + "px";
+                    style.right = '';
+                    style.bottom = '';
+                    style.paddingLeft = visualLabelLineHeight + "px";
+                    style.paddingTop = '';
+                    style.paddingRight = visualLabelPadding + "px";
+                    style.paddingBottom = '';
+                    style.width = '';
+                    style.height = visualLabelLineHeight + "px";
                 }
-                x += stepX;
-                y += stepY;
             }
-        }
+            //if (this.grid.zoom >= 1.25) {
+                port.style.lineHeight = visualPortSize + 'px';
+                port.innerHTML = '<span>' + name.slice(0, 1) + '</span>';
+            //}
+        });
 
         // render component body
         this.element.style.left = this.visualX + "px";
@@ -236,7 +240,7 @@ class Component extends GridElement {
     }
 
     // Returns ports rotated by current component rotation.
-    rotatedPorts() {
+    #rotatedPorts() {
         let sides = Component.SIDES;
         let mapped = {};
         mapped.top      = this.ports[sides[(0 + this.rotation) % 4]];
@@ -244,5 +248,28 @@ class Component extends GridElement {
         mapped.bottom   = this.ports[sides[(2 + this.rotation) % 4]];
         mapped.left     = this.ports[sides[(3 + this.rotation) % 4]];
         return mapped;
+    }
+
+    // Iterate with callback fn(port, x, y) over component ports.
+    #iterPorts(ports, fn) {
+        for (const [side, items] of Object.entries(ports)) {
+            let x = side !== 'right' ? (side !== 'left' ? this.grid.spacing - (this.portSize / 2) : 0) : this.width - this.portSize;
+            let y = side !== 'bottom' ? (side !== 'top' ? this.grid.spacing - (this.portSize / 2) : 0) : this.height - this.portSize;
+            let stepX = side === 'left' || side === 'right' ? 0 : this.grid.spacing;
+            let stepY = side === 'top' || side === 'bottom' ? 0 : this.grid.spacing;
+            for (const item of items) {
+                if (item.name !== null) {
+                    fn(item, side, x, y);
+                }
+                x += stepX;
+                y += stepY;
+            }
+        }
+    }
+
+    // Update component width/height from given ports.
+    #updateDimensions(ports) {
+        this.width = Math.max(this.grid.spacing * 2, (ports.top.length + 1) * this.grid.spacing, (ports.bottom.length + 1) * this.grid.spacing);
+        this.height = Math.max(this.grid.spacing * 2, (ports.left.length + 1) * this.grid.spacing, (ports.right.length + 1) * this.grid.spacing);
     }
 }

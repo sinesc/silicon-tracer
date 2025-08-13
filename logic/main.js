@@ -51,14 +51,16 @@ for (let [ gateType, { joinOp } ] of Object.entries(Compilable.GATE_MAP)) {
 }
 
 
-/*
+
 let circuit1 = new Circuit('Gate', { left: [ "a", "b" ], right: [ "q" ], top: [ "xuper", "y" ], bottom: [ "g" ] });
+circuit1.createComponent(mainGrid, 250, 50);
+
+/*
 let circuit2 = new Circuit('Bait', { left: [ "a bit long" ], right: [ "quite long", "really very long", "short" ], top: [ "x" ], bottom: [ "great", "h", "i", "j" ] });
 let circuit3 = new Circuit('Bleeep', { left: [ "a", "b", "c", "d", "e" ], right: [ "q", "r", "s" ] });
 let circuit4 = new Circuit('Blubb', { top: [ "a", "be long", "c", "duh", "e" ], bottom: [ "q", "r", "s" ] });
 let circuit5 = new Circuit('Gate', { left: [ "a", null, "b" ], right: [ null, "q", null ] });
 
-circuit1.createComponent(mainGrid, 250, 50);
 circuit2.createComponent(mainGrid, 500, 100);
 circuit3.createComponent(mainGrid, 330, 200);
 circuit4.createComponent(mainGrid, 500, 450);
