@@ -102,7 +102,7 @@ class Circuit {
     }
     // Drops this circuit as a component onto the grid.
     createComponent(grid, x, y) {
-        let component = new Component(grid, this.name, x, y, this);
+        let component = new Component(grid, this.name, x, y, /*Math.floor(Math.random() * 4)*/0, this);
         return component;
     }
     // Creates the circuit on the given grid. Normally the grid should be cleared first.

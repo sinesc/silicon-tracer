@@ -34,8 +34,9 @@ let mainGrid = new Grid(document.querySelector('#grid'));
 let toolbar = document.querySelector('#toolbar');
 
 for (let [ gateType, { joinOp } ] of Object.entries(Compilable.GATE_MAP)) {
+    let gateLabel = gateType.charAt(0).toUpperCase() + gateType.slice(1);
     let button = document.createElement('div');
-    button.innerHTML = gateType;
+    button.innerHTML = gateLabel;
     button.classList.add('toolbar-button');
     button.onmousedown = function(e) {
         let numInputs = 2; // TODO: configurable somewhere
@@ -45,6 +46,7 @@ for (let [ gateType, { joinOp } ] of Object.entries(Compilable.GATE_MAP)) {
         gate.render();
     };
     toolbar.appendChild(button);
+    mainGrid.setHoverStatus(button, '<b>' + gateLabel + '</b> gate. <i>LMB</i>: Drag to move onto grid.');
 }
 
 

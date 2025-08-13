@@ -1,5 +1,7 @@
 class Component extends GridElement {
 
+    static SIDES = [ 'top', 'right', 'bottom', 'left' ];
+
     portSize = 14;
     innerMargin = 5;
 
@@ -8,19 +10,23 @@ class Component extends GridElement {
     dropPreview;
     ports;
     dragConnection = null;
+    rotation = 0;
 
     circuit;
 
-    constructor(grid, name, x, y, circuit) {
+    constructor(grid, name, x, y, rotation, circuit) {
 
         super(grid);
         this.circuit = circuit;
+        this.rotation = rotation % 4;
+        //Component.rotationMap ??= Component.#buildRotationMap();
 
         [ this.x, this.y ] = this.gridAlign(x, y);
 
         // container
         this.element = document.createElement('div');
         this.element.classList.add('component');
+        this.element.classList.add('component-type-' + name);
 
         // inner area with name
         this.inner = document.createElement('div');
@@ -32,11 +38,13 @@ class Component extends GridElement {
 
         // compute dimensions from ports
         this.ports = { left: [], right: [], top: [], bottom: [], ...circuit.ports }.map((side, ports) => ports.map((name) => ({ name: name, side: side, port: null, portLabel: null, x: null, y: null })));
-        this.width = Math.max(grid.spacing * 2, (this.ports.top.length + 1) * grid.spacing, (this.ports.bottom.length + 1) * grid.spacing);
-        this.height = Math.max(grid.spacing * 2, (this.ports.left.length + 1) * grid.spacing, (this.ports.right.length + 1) * grid.spacing);
+
+        let ports = this.rotatedPorts();
+        this.width = Math.max(grid.spacing * 2, (ports.top.length + 1) * grid.spacing, (ports.bottom.length + 1) * grid.spacing);
+        this.height = Math.max(grid.spacing * 2, (ports.left.length + 1) * grid.spacing, (ports.right.length + 1) * grid.spacing);
 
         // ports
-        for (const [side, items] of Object.entries(this.ports)) {
+        for (const [side, items] of Object.entries(ports)) {
             let x = side !== 'right' ? (side !== 'left' ? this.portSize / 2 : 0) : this.width - this.portSize;
             let y = side !== 'bottom' ? (side !== 'top' ? this.portSize / 2 : 0) : this.height - this.portSize;
             let stepX = side === 'left' || side === 'right' ? 0 : grid.spacing;
@@ -142,8 +150,9 @@ class Component extends GridElement {
         let visualOffset = visualSpacing - (visualPortSize / 2);
         let visualLabelPadding = 1 * this.grid.zoom;
         let visualLabelLineHeight = visualPortSize + 2 * visualLabelPadding;
+        let ports = this.rotatedPorts();
 
-        for (const [side, items] of Object.entries(this.ports)) {
+        for (const [side, items] of Object.entries(ports)) {
             let x = side !== 'right' ? (side !== 'left' ? visualOffset : 0) : this.visualWidth - visualPortSize;
             let y = side !== 'bottom' ? (side !== 'top' ? visualOffset : 0) : this.visualHeight - visualPortSize;
             let stepX = side === 'left' || side === 'right' ? 0 : visualSpacing;
@@ -202,12 +211,23 @@ class Component extends GridElement {
         this.element.style.width = this.visualWidth + "px";
         this.element.style.height = this.visualHeight + "px";
 
-        if (this.width < this.height && this.visualWidth < 200) {
+        if ((this.width < this.height || (this.width === this.height && ports.top.length === 0 && ports.bottom.length === 0)) && this.visualWidth < 200) {
             this.inner.style.lineHeight = (this.visualWidth - (this.innerMargin * 2)) + "px";
             this.inner.style.writingMode = 'vertical-rl';
         } else {
             this.inner.style.lineHeight = (this.visualHeight - (this.innerMargin * 2)) + "px";
             this.inner.style.writingMode = 'horizontal-tb';
         }
+    }
+
+    // Returns ports rotated by current component rotation.
+    rotatedPorts() {
+        let sides = Component.SIDES;
+        let mapped = {};
+        mapped.top      = this.ports[sides[(0 + this.rotation) % 4]];
+        mapped.right    = this.ports[sides[(1 + this.rotation) % 4]];
+        mapped.bottom   = this.ports[sides[(2 + this.rotation) % 4]];
+        mapped.left     = this.ports[sides[(3 + this.rotation) % 4]];
+        return mapped;
     }
 }
