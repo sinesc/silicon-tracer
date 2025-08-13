@@ -93,6 +93,8 @@ class Component extends GridElement {
     onHotkey(element, key, status) {
         if (key === 'r') {
             this.rotation = (this.rotation + 1) % 4;
+            this.x += (this.width - this.height) / 2;
+            this.y -= (this.width - this.height) / 2;
             this.render();
         }
     }
@@ -122,6 +124,8 @@ class Component extends GridElement {
         } else {
             this.grid.removeVisual(this.dropPreview);
             this.dropPreview = null;
+            what.grabOffsetX = null;
+            what.grabOffsetY = null
         }
     }
 
