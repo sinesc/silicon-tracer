@@ -3,6 +3,7 @@ class Compilable {
     static DEBUG = true;
     static DEFAULT_DELAY = 1;
     static GATE_MAP = {
+        'buffer': { negIn: false, negOut: false,  joinOp: null },
         'not'   : { negIn: false, negOut: true,  joinOp: null },
         'and'   : { negIn: false, negOut: false, joinOp: '&' },
         'nand'  : { negIn: false, negOut: true,  joinOp: '&' },
@@ -17,19 +18,19 @@ class Compilable {
     gates = [];
     sim;
 
-    // Declares a net (which inputs/outputs are connected).
+    // Declares a net (which inputs/outputs are connected) and returns the net-index.
     netDecl(attachedIONames) {
         const index = this.nets.length;
         this.nets.push({ offset: this.#alloc(), io: attachedIONames });
         return index;
     }
 
-    // Declares an input or output.
+    // Declares a named input or output.
     ioDecl(name, type, delay) {
         this.ioMap.set(name, { offset: this.#alloc(), delay: delay ?? Compilable.DEFAULT_DELAY, in: type.indexOf('i') !== -1, out: type.indexOf('o') !== -1 });
     }
 
-    // Declares a gate function for the given inputs/output.
+    // Declares a gate function for the given inputs/output and returns the gate-index.
     fnDecl(type, inputs, output) {
         let rules = Compilable.GATE_MAP[type];
         let inner = inputs.map((v) => (rules.negIn ? '(!' + v + ')' : v)).join(' ' + rules.joinOp + ' ');
@@ -72,39 +73,40 @@ class Compilable {
     }
 
     // Compiles a net to input assertion.
-    #compileNetToInput(name, net) {
+    #compileNetToInput(name, netIndex) {
         if (typeof name !== 'string') {
             throw 'Expected io name as first argument';
         }
-        let io = this.#io(name);
-        let netValue = this.#netValue(net);
-        let ioValue = this.#ioValue(name);
-        let delayMask = this.#delayMask(io.delay);
+        let io = this.#getIO(name);
+        let netValue = this.#compileNetValue(netIndex);
+        let ioValue = this.#compileIOValue(name);
+        let delayMask = this.#compileDelayMask(io.delay);
         return `${ioValue} = (${ioValue} & ${delayMask}) | (${netValue} << ${io.delay})`;   // shift net value up to newest io-data/signal bits and apply
     }
 
     // Compiles a gate reading from one or more inputs and writing to an output.
-    #compileGate(gate, ioReplacements) {
-        let io = this.#io(gate.output);
+    #compileGate(gateIndex, ioReplacements) {
+        let gate = this.gates[gateIndex];
+        let io = this.#getIO(gate.output);
         let op = gate.template.replace(/[a-z_][a-z0-9_]*/g, (match) => ioReplacements[match]);
-        let ioValue = this.#ioValue(gate.output);
-        let delayMask = this.#delayMask(io.delay);
-        let signalBit = this.#binConst(1 << GlobalState.MAX_DELAY);
+        let ioValue = this.#compileIOValue(gate.output);
+        let delayMask = this.#compileDelayMask(io.delay);
+        let signalBit = this.#compileConst(1 << GlobalState.MAX_DELAY);
         let code = `result = ${signalBit} | (${op}); `;                                     // set signal bit on computed result
         code += `${ioValue} = (${ioValue} & ${delayMask}) | (result << ${io.delay})`;       // shift result up to newest io-data/signal bits and apply
         return code;
     }
 
     // Compiles an output to net assertion.
-    #compileOutputToNet(net, name) {
-        if (typeof net !== 'number') {
+    #compileOutputToNet(netIndex, name) {
+        if (typeof netIndex !== 'number') {
             throw 'Expected net index as first argument';
         }
-        let io = this.#io(name);
+        let io = this.#getIO(name);
         let netSignalBit = GlobalState.MAX_DELAY;           // oldest net signal bit (also the only signal bit for nets)
         let ioSignalBit = GlobalState.MAX_DELAY + io.delay  // newest io signal bit
-        let netValue = this.#netValue(net);
-        let ioValue = this.#ioValue(name);
+        let netValue = this.#compileNetValue(netIndex);
+        let ioValue = this.#compileIOValue(name);
         let code = `signal = (${ioValue} & (1 << ${ioSignalBit})) >> ${ioSignalBit}; `;     // do we have a signal on the output?
         code += `mask = ~(signal | (signal << ${netSignalBit})); `;                        // build mask for oldest (and only) net-data/signal from io-signal (all bits enabled if no signal)
         code += `${netValue} = (${netValue} & mask) | (${ioValue} & ~mask)`;                // apply io-data/signal to net if signal is set
@@ -116,12 +118,12 @@ class Compilable {
         let result = ''
         // advance time for all ports
         for (const [ name ] of this.ioMap) {
-            result += this.#ioValue(name) + ' >>= 1' + this.#endl('tick ' + name);
+            result += this.#compileIOValue(name) + ' >>= 1' + this.#endl('tick ' + name);
         }
         // copy net-state to connected ports
         for (const [ netIndex, net ] of this.nets.entries()) {
             for (const name of net.io) {
-                if (this.#io(name).in) {
+                if (this.#getIO(name).in) {
                     result += this.#compileNetToInput(name, netIndex) + this.#endl('set port ' + name + ' from net ' + netIndex);
                 }
             }
@@ -129,15 +131,15 @@ class Compilable {
         // process inputs using defined gates
         let ioReplacements = { };
         for (const [ name ] of this.ioMap) {
-            ioReplacements[name] = this.#ioValue(name);
+            ioReplacements[name] = this.#compileIOValue(name);
         }
-        for (const gate of this.gates) {
-            result += this.#compileGate(gate, ioReplacements) + this.#endl('compute ' + gate.template);
+        for (const [ gateIndex, gate ] of this.gates.entries()) {
+            result += this.#compileGate(gateIndex, ioReplacements) + this.#endl('compute ' + gate.template);
         }
         // copy port-state to attached net
         for (const [ netIndex, net ] of this.nets.entries()) {
             for (const name of net.io ) {
-                if (this.#io(name).out) {
+                if (this.#getIO(name).out) {
                     result += this.#compileOutputToNet(netIndex, name) + this.#endl('set net ' + netIndex + ' from port ' + name);
                 }
             }
@@ -145,35 +147,25 @@ class Compilable {
         return result;
     }
 
-    // Returns an input/output declaration.
-    #io(name) {
-        let def;
-        if ((def = this.ioMap.get(name)) !== undefined) {
-            return def;
-        } else {
-            throw 'Undefined IO ' + name;
-        }
-    }
-
     // Retuns code to refer to an IO state.
-    #ioValue(name) {
-        return 'mem[' + this.#io(name).offset + ']';
+    #compileIOValue(name) {
+        return 'mem[' + this.#getIO(name).offset + ']';
     }
 
     // Returns code to refer to the state of a net.
-    #netValue(index) {
+    #compileNetValue(index) {
         return 'mem[' + this.nets[index].offset + ']';
     }
 
-    // Returns a bitmask with the signal and data bits for the given delay being unset.
-    #delayMask(delay) {
+    // Returns code for a bitmask with the signal and data bits for the given delay being unset.
+    #compileDelayMask(delay) {
         let clearDataMask = ((1 << GlobalState.ARRAY_BITS) - 1) & ~(1 << delay);
         let clearSignalMask = ((1 << GlobalState.ARRAY_BITS) - 1) & ~(1 << (GlobalState.MAX_DELAY + delay));
-        return this.#binConst(clearSignalMask & clearDataMask);
+        return this.#compileConst(clearSignalMask & clearDataMask);
     }
 
-    // Converts value to binary notation (for readability of compiled code).
-    #binConst(value) {
+    // Returns code for a constant (written in binary notation for better readability of compiled code).
+    #compileConst(value) {
         let result = '0b';
         for (let i = GlobalState.ARRAY_BITS - 1; i >= 0; --i) {
             result += ((value & (1 << i)) > 0 ? '1' : '0');
@@ -184,6 +176,16 @@ class Compilable {
     // Returns a semicolon followed by an optional comment if DEBUG is set and a newline.
     #endl(comment) {
         return '; ' + (Compilable.DEBUG && comment ? '// ' + comment : '') + "\n";
+    }
+
+    // Returns an input/output declaration.
+    #getIO(name) {
+        let def;
+        if ((def = this.ioMap.get(name)) !== undefined) {
+            return def;
+        } else {
+            throw 'Undefined IO ' + name;
+        }
     }
 
     // Allocates memory for a single port or net.

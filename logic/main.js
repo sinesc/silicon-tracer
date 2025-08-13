@@ -33,13 +33,14 @@ setInterval(function() {
 let mainGrid = new Grid(document.querySelector('#grid'));
 let toolbar = document.querySelector('#toolbar');
 
-for (let [ gateType ] of Object.entries(Compilable.GATE_MAP)) {
+for (let [ gateType, { joinOp } ] of Object.entries(Compilable.GATE_MAP)) {
     let button = document.createElement('div');
     button.innerHTML = gateType;
     button.classList.add('toolbar-button');
     button.onmousedown = function(e) {
+        let numInputs = 2; // TODO: configurable somewhere
         let [ x, y ] = mainGrid.screenToGrid(e.clientX, e.clientY);
-        let gate = Prefabs.createGate(mainGrid, x, y, gateType, 2);
+        let gate = Prefabs.createGate(mainGrid, x, y, gateType, joinOp !== null ? numInputs : 1);
         gate.dragStart(e, { type: "component", grabOffsetX: gate.width / 2, grabOffsetY: gate.height / 2 });
         gate.render();
     };
