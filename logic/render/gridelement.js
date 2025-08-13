@@ -57,6 +57,28 @@ class GridElement {
         this.y = y;
     }
 
+    // Sets a status message to be displayed while mouse-hovering the visual element.
+    setHoverStatus(element, message) {
+        let existingHandler = this.grid.hoverStatusListener.get(element);
+        if (existingHandler) {
+            element.removeEventListener('mouseenter', existingHandler);
+            element.removeEventListener('mouseleave', existingHandler);
+        }
+        if (message) {
+            let grid = this.grid;
+            let handler = function(e) {
+                if (e.type === 'mouseenter') {
+                    grid.setStatus(message);
+                } else {
+                    grid.clearStatus();
+                }
+            }
+            this.grid.hoverStatusListener.set(element, handler);
+            element.addEventListener('mouseenter', handler);
+            element.addEventListener('mouseleave', handler);
+        }
+    }
+
     // Registers a drag event source with optional additional arguments to pass with each event to onDrag().
     registerDrag(element, ...args) {
         element.onmousedown = this.#handleDragStart.bind(this, args);

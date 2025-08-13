@@ -46,7 +46,8 @@ for (let [ gateType, { joinOp } ] of Object.entries(Compilable.GATE_MAP)) {
         gate.render();
     };
     toolbar.appendChild(button);
-    mainGrid.setHoverStatus(button, '<b>' + gateLabel + '</b> gate. <i>LMB</i>: Drag to move onto grid.');
+    button.onmouseenter = () => mainGrid.setStatus('<b>' + gateLabel + '</b> gate. <i>LMB</i>: Drag to move onto grid.');
+    button.onmouseleave = () => mainGrid.clearStatus();
 }
 
 

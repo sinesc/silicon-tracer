@@ -32,7 +32,7 @@ class Component extends GridElement {
         this.inner = document.createElement('div');
         this.inner.innerHTML = name;
         this.inner.classList.add('component-inner');
-        grid.setHoverStatus(this.inner, 'Component <b>' + name + '</b>. <i>LMB</i>: Drag to move.');
+        this.setHoverStatus(this.inner, 'Component <b>' + name + '</b>. <i>LMB</i>: Drag to move. <i>R</i>: Rotate');
         this.registerDrag(this.inner, { type: "component", grabOffsetX: null, grabOffsetY: null });
         this.element.appendChild(this.inner);
 
@@ -55,7 +55,7 @@ class Component extends GridElement {
                     let port = document.createElement('div');
                     port.classList.add('component-port');
                     this.element.appendChild(port);
-                    grid.setHoverStatus(port, 'Port <b>' + item.name + '</b> of <b>' + name + '</b>. <i>LMB</i>: Drag to connect.');
+                    this.setHoverStatus(port, 'Port <b>' + item.name + '</b> of <b>' + name + '</b>. <i>LMB</i>: Drag to connect.');
                     // port hover label
                     let portLabel = document.createElement('div');
                     portLabel.classList.add('component-port-label');

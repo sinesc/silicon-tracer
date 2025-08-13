@@ -9,6 +9,7 @@ class Grid {
     zoom = 1.25;
     offsetX = 0;
     offsetY = 0;
+    hoverStatusListener;
 
     #element;
     #status;
@@ -17,7 +18,6 @@ class Grid {
     #statusTimer = null;
     #mouseX = 0;
     #mouseY = 0;
-    #hoverStatusListener;
 
     constructor(parent) {
         this.#element = document.createElement('div');
@@ -29,7 +29,7 @@ class Grid {
         this.#status.classList.add('grid-status');
         this.#element.appendChild(this.#status);
 
-        this.#hoverStatusListener = new WeakMap();
+        this.hoverStatusListener = new WeakMap();
 
         document.addEventListener('mousemove', this.#handleMouse.bind(this));
         parent.appendChild(this.#element);
@@ -50,29 +50,6 @@ class Grid {
     // Removes a component visual element from the grid.
     removeVisual(element) {
         element.remove();
-    }
-
-    // Sets a status message to be displayed while mouse-hovering the visual element.
-    // TODO: move to GridElement?
-    setHoverStatus(element, message) {
-        let existingHandler = this.#hoverStatusListener.get(element);
-        if (existingHandler) {
-            element.removeEventListener('mouseenter', existingHandler);
-            element.removeEventListener('mouseleave', existingHandler);
-        }
-        if (message) {
-            let grid = this;
-            let handler = function(e) {
-                if (e.type === 'mouseenter') {
-                    grid.setStatus(message);
-                } else {
-                    grid.clearStatus();
-                }
-            }
-            this.#hoverStatusListener.set(element, handler);
-            element.addEventListener('mouseenter', handler);
-            element.addEventListener('mouseleave', handler);
-        }
     }
 
     // Returns whether the given screen coordinates are within the bounds of the grid.
