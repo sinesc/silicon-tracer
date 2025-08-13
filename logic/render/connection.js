@@ -24,13 +24,13 @@ class Connection extends GridElement {
         this.elementH = document.createElement('div');
         this.elementH.classList.add('connection-h');
         this.registerDrag(this.elementH, { ordering: 'vh' });
-        this.setHoverStatus(this.elementH, 'Connection. <i>LMB</i>: Branch off new connection. <i>Shift+LMB</i>: Drag along the normal.');
+        this.setHoverMessage(this.elementH, 'Connection. <i>LMB</i>: Branch off new connection. <i>Shift+LMB</i>: Drag along the normal.');
         this.grid.addVisual(this.elementH);
 
         this.elementV = document.createElement('div');
         this.elementV.classList.add('connection-v');
         this.registerDrag(this.elementV, { ordering: 'hv' });
-        this.setHoverStatus(this.elementV, 'Connection. <i>LMB</i>: Branch off new connection. <i>Shift+LMB</i>: Drag along the normal.');
+        this.setHoverMessage(this.elementV, 'Connection. <i>LMB</i>: Branch off new connection. <i>Shift+LMB</i>: Drag along the normal.');
         this.grid.addVisual(this.elementV);
 
 // TODO: add hotkey while dragging to end current wire and start new +/-90° wire

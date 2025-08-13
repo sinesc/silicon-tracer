@@ -7,14 +7,21 @@ class GridElement {
     width;
     height;
 
+    #hoverMessages;
+    #hoverRegistered;
+
     constructor(grid) {
         this.grid = grid;
         grid.registerComponent(this);
+        this.#hoverRegistered = new Map();
+        this.#hoverMessages = new Map();
     }
 
     render() { }
 
-    onDrag(x, y, done, ...args) { }
+    onDrag(x, y, status, ...args) { }
+
+    onHotkey(element, key, status) { }
 
     get visualX() {
         return (this.x + this.grid.offsetX) * this.grid.zoom;
@@ -57,26 +64,18 @@ class GridElement {
         this.y = y;
     }
 
+    // Registers a visual element for hover events. Required for hover messages or hover hotkeys.
+    registerHoverWatch(element) {
+        if (!this.#hoverRegistered.has(element)) {
+            element.addEventListener('mouseenter', this.#handleHover.bind(this, element, 'start'));
+            element.addEventListener('mouseleave', this.#handleHover.bind(this, element, 'stop'));
+        }
+    }
+
     // Sets a status message to be displayed while mouse-hovering the visual element.
-    setHoverStatus(element, message) {
-        let existingHandler = this.grid.hoverStatusListener.get(element);
-        if (existingHandler) {
-            element.removeEventListener('mouseenter', existingHandler);
-            element.removeEventListener('mouseleave', existingHandler);
-        }
-        if (message) {
-            let grid = this.grid;
-            let handler = function(e) {
-                if (e.type === 'mouseenter') {
-                    grid.setStatus(message);
-                } else {
-                    grid.clearStatus();
-                }
-            }
-            this.grid.hoverStatusListener.set(element, handler);
-            element.addEventListener('mouseenter', handler);
-            element.addEventListener('mouseleave', handler);
-        }
+    setHoverMessage(element, message) {
+        this.registerHoverWatch(element);
+        this.#hoverMessages.set(element, message);
     }
 
     // Registers a drag event source with optional additional arguments to pass with each event to onDrag().
@@ -115,5 +114,17 @@ class GridElement {
         let [ dragCurrentX, dragCurrentY ] = this.grid.screenToGrid(e.clientX, e.clientY);
         this.onDrag(dragCurrentX, dragCurrentY, 'stop', ...args);
         this.render();
+    }
+
+    #handleHover(element, status) {
+        this.grid.hotkeyTarget = status === 'start' ? { gridElement: this, element: element } : null;
+        let message = this.#hoverMessages.get(element);
+        if (message) {
+            if (status === 'start') {
+                this.grid.setStatus(message);
+            } else {
+                this.grid.clearStatus();
+            }
+        }
     }
 }

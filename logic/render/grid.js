@@ -9,7 +9,7 @@ class Grid {
     zoom = 1.25;
     offsetX = 0;
     offsetY = 0;
-    hoverStatusListener;
+    hotkeyTarget = null;
 
     #element;
     #status;
@@ -29,12 +29,20 @@ class Grid {
         this.#status.classList.add('grid-status');
         this.#element.appendChild(this.#status);
 
-        this.hoverStatusListener = new WeakMap();
-
         document.addEventListener('mousemove', this.#handleMouse.bind(this));
         parent.appendChild(this.#element);
         this.clearStatus();
         this.render();
+
+
+        document.addEventListener('keydown', this.#handleKeyDown.bind(this));
+    }
+
+    #handleKeyDown(e) {
+        if (this.hotkeyTarget) {
+            let { gridElement, element } = this.hotkeyTarget;
+            gridElement.onHotkey(element, e.key, 'down');
+        }
     }
 
     // Registers a componenet with the grids renderloop. Automatically done by GridElement constructor.

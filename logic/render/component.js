@@ -32,7 +32,7 @@ class Component extends GridElement {
         this.inner = document.createElement('div');
         this.inner.innerHTML = name;
         this.inner.classList.add('component-inner');
-        this.setHoverStatus(this.inner, 'Component <b>' + name + '</b>. <i>LMB</i>: Drag to move. <i>R</i>: Rotate');
+        this.setHoverMessage(this.inner, 'Component <b>' + name + '</b>. <i>LMB</i>: Drag to move. <i>R</i>: Rotate');
         this.registerDrag(this.inner, { type: "component", grabOffsetX: null, grabOffsetY: null });
         this.element.appendChild(this.inner);
 
@@ -55,7 +55,7 @@ class Component extends GridElement {
                     let port = document.createElement('div');
                     port.classList.add('component-port');
                     this.element.appendChild(port);
-                    this.setHoverStatus(port, 'Port <b>' + item.name + '</b> of <b>' + name + '</b>. <i>LMB</i>: Drag to connect.');
+                    this.setHoverMessage(port, 'Port <b>' + item.name + '</b> of <b>' + name + '</b>. <i>LMB</i>: Drag to connect.');
                     // port hover label
                     let portLabel = document.createElement('div');
                     portLabel.classList.add('component-port-label');
@@ -87,6 +87,14 @@ class Component extends GridElement {
             }
         }
         return null;
+    }
+
+    // Hover hotkey actions
+    onHotkey(element, key, status) {
+        if (key === 'r') {
+            this.rotation = (this.rotation + 1) % 4;
+            this.render();
+        }
     }
 
     // Draw drop preview while moving component.
@@ -151,6 +159,9 @@ class Component extends GridElement {
         let visualLabelPadding = 1 * this.grid.zoom;
         let visualLabelLineHeight = visualPortSize + 2 * visualLabelPadding;
         let ports = this.rotatedPorts();
+
+        this.width = Math.max(this.grid.spacing * 2, (ports.top.length + 1) * this.grid.spacing, (ports.bottom.length + 1) * this.grid.spacing);
+        this.height = Math.max(this.grid.spacing * 2, (ports.left.length + 1) * this.grid.spacing, (ports.right.length + 1) * this.grid.spacing);
 
         for (const [side, items] of Object.entries(ports)) {
             let x = side !== 'right' ? (side !== 'left' ? visualOffset : 0) : this.visualWidth - visualPortSize;
