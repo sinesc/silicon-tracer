@@ -50,6 +50,22 @@ for (let [ gateType, { joinOp } ] of Object.entries(Compilable.GATE_MAP)) {
     button.onmouseleave = () => mainGrid.clearStatus();
 }
 
+// Show warning when not focussed to avoid confusion. In this state mouse wheel events still register but hotkeys don't.
+let hadFocus = null;
+let focusTimer = null;
+setInterval(() => {
+    let hasFocus = document.hasFocus();
+    if (hasFocus !== hadFocus) {
+        // remove display: none first
+        document.body.classList.add('focus-changing');
+        // then change focus class
+        setTimeout(hasFocus ? () => document.body.classList.remove('no-focus') : () => document.body.classList.add('no-focus'), 1);
+        hadFocus = hasFocus;
+        // later add general display none again, but overriden by focus state
+        clearTimeout(focusTimer);
+        focusTimer = setTimeout(() => document.body.classList.remove('focus-changing'), 750);
+    }
+}, 100);
 
 
 let circuit1 = new Circuit('Gate', { left: [ "a", "b" ], right: [ "q" ], top: [ "xuper", "y" ], bottom: [ "g" ] });

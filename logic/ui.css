@@ -1,7 +1,7 @@
 @charset "UTF-8";
 
 /*
- * general ui
+ * General UI
  */
 html {
     background-color: black;
@@ -40,9 +40,38 @@ html {
     border: 1px solid #fff;
 }
 
+/*
+ * Focus hint, see main.js.
+ */
+#focus-hint {
+    pointer-events: none;
+    display: none;
+    position: absolute;
+    z-index: 99;
+    top: 75px;
+    left: 50%;
+    margin-left: -400px;
+    width: 800px;
+    padding: 10px;
+    text-align: center;
+    font-size: 1.5em;
+    font-weight: bold;
+    border: 3px solid red;
+    background: maroon;
+    opacity: 0.0;
+    border-radius: 10px;
+    transition: opacity 0.5s;
+}
+body.focus-changing #focus-hint {
+    display: block;
+}
+body.no-focus #focus-hint {
+    display: block;
+    opacity: 0.3;
+}
 
 /*
- * grid
+ * Grid
  */
 .grid {
     /*background-image: radial-gradient(circle, #888 1px, #000 1px);  in JS to avoid looking to bright on low zoom */
