@@ -207,6 +207,35 @@ body.no-focus #focus-hint {
 .connection-h, .connection-v {
     z-index: 10;
     position: absolute;
-    background-color: rgb(76, 136, 76);
     box-sizing: border-box;
+}
+.connection-color-0 {
+    background-color: rgb(76, 136, 76);
+}
+.connection-color-1 {
+    background-color: rgb(120, 136, 76);
+}
+.connection-color-2 {
+    background-color: rgb(136, 115, 76);
+}
+.connection-color-3 {
+    background-color: rgb(136, 95, 76);
+}
+.connection-color-4 {
+    background-color: rgb(136, 76, 76);
+}
+.connection-color-5 {
+    background-color: rgb(136, 76, 111);
+}
+.connection-color-6 {
+    background-color: rgb(112, 76, 136);
+}
+.connection-color-7 {
+    background-color: rgb(87, 76, 136);
+}
+.connection-color-8 {
+    background-color: rgb(76, 100, 136);
+}
+.connection-color-9 {
+    background-color: rgb(76, 136, 133);
 }

@@ -95,7 +95,8 @@ class Component extends GridElement {
             // add connection point when pressing R while dragging a connection
             let x = this.dragConnection.x + this.dragConnection.width;
             let y = this.dragConnection.y + this.dragConnection.height;
-            this.dragConnection = new Connection(this.grid, x, y, x, y, ordering === 'vh' ? 'hv' : 'vh');
+            let color = this.dragConnection.color;
+            this.dragConnection = new Connection(this.grid, x, y, x, y, ordering === 'vh' ? 'hv' : 'vh', color);
             this.dragConnection.render();
         }
     }
