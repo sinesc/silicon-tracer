@@ -1,9 +1,8 @@
 class Component extends GridElement {
 
     static SIDES = [ 'top', 'right', 'bottom', 'left' ];
-
-    portSize = 14;
-    innerMargin = 5;
+    static PORT_SIZE = 14;
+    static INNER_MARGIN = 5;
 
     element;
     inner;
@@ -53,8 +52,8 @@ class Component extends GridElement {
             // update this.ports with computed port properties
             item.port = port;
             item.portLabel = portLabel;
-            item.x = x + this.portSize / 2;
-            item.y = y + this.portSize / 2;
+            item.x = x + Component.PORT_SIZE / 2;
+            item.y = y + Component.PORT_SIZE / 2;
             // register a drag event for the port, will trigger onDrag with the port name
             this.registerDrag(port, { type: "port", name: item.name });
         });
@@ -87,8 +86,8 @@ class Component extends GridElement {
             this.y -= (this.width - this.height) / 2;
             this.#updateDimensions(ports);
             this.#iterPorts(ports, (item, side, x, y) => {
-                item.x = x + this.portSize / 2;
-                item.y = y + this.portSize / 2;
+                item.x = x + Component.PORT_SIZE / 2;
+                item.y = y + Component.PORT_SIZE / 2;
             });
             this.render();
         } else if (key === 'r' && origin === 'connection') {
@@ -136,7 +135,7 @@ class Component extends GridElement {
     onConnect(x, y, status, what) {
         let [ side, port ] = this.portByName(what.name);
         if (!this.dragConnection /* start */) {
-            this.grid.setStatus( 'Drawing connection. <i>R</i>: Add point, continue drawing from here.', true);
+            this.grid.setStatus(Connection.DRAWING_CONNECTION_MESSAGE, true);
             let ordering = side === 'top' || side === 'bottom' ? 'vh' : 'hv';
             this.grid.requestHotkeyTarget(this, 'connection', ordering);
             this.dragConnection = new Connection(this.grid, this.x + port.x, this.y + port.y, x, y, ordering);
@@ -175,17 +174,17 @@ class Component extends GridElement {
         this.element.style.height = this.visualHeight + "px";
 
         if ((this.width < this.height || (this.width === this.height && ports.top.length === 0 && ports.bottom.length === 0)) && this.visualWidth < 200) {
-            this.inner.style.lineHeight = (this.visualWidth - (this.innerMargin * 2)) + "px";
+            this.inner.style.lineHeight = (this.visualWidth - (Component.INNER_MARGIN * 2)) + "px";
             this.inner.style.writingMode = 'vertical-rl';
         } else {
-            this.inner.style.lineHeight = (this.visualHeight - (this.innerMargin * 2)) + "px";
+            this.inner.style.lineHeight = (this.visualHeight - (Component.INNER_MARGIN * 2)) + "px";
             this.inner.style.writingMode = 'horizontal-tb';
         }
     }
 
     // Renders component ports. Only required during scaling/rotation.
     #renderPorts() {
-        let visualPortSize = this.portSize * this.grid.zoom;
+        let visualPortSize = Component.PORT_SIZE * this.grid.zoom;
         let visualLabelPadding = 1 * this.grid.zoom;
         let visualLabelLineHeight = visualPortSize + 2 * visualLabelPadding;
         let ports = this.#rotatedPorts();
@@ -263,10 +262,10 @@ class Component extends GridElement {
     // Iterate with callback fn(port, side, x, y) over component ports.
     #iterPorts(ports, fn) {
         for (const [side, items] of Object.entries(ports)) {
-            let x = side !== 'right' ? (side !== 'left' ? this.grid.spacing - (this.portSize / 2) : 0) : this.width - this.portSize;
-            let y = side !== 'bottom' ? (side !== 'top' ? this.grid.spacing - (this.portSize / 2) : 0) : this.height - this.portSize;
-            let stepX = side === 'left' || side === 'right' ? 0 : this.grid.spacing;
-            let stepY = side === 'top' || side === 'bottom' ? 0 : this.grid.spacing;
+            let x = side !== 'right' ? (side !== 'left' ? Grid.SPACING - (Component.PORT_SIZE / 2) : 0) : this.width - Component.PORT_SIZE;
+            let y = side !== 'bottom' ? (side !== 'top' ? Grid.SPACING - (Component.PORT_SIZE / 2) : 0) : this.height - Component.PORT_SIZE;
+            let stepX = side === 'left' || side === 'right' ? 0 : Grid.SPACING;
+            let stepY = side === 'top' || side === 'bottom' ? 0 : Grid.SPACING;
             for (const item of items) {
                 if (item.name !== null) {
                     fn(item, side, x, y);
@@ -279,7 +278,7 @@ class Component extends GridElement {
 
     // Update component width/height from given ports.
     #updateDimensions(ports) {
-        this.width = Math.max(this.grid.spacing * 2, (ports.top.length + 1) * this.grid.spacing, (ports.bottom.length + 1) * this.grid.spacing);
-        this.height = Math.max(this.grid.spacing * 2, (ports.left.length + 1) * this.grid.spacing, (ports.right.length + 1) * this.grid.spacing);
+        this.width = Math.max(Grid.SPACING * 2, (ports.top.length + 1) * Grid.SPACING, (ports.bottom.length + 1) * Grid.SPACING);
+        this.height = Math.max(Grid.SPACING * 2, (ports.left.length + 1) * Grid.SPACING, (ports.right.length + 1) * Grid.SPACING);
     }
 }

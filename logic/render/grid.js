@@ -1,10 +1,9 @@
 class Grid {
 
-    // would be static if they weren't so inconvenient to access
-    debugCoords = false;
-    spacing = 20;
-    zoomLevels = [ 0.5, 0.65, 0.85, 1.0, 1.25, 1.50, 1.75, 2.0, 2.5, 3.0 ];
-    statusDelay = 500;
+    static DEBUG_COORDS = false;
+    static ZOOM_LEVELS = [ 0.5, 0.65, 0.85, 1.0, 1.25, 1.50, 1.75, 2.0, 2.5, 3.0 ];
+    static SPACING = 20;
+    static STATUS_DELAY = 500;
 
     zoom = 1.25;
     offsetX = 0;
@@ -74,12 +73,12 @@ class Grid {
 
     // Renders the grid and its components. If the optional reason is 'move' some render steps may be optimized out.
     render(reason) {
-        let spacing = this.spacing * this.zoom;
+        let spacing = Grid.SPACING * this.zoom;
         let offsetX = this.offsetX * this.zoom;
         let offsetY = this.offsetY * this.zoom;
 
         // add below/above/current zoom level classes to grid to enable zoom based styling
-        for (let zoom of this.zoomLevels) {
+        for (let zoom of Grid.ZOOM_LEVELS) {
             let name = zoom * 100;
             this.#element.classList.remove('grid-zoom-above-' + name);
             this.#element.classList.remove('grid-zoom-' + name);
@@ -147,7 +146,7 @@ class Grid {
             clearTimeout(this.#statusTimer);
         }
         this.#status.classList.add('grid-status-faded');
-        this.#statusTimer = setTimeout(() => this.setStatus(), this.statusDelay);
+        this.#statusTimer = setTimeout(() => this.setStatus(), Grid.STATUS_DELAY);
     }
 
     // Makes given gridelement become the hotkey-target and prevents hover events from stealing hotkey focus until released.
@@ -166,13 +165,13 @@ class Grid {
 
     // Gets the current zoom level index.
     get zoomLevel() {
-        return this.zoomLevels.findIndex((z) => z === this.zoom) ?? 0;
+        return Grid.ZOOM_LEVELS.findIndex((z) => z === this.zoom) ?? 0;
     }
 
     // Sets a new zoom level index.
     set zoomLevel(level) {
-        level = level < 0 ? 0 : (level >= this.zoomLevels.length ? this.zoomLevels.length - 1 : level);
-        this.zoom = this.zoomLevels[level];
+        level = level < 0 ? 0 : (level >= Grid.ZOOM_LEVELS.length ? Grid.ZOOM_LEVELS.length - 1 : level);
+        this.zoom = Grid.ZOOM_LEVELS[level];
     }
 
     // Called when a key is pressed and then repeatedly while being held.
@@ -187,7 +186,7 @@ class Grid {
     #handleMouse(e) {
         this.#mouseX = e.clientX;
         this.#mouseY = e.clientY;
-        if (this.debugCoords && this.#statusMessage === null && this.screenInBounds(this.#mouseX, this.#mouseY)) {
+        if (Grid.DEBUG_COORDS && this.#statusMessage === null && this.screenInBounds(this.#mouseX, this.#mouseY)) {
             let [ x, y ] = this.screenToGrid(this.#mouseX, this.#mouseY);
             this.#status.innerHTML = 'x: ' + Math.round(x) + ' y: ' + Math.round(y) + ' zoom: ' + this.zoom + '</b>';
         }

@@ -42,8 +42,8 @@ class GridElement {
     // Utility function to align given x/y to grid coordinates and return them.
     gridAlign(x, y) {
         return [
-            Math.ceil(x / this.grid.spacing) * this.grid.spacing - 0.5 * this.grid.spacing,
-            Math.ceil(y / this.grid.spacing) * this.grid.spacing - 0.5 * this.grid.spacing
+            Math.ceil(x / Grid.SPACING) * Grid.SPACING - 0.5 * Grid.SPACING,
+            Math.ceil(y / Grid.SPACING) * Grid.SPACING - 0.5 * Grid.SPACING
         ];
     }
 

@@ -1,8 +1,8 @@
 class Connection extends GridElement {
 
     static HOVER_MESSAGE = 'Connection. <i>LMB</i>: Branch off new connection. <i>0</i> - <i>9</i>: Set net color.';// TODO: <i>Shift+LMB</i>: Drag along the normal.
-
-    thickness = 4;
+    static DRAWING_CONNECTION_MESSAGE = 'Drawing connection. <i>R</i>: Add point, continue drawing from here.';
+    static THICKNESS = 4;
 
     elementH;
     elementV;
@@ -43,20 +43,24 @@ class Connection extends GridElement {
         this.render();
     }
 
-    // Create connection from port.
+    // Create connection from exiting connection.
     onConnect(x, y, status, what) {
         if (status === 'start') {
             what.startX = x;
             what.startY = y;
         }
         if (!this.dragConnection) {
+            this.grid.setStatus(Connection.DRAWING_CONNECTION_MESSAGE, true);
+            this.grid.requestHotkeyTarget(this, 'connection', what.ordering);
             this.dragConnection = new Connection(this.grid, what.startX, what.startY, x, y, what.ordering, this.color);
             this.dragConnection.render();
         } else if (status !== 'stop') {
-            this.dragConnection.setEndpoints(what.startX, what.startY, x, y, true);
+            this.dragConnection.setEndpoints(this.dragConnection.x, this.dragConnection.y, x, y, true);
             this.dragConnection.render();
         } else {
             this.dragConnection = null;
+            this.grid.clearStatus(true);
+            this.grid.releaseHotkeyTarget(this);
         }
     }
 
@@ -66,10 +70,17 @@ class Connection extends GridElement {
     }
 
     // Hover hotkey actions
-    onHotkey(key, status, ...args) {
+    onHotkey(key, status, origin, ordering) {
         if (key >= '0' && key <= '9') {
             this.color = parseInt(key);
             this.render();
+        } else if (key === 'r' && origin === 'connection') {
+            // add connection point when pressing R while dragging a connection
+            let x = this.dragConnection.x + this.dragConnection.width;
+            let y = this.dragConnection.y + this.dragConnection.height;
+            let color = this.dragConnection.color;
+            this.dragConnection = new Connection(this.grid, x, y, x, y, ordering === 'vh' ? 'hv' : 'vh', color);
+            this.dragConnection.render();
         }
     }
 
@@ -88,7 +99,7 @@ class Connection extends GridElement {
     // Renders the component onto the grid.
     render() {
 
-        let thickness = this.thickness * this.grid.zoom;
+        let thickness = Connection.THICKNESS * this.grid.zoom;
         let x = this.visualX;
         let y = this.visualY ;
         let width = this.visualWidth;
@@ -102,7 +113,7 @@ class Connection extends GridElement {
             this.elementH.classList.remove('connection-color-' + c);
             this.elementV.classList.remove('connection-color-' + c);
         }
-        
+
         this.elementH.classList.add('connection-color-' + this.color);
         this.elementV.classList.add('connection-color-' + this.color);
 
