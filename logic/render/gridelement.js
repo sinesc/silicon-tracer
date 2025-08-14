@@ -21,7 +21,7 @@ class GridElement {
 
     onDrag(x, y, status, ...args) { }
 
-    onHotkey(element, key, status) { }
+    onHotkey(key, status, ...args) { }
 
     get visualX() {
         return (this.x + this.grid.offsetX) * this.grid.zoom;
@@ -119,7 +119,9 @@ class GridElement {
 
     // Called when mouse hovers over a registered element, sets the grids status message.
     #handleHover(element, status) {
-        this.grid.hotkeyTarget = status === 'start' ? { gridElement: this, element: element } : null;
+        if (this.grid.hotkeyTarget === null || !this.grid.hotkeyTarget.locked) { // TODO: refactor this into grid.requestHotkeyTarget by adding a lock parameter, then make grid.hotkeyTarget private there
+            this.grid.hotkeyTarget = status === 'start' ? { gridElement: this, args: [], locked: false } : null;
+        }
         let message = this.#hoverMessages.get(element);
         if (message) {
             if (status === 'start') {

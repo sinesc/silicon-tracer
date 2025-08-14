@@ -16,6 +16,7 @@ class Grid {
     #components = [];
     #statusMessage = null;
     #statusTimer = null;
+    #statusLocked = false;
     #mouseX = 0;
     #mouseY = 0;
 
@@ -113,7 +114,11 @@ class Grid {
     }
 
     // Sets a status message. Pass null to unset and revert back to default status.
-    setStatus(message) {
+    setStatus(message, lock) {
+        if (this.#statusLocked && !lock) {
+            return;
+        }
+        this.#statusLocked = lock ?? false;
         if (this.#statusTimer) {
             clearTimeout(this.#statusTimer);
         }
@@ -133,12 +138,30 @@ class Grid {
     }
 
     // Clears the current status message.
-    clearStatus() {
+    clearStatus(unlock) {
+        if (this.#statusLocked && !unlock) {
+            return;
+        }
+        this.#statusLocked = false;
         if (this.#statusTimer) {
             clearTimeout(this.#statusTimer);
         }
         this.#status.classList.add('grid-status-faded');
         this.#statusTimer = setTimeout(() => this.setStatus(), this.statusDelay);
+    }
+
+    // Makes given gridelement become the hotkey-target and prevents hover events from stealing hotkey focus until released.
+    requestHotkeyTarget(gridElement, ...args) {
+        if (!this.hotkeyTarget || !this.hotkeyTarget.locked) {
+            this.hotkeyTarget = { gridElement, args, locked: true };
+        }
+    }
+
+    // Releases hotkey focus and lock if given element matches current lock holder.
+    releaseHotkeyTarget(gridElement) {
+        if (this.hotkeyTarget && this.hotkeyTarget.gridElement === gridElement) {
+            this.hotkeyTarget = null;
+        }
     }
 
     // Gets the current zoom level index.
@@ -155,8 +178,8 @@ class Grid {
     // Called when a key is pressed and then repeatedly while being held.
     #handleKeyDown(e) {
         if (this.hotkeyTarget) {
-            let { gridElement, element } = this.hotkeyTarget;
-            gridElement.onHotkey(element, e.key, 'down');
+            let { gridElement, args } = this.hotkeyTarget;
+            gridElement.onHotkey(e.key, 'down', ...args);
         }
     }
 

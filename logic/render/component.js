@@ -77,8 +77,10 @@ class Component extends GridElement {
     }
 
     // Hover hotkey actions
-    onHotkey(element, key, status) {
-        if (key === 'r') {
+    onHotkey(key, status, origin, ordering) {
+        origin ??= 'hover';
+        if (key === 'r' && origin === 'hover') {
+            // rotate component with R while mouse is hovering
             this.rotation = (this.rotation - 1) & 3;
             let ports = this.#rotatedPorts();
             this.x += (this.width - this.height) / 2;
@@ -89,6 +91,12 @@ class Component extends GridElement {
                 item.y = y + this.portSize / 2;
             });
             this.render();
+        } else if (key === 'r' && origin === 'connection') {
+            // add connection point when pressing R while dragging a connection
+            let x = this.dragConnection.x + this.dragConnection.width;
+            let y = this.dragConnection.y + this.dragConnection.height;
+            this.dragConnection = new Connection(this.grid, x, y, x, y, ordering === 'vh' ? 'hv' : 'vh');
+            this.dragConnection.render();
         }
     }
 
@@ -126,18 +134,20 @@ class Component extends GridElement {
     // Create connection from port.
     onConnect(x, y, status, what) {
         let [ side, port ] = this.portByName(what.name);
-        if (!this.dragConnection) {
-            console.log(side);
+        if (!this.dragConnection /* start */) {
+            this.grid.setStatus( 'Drawing connection. <i>R</i>: Add point, continue drawing from here.', true);
             let ordering = side === 'top' || side === 'bottom' ? 'vh' : 'hv';
+            this.grid.requestHotkeyTarget(this, 'connection', ordering);
             this.dragConnection = new Connection(this.grid, this.x + port.x, this.y + port.y, x, y, ordering);
             this.dragConnection.render();
         } else if (status !== 'stop') {
-            this.dragConnection.setEndpoints(this.x + port.x, this.y + port.y, x, y, true);
+            this.dragConnection.setEndpoints(this.dragConnection.x, this.dragConnection.y, x, y, true);
             this.dragConnection.render();
         } else {
             this.dragConnection = null;
+            this.grid.clearStatus(true);
+            this.grid.releaseHotkeyTarget(this);
         }
-
     }
 
     // Called while a registered visual is being dragged.
@@ -174,7 +184,6 @@ class Component extends GridElement {
 
     // Renders component ports. Only required during scaling/rotation.
     #renderPorts() {
-        console.log('rendering ports');
         let visualPortSize = this.portSize * this.grid.zoom;
         let visualLabelPadding = 1 * this.grid.zoom;
         let visualLabelLineHeight = visualPortSize + 2 * visualLabelPadding;
@@ -189,6 +198,7 @@ class Component extends GridElement {
             port.style.height = visualPortSize + "px";
             port.style.lineHeight = visualPortSize + 'px';
             port.innerHTML = '<span>' + name.slice(0, 1) + '</span>';
+            // TODO: colorize based on connection (and its color)
             if (name.length > 1) {
                 portLabel.innerHTML = name;
                 portLabel.style.lineHeight = visualLabelLineHeight + 'px';
@@ -239,6 +249,7 @@ class Component extends GridElement {
 
     // Returns ports rotated by current component rotation.
     #rotatedPorts() {
+        // FIXME: this needs to flip the order of ports on each side as well
         let sides = Component.SIDES;
         let mapped = {};
         mapped.top      = this.ports[sides[(0 + this.rotation) % 4]];
