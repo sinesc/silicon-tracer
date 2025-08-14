@@ -34,15 +34,8 @@ class Grid {
         this.clearStatus();
         this.render();
 
-
+        // TODO: may have to go to parent UI
         document.addEventListener('keydown', this.#handleKeyDown.bind(this));
-    }
-
-    #handleKeyDown(e) {
-        if (this.hotkeyTarget) {
-            let { gridElement, element } = this.hotkeyTarget;
-            gridElement.onHotkey(element, e.key, 'down');
-        }
     }
 
     // Registers a componenet with the grids renderloop. Automatically done by GridElement constructor.
@@ -78,8 +71,8 @@ class Grid {
         return [ mouseGridX, mouseGridY ];
     }
 
-    // Renders the grid and its components.
-    render() {
+    // Renders the grid and its components. If the optional reason is 'move' some render steps may be optimized out.
+    render(reason) {
         let spacing = this.spacing * this.zoom;
         let offsetX = this.offsetX * this.zoom;
         let offsetY = this.offsetY * this.zoom;
@@ -106,7 +99,7 @@ class Grid {
         for (let i = 0; i < this.#components.length; ++i) {
             let component = this.#components[i].deref();
             if (component) {
-                component.render();
+                component.render(reason);
             } else {
                 // remove from array by replacing with last entry. afterwards next iteration has to repeat this index.
                 if (i < this.#components.length - 1) {
@@ -159,6 +152,14 @@ class Grid {
         this.zoom = this.zoomLevels[level];
     }
 
+    // Called when a key is pressed and then repeatedly while being held.
+    #handleKeyDown(e) {
+        if (this.hotkeyTarget) {
+            let { gridElement, element } = this.hotkeyTarget;
+            gridElement.onHotkey(element, e.key, 'down');
+        }
+    }
+
     // Called on mouse move, updates mouse coordinates and tooltip.
     #handleMouse(e) {
         this.#mouseX = e.clientX;
@@ -185,6 +186,7 @@ class Grid {
         this.render();
     }
 
+    // Called when mouse drag starts.
     #handleDragStart(e) {
         e.preventDefault();
         e.stopPropagation();
@@ -195,6 +197,7 @@ class Grid {
         document.onmouseup = this.#handleDragStop.bind(this);
     }
 
+    // Called on mouse drag, moves the grid.
     #handleDragMove(dragStartX, dragStartY, originalX, originalY, e) {
         e.preventDefault();
         e.stopPropagation();
@@ -202,9 +205,10 @@ class Grid {
         let deltaY = e.clientY - dragStartY;
         this.offsetX = originalX + deltaX / this.zoom;
         this.offsetY = originalY + deltaY / this.zoom;
-        this.render();
+        this.render('move');
     }
 
+    // Called when mouse drag ends.
     #handleDragStop(e) {
         document.onmouseup = null;
         document.onmousemove = null;

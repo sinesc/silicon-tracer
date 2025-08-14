@@ -88,6 +88,7 @@ class GridElement {
         this.#handleDragStart(args, e);
     }
 
+    // Called when mouse drag starts, invokes onDrag().
     #handleDragStart(args, e) {
         e.preventDefault();
         if (e.which !== 1) { // don't stop propagation for other buttons so we can drag the grid while hovering over a connection/component
@@ -100,22 +101,23 @@ class GridElement {
         this.onDrag(dragStartX, dragStartY, 'start', ...args);
     }
 
+    // Called during mouse drag, invokes onDrag().
     #handleDragMove(args, e) {
         e.preventDefault();
         e.stopPropagation();
         let [ dragCurrentX, dragCurrentY ] = this.grid.screenToGrid(e.clientX, e.clientY);
         this.onDrag(dragCurrentX, dragCurrentY, 'drag', ...args);
-        this.render();
     }
 
+    // Called when mouse drag ends, invokes onDrag().
     #handleDragStop(args, e) {
         document.onmouseup = null;
         document.onmousemove = null;
         let [ dragCurrentX, dragCurrentY ] = this.grid.screenToGrid(e.clientX, e.clientY);
         this.onDrag(dragCurrentX, dragCurrentY, 'stop', ...args);
-        this.render();
     }
 
+    // Called when mouse hovers over a registered element, sets the grids status message.
     #handleHover(element, status) {
         this.grid.hotkeyTarget = status === 'start' ? { gridElement: this, element: element } : null;
         let message = this.#hoverMessages.get(element);

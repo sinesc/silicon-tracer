@@ -18,7 +18,7 @@ class Component extends GridElement {
 
         super(grid);
         this.circuit = circuit;
-        this.rotation = rotation % 4;
+        this.rotation = rotation & 3;
 
         [ this.x, this.y ] = this.gridAlign(x, y);
 
@@ -79,7 +79,7 @@ class Component extends GridElement {
     // Hover hotkey actions
     onHotkey(element, key, status) {
         if (key === 'r') {
-            this.rotation = (this.rotation + 1) % 4;
+            this.rotation = (this.rotation - 1) & 3;
             let ports = this.#rotatedPorts();
             this.x += (this.width - this.height) / 2;
             this.y -= (this.width - this.height) / 2;
@@ -120,6 +120,7 @@ class Component extends GridElement {
             what.grabOffsetX = null;
             what.grabOffsetY = null
         }
+        this.render('move');
     }
 
     // Create connection from port.
@@ -149,82 +150,14 @@ class Component extends GridElement {
     }
 
     // Renders the component onto the grid.
-    render() {
-        // render component ports
-        let visualPortSize = this.portSize * this.grid.zoom;
-        let visualLabelPadding = 1 * this.grid.zoom;
-        let visualLabelLineHeight = visualPortSize + 2 * visualLabelPadding;
+    render(reason) {
         let ports = this.#rotatedPorts();
 
-        this.#iterPorts(ports, ({ name, port, portLabel }, side, x, y) => {
-            x *= this.grid.zoom;
-            y *= this.grid.zoom;
-            port.style.left = x + "px";
-            port.style.top = y + "px";
-            port.style.width = visualPortSize + "px";
-            port.style.height = visualPortSize + "px";
-            if (/*this.grid.zoom >= 1.25 &&*/ name.length > 1) {
-                port.innerHTML = '';
-                portLabel.innerHTML = name;
-                let style = portLabel.style;
-                style.lineHeight = visualLabelLineHeight + 'px';
-                if (side === 'bottom') {
-                    style.writingMode = 'vertical-rl';
-                    style.left = (x - visualLabelPadding) + "px";
-                    style.top = (y - visualLabelPadding) + "px";
-                    style.right = '';
-                    style.bottom = '';
-                    style.paddingLeft = '';
-                    style.paddingTop = visualLabelLineHeight + "px";
-                    style.paddingRight = '';
-                    style.paddingBottom = visualLabelPadding + "px";
-                    style.width = visualLabelLineHeight + "px";
-                    style.height = '';
-                } else if (side === 'top') {
-                    style.writingMode = 'sideways-lr';
-                    style.left = (x - visualLabelPadding) + "px";
-                    style.top = '';
-                    style.right = '';
-                    style.bottom = (this.visualHeight - visualPortSize - visualLabelPadding) + "px";
-                    style.paddingLeft = '';
-                    style.paddingTop = visualLabelPadding + "px";
-                    style.paddingRight = '';
-                    style.paddingBottom = visualLabelLineHeight + "px";
-                    style.width = visualLabelLineHeight + "px";
-                    style.height = '';
-                } else if (side === 'left') {
-                    style.writingMode = 'horizontal-tb';
-                    style.left = '';
-                    style.top = (y - visualLabelPadding) + "px";
-                    style.right = (this.visualWidth - visualPortSize - visualLabelPadding) + "px";
-                    style.bottom = '';
-                    style.paddingLeft = visualLabelPadding + "px";
-                    style.paddingTop = '';
-                    style.paddingRight = visualLabelLineHeight + "px";
-                    style.paddingBottom = '';
-                    style.width = '';
-                    style.height = visualLabelLineHeight + "px";
-                } else if (side === 'right') {
-                    style.writingMode = 'horizontal-tb';
-                    style.left = (x - visualLabelPadding) + "px";
-                    style.top = (y - visualLabelPadding) + "px";
-                    style.right = '';
-                    style.bottom = '';
-                    style.paddingLeft = visualLabelLineHeight + "px";
-                    style.paddingTop = '';
-                    style.paddingRight = visualLabelPadding + "px";
-                    style.paddingBottom = '';
-                    style.width = '';
-                    style.height = visualLabelLineHeight + "px";
-                }
-            }
-            //if (this.grid.zoom >= 1.25) {
-                port.style.lineHeight = visualPortSize + 'px';
-                port.innerHTML = '<span>' + name.slice(0, 1) + '</span>';
-            //}
-        });
+        // don't need to update ports when only moving
+        if (reason !== 'move') {
+            this.#renderPorts();
+        }
 
-        // render component body
         this.element.style.left = this.visualX + "px";
         this.element.style.top = this.visualY + "px";
         this.element.style.width = this.visualWidth + "px";
@@ -239,6 +172,71 @@ class Component extends GridElement {
         }
     }
 
+    // Renders component ports. Only required during scaling/rotation.
+    #renderPorts() {
+        console.log('rendering ports');
+        let visualPortSize = this.portSize * this.grid.zoom;
+        let visualLabelPadding = 1 * this.grid.zoom;
+        let visualLabelLineHeight = visualPortSize + 2 * visualLabelPadding;
+        let ports = this.#rotatedPorts();
+        let properties = [ 'writingMode', 'left', 'top', 'right', 'bottom','paddingLeft', 'paddingTop', 'paddingRight', 'paddingBottom', 'width', 'height', ];
+        this.#iterPorts(ports, ({ name, port, portLabel }, side, x, y) => {
+            x *= this.grid.zoom;
+            y *= this.grid.zoom;
+            port.style.left = x + "px";
+            port.style.top = y + "px";
+            port.style.width = visualPortSize + "px";
+            port.style.height = visualPortSize + "px";
+            port.style.lineHeight = visualPortSize + 'px';
+            port.innerHTML = '<span>' + name.slice(0, 1) + '</span>';
+            if (name.length > 1) {
+                portLabel.innerHTML = name;
+                portLabel.style.lineHeight = visualLabelLineHeight + 'px';
+                let style;
+                if (side === 'bottom') {
+                    style = {
+                        writingMode: 'vertical-rl',
+                        left: (x - visualLabelPadding) + "px",
+                        top: (y - visualLabelPadding) + "px",
+                        paddingTop: visualLabelLineHeight + "px",
+                        paddingBottom: visualLabelPadding + "px",
+                        width: visualLabelLineHeight + "px",
+                    };
+                } else if (side === 'top') {
+                    style = {
+                        writingMode: 'sideways-lr',
+                        left: (x - visualLabelPadding) + "px",
+                        bottom: (this.visualHeight - visualPortSize - visualLabelPadding) + "px",
+                        paddingTop: visualLabelPadding + "px",
+                        paddingBottom: visualLabelLineHeight + "px",
+                        width: visualLabelLineHeight + "px",
+                    };
+                } else if (side === 'left') {
+                    style = {
+                        writingMode: 'horizontal-tb',
+                        top: (y - visualLabelPadding) + "px",
+                        right: (this.visualWidth - visualPortSize - visualLabelPadding) + "px",
+                        paddingLeft: visualLabelPadding + "px",
+                        paddingRight: visualLabelLineHeight + "px",
+                        height: visualLabelLineHeight + "px",
+                    };
+                } else if (side === 'right') {
+                    style = {
+                        writingMode: 'horizontal-tb',
+                        left: (x - visualLabelPadding) + "px",
+                        top: (y - visualLabelPadding) + "px",
+                        paddingLeft: visualLabelLineHeight + "px",
+                        paddingRight: visualLabelPadding + "px",
+                        height: visualLabelLineHeight + "px",
+                    };
+                }
+                for (const property of properties) {
+                    portLabel.style[property] = style[property] ?? '';
+                }
+            }
+        });
+    }
+
     // Returns ports rotated by current component rotation.
     #rotatedPorts() {
         let sides = Component.SIDES;
@@ -250,7 +248,7 @@ class Component extends GridElement {
         return mapped;
     }
 
-    // Iterate with callback fn(port, x, y) over component ports.
+    // Iterate with callback fn(port, side, x, y) over component ports.
     #iterPorts(ports, fn) {
         for (const [side, items] of Object.entries(ports)) {
             let x = side !== 'right' ? (side !== 'left' ? this.grid.spacing - (this.portSize / 2) : 0) : this.width - this.portSize;

@@ -5,6 +5,7 @@ class Connection extends GridElement {
     elementH;
     elementV;
     ordering;
+    dragConnection;
 
     net;
 
