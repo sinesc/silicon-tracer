@@ -209,6 +209,47 @@ body.no-focus #focus-hint {
     position: absolute;
     box-sizing: border-box;
 }
+.connection-debug {
+    pointer-events: none;
+    z-index: 11;
+    position: absolute;
+    box-sizing: border-box;
+    border: 1px solid grey;
+    border-top-color: red;
+    border-bottom-color: green;
+    border-left-color: orange;
+    border-right-color: turquoise;
+    opacity: 0.5;
+}
+.connection-debug span {
+    pointer-events: none;
+    z-index: 11;
+    display: block;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 300px;
+    height: 40px;
+    margin-left: -150px;
+    margin-top: -20px;
+    text-align: center;
+}
+.connection-debug-point {
+    pointer-events: none;
+    z-index: 11;
+    display: block;
+    position: absolute;
+}
+.connection-debug-point0::after {
+    content: '0';
+}
+.connection-debug-point1::after {
+    content: '1';
+}
+.connection-debug-point2::after {
+    content: '2';
+}
+
 /* extends clickable area around connections */
 .connection-h::after, .connection-v::after {
     content: '';

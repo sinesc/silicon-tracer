@@ -1,5 +1,6 @@
 class Connection extends GridElement {
 
+    static DEBUG_BOX = false;
     static HOVER_MESSAGE = 'Connection. <i>LMB</i>: Branch off new connection. <i>0</i> - <i>9</i>: Set net color.';// TODO: <i>Shift+LMB</i>: Drag along the normal.
     static DRAWING_CONNECTION_MESSAGE = 'Drawing connection. <i>R</i>: Add point, continue drawing from here.';
     static THICKNESS = 4;
@@ -9,10 +10,9 @@ class Connection extends GridElement {
     ordering;
     color;
     dragConnection;
+    points;
 
-    net;
-
-    constructor(grid, x1, y1, x2, y2, ordering, color, net) {
+    constructor(grid, x1, y1, x2, y2, ordering, color) {
 
         super(grid);
 
@@ -24,7 +24,6 @@ class Connection extends GridElement {
         this.height = y2 - y1;
         this.ordering = ordering ?? 'hv';
         this.color = color ?? 0;
-        this.net = net ?? new Net();
 
         this.elementH = document.createElement('div');
         this.elementH.classList.add('connection-h');
@@ -39,6 +38,17 @@ class Connection extends GridElement {
         this.registerDrag(this.elementV, { ordering: 'hv' });
         this.setHoverMessage(this.elementV, Connection.HOVER_MESSAGE);
         this.grid.addVisual(this.elementV);
+
+        if (Connection.DEBUG_BOX) {
+            this.debug = document.createElement('div');
+            this.debug.classList.add('connection-debug');
+            this.grid.addVisual(this.debug);
+            for (let i = 0; i < 3; ++i) {
+                this['debug' + i] = document.createElement('div');
+                this['debug' + i].classList.add('connection-debug-point', 'connection-debug-point' + i);
+                this.grid.addVisual(this['debug' + i]);
+            }
+        }
 
         this.render();
     }
@@ -96,6 +106,22 @@ class Connection extends GridElement {
         this.height = y2 - y1;
     };
 
+    // Returns the 2 or 3 distinct endpoint coordinates of this connection.
+    getPoints() {
+
+        let points = [ [ this.x, this.y ] ];
+
+        if (this.width !== 0) {
+            points.push(this.ordering === 'hv' ? [ this.x + this.width, this.y ] : [ this.x + (this.height === 0 ? this.width : 0), this.y + this.height ]);
+        }
+
+        if (this.height !== 0) {
+            points.push([ this.x + this.width, this.y + this.height ]);
+        }
+
+        return points;
+    }
+
     // Renders the component onto the grid.
     render() {
 
@@ -129,7 +155,7 @@ class Connection extends GridElement {
                 this.elementH.style.minHeight = thickness + 'px';
             }
             if (this.height !== 0) {
-                let vy = height < 0 ? y + height :  y;
+                let vy = height < 0 ? y + height : y;
                 let vh = Math.abs(height);
                 this.elementV.style.left = (x + width - t) + "px";
                 this.elementV.style.top = (vy - t) + "px";
@@ -157,6 +183,35 @@ class Connection extends GridElement {
                 this.elementH.style.minWidth = thickness + 'px';
                 this.elementH.style.minHeight = thickness + 'px';
             }
+        }
+
+        if (Connection.DEBUG_BOX) {
+            let hx = width < 0 ? x + width : x;
+            let hy = height < 0 ? y + height : y;
+            this.debug.style.left = hx + "px";
+            this.debug.style.top = hy + "px";
+            this.debug.style.width = Math.abs(width) + "px";
+            this.debug.style.height = Math.abs(height) + "px";
+            let points = this.getPoints();
+            for (let i = 0; i < 3; ++i) {
+                this.debugPoint(i, i < points.length ? points[i] : null);
+            }
+            this.debug.innerHTML = '<span>' + points.map((p) => JSON.stringify(p)).join('<br>') + '</span>';
+        }
+    }
+
+    // Renders a debug point on one of the 3 distinct connection end points.
+    debugPoint(i, c) {
+        if (c === null) {
+            this['debug' + i].style.display = 'none';
+        } else {
+            let x = c[0];
+            let y = c[1];
+            let vx = (x + this.grid.offsetX) * this.grid.zoom;
+            let vy = (y + this.grid.offsetY) * this.grid.zoom;
+            this['debug' + i].style.display = 'block';
+            this['debug' + i].style.left = (vx - 6) + 'px';
+            this['debug' + i].style.top = (vy - 6) + 'px';
         }
     }
 }
