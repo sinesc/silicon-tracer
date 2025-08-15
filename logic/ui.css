@@ -209,6 +209,18 @@ body.no-focus #focus-hint {
     position: absolute;
     box-sizing: border-box;
 }
+/* extends clickable area around connections */
+.connection-h::after, .connection-v::after {
+    content: '';
+    position: absolute;
+    inset-block: -4px;
+    inset-inline: -4px;
+}
+.grid-zoom-above-100 .connection-h::after, .grid-zoom-above-100 .connection-v::after {
+    inset-block: -8px;
+    inset-inline: -8px;
+}
+/* colors */
 .connection-color-0 {
     background-color: rgb(76, 136, 76);
 }
