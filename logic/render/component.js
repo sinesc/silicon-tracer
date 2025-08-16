@@ -35,7 +35,16 @@ class Component extends GridElement {
         this.element.appendChild(this.inner);
 
         // ensure ports are completely defined
-        this.ports = { left: [], right: [], top: [], bottom: [], ...circuit.ports }.map((side, ports) => ports.map((name) => ({ name: name, port: null, portLabel: null, x: null, y: null })));
+
+        this.ports = { left: [], right: [], top: [], bottom: [], ...circuit.ports };
+
+        for (let [ side, other ] of Object.entries({ 'left': 'right', 'right': 'left', 'top': 'bottom', 'bottom': 'top' })) {
+            while (this.ports[side].length < this.ports[other].length) {
+                this.ports[side].push(null);
+            }
+        }
+
+        this.ports = this.ports.map((side, ports) => ports.map((name) => ({ name: name, port: null, portLabel: null, x: null, y: null })));
 
         // ports
         let ports = this.#rotatedPorts();
@@ -260,13 +269,12 @@ class Component extends GridElement {
 
     // Returns ports rotated by current component rotation.
     #rotatedPorts() {
-        // FIXME: this needs to flip the order of ports on each side as well
         let sides = Component.SIDES;
         let mapped = {};
         mapped.top      = this.ports[sides[(0 + this.rotation) % 4]];
         mapped.right    = this.ports[sides[(1 + this.rotation) % 4]];
-        mapped.bottom   = this.ports[sides[(2 + this.rotation) % 4]];
-        mapped.left     = this.ports[sides[(3 + this.rotation) % 4]];
+        mapped.bottom   = this.ports[sides[(2 + this.rotation) % 4]].toReversed(); // TODO: I should render these in the 'correct' order instead
+        mapped.left     = this.ports[sides[(3 + this.rotation) % 4]].toReversed();
         return mapped;
     }
 
