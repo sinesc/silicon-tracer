@@ -1,4 +1,4 @@
-class GridElement {
+class GridItem {
 
     grid;
 
@@ -12,7 +12,7 @@ class GridElement {
 
     constructor(grid) {
         this.grid = grid;
-        grid.registerComponent(this);
+        grid.registerItem(this);
         this.#hoverRegistered = new Map();
         this.#hoverMessages = new Map();
     }
@@ -55,7 +55,7 @@ class GridElement {
         ];
     }
 
-    // Sets the optionally aligned component position.
+    // Sets the optionally aligned item position.
     setPosition(x, y, aligned) {
         if (aligned) {
             [ x, y ] = this.gridAlign(x, y);
@@ -85,14 +85,14 @@ class GridElement {
         element.onmousedown = this.#handleDragStart.bind(this, args);
     }
 
-    // Trigger component drag (e.g. when dragging from template into the grid).
+    // Trigger item drag (e.g. when dragging from template into the grid).
     dragStart(x, y, ...args) {
         document.onmousemove = this.#handleDragMove.bind(this, args);
         document.onmouseup = this.#handleDragStop.bind(this, args);
         this.onDrag(x, y, 'start', ...args);
     }
 
-    // Trigger component drag cancellation.
+    // Trigger item drag cancellation.
     dragStop(x, y, ...args) {
         document.onmouseup = null;
         document.onmousemove = null;

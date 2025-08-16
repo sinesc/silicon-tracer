@@ -11,7 +11,7 @@ class Grid {
 
     #element;
     #status;
-    #components = [];
+    #items = [];
     #statusMessage = null;
     #statusTimer = null;
     #statusLocked = false;
@@ -39,17 +39,22 @@ class Grid {
         document.addEventListener('keydown', this.#handleKeyDown.bind(this));
     }
 
-    // Registers a componenet with the grids renderloop. Automatically done by GridElement constructor.
-    registerComponent(component) {
-        this.#components.push(new WeakRef(component));
+    // Registers a componenet with the grids renderloop. Automatically done by GridItem constructor.
+    registerItem(item) {
+        this.#items.push(new WeakRef(item));
     }
 
-    // Adds a component visual element to the grid.
+    // Returns components that passed the given filter (c) => bool.
+    getComponents(filter) {
+        return this.#items.map((c) => c.deref()).filter((c) => c !== null && filter(c));
+    }
+
+    // Adds a visual element for a grid item to the grid.
     addVisual(element) {
         this.#element.appendChild(element);
     }
 
-    // Removes a component visual element from the grid.
+    // Removes a visual element from the grid.
     removeVisual(element) {
         element.remove();
     }
@@ -97,17 +102,17 @@ class Grid {
         this.#element.style.backgroundPositionX = (offsetX % spacing) + 'px';
         this.#element.style.backgroundPositionY = (offsetY % spacing) + 'px';
 
-        for (let i = 0; i < this.#components.length; ++i) {
-            let component = this.#components[i].deref();
-            if (component) {
-                component.render(reason);
+        for (let i = 0; i < this.#items.length; ++i) {
+            let item = this.#items[i].deref();
+            if (item) {
+                item.render(reason);
             } else {
                 // remove from array by replacing with last entry. afterwards next iteration has to repeat this index.
-                if (i < this.#components.length - 1) {
-                    this.#components[i] = this.#components.pop();
+                if (i < this.#items.length - 1) {
+                    this.#items[i] = this.#items.pop();
                     --i;
                 } else {
-                    this.#components.pop()
+                    this.#items.pop()
                 }
             }
         }

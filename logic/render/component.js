@@ -1,4 +1,4 @@
-class Component extends GridElement {
+class Component extends GridItem {
 
     static SIDES = [ 'top', 'right', 'bottom', 'left' ];
     static PORT_SIZE = 14;
@@ -157,7 +157,7 @@ class Component extends GridElement {
             this.dragConnection = new Connection(this.grid, this.x + port.x, this.y + port.y, x, y, what.ordering);
             this.dragConnection.render();
         } else if (status !== 'stop') {
-            // flip ordering when draggin towards component, effetively routing around the component
+            // flip ordering when draggin towards component, effetively routing around the component // FIXME: breaks order for R continued wires
             if (what.ordering === 'hv' && ((side === 'left' ? this.dragConnection.x < x : this.dragConnection.x > x))) {
                 this.dragConnection.ordering = 'vh';
             } else if (what.ordering === 'vh' && (side === 'top' ? this.dragConnection.y < y : this.dragConnection.y > y)) {

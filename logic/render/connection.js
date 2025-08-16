@@ -1,4 +1,4 @@
-class Connection extends GridElement {
+class Connection extends GridItem {
 
     static DEBUG_BOX = false;
     static HOVER_MESSAGE = 'Connection. <i>LMB</i>: Branch off new connection. <i>0</i> - <i>9</i>: Set net color.';// TODO: <i>Shift+LMB</i>: Drag along the normal.
@@ -122,7 +122,7 @@ class Connection extends GridElement {
         return points;
     }
 
-    // Renders the component onto the grid.
+    // Renders the connection onto the grid.
     render() {
 
         let thickness = Connection.THICKNESS * this.grid.zoom;
