@@ -7,13 +7,9 @@ class GlobalState {
     // Maps port ids to circuits.
     static todo;
 
-    static allocBase = 0;
     static allocMem;
 
     // Simulation granularity
-    static ARRAY_CONSTRUCTOR = Uint8Array;
-    static ARRAY_BITS = 8;
-    static MAX_DELAY = GlobalState.ARRAY_BITS / 2;
 
 }
 

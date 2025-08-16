@@ -1,7 +1,7 @@
 /*
 // test flipflop
 
-let c = new Compilable();
+let c = new Simulation();
 
 c.gateDecl('nor', [ 'a1', 'b1' ], 'q1');
 c.gateDecl('nor', [ 'a2', 'b2' ], 'q2');
@@ -13,27 +13,25 @@ let out2 = c.netDecl([ 'q2', 'b1' ]);
 
 c.compile();
 
-let mem = new Uint8Array(20);
-
 // ui stuff
 
-document.querySelector('#atrue').addEventListener('click', () => c.setNet(mem, set, 1));
-document.querySelector('#afalse').addEventListener('click', () => c.setNet(mem, set, 0));
-document.querySelector('#btrue').addEventListener('click', () => c.setNet(mem, reset, 1));
-document.querySelector('#bfalse').addEventListener('click', () => c.setNet(mem, reset, 0));
+document.querySelector('#atrue').addEventListener('click', () => c.setNet(set, 1));
+document.querySelector('#afalse').addEventListener('click', () => c.setNet(set, 0));
+document.querySelector('#btrue').addEventListener('click', () => c.setNet(reset, 1));
+document.querySelector('#bfalse').addEventListener('click', () => c.setNet(reset, 0));
 
 setInterval(function() {
-    c.simulate(mem);
-    c.simulate(mem);
-    c.simulate(mem);
-    document.querySelector('#data').innerHTML = 'set: ' + c.getNet(mem, set) + '<br>reset: ' + c.getNet(mem, reset) + '<br>out1: ' + c.getNet(mem, out1) + '<br>out2: ' + c.getNet(mem, out2);
+    for (let i = 0; i < 100; ++i) {
+        c.simulate();
+    }
+    document.querySelector('#data').innerHTML = 'set: ' + c.getNet(set) + '<br>reset: ' + c.getNet(reset) + '<br>out1: ' + c.getNet(out1) + '<br>out2: ' + c.getNet(out2);
 }, 50);
 */
 
 let mainGrid = new Grid(document.querySelector('#grid'));
 let toolbar = document.querySelector('#toolbar');
 
-for (let [ gateType, { joinOp } ] of Object.entries(Compilable.GATE_MAP)) {
+for (let [ gateType, { joinOp } ] of Object.entries(Simulation.GATE_MAP)) {
     let gateLabel = gateType.charAt(0).toUpperCase() + gateType.slice(1);
     let button = document.createElement('div');
     button.innerHTML = gateLabel;
