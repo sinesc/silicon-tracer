@@ -35,6 +35,7 @@ class Grid {
         this.render();
 
         // TODO: may have to go to parent UI
+        // TODO: GridElements currently register document.onmouse* temporarily. those should probably follow the same logic: register onmouse* here and then pass on to whichever element wants to have them
         document.addEventListener('keydown', this.#handleKeyDown.bind(this));
     }
 
@@ -178,7 +179,7 @@ class Grid {
     #handleKeyDown(e) {
         if (this.hotkeyTarget) {
             let { gridElement, args } = this.hotkeyTarget;
-            gridElement.onHotkey(e.key, 'down', ...args);
+            gridElement.onHotkey(e.key, ...args);
         }
     }
 

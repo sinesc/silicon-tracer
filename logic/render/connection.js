@@ -28,15 +28,15 @@ class Connection extends GridElement {
         this.elementH = document.createElement('div');
         this.elementH.classList.add('connection-h');
         this.elementH.classList.add('connection-color-' + this.color);
-        this.registerDrag(this.elementH, { ordering: 'vh' });
-        this.setHoverMessage(this.elementH, Connection.HOVER_MESSAGE);
+        this.registerDrag(this.elementH, { type: 'connect', ordering: 'vh' });
+        this.setHoverMessage(this.elementH, Connection.HOVER_MESSAGE, { type: 'hover' });
         this.grid.addVisual(this.elementH);
 
         this.elementV = document.createElement('div');
         this.elementV.classList.add('connection-v');
         this.elementV.classList.add('connection-color-' + this.color);
-        this.registerDrag(this.elementV, { ordering: 'hv' });
-        this.setHoverMessage(this.elementV, Connection.HOVER_MESSAGE);
+        this.registerDrag(this.elementV, { type: 'connect', ordering: 'hv' });
+        this.setHoverMessage(this.elementV, Connection.HOVER_MESSAGE, { type: 'hover' });
         this.grid.addVisual(this.elementV);
 
         if (Connection.DEBUG_BOX) {
@@ -61,7 +61,7 @@ class Connection extends GridElement {
         }
         if (!this.dragConnection) {
             this.grid.setStatus(Connection.DRAWING_CONNECTION_MESSAGE, true);
-            this.grid.requestHotkeyTarget(this, 'connection', what.ordering);
+            this.grid.requestHotkeyTarget(this, { ...what, type: 'connect' }); // pass 'what' to onHotkey()
             this.dragConnection = new Connection(this.grid, what.startX, what.startY, x, y, what.ordering, this.color);
             this.dragConnection.render();
         } else if (status !== 'stop') {
@@ -80,16 +80,16 @@ class Connection extends GridElement {
     }
 
     // Hover hotkey actions
-    onHotkey(key, status, origin, ordering) {
-        if (key >= '0' && key <= '9') {
+    onHotkey(key, what) {
+        if (what.type === 'hover' && key >= '0' && key <= '9') {
             this.color = parseInt(key);
             this.render();
-        } else if (key === 'r' && origin === 'connection') {
+        } else if (what.type === 'connect' && key === 'r') {
             // add connection point when pressing R while dragging a connection
             let x = this.dragConnection.x + this.dragConnection.width;
             let y = this.dragConnection.y + this.dragConnection.height;
             let color = this.dragConnection.color;
-            this.dragConnection = new Connection(this.grid, x, y, x, y, ordering === 'vh' ? 'hv' : 'vh', color);
+            this.dragConnection = new Connection(this.grid, x, y, x, y, what.ordering, color);
             this.dragConnection.render();
         }
     }

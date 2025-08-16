@@ -30,7 +30,7 @@ class Component extends GridElement {
         this.inner = document.createElement('div');
         this.inner.innerHTML = name;
         this.inner.classList.add('component-inner');
-        this.setHoverMessage(this.inner, 'Component <b>' + name + '</b>. <i>LMB</i>: Drag to move. <i>R</i>: Rotate');
+        this.setHoverMessage(this.inner, 'Component <b>' + name + '</b>. <i>LMB</i>: Drag to move. <i>R</i>: Rotate', { type: 'hover' });
         this.registerDrag(this.inner, { type: "component", grabOffsetX: null, grabOffsetY: null });
         this.element.appendChild(this.inner);
 
@@ -44,7 +44,7 @@ class Component extends GridElement {
             let port = document.createElement('div');
             port.classList.add('component-port');
             this.element.appendChild(port);
-            this.setHoverMessage(port, 'Port <b>' + item.name + '</b> of <b>' + name + '</b>. <i>LMB</i>: Drag to connect.');
+            this.setHoverMessage(port, 'Port <b>' + item.name + '</b> of <b>' + name + '</b>. <i>LMB</i>: Drag to connect.', { type: 'hover-port' });
             // port hover label
             let portLabel = document.createElement('div');
             portLabel.classList.add('component-port-label');
@@ -76,9 +76,8 @@ class Component extends GridElement {
     }
 
     // Hover hotkey actions
-    onHotkey(key, status, origin, ordering) {
-        origin ??= 'hover';
-        if (key === 'r' && origin === 'hover') {
+    onHotkey(key, what) {
+        if (key === 'r' && what.type === 'hover') {
             // rotate component with R while mouse is hovering
             this.rotation = (this.rotation - 1) & 3;
             let ports = this.#rotatedPorts();
@@ -90,13 +89,17 @@ class Component extends GridElement {
                 item.y = y + Component.PORT_SIZE / 2;
             });
             this.render();
-        } else if (key === 'r' && origin === 'connection') {
+        } else if (key === 'r' && what.type === 'connect') {
             // add connection point when pressing R while dragging a connection
             let x = this.dragConnection.x + this.dragConnection.width;
             let y = this.dragConnection.y + this.dragConnection.height;
             let color = this.dragConnection.color;
-            this.dragConnection = new Connection(this.grid, x, y, x, y, ordering === 'vh' ? 'hv' : 'vh', color);
-            this.dragConnection.render();
+            // pass handling off to the previously created connection
+            let dragConnectionWhat = { ...what, x, y, color };
+            this.grid.releaseHotkeyTarget(this);
+            this.dragStop(x, y, what);
+            this.dragConnection.dragStart(x, y, dragConnectionWhat);
+            this.dragConnection = null;
         }
     }
 
@@ -137,7 +140,7 @@ class Component extends GridElement {
         if (!this.dragConnection /* start */) {
             this.grid.setStatus(Connection.DRAWING_CONNECTION_MESSAGE, true);
             what.ordering = side === 'top' || side === 'bottom' ? 'vh' : 'hv';
-            this.grid.requestHotkeyTarget(this, 'connection', what.ordering);
+            this.grid.requestHotkeyTarget(this, { ...what, type: 'connect' }); // pass 'what' to onHotkey()
             this.dragConnection = new Connection(this.grid, this.x + port.x, this.y + port.y, x, y, what.ordering);
             this.dragConnection.render();
         } else if (status !== 'stop') {

@@ -39,10 +39,12 @@ for (let [ gateType, { joinOp } ] of Object.entries(Compilable.GATE_MAP)) {
     button.innerHTML = gateLabel;
     button.classList.add('toolbar-button');
     button.onmousedown = function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         let numInputs = 2; // TODO: configurable somewhere
         let [ x, y ] = mainGrid.screenToGrid(e.clientX, e.clientY);
         let gate = Prefabs.createGate(mainGrid, x, y, gateType, joinOp !== null ? numInputs : 1);
-        gate.dragStart(e, { type: "component", grabOffsetX: gate.width / 2, grabOffsetY: gate.height / 2 });
+        gate.dragStart(x, y, { type: "component", grabOffsetX: gate.width / 2, grabOffsetY: gate.height / 2 });
         gate.render();
     };
     toolbar.appendChild(button);

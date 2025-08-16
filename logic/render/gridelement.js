@@ -21,7 +21,7 @@ class GridElement {
 
     onDrag(x, y, status, ...args) { }
 
-    onHotkey(key, status, ...args) { }
+    onHotkey(key, ...args) { }
 
     get visualX() {
         return (this.x + this.grid.offsetX) * this.grid.zoom;
@@ -65,16 +65,18 @@ class GridElement {
     }
 
     // Registers a visual element for hover events. Required for hover messages or hover hotkeys.
-    registerHoverWatch(element) {
+    // Note: setHoverMessage() automatically registers the element.
+    registerHoverWatch(element, ...args) {
         if (!this.#hoverRegistered.has(element)) {
-            element.addEventListener('mouseenter', this.#handleHover.bind(this, element, 'start'));
-            element.addEventListener('mouseleave', this.#handleHover.bind(this, element, 'stop'));
+            element.addEventListener('mouseenter', this.#handleHover.bind(this, element, 'start', args));
+            element.addEventListener('mouseleave', this.#handleHover.bind(this, element, 'stop', args));
         }
     }
 
-    // Sets a status message to be displayed while mouse-hovering the visual element.
-    setHoverMessage(element, message) {
-        this.registerHoverWatch(element);
+    // Sets a status message to be displayed while mouse-hovering the visual element. Additional arguments will be passed to the
+    // onHotkey() handler that may be triggered while an element with a hover-message is being hovered.
+    setHoverMessage(element, message, ...args) {
+        this.registerHoverWatch(element, ...args);
         this.#hoverMessages.set(element, message);
     }
 
@@ -84,8 +86,17 @@ class GridElement {
     }
 
     // Trigger component drag (e.g. when dragging from template into the grid).
-    dragStart(e, ...args) {
-        this.#handleDragStart(args, e);
+    dragStart(x, y, ...args) {
+        document.onmousemove = this.#handleDragMove.bind(this, args);
+        document.onmouseup = this.#handleDragStop.bind(this, args);
+        this.onDrag(x, y, 'start', ...args);
+    }
+
+    // Trigger component drag cancellation.
+    dragStop(x, y, ...args) {
+        document.onmouseup = null;
+        document.onmousemove = null;
+        this.onDrag(x, y, 'stop', ...args);
     }
 
     // Called when mouse drag starts, invokes onDrag().
@@ -118,9 +129,9 @@ class GridElement {
     }
 
     // Called when mouse hovers over a registered element, sets the grids status message.
-    #handleHover(element, status) {
+    #handleHover(element, status, args, e) {
         if (this.grid.hotkeyTarget === null || !this.grid.hotkeyTarget.locked) { // TODO: refactor this into grid.requestHotkeyTarget by adding a lock parameter, then make grid.hotkeyTarget private there
-            this.grid.hotkeyTarget = status === 'start' ? { gridElement: this, args: [], locked: false } : null;
+            this.grid.hotkeyTarget = status === 'start' ? { gridElement: this, args, locked: false } : null;
         }
         let message = this.#hoverMessages.get(element);
         if (message) {
