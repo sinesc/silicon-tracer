@@ -3,7 +3,7 @@ class Connection extends GridElement {
     static DEBUG_BOX = false;
     static HOVER_MESSAGE = 'Connection. <i>LMB</i>: Branch off new connection. <i>0</i> - <i>9</i>: Set net color.';// TODO: <i>Shift+LMB</i>: Drag along the normal.
     static DRAWING_CONNECTION_MESSAGE = 'Drawing connection. <i>R</i>: Add point, continue drawing from here.';
-    static THICKNESS = 4;
+    static THICKNESS = 3;
 
     elementH;
     elementV;
