@@ -130,8 +130,11 @@ class GridElement {
 
     // Called when mouse hovers over a registered element, sets the grids status message.
     #handleHover(element, status, args, e) {
-        if (this.grid.hotkeyTarget === null || !this.grid.hotkeyTarget.locked) { // TODO: refactor this into grid.requestHotkeyTarget by adding a lock parameter, then make grid.hotkeyTarget private there
-            this.grid.hotkeyTarget = status === 'start' ? { gridElement: this, args, locked: false } : null;
+
+        if (status === 'start') {
+            this.grid.requestHotkeyTarget(this, false, ...args);
+        } else {
+            this.grid.releaseHotkeyTarget(this);
         }
         let message = this.#hoverMessages.get(element);
         if (message) {

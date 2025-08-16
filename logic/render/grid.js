@@ -8,7 +8,6 @@ class Grid {
     zoom = 1.25;
     offsetX = 0;
     offsetY = 0;
-    hotkeyTarget = null;
 
     #element;
     #status;
@@ -18,6 +17,7 @@ class Grid {
     #statusLocked = false;
     #mouseX = 0;
     #mouseY = 0;
+    #hotkeyTarget = null;
 
     constructor(parent) {
         this.#element = document.createElement('div');
@@ -150,17 +150,18 @@ class Grid {
         this.#statusTimer = setTimeout(() => this.setStatus(), Grid.STATUS_DELAY);
     }
 
-    // Makes given gridelement become the hotkey-target and prevents hover events from stealing hotkey focus until released.
-    requestHotkeyTarget(gridElement, ...args) {
-        if (!this.hotkeyTarget || !this.hotkeyTarget.locked) {
-            this.hotkeyTarget = { gridElement, args, locked: true };
+    // Makes given gridelement become the hotkey-target and when locked also prevents hover events from stealing hotkey focus until released.
+    requestHotkeyTarget(gridElement, lock, ...args) {
+        lock ??= false;
+        if (!this.#hotkeyTarget || !this.#hotkeyTarget.locked) {
+            this.#hotkeyTarget = { gridElement, args, locked: lock };
         }
     }
 
     // Releases hotkey focus and lock if given element matches current lock holder.
-    releaseHotkeyTarget(gridElement) {
-        if (this.hotkeyTarget && this.hotkeyTarget.gridElement === gridElement) {
-            this.hotkeyTarget = null;
+    releaseHotkeyTarget(gridElement, unlock) {
+        if (this.#hotkeyTarget && this.#hotkeyTarget.gridElement === gridElement && (!this.#hotkeyTarget.locked || unlock)) {
+            this.#hotkeyTarget = null;
         }
     }
 
@@ -177,8 +178,8 @@ class Grid {
 
     // Called when a key is pressed and then repeatedly while being held.
     #handleKeyDown(e) {
-        if (this.hotkeyTarget) {
-            let { gridElement, args } = this.hotkeyTarget;
+        if (this.#hotkeyTarget) {
+            let { gridElement, args } = this.#hotkeyTarget;
             gridElement.onHotkey(e.key, ...args);
         }
     }

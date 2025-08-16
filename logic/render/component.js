@@ -109,7 +109,7 @@ class Component extends GridElement {
             let color = this.dragConnection.color;
             // pass handling off to the previously created connection
             let dragConnectionWhat = { ...what, x, y, color };
-            this.grid.releaseHotkeyTarget(this);
+            this.grid.releaseHotkeyTarget(this, true);
             this.dragStop(x, y, what);
             this.dragConnection.dragStart(x, y, dragConnectionWhat);
             this.dragConnection = null;
@@ -153,7 +153,7 @@ class Component extends GridElement {
         if (!this.dragConnection /* start */) {
             this.grid.setStatus(Connection.DRAWING_CONNECTION_MESSAGE, true);
             what.ordering = side === 'top' || side === 'bottom' ? 'vh' : 'hv';
-            this.grid.requestHotkeyTarget(this, { ...what, type: 'connect' }); // pass 'what' to onHotkey()
+            this.grid.requestHotkeyTarget(this, true, { ...what, type: 'connect' }); // pass 'what' to onHotkey()
             this.dragConnection = new Connection(this.grid, this.x + port.x, this.y + port.y, x, y, what.ordering);
             this.dragConnection.render();
         } else if (status !== 'stop') {
@@ -170,7 +170,7 @@ class Component extends GridElement {
         } else {
             this.dragConnection = null;
             this.grid.clearStatus(true);
-            this.grid.releaseHotkeyTarget(this);
+            this.grid.releaseHotkeyTarget(this, true);
         }
     }
 

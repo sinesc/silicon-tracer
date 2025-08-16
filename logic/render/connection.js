@@ -61,7 +61,7 @@ class Connection extends GridElement {
         }
         if (!this.dragConnection) {
             this.grid.setStatus(Connection.DRAWING_CONNECTION_MESSAGE, true);
-            this.grid.requestHotkeyTarget(this, { ...what, type: 'connect' }); // pass 'what' to onHotkey()
+            this.grid.requestHotkeyTarget(this, true, { ...what, type: 'connect' }); // pass 'what' to onHotkey()
             this.dragConnection = new Connection(this.grid, what.startX, what.startY, x, y, what.ordering, this.color);
             this.dragConnection.render();
         } else if (status !== 'stop') {
@@ -70,7 +70,7 @@ class Connection extends GridElement {
         } else {
             this.dragConnection = null;
             this.grid.clearStatus(true);
-            this.grid.releaseHotkeyTarget(this);
+            this.grid.releaseHotkeyTarget(this, true);
         }
     }
 
