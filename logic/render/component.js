@@ -108,7 +108,8 @@ class Component extends GridItem {
             let y = this.dragConnection.y + this.dragConnection.height;
             let color = this.dragConnection.color;
             // pass handling off to the previously created connection
-            let dragConnectionWhat = { ...what, x, y, color };
+            let flippedOrdering = this.dragConnection.ordering !== what.ordering;
+            let dragConnectionWhat = { ...what, ordering: flippedOrdering ? what.ordering == 'hv' ? 'vh' : 'hv' : what.ordering, x, y, color };
             this.grid.releaseHotkeyTarget(this, true);
             this.dragStop(x, y, what);
             this.dragConnection.dragStart(x, y, dragConnectionWhat);
@@ -157,7 +158,7 @@ class Component extends GridItem {
             this.dragConnection = new Connection(this.grid, this.x + port.x, this.y + port.y, x, y, what.ordering);
             this.dragConnection.render();
         } else if (status !== 'stop') {
-            // flip ordering when draggin towards component, effetively routing around the component // FIXME: breaks order for R continued wires
+            // flip ordering when draggin towards component, effetively routing around the component
             if (what.ordering === 'hv' && ((side === 'left' ? this.dragConnection.x < x : this.dragConnection.x > x))) {
                 this.dragConnection.ordering = 'vh';
             } else if (what.ordering === 'vh' && (side === 'top' ? this.dragConnection.y < y : this.dragConnection.y > y)) {
