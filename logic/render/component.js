@@ -136,11 +136,19 @@ class Component extends GridElement {
         let [ side, port ] = this.portByName(what.name);
         if (!this.dragConnection /* start */) {
             this.grid.setStatus(Connection.DRAWING_CONNECTION_MESSAGE, true);
-            let ordering = side === 'top' || side === 'bottom' ? 'vh' : 'hv';
-            this.grid.requestHotkeyTarget(this, 'connection', ordering);
-            this.dragConnection = new Connection(this.grid, this.x + port.x, this.y + port.y, x, y, ordering);
+            what.ordering = side === 'top' || side === 'bottom' ? 'vh' : 'hv';
+            this.grid.requestHotkeyTarget(this, 'connection', what.ordering);
+            this.dragConnection = new Connection(this.grid, this.x + port.x, this.y + port.y, x, y, what.ordering);
             this.dragConnection.render();
         } else if (status !== 'stop') {
+            // flip ordering when draggin towards component, effetively routing around the component
+            if (what.ordering === 'hv' && ((side === 'left' ? this.dragConnection.x < x : this.dragConnection.x > x))) {
+                this.dragConnection.ordering = 'vh';
+            } else if (what.ordering === 'vh' && (side === 'top' ? this.dragConnection.y < y : this.dragConnection.y > y)) {
+                this.dragConnection.ordering = 'hv';
+            } else {
+                this.dragConnection.ordering = what.ordering;
+            }
             this.dragConnection.setEndpoints(this.dragConnection.x, this.dragConnection.y, x, y, true);
             this.dragConnection.render();
         } else {
