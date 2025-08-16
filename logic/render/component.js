@@ -28,7 +28,7 @@ class Component extends GridElement {
 
         // inner area with name
         this.inner = document.createElement('div');
-        this.inner.innerHTML = name;
+        this.inner.innerHTML = '<span>' + name + '</span>';
         this.inner.classList.add('component-inner');
         this.setHoverMessage(this.inner, 'Component <b>' + name + '</b>. <i>LMB</i>: Drag to move. <i>R</i>: Rotate', { type: 'hover' });
         this.registerDrag(this.inner, { type: "component", grabOffsetX: null, grabOffsetY: null });
@@ -97,7 +97,11 @@ class Component extends GridElement {
                 item.x = x + Component.PORT_SIZE / 2;
                 item.y = y + Component.PORT_SIZE / 2;
             });
-            this.render();
+            this.element.classList.add('component-rotate-animation');
+            setTimeout(() => {
+                this.element.classList.remove('component-rotate-animation');
+                this.render();
+            }, 150);
         } else if (key === 'r' && what.type === 'connect') {
             // add connection point when pressing R while dragging a connection
             let x = this.dragConnection.x + this.dragConnection.width;

@@ -138,6 +138,15 @@ body.no-focus #focus-hint {
     outline: 2px solid #444;
     outline-offset: -4px;
 }
+.component-rotate-animation {
+    transition: transform 0.15s;
+    transform: rotate(90deg);
+}
+.component-rotate-animation span {
+    display: block;
+    transition: transform 0.15s;
+    transform: rotate(-90deg);
+}
 .component-inner {
     z-index: 12;
     position: absolute;
@@ -175,7 +184,6 @@ body.no-focus #focus-hint {
 .grid-zoom-below-85 .component-port span {
     display: none;
 }
-
 .component-port:hover {
     background-color: #aaa;
     transition: background-color 0.15s, color 0.15s;
