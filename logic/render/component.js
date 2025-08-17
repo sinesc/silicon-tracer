@@ -24,7 +24,7 @@ class Component extends GridItem {
         // container
         this.element = document.createElement('div');
         this.element.classList.add('component');
-        this.element.classList.add('component-type-' + name);
+        this.element.setAttribute('data-component-name', name); // setAttribtute: dislike dataset-api name transcription when they could have just used [index] access to avoid the hyphen issue.
 
         // inner area with name
         this.inner = document.createElement('div');

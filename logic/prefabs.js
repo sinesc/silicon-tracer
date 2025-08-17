@@ -29,4 +29,13 @@ class Prefabs {
         return circuit.createComponent(grid, x, y);
     }
 
+    static createPinLeft(grid, x, y, name) {
+        let circuit = new Circuit(name, { 'left': [ '' ], 'top': [ null, null ] });
+        return circuit.createComponent(grid, x, y);
+    }
+
+    static createPinRight(grid, x, y, name) {
+        let circuit = new Circuit(name, { 'right': [ '' ], 'top': [ null, null ] });
+        return circuit.createComponent(grid, x, y);
+    }
 }
