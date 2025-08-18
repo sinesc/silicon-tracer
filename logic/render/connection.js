@@ -1,3 +1,12 @@
+class Point {
+    x;
+    y;
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+    }
+}
+
 class Connection extends GridItem {
 
     static DEBUG_BOX = false;
@@ -71,6 +80,7 @@ class Connection extends GridItem {
             this.dragConnection = null;
             this.grid.clearStatus(true);
             this.grid.releaseHotkeyTarget(this, true);
+            identifyNets();
         }
     }
 
@@ -109,14 +119,15 @@ class Connection extends GridItem {
     // Returns the 2 or 3 distinct endpoint coordinates of this connection.
     getPoints() {
 
-        let points = [ [ this.x, this.y ] ];
+        let mk = (x, y) => new Point(x, y);
+        let points = [ mk(this.x, this.y) ];
 
         if (this.width !== 0) {
-            points.push(this.ordering === 'hv' ? [ this.x + this.width, this.y ] : [ this.x + (this.height === 0 ? this.width : 0), this.y + this.height ]);
+            points.push(this.ordering === 'hv' ? mk(this.x + this.width, this.y) : mk(this.x + (this.height === 0 ? this.width : 0), this.y + this.height));
         }
 
         if (this.height !== 0) {
-            points.push([ this.x + this.width, this.y + this.height ]);
+            points.push(mk(this.x + this.width, this.y + this.height));
         }
 
         return points;

@@ -39,13 +39,13 @@ class Grid {
         document.addEventListener('keydown', this.#handleKeyDown.bind(this));
     }
 
-    // Registers a componenet with the grids renderloop. Automatically done by GridItem constructor.
+    // Registers an item with the grids renderloop. Automatically done by GridItem constructor.
     registerItem(item) {
         this.#items.push(new WeakRef(item));
     }
 
-    // Returns components that passed the given filter (c) => bool.
-    getComponents(filter) {
+    // Returns items that passed the given filter (c) => bool.
+    getItems(filter) {
         return this.#items.map((c) => c.deref()).filter((c) => c !== null && filter(c));
     }
 

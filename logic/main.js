@@ -30,7 +30,73 @@ setInterval(() => {
     }
 }, 100);
 
+function pointOnLine(p, wire) {
+    let [ w1, w2 ] = wire;
+    if (w1.x === w2.x && w1.x === p.x) {
+        if (w1.y > w2.y) {
+            [ w2, w1 ] = [ w1, w2 ];
+        }
+        return w1.y <= p.y && w2.y >= p.y;
+    } else if (w1.y === w2.y && w1.y === p.y) {
+        if (w1.x > w2.x) {
+            [ w2, w1 ] = [ w1, w2 ];
+        }
+        return w1.x <= p.x && w2.x >= p.x;
+    } else {
+        return false;
+    }
+}
 
+function endsIntersect(a, b) {
+    return pointOnLine(a[0], b) || pointOnLine(a[1], b) || pointOnLine(b[0], a) || pointOnLine(b[1], a);
+}
+
+function identifyNets() {
+    // get all individual wires
+    let connections = mainGrid.getItems((i) => i instanceof Connection);
+    let wires = [];
+    for (let connection of connections) {
+        let points = connection.getPoints();
+        wires.push([ points[0], points[1], connection ]);
+        if (points.length === 3) {
+            wires.push([ points[1], points[2], connection ]);
+        }
+    }
+    //console.log(wires.map((w) => JSON.stringify(w.slice(0, 2))));
+
+    // create nets
+    let nets = [];
+    while (wires.length > 0) {
+        let prevFoundWires = [ wires.pop() ];
+        let newNet = [];
+        let foundWires;
+        // each iteration, check only the wires found in the previous iteration for more intersections
+        do {
+            foundWires = [];
+            for (let p = 0; p < prevFoundWires.length; ++p) {
+                for (let w = wires.length - 1; w >= 0; --w) {
+                    if (endsIntersect(prevFoundWires[p], wires[w])) {
+                        foundWires.push(wires[w]);
+                        wires.swapRemove(w);
+                    }
+                }
+            }
+            newNet.push(...prevFoundWires);
+            prevFoundWires = foundWires;
+        } while (foundWires.length > 0);
+        nets.push(newNet);
+    }
+
+    // colorize nets
+    let color = 1;
+    for (let net of nets) {
+        for (let wire of net) {
+            wire[2].color = color;
+            wire[2].render();
+        }
+        ++color;
+    }
+}
 
 
 // MISC TESTING STUFF

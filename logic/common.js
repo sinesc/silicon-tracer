@@ -9,6 +9,16 @@ Object.defineProperty(Object.prototype, "map", {
     }
 });
 
+Object.defineProperty(Array.prototype, "swapRemove", {
+    value: function(i) {
+        if (i < this.length - 1) {
+            this[i] = this.pop();
+        } else {
+            this.pop();
+        }
+    }
+});
+
 String.isString = function(s) {
     return typeof s === 'string';
 }
