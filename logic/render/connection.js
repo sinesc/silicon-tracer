@@ -1,12 +1,3 @@
-class Point {
-    x;
-    y;
-    constructor(x, y) {
-        this.x = x;
-        this.y = y;
-    }
-}
-
 class Connection extends GridItem {
 
     static DEBUG_BOX = false;

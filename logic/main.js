@@ -30,26 +30,6 @@ setInterval(() => {
     }
 }, 100);
 
-function pointOnLine(p, wire) {
-    let [ w1, w2 ] = wire;
-    if (w1.x === w2.x && w1.x === p.x) {
-        if (w1.y > w2.y) {
-            [ w2, w1 ] = [ w1, w2 ];
-        }
-        return w1.y <= p.y && w2.y >= p.y;
-    } else if (w1.y === w2.y && w1.y === p.y) {
-        if (w1.x > w2.x) {
-            [ w2, w1 ] = [ w1, w2 ];
-        }
-        return w1.x <= p.x && w2.x >= p.x;
-    } else {
-        return false;
-    }
-}
-
-function endsIntersect(a, b) {
-    return pointOnLine(a[0], b) || pointOnLine(a[1], b) || pointOnLine(b[0], a) || pointOnLine(b[1], a);
-}
 
 function identifyNets() {
     // get all individual wires
@@ -57,44 +37,35 @@ function identifyNets() {
     let wires = [];
     for (let connection of connections) {
         let points = connection.getPoints();
-        wires.push([ points[0], points[1], connection ]);
+        console.log(points);
+
+        if (points.length >= 2) {
+            wires.push([ points[0], points[1], connection ]);
+        }
         if (points.length === 3) {
             wires.push([ points[1], points[2], connection ]);
         }
     }
-    //console.log(wires.map((w) => JSON.stringify(w.slice(0, 2))));
+    // get all component ports
+    let components = mainGrid.getItems((i) => i instanceof Component);
+    let ports = [];
+    for (let component of components) {
+        let points = component.getPoints();
+        console.log(points);
 
-    // create nets
-    let nets = [];
-    while (wires.length > 0) {
-        let prevFoundWires = [ wires.pop() ];
-        let newNet = [];
-        let foundWires;
-        // each iteration, check only the wires found in the previous iteration for more intersections
-        do {
-            foundWires = [];
-            for (let p = 0; p < prevFoundWires.length; ++p) {
-                for (let w = wires.length - 1; w >= 0; --w) {
-                    if (endsIntersect(prevFoundWires[p], wires[w])) {
-                        foundWires.push(wires[w]);
-                        wires.swapRemove(w);
-                    }
-                }
-            }
-            newNet.push(...prevFoundWires);
-            prevFoundWires = foundWires;
-        } while (foundWires.length > 0);
-        nets.push(newNet);
     }
 
+
+    let netList = NetList.fromWires(wires.toReversed(/*avoids complete net reassign on new wire, just for testing anyways*/));
+
     // colorize nets
-    let color = 1;
-    for (let net of nets) {
+    let color = 0;
+    for (let net of netList.nets) {
         for (let wire of net) {
             wire[2].color = color;
             wire[2].render();
         }
-        ++color;
+        color = (color + 1) % 10;
     }
 }
 
@@ -131,10 +102,10 @@ setInterval(function() {
 }, 50);
 */
 
-/*
-let circuit1 = new Circuit('Gate', { left: [ "a", "b" ], right: [ "q" ], top: [ "xuper", "y" ], bottom: [ "g" ] });
+let circuit1 = new Circuit('Gate', { left: [ "a", "b", "c" ], right: [ "d", "e", "f" ], top: [ "g", "h", "i" ], bottom: [ "j", "k", "l" ] });
 circuit1.createComponent(mainGrid, 250, 50);
 
+/*
 let circuit2 = new Circuit('Bait', { left: [ "a bit long" ], right: [ "quite long", "really very long", "short" ], top: [ "x" ], bottom: [ "great", "h", "i", "j" ] });
 circuit2.createComponent(mainGrid, 500, 100);
 

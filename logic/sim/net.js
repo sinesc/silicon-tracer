@@ -1,81 +1,67 @@
-// Global data.
-class GlobalState {
-    // Globallay unique net id.
-    static netId = 0;
-    // Globally unique port id.
-    static portId = 0;
-    // Maps port ids to circuits.
-    static todo;
+// Net identification
+class NetList {
+    nets;
 
-    static allocMem;
-
-    // Simulation granularity
-
-}
-
-// Actual net data, accessed through a Net instance.
-class NetData {
-    // Id of this net.
-    id;
-    // Connected ports.
-    portIds;
-    // Constructs a new net.
-    constructor() {
-        this.id = GlobalState.netId++;
-        this.portIds = [];
-    }
-}
-
-// References net-data so that connections can have their nets merged without having to update the components.
-class Net {
-    // Reference to the actual net data
-    data;
-
-    // Construct a new net.
-    constructor() {
-        this.data = new NetData;
+    // Construct a new netlist.
+    constructor(nets) {
+        this.nets = nets;
     }
 
-    // Returns ids of connected ports.
-    get portIds() {
-        return this.data.portIds;
-    }
+    // Creates a netlist from wires.
+    static fromWires(wires, pins) {
 
-    // Returns the id of this net.
-    get id() {
-        return this.data.id;
-    }
+        let nets = [];
 
-    // Adds a port id to the net.
-    addPortId(id) {
-        this.data.portIds.push(id);
-    }
-
-    // Removes a port id from the net if present.
-    removePortId(id) {
-        let index = this.data.portIds.findIndex(id);
-        if (index > -1) {
-            if (this.data.portIds.length > 1) {
-                this.data.portIds[index] = this.data.portIds.pop();
-            } else {
-                this.data.portIds.pop();
-            }
-            return true;
+        while (wires.length > 0) {
+            let prevFoundWires = [ wires.pop() ];
+            let newNet = [];
+            let foundWires;
+            // each iteration, check only the wires found in the previous iteration for more intersections
+            do {
+                foundWires = [];
+                for (let p = 0; p < prevFoundWires.length; ++p) {
+                    for (let w = wires.length - 1; w >= 0; --w) {
+                        if (NetList.#endsIntersect(prevFoundWires[p], wires[w])) {
+                            foundWires.push(wires[w]);
+                            wires.swapRemove(w);
+                        }
+                    }
+                }
+                newNet.push(...prevFoundWires);
+                prevFoundWires = foundWires;
+            } while (foundWires.length > 0);
+            nets.push(newNet);
         }
-        return false;
+
+        return new NetList(nets);
+    }
+
+    static #endsIntersect(a, b) {
+        return NetList.#pointOnLine(a[0], b) || NetList.#pointOnLine(a[1], b) || NetList.#pointOnLine(b[0], a) || NetList.#pointOnLine(b[1], a);
+    }
+
+    static #pointOnLine(p, wire) {
+        let [ w1, w2 ] = wire;
+        if (w1.x === w2.x && w1.x === p.x) {
+            if (w1.y > w2.y) {
+                [ w2, w1 ] = [ w1, w2 ];
+            }
+            return w1.y <= p.y && w2.y >= p.y;
+        } else if (w1.y === w2.y && w1.y === p.y) {
+            if (w1.x > w2.x) {
+                [ w2, w1 ] = [ w1, w2 ];
+            }
+            return w1.x <= p.x && w2.x >= p.x;
+        } else {
+            return false;
+        }
     }
 }
 
-// A port connected to a net. Holds a reference to its circuit.
-class NetPort { // TODO: needs to be more like a map, maybe just use a weakmap(id => circuit)?
-    id;
-    circuit;
-    constructor(circuit) {
-        this.id = GlobalState.portId++; // FIXME: port id should probably be incremented on component
-        this.circuit = circuit;
-    }
 
-}
+
+
+
 
 // A circuit is either a basic gate definition or a schematic for a component.
 class Circuit {

@@ -22,3 +22,12 @@ Object.defineProperty(Array.prototype, "swapRemove", {
 String.isString = function(s) {
     return typeof s === 'string';
 }
+
+class Point {
+    x;
+    y;
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+    }
+}

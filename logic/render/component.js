@@ -61,27 +61,14 @@ class Component extends GridItem {
             // update this.ports with computed port properties
             item.port = port;
             item.portLabel = portLabel;
-            item.x = x + Component.PORT_SIZE / 2;
-            item.y = y + Component.PORT_SIZE / 2;
+            item.x = x;
+            item.y = y;
             // register a drag event for the port, will trigger onDrag with the port name
             this.registerDrag(port, { type: "port", name: item.name });
         });
 
         grid.addVisual(this.element);
         this.render();
-    }
-
-    // Gets a port side+definition by its name.
-    portByName(name) {
-        let ports = this.#rotatedPorts();
-        for (const [side, items] of Object.entries(ports)) {
-            for (const item of items) {
-                if (item.name === name) {
-                    return [ side, item ];
-                }
-            }
-        }
-        return null;
     }
 
     // Hover hotkey actions
@@ -169,9 +156,11 @@ class Component extends GridItem {
             this.dragConnection.setEndpoints(this.dragConnection.x, this.dragConnection.y, x, y, true);
             this.dragConnection.render();
         } else {
+            // FIXME: delete connection if no wires were produced (not dragged far enough)
             this.dragConnection = null;
             this.grid.clearStatus(true);
             this.grid.releaseHotkeyTarget(this, true);
+            identifyNets();
         }
     }
 
@@ -207,18 +196,53 @@ class Component extends GridItem {
         }
     }
 
+    // Returns port coordinates.
+    getPoints() {
+        let mk = (x, y) => new Point(x, y);
+        let points = [  ];
+        let offset = 0;//Component.PORT_SIZE / 2; // TODO: remove this from the port coordinates, add during rendering
+        for (const [ side, items ] of Object.entries(this.ports)) {
+            for (const item of items) {
+                if (item.x !== null && item.y !== null) {
+                    points.push(mk(this.x + item.x + offset, this.y + item.y + offset));
+                }
+            }
+        }
+        return points;
+    }
+
+    // Gets a port side+definition by its name.
+    portByName(name) {
+        let ports = this.#rotatedPorts();
+        for (const [side, items] of Object.entries(ports)) {
+            for (const item of items) {
+                if (item.name === name) {
+                    return [ side, item ];
+                }
+            }
+        }
+        return null;
+    }
+
     // Renders component ports. Only required during scaling/rotation.
     #renderPorts() {
         let visualPortSize = Component.PORT_SIZE * this.grid.zoom;
+        let visualPortCenterOffset = visualPortSize / 2;
+        let visualPortInset = visualPortSize / 4;
         let visualLabelPadding = 1 * this.grid.zoom;
         let visualLabelLineHeight = visualPortSize + 2 * visualLabelPadding;
         let ports = this.#rotatedPorts();
         let properties = [ 'writingMode', 'left', 'top', 'right', 'bottom','paddingLeft', 'paddingTop', 'paddingRight', 'paddingBottom', 'width', 'height', ];
         this.#iterPorts(ports, ({ name, port, portLabel }, side, x, y) => {
+            // minor inset to move ports inward into the component just a little
+            let visualPortInsetX = side === 'left' ? visualPortInset : (side === 'right' ? -visualPortInset : 0);
+            let visualPortInsetY = side === 'top' ? visualPortInset : (side === 'bottom' ? -visualPortInset : 0);
+            // apply grid zoom
             x *= this.grid.zoom;
             y *= this.grid.zoom;
-            port.style.left = x + "px";
-            port.style.top = y + "px";
+            // set visual coordinates
+            port.style.left = (x - visualPortCenterOffset + visualPortInsetX) + "px";
+            port.style.top = (y - visualPortCenterOffset + visualPortInsetY) + "px";
             port.style.width = visualPortSize + "px";
             port.style.height = visualPortSize + "px";
             port.style.lineHeight = visualPortSize + 'px';
@@ -278,18 +302,25 @@ class Component extends GridItem {
         let mapped = {};
         mapped.top      = this.ports[sides[(0 + this.rotation) % 4]];
         mapped.right    = this.ports[sides[(1 + this.rotation) % 4]];
-        mapped.bottom   = this.ports[sides[(2 + this.rotation) % 4]].toReversed(); // TODO: I should render these in the 'correct' order instead
-        mapped.left     = this.ports[sides[(3 + this.rotation) % 4]].toReversed();
+        mapped.bottom   = this.ports[sides[(2 + this.rotation) % 4]];
+        mapped.left     = this.ports[sides[(3 + this.rotation) % 4]];
         return mapped;
     }
 
     // Iterate with callback fn(port, side, x, y) over component ports.
     #iterPorts(ports, fn) {
+        // for correct rotation required: top: left->right, right: top->bottom, bottom: right->left, left: bottom->top
+        const map = {
+            'top'   : { x: Grid.SPACING,                y: 0,                           stepX: Grid.SPACING },
+            'right' : { x: this.width,                  y: Grid.SPACING,                stepY: Grid.SPACING },
+            'bottom': { x: this.width - Grid.SPACING,   y: this.height,                 stepX: -Grid.SPACING },
+            'left'  : { x: 0,                           y: this.height - Grid.SPACING,  stepY: -Grid.SPACING },
+        };
         for (const [side, items] of Object.entries(ports)) {
-            let x = side !== 'right' ? (side !== 'left' ? Grid.SPACING - (Component.PORT_SIZE / 2) : 0) : this.width - Component.PORT_SIZE;
-            let y = side !== 'bottom' ? (side !== 'top' ? Grid.SPACING - (Component.PORT_SIZE / 2) : 0) : this.height - Component.PORT_SIZE;
-            let stepX = side === 'left' || side === 'right' ? 0 : Grid.SPACING;
-            let stepY = side === 'top' || side === 'bottom' ? 0 : Grid.SPACING;
+            let x = map[side].x;
+            let y = map[side].y;
+            let stepX = map[side].stepX ?? 0;
+            let stepY = map[side].stepY ?? 0;
             for (const item of items) {
                 if (item.name !== null) {
                     fn(item, side, x, y);
