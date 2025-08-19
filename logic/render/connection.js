@@ -27,14 +27,12 @@ class Connection extends GridItem {
 
         this.elementH = document.createElement('div');
         this.elementH.classList.add('connection-h');
-        this.elementH.classList.add('connection-color-' + this.color);
         this.registerDrag(this.elementH, { type: 'connect', ordering: 'vh' });
         this.setHoverMessage(this.elementH, Connection.HOVER_MESSAGE, { type: 'hover' });
         this.grid.addVisual(this.elementH);
 
         this.elementV = document.createElement('div');
         this.elementV.classList.add('connection-v');
-        this.elementV.classList.add('connection-color-' + this.color);
         this.registerDrag(this.elementV, { type: 'connect', ordering: 'hv' });
         this.setHoverMessage(this.elementV, Connection.HOVER_MESSAGE, { type: 'hover' });
         this.grid.addVisual(this.elementV);
@@ -139,13 +137,8 @@ class Connection extends GridItem {
         this.elementH.style.display = this.width !== 0 ? 'block' : 'none';
         this.elementV.style.display = this.height !== 0 ? 'block' : 'none';
 
-        for (let c = 0; c < 10; ++c) {
-            this.elementH.classList.remove('connection-color-' + c);
-            this.elementV.classList.remove('connection-color-' + c);
-        }
-
-        this.elementH.classList.add('connection-color-' + this.color);
-        this.elementV.classList.add('connection-color-' + this.color);
+        this.elementH.setAttribute('data-connection-color', this.color ?? '');
+        this.elementV.setAttribute('data-connection-color', this.color ?? '');
 
         if (this.ordering === 'hv') {
             // horizontal first, then vertical

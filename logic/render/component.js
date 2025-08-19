@@ -245,11 +245,7 @@ class Component extends GridItem {
             port.style.height = visualPortSize + "px";
             port.style.lineHeight = visualPortSize + 'px';
             port.innerHTML = '<span>' + name.slice(0, 1) + '</span>';
-            if (color !== null) {
-                port.classList.add('component-port-color-' + color);
-            } else {
-                port.classList.remove('component-port-color-0', 'component-port-color-1', 'component-port-color-2', 'component-port-color-3');// todo: loop, but better yet, don't use classes.
-            }
+            port.setAttribute('data-component-port-color', color ?? '');
             if (name.length > 1) {
                 portLabel.innerHTML = name;
                 portLabel.style.lineHeight = visualLabelLineHeight + 'px';
