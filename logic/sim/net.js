@@ -7,16 +7,14 @@ class NetList {
         this.nets = nets;
     }
 
-    // Creates a netlist from wires.
-    static fromWires(wires, pins) {
-
+    // Creates a netlist from wires and ports. Both wires and ports will be emptied during this process.
+    static fromWires(wires, ports) {
         let nets = [];
-
         while (wires.length > 0) {
             let prevFoundWires = [ wires.pop() ];
-            let newNet = [];
+            let netWires = [];
             let foundWires;
-            // each iteration, check only the wires found in the previous iteration for more intersections
+            // each do-while iteration, check only the wires found in the previous iteration for more intersections (essentially flattened recursion)
             do {
                 foundWires = [];
                 for (let p = 0; p < prevFoundWires.length; ++p) {
@@ -27,12 +25,21 @@ class NetList {
                         }
                     }
                 }
-                newNet.push(...prevFoundWires);
+                netWires.push(...prevFoundWires);
                 prevFoundWires = foundWires;
             } while (foundWires.length > 0);
-            nets.push(newNet);
+            // find ports on net
+            let foundPorts = [];
+            for (let w = 0; w < netWires.length; ++w) {
+                for (let p = ports.length - 1; p >= 0; --p) {
+                    if (NetList.#pointOnLine(ports[p][0], netWires[w])) {
+                        foundPorts.push(ports[p]);
+                        ports.swapRemove(p);
+                    }
+                }
+            }
+            nets.push({ wires: netWires, ports: foundPorts });
         }
-
         return new NetList(nets);
     }
 

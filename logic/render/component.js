@@ -197,18 +197,16 @@ class Component extends GridItem {
     }
 
     // Returns port coordinates.
-    getPoints() {
-        let mk = (x, y) => new Point(x, y);
-        let points = [  ];
-        let offset = 0;//Component.PORT_SIZE / 2; // TODO: remove this from the port coordinates, add during rendering
+    getPorts() {
+        let ports = [  ];
         for (const [ side, items ] of Object.entries(this.ports)) {
             for (const item of items) {
                 if (item.x !== null && item.y !== null) {
-                    points.push(mk(this.x + item.x + offset, this.y + item.y + offset));
+                    ports.push(item);
                 }
             }
         }
-        return points;
+        return ports;
     }
 
     // Gets a port side+definition by its name.

@@ -31,14 +31,14 @@ setInterval(() => {
 }, 100);
 
 
+// MISC TESTING STUFF
+
 function identifyNets() {
     // get all individual wires
     let connections = mainGrid.getItems((i) => i instanceof Connection);
     let wires = [];
     for (let connection of connections) {
         let points = connection.getPoints();
-        console.log(points);
-
         if (points.length >= 2) {
             wires.push([ points[0], points[1], connection ]);
         }
@@ -46,31 +46,31 @@ function identifyNets() {
             wires.push([ points[1], points[2], connection ]);
         }
     }
+    //console.log(wires.map((w) => [ w[0].x, w[0].y, w[1].x, w[1].y ]));
     // get all component ports
     let components = mainGrid.getItems((i) => i instanceof Component);
     let ports = [];
     for (let component of components) {
-        let points = component.getPoints();
-        console.log(points);
-
+        for (let port of component.getPorts()) {
+            ports.push([ new Point(port.x + component.x, port.y + component.y), component, port.name ]);
+        }
     }
+    //console.log(ports.map((p) => [ p[0].x, p[0].y, p[2] ]));
 
 
-    let netList = NetList.fromWires(wires.toReversed(/*avoids complete net reassign on new wire, just for testing anyways*/));
+    let netList = NetList.fromWires(wires.toReversed(), ports); /* toReversed just avoids complete net reassign on new wire. not required, just for testing */
+    console.log(netList.nets.map((n) => n.ports));
 
     // colorize nets
     let color = 0;
     for (let net of netList.nets) {
-        for (let wire of net) {
+        for (let wire of net.wires) {
             wire[2].color = color;
             wire[2].render();
         }
         color = (color + 1) % 10;
     }
 }
-
-
-// MISC TESTING STUFF
 
 /*
 // test flipflop
