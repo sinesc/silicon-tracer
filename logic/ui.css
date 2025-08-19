@@ -216,6 +216,7 @@ body.no-focus #focus-hint {
     z-index: 10;
     position: absolute;
     box-sizing: border-box;
+    background-color: #6d6d6d;
 }
 /* extends clickable area around connections */
 .connection-h::after, .connection-v::after {

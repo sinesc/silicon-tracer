@@ -11,12 +11,9 @@ class Component extends GridItem {
     dragConnection = null;
     rotation = 0;
 
-    circuit;
-
-    constructor(grid, name, x, y, rotation, circuit) {
+    constructor(grid, name, x, y, rotation, ports) {
 
         super(grid);
-        this.circuit = circuit;
         this.rotation = rotation & 3;
 
         [ this.x, this.y ] = this.gridAlign(x, y);
@@ -36,7 +33,7 @@ class Component extends GridItem {
 
         // ensure ports are completely defined
 
-        this.ports = { left: [], right: [], top: [], bottom: [], ...circuit.ports };
+        this.ports = { left: [], right: [], top: [], bottom: [], ...ports };
 
         for (let [ side, other ] of Object.entries({ 'left': 'right', 'right': 'left', 'top': 'bottom', 'bottom': 'top' })) {
             while (this.ports[side].length < this.ports[other].length) {
@@ -47,9 +44,9 @@ class Component extends GridItem {
         this.ports = this.ports.map((side, ports) => ports.map((name) => ({ name: name, port: null, portLabel: null, color: null, x: null, y: null })));
 
         // ports
-        let ports = this.#rotatedPorts();
-        this.#updateDimensions(ports);
-        this.#iterPorts(ports, (item, side, x, y) => {
+        let rotatedPorts = this.#rotatedPorts();
+        this.#updateDimensions(rotatedPorts);
+        this.#iterPorts(rotatedPorts, (item, side, x, y) => {
             let port = document.createElement('div');
             port.classList.add('component-port');
             this.element.appendChild(port);
@@ -88,6 +85,7 @@ class Component extends GridItem {
             setTimeout(() => {
                 this.element.classList.remove('component-rotate-animation');
                 this.render();
+                identifyNets();
             }, 150);
         } else if (key === 'r' && what.type === 'connect') {
             // add connection point when pressing R while dragging a connection
@@ -101,6 +99,7 @@ class Component extends GridItem {
             this.dragStop(x, y, what);
             this.dragConnection.dragStart(x, y, dragConnectionWhat);
             this.dragConnection = null;
+            identifyNets();
         }
     }
 
@@ -130,7 +129,8 @@ class Component extends GridItem {
             this.grid.removeVisual(this.dropPreview);
             this.dropPreview = null;
             what.grabOffsetX = null;
-            what.grabOffsetY = null
+            what.grabOffsetY = null;
+            identifyNets();
         }
         this.render('move');
     }

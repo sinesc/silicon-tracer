@@ -1,15 +1,18 @@
 // Net identification
 class NetList {
     nets;
+    unconnected;
 
     // Construct a new netlist.
-    constructor(nets) {
+    constructor(nets, unconnectedWires, unconnectedPorts) {
         this.nets = nets;
+        this.unconnected = { wires: unconnectedWires, ports: unconnectedPorts };
     }
 
     // Creates a netlist from wires and ports. Both wires and ports will be emptied during this process.
     static fromWires(wires, ports) {
         let nets = [];
+        let unconnectedWires = [];
         while (wires.length > 0) {
             let prevFoundWires = [ wires.pop() ];
             let netWires = [];
@@ -38,9 +41,13 @@ class NetList {
                     }
                 }
             }
-            nets.push({ wires: netWires, ports: foundPorts });
+            if (foundPorts.length > 0) {
+                nets.push({ wires: netWires, ports: foundPorts });
+            } else {
+                unconnectedWires.push(...netWires);
+            }
         }
-        return new NetList(nets);
+        return new NetList(nets, unconnectedWires, ports);
     }
 
     static #endsIntersect(a, b) {
@@ -66,37 +73,35 @@ class NetList {
 }
 
 
-
-
-
-
 // A circuit is either a basic gate definition or a schematic for a component.
 class Circuit {
     // External connections of this circuit.
     ports;
     // Name of this circuit.
     name;
-    // Nets contained in the circuit. // TODO: or lines? need wire coords, not just nets
-    nets;
-    // Other circuits contained in this circuit.
-    circuits;
-
-    // or maybe just
-    items; // contains wires+circuits and nets are computed on demand
+    // Items in this circuit (wires, components)
+    items;
 
     // Constructs a new circuit with the given name and ports. Name must be unique
     constructor(name, ports) {
         this.name = name;
         this.ports = { left: [], right: [], top: [], bottom: [], ...ports };
     }
+
     // Drops this circuit as a component onto the grid.
     createComponent(grid, x, y) {
-        let component = new Component(grid, this.name, x, y, /*Math.floor(Math.random() * 4)*/0, this);
+        let component = new Component(grid, this.name, x, y, 0, this);
         return component;
     }
+
     // Creates the circuit on the given grid. Normally the grid should be cleared first.
     createSchematic(grid) {
         // TODO: how to recreate connections from here? nets need connections then
+    }
+
+    // Creates a circuit from the components on the given grid.
+    static fromGrid(grid) {
+
     }
 }
 

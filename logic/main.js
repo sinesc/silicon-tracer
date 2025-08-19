@@ -2,8 +2,8 @@
 let mainGrid = new Grid(document.querySelector('#grid'));
 let toolbar = new Toolbar(document.querySelector('#toolbar'));
 
-toolbar.createButton('Pin ·', 'Component IO pin. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => Prefabs.createPinRight(grid, x, y, 'Pin'));
-toolbar.createButton('· Pin', 'Component IO pin. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => Prefabs.createPinLeft(grid, x, y, 'Pin'));
+toolbar.createButton('Port ·', 'Component IO pin. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => Prefabs.createPortRight(grid, x, y, 'Port'));
+toolbar.createButton('· Port', 'Component IO pin. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => Prefabs.createPortLeft(grid, x, y, 'Port'));
 
 for (let [ gateType, { joinOp } ] of Object.entries(Simulation.GATE_MAP)) {
     let gateLabel = gateType.charAt(0).toUpperCase() + gateType.slice(1);
@@ -73,6 +73,14 @@ function identifyNets() {
             component.portByName(portName)[1].color = color;
         }
         color = (color + 1) % 10;
+    }
+    for (let wire of netList.unconnected.wires) {
+        wire[2].color = null;
+    }
+    for (let port of netList.unconnected.ports) {
+        let component = port[1];
+        let portName = port[2].split('-')[1];
+        component.portByName(portName)[1].color = null;
     }
     mainGrid.render();
 }

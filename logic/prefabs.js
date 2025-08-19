@@ -25,17 +25,14 @@ class Prefabs {
             right.push(i === outputAt ? String.fromCharCode(Prefabs.START_LETTER + 16) : null);
         }
         // drop onto grid
-        let circuit = new Circuit(fn, { 'left': left, 'right': right });
-        return circuit.createComponent(grid, x, y);
+        return new Component(grid, fn, x, y, 0, { 'left': left, 'right': right });
     }
 
-    static createPinLeft(grid, x, y, name) {
-        let circuit = new Circuit(name, { 'left': [ '' ], 'top': [ null, null ] });
-        return circuit.createComponent(grid, x, y);
+    static createPortLeft(grid, x, y, name) {
+        return new Port(grid, name, x, y, 0, { 'left': [ '' ], 'top': [ null, null ] });
     }
 
-    static createPinRight(grid, x, y, name) {
-        let circuit = new Circuit(name, { 'right': [ '' ], 'top': [ null, null ] });
-        return circuit.createComponent(grid, x, y);
+    static createPortRight(grid, x, y, name) {
+        return new Port(grid, name, x, y, 0, { 'right': [ '' ], 'top': [ null, null ] });
     }
 }

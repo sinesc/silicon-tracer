@@ -92,6 +92,7 @@ class Connection extends GridItem {
             let color = this.dragConnection.color;
             this.dragConnection = new Connection(this.grid, x, y, x, y, what.ordering, color);
             this.dragConnection.render();
+            identifyNets();
         }
     }
 
