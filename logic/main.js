@@ -50,9 +50,9 @@ function identifyNets() {
     // get all component ports
     let components = mainGrid.getItems((i) => i instanceof Component);
     let ports = [];
-    for (let component of components) {
+    for (let [c, component] of components.entries()) {
         for (let port of component.getPorts()) {
-            ports.push([ new Point(port.x + component.x, port.y + component.y), component, port.name ]);
+            ports.push([ new Point(port.x + component.x, port.y + component.y), component, 'c' + c + '-' + port.name ]);
         }
     }
     //console.log(ports.map((p) => [ p[0].x, p[0].y, p[2] ]));
@@ -66,10 +66,15 @@ function identifyNets() {
     for (let net of netList.nets) {
         for (let wire of net.wires) {
             wire[2].color = color;
-            wire[2].render();
+        }
+        for (let port of net.ports) {
+            let component = port[1];
+            let portName = port[2].split('-')[1];
+            component.portByName(portName)[1].color = color;
         }
         color = (color + 1) % 10;
     }
+    mainGrid.render();
 }
 
 /*
@@ -102,10 +107,10 @@ setInterval(function() {
 }, 50);
 */
 
+/*
 let circuit1 = new Circuit('Gate', { left: [ "a", "b", "c" ], right: [ "d", "e", "f" ], top: [ "g", "h", "i" ], bottom: [ "j", "k", "l" ] });
 circuit1.createComponent(mainGrid, 250, 50);
 
-/*
 let circuit2 = new Circuit('Bait', { left: [ "a bit long" ], right: [ "quite long", "really very long", "short" ], top: [ "x" ], bottom: [ "great", "h", "i", "j" ] });
 circuit2.createComponent(mainGrid, 500, 100);
 

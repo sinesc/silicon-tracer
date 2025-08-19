@@ -229,34 +229,34 @@ body.no-focus #focus-hint {
     inset-inline: -8px;
 }
 /* colors */
-.connection-color-0 {
+.connection-color-0, .component-port-color-0 {
     background-color: rgb(76, 136, 76);
 }
-.connection-color-1 {
+.connection-color-1, .component-port-color-1 {
     background-color: rgb(120, 136, 76);
 }
-.connection-color-2 {
+.connection-color-2, .component-port-color-2 {
     background-color: rgb(136, 115, 76);
 }
-.connection-color-3 {
+.connection-color-3, .component-port-color-3 {
     background-color: rgb(136, 95, 76);
 }
-.connection-color-4 {
+.connection-color-4, .component-port-color-4 {
     background-color: rgb(136, 76, 76);
 }
-.connection-color-5 {
+.connection-color-5, .component-port-color-5 {
     background-color: rgb(136, 76, 111);
 }
-.connection-color-6 {
+.connection-color-6, .component-port-color-6 {
     background-color: rgb(112, 76, 136);
 }
-.connection-color-7 {
+.connection-color-7, .component-port-color-7 {
     background-color: rgb(87, 76, 136);
 }
-.connection-color-8 {
+.connection-color-8, .component-port-color-8 {
     background-color: rgb(76, 100, 136);
 }
-.connection-color-9 {
+.connection-color-9, .component-port-color-9 {
     background-color: rgb(76, 136, 133);
 }
 /* connection debugging */

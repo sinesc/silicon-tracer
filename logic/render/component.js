@@ -44,7 +44,7 @@ class Component extends GridItem {
             }
         }
 
-        this.ports = this.ports.map((side, ports) => ports.map((name) => ({ name: name, port: null, portLabel: null, x: null, y: null })));
+        this.ports = this.ports.map((side, ports) => ports.map((name) => ({ name: name, port: null, portLabel: null, color: null, x: null, y: null })));
 
         // ports
         let ports = this.#rotatedPorts();
@@ -196,7 +196,7 @@ class Component extends GridItem {
         }
     }
 
-    // Returns port coordinates.
+    // Returns flat list of ports.
     getPorts() {
         let ports = [  ];
         for (const [ side, items ] of Object.entries(this.ports)) {
@@ -231,7 +231,7 @@ class Component extends GridItem {
         let visualLabelLineHeight = visualPortSize + 2 * visualLabelPadding;
         let ports = this.#rotatedPorts();
         let properties = [ 'writingMode', 'left', 'top', 'right', 'bottom','paddingLeft', 'paddingTop', 'paddingRight', 'paddingBottom', 'width', 'height', ];
-        this.#iterPorts(ports, ({ name, port, portLabel }, side, x, y) => {
+        this.#iterPorts(ports, ({ name, port, color, portLabel }, side, x, y) => {
             // minor inset to move ports inward into the component just a little
             let visualPortInsetX = side === 'left' ? visualPortInset : (side === 'right' ? -visualPortInset : 0);
             let visualPortInsetY = side === 'top' ? visualPortInset : (side === 'bottom' ? -visualPortInset : 0);
@@ -245,7 +245,11 @@ class Component extends GridItem {
             port.style.height = visualPortSize + "px";
             port.style.lineHeight = visualPortSize + 'px';
             port.innerHTML = '<span>' + name.slice(0, 1) + '</span>';
-            // TODO: colorize based on connection (and its color)
+            if (color !== null) {
+                port.classList.add('component-port-color-' + color);
+            } else {
+                port.classList.remove('component-port-color-0', 'component-port-color-1', 'component-port-color-2', 'component-port-color-3');// todo: loop, but better yet, don't use classes.
+            }
             if (name.length > 1) {
                 portLabel.innerHTML = name;
                 portLabel.style.lineHeight = visualLabelLineHeight + 'px';
