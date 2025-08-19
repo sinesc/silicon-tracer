@@ -78,8 +78,8 @@ class Component extends GridItem {
             this.y -= (this.width - this.height) / 2;
             this.#updateDimensions(ports);
             this.#iterPorts(ports, (item, side, x, y) => {
-                item.x = x + Component.PORT_SIZE / 2;
-                item.y = y + Component.PORT_SIZE / 2;
+                item.x = x;
+                item.y = y;
             });
             this.element.classList.add('component-rotate-animation');
             setTimeout(() => {
