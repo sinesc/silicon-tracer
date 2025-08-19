@@ -246,7 +246,10 @@ class Component extends GridItem {
             port.style.lineHeight = visualPortSize + 'px';
             port.innerHTML = '<span>' + name.slice(0, 1) + '</span>';
             port.setAttribute('data-component-port-color', color ?? '');
-            if (name.length > 1) {
+            if (name.length <= 1) {
+                portLabel.style.display = 'none';
+            } else {
+                portLabel.style.display = 'block';
                 portLabel.innerHTML = name;
                 portLabel.style.lineHeight = visualLabelLineHeight + 'px';
                 let style;
