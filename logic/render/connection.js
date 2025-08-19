@@ -60,6 +60,8 @@ class Connection extends GridItem {
             what.startY = y;
         }
         if (!this.dragConnection) {
+            // TODO: when dragging forward (i.e. not perpendicular) from the end of a wire, ordering should be reversed.
+            // this requires getting a mouse movement vector because the user might still want to drag along the normal at the end of a wire
             this.grid.setStatus(Connection.DRAWING_CONNECTION_MESSAGE, true);
             this.grid.requestHotkeyTarget(this, true, { ...what, type: 'connect' }); // pass 'what' to onHotkey()
             this.dragConnection = new Connection(this.grid, what.startX, what.startY, x, y, what.ordering, this.color);
