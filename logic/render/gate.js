@@ -3,7 +3,8 @@ class Gate extends Component {
     static START_LETTER = 97; // 65 for capitalized
 
     type;
-    numInputs;
+    inputs = [];
+    output;
 
     constructor(grid, x, y, type, numInputs) {
 
@@ -16,12 +17,14 @@ class Gate extends Component {
             numSlots += 1;
         }
 
-        let outputAt = (numSlots - 1) / 2;
+        const outputAt = (numSlots - 1) / 2;
 
         // inputs
-        let left = [];
+        const left = [];
+        const inputs = [];
         for (let i = 0; i < numInputs; ++i) {
             let letter = String.fromCharCode(Gate.START_LETTER + i);
+            inputs.push(letter);
             left.push(letter);
             if (i === blankAfter) {
                 left.push(null);
@@ -29,13 +32,17 @@ class Gate extends Component {
         }
 
         // output
-        let right = [];
+        const right = [];
+        const output = String.fromCharCode(Gate.START_LETTER + 16);
         for (let i = 0; i < numSlots; ++i) {
-            right.push(i === outputAt ? String.fromCharCode(Gate.START_LETTER + 16) : null);
+            right.push(i === outputAt ? output : null);
         }
 
-        let name = type.toUpperFirst();
+        const name = type.toUpperFirst();
         super(grid, x, y, { 'left': left, 'right': right }, name);
+
+        this.inputs = inputs;
+        this.output = output;
         this.type = type;
         this.numInputs = numInputs;
         this.setHoverMessage(this.inner, '<b>' + name + '-Gate</b>. <i>LMB</i>: Drag to move. <i>R</i>: Rotate', { type: 'hover' });

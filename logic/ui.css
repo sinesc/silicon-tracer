@@ -52,6 +52,7 @@ html {
     background-color: black;
     color: white;
     font-family: sans-serif;
+    user-select: none;
 }
 #header h1, #toolbar, #toolbar .toolbar-button {
     display: inline-block;

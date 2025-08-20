@@ -104,15 +104,15 @@ class Grid {
         this.#element.style.backgroundPositionY = (offsetY % spacing) + 'px';
 
         // apply net colors to wires
-        let netList = this.identifyNets();
+        let [ netList ] = this.identifyNets();
         let color = 0;
         for (let net of netList.nets) {
             for (let wire of net.wires) {
                 wire[2].color = color;
             }
             for (let port of net.ports) {
-                let component = port[1];
-                let portName = port[2].split('-')[1];
+                let component = port[2];
+                let portName = port[1].split('-')[1];
                 component.portByName(portName)[1].color = color; // FIXME: don't override user set color
             }
             color = (color + 1) % 10;
@@ -121,8 +121,8 @@ class Grid {
             wire[2].color = null;
         }
         for (let port of netList.unconnected.ports) {
-            let component = port[1];
-            let portName = port[2].split('-')[1];
+            let component = port[2];
+            let portName = port[1].split('-')[1];
             component.portByName(portName)[1].color = null;
         }
 
@@ -143,7 +143,7 @@ class Grid {
         }
     }
 
-    // Identifies nets on the grid and returns a NetList.
+    // Identifies nets on the grid and returns a [ NetList, Map<String, Component> ].
     identifyNets() {
         // get all individual wires
         let connections = this.getItems((i) => i instanceof Connection);
@@ -151,7 +151,7 @@ class Grid {
         for (let connection of connections) {
             let points = connection.getPoints();
             if (points.length >= 2) {
-                wires.push([ points[0], points[1], connection ]);
+                wires.push([ points[0], points[1], connection ]); // TODO refactor to use class, e.g. NetWire(p1, p2, connection) where connection is arbitrary meta data since we need this for schematics that aren't currently on the grid too
             }
             if (points.length === 3) {
                 wires.push([ points[1], points[2], connection ]);
@@ -161,17 +161,19 @@ class Grid {
         // get all component ports
         let components = this.getItems((i) => i instanceof Component);
         let ports = [];
+        let componentMap = new Map();
         for (let [c, component] of components.entries()) {
+            let componentPrefix = 'c' + c + '-';
+            componentMap.set(componentPrefix, component);
             for (let port of component.getPorts()) {
-                ports.push([ new Point(port.x + component.x, port.y + component.y), component, 'c' + c + '-' + port.name ]);
+                ports.push([ new Point(port.x + component.x, port.y + component.y), componentPrefix + port.name, component ]); // TODO refactor to use class, e.g. NetPort(p, name, component) where component is arbitrary meta data since we need this for schematics that aren't currently on the grid too
             }
         }
         //console.log(ports.map((p) => [ p[0].x, p[0].y, p[2] ]));
         let netList = NetList.fromWires(wires.toReversed(), ports); /* toReversed just avoids complete net reassign on new wire. not required, just for testing */
         //console.log(netList.nets.map((n) => n.ports));
-        return netList;
+        return [ netList, componentMap ];
     }
-
 
     // Sets a status message. Pass null to unset and revert back to default status.
     setMessage(message, lock) {
