@@ -6,7 +6,7 @@ toolbar.createButton('Port ·', 'Component IO pin. <i>LMB</i>: Drag to move on
 toolbar.createButton('· Port', 'Component IO pin. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => Prefabs.createPortLeft(grid, x, y, 'Port'));
 
 for (let [ gateType, { joinOp } ] of Object.entries(Simulation.GATE_MAP)) {
-    let gateLabel = gateType.charAt(0).toUpperCase() + gateType.slice(1);
+    let gateLabel = gateType.toUpperFirst();
     toolbar.createButton(gateLabel, '<b>' + gateLabel + '</b> gate. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => {
         let numInputs = 2; // TODO: configurable somewhere
         return Prefabs.createGate(grid, x, y, gateType, joinOp !== null ? numInputs : 1);
@@ -114,21 +114,3 @@ setInterval(function() {
     document.querySelector('#data').innerHTML = 'set: ' + c.getNet(set) + '<br>reset: ' + c.getNet(reset) + '<br>out1: ' + c.getNet(out1) + '<br>out2: ' + c.getNet(out2);
 }, 50);
 */
-
-/*
-let circuit1 = new Circuit('Gate', { left: [ "a", "b", "c" ], right: [ "d", "e", "f" ], top: [ "g", "h", "i" ], bottom: [ "j", "k", "l" ] });
-circuit1.createComponent(mainGrid, 250, 50);
-
-let circuit2 = new Circuit('Bait', { left: [ "a bit long" ], right: [ "quite long", "really very long", "short" ], top: [ "x" ], bottom: [ "great", "h", "i", "j" ] });
-circuit2.createComponent(mainGrid, 500, 100);
-
-let circuit3 = new Circuit('Bleeep', { left: [ "a", "b", "c", "d", "e" ], right: [ "q", "r", "s" ] });
-circuit3.createComponent(mainGrid, 330, 200);
-
-let circuit4 = new Circuit('Blubb', { top: [ "a", "be long", "c", "duh", "e" ], bottom: [ "q", "r", "s" ] });
-circuit4.createComponent(mainGrid, 500, 450);
-
-let circuit5 = new Circuit('Gate', { left: [ "a", null, "b" ], right: [ null, "q", null ] });
-circuit5.createComponent(mainGrid, 800, 500);
-*/
-

@@ -23,6 +23,12 @@ String.isString = function(s) {
     return typeof s === 'string';
 }
 
+Object.defineProperty(String.prototype, "toUpperFirst", {
+    value: function() {
+        return this.length > 0 ? this.charAt(0).toUpperCase() + this.slice(1) : '';
+    }
+});
+
 class Point {
     x;
     y;
