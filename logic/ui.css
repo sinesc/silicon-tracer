@@ -97,11 +97,10 @@ html {
     border-radius: 10px;
     transition: opacity 0.5s;
 }
-body.focus-changing #focus-hint {
+body.no-focus #focus-hint, body.focus-changing #focus-hint {
     display: block;
 }
-body.no-focus #focus-hint {
-    display: block;
+body.no-focus #focus-hint:has(+div#grid:hover) {
     opacity: 0.3;
 }
 
