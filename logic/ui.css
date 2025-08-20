@@ -37,6 +37,7 @@
     --wire-color9-low: oklch(from var(--wire-color9) calc(l * var(--wire-low-factor)) c h);
     --wire-color9-high: oklch(from var(--wire-color9) calc(l * var(--wire-high-factor)) c h);
     --component-rotate-duration: 0.15s;
+    --component-color-transition-duration: 0.15s;
     --component-body-color: #444;
     --component-border-color: #222;
     --component-preview-color: #444;
@@ -69,7 +70,7 @@ html {
     cursor: default;
     background-color: var(--component-body-color);
     border: 1px solid var(--component-border-color);
-    transition: border-color 0.15s;
+    transition: border-color var(--component-color-transition-duration);
     border-radius: 3px;
     color: #ffffff;
     text-align: center;
@@ -223,6 +224,7 @@ body.no-focus #focus-hint:has(+div#grid:hover) {
     color: #ddd;
     border: 1px solid var(--component-port-body-color);
     box-sizing: border-box;
+    transition: background-color var(--component-color-transition-duration);
 }
 .grid-zoom-below-100 .component-port {
     border-radius: 0;
@@ -232,7 +234,7 @@ body.no-focus #focus-hint:has(+div#grid:hover) {
 }
 .component-port:hover {
     background-color: #aaa;
-    transition: background-color 0.15s, color 0.15s;
+    transition: background-color var(--component-color-transition-duration), color var(--component-color-transition-duration);
     color: #000;
 }
 .component-port-label {
@@ -246,7 +248,7 @@ body.no-focus #focus-hint:has(+div#grid:hover) {
     box-sizing: border-box;
     color: #ccc;
     opacity: 0;
-    transition: opacity 0.15s;
+    transition: opacity var(--component-color-transition-duration);
 }
 .grid-zoom-below-125 .component-port-label {
     display: none;
