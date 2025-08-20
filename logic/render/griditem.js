@@ -25,18 +25,29 @@ class GridItem {
 
     onHotkey(key, ...args) { }
 
+    // Serializes the object for writing to disk.
+    serialize() {
+        return {
+            _: { c: this.constructor.name, a: [] },
+        };
+    }
+
+    // Gets the grid-relative screen x-coordinate for this grid item.
     get visualX() {
         return (this.x + this.grid.offsetX) * this.grid.zoom;
     }
 
+    // Gets the grid-relative screen y-coordinate for this grid item.
     get visualY() {
         return (this.y + this.grid.offsetY) * this.grid.zoom;
     }
 
+    // Gets the screen width for this grid item.
     get visualWidth() {
         return this.width * this.grid.zoom;
     }
 
+    // Gets the screen height for this grid item.
     get visualHeight() {
         return this.height * this.grid.zoom;
     }

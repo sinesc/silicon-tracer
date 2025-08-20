@@ -4,6 +4,36 @@
 let mainGrid = new Grid(document.querySelector('#grid'));
 let toolbar = new Toolbar(document.querySelector('#toolbar'));
 
+// Add file operations to toolbar
+
+toolbar.createActionButton('Open...', 'Load circuit from disk', async () => {
+    let [fileHandle] = await window.showOpenFilePicker();
+    const file = await fileHandle.getFile();
+    const content = await file.text();
+    mainGrid.unserialize(JSON.parse(content));
+    mainGrid.render();
+});
+
+toolbar.createActionButton('Save as...', 'Save circuit to disk', async () => {
+    const options = {
+        types: [
+            {
+                description: "Silicon Tracer circuit",
+                accept: {
+                    "text/plain": [".stc"],
+                },
+            },
+        ],
+    };
+    const handle = await window.showSaveFilePicker(options);
+    const writable = await handle.createWritable();
+    await writable.write(JSON.stringify(mainGrid.serialize()));
+    await writable.close();
+});
+
+
+// Add standard components to toolbar
+
 toolbar.createComponentButton('Port ·', 'Component IO pin. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => new Port(grid, x, y, 'right'));
 toolbar.createComponentButton('· Port', 'Component IO pin. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => new Port(grid, x, y, 'left'));
 

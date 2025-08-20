@@ -78,18 +78,21 @@ html {
     color: #ffffff;
     text-align: center;
     box-sizing: border-box;
-    margin: 5px; /* fixme: needs to match component, should just be set there */
+    margin: 5px;
     text-shadow: 1px 1px 2px black;
     font-size: 0.8em;
     min-width: 50px;
     line-height: 2;
+    padding: 0 5px;
 }
 .toolbar .toolbar-button:hover {
     border: 1px solid #fff;
 }
 .toolbar .toolbar-action-button {
+    text-shadow: none;
     background-color: #bbb;
     color: #000;
+    font-weight: bold;
 }
 
 /*

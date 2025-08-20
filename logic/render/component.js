@@ -68,6 +68,15 @@ class Component extends GridItem {
         grid.addVisual(this.element);
     }
 
+    // Serializes the object for writing to disk.
+    serialize() {
+        return {
+            ...super.serialize(),
+            _: { c: this.constructor.name, a: [ this.x, this.y, this.ports.map((p) => p.name), this.element.getAttribute('data-component-name') ]},
+            rotation: this.rotation,
+        };
+    }
+
     // Hover hotkey actions
     onHotkey(key, what) {
         if (key === 'r' && what.type === 'hover') {

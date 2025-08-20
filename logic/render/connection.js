@@ -51,6 +51,14 @@ class Connection extends GridItem {
         }
     }
 
+    // Serializes the object for writing to disk.
+    serialize() {
+        return {
+            ...super.serialize(),
+            _: { c: this.constructor.name, a: [ this.x, this.y, this.x + this.width, this.y + this.height, this.ordering, this.color ]},
+        };
+    }
+
     // Create connection from exiting connection.
     onConnect(x, y, status, what) {
         if (status === 'start') {

@@ -4,6 +4,7 @@ class Port extends Component {
 
     state = null;
     netId = null;
+    #side;
 
     constructor(grid, x, y, side, name = 'Port') {
 
@@ -20,7 +21,17 @@ class Port extends Component {
         }
 
         super(grid, x, y, ports, name);
-        this.setHoverMessage(this.inner, 'Port <b>' + name + '</b>. <i>LMB</i>: Drag to move. <i>R</i>: Rotate, <i>1</i>: Set high, <i>2</i>: Set low, <i>3</i>: Unset, <i>Space</i>: Toggle high/low/unset', { type: 'hover' });
+        this.#side = side;
+        this.setHoverMessage(this.inner, 'Port <b>' + name + '</b>. <i>LMB</i>: Drag to move. <i>R</i>: Rotate, <i>1</i>: Set high, <i>2</i>: Set low, <i>3</i>: Unset', { type: 'hover' });
+    }
+
+    // Serializes the object for writing to disk.
+    serialize() {
+        return {
+            ...super.serialize(),
+            _: { c: this.constructor.name, a: [ this.x, this.y, this.#side, this.element.getAttribute('data-component-name') ]},
+            rotation: this.rotation,
+        };
     }
 
     // Hover hotkey actions
@@ -34,14 +45,6 @@ class Port extends Component {
                 this.state = 0;
             } else if (key === '3') {
                 this.state = null;
-            } else if (key === ' ') {
-                if (this.state === null) {
-                    this.state = 1;
-                } else if (this.state === 1) {
-                    this.state = 0;
-                } else if (this.state === 0) {
-                    this.state = null;
-                }
             }
             if (prevState !== this.state) {
                 if (/*this.state !== null &&*/ this.netId !== null && global.sim && global.sim.ready) {

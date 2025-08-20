@@ -41,6 +41,43 @@ class Grid {
         document.addEventListener('keydown', this.#handleKeyDown.bind(this));
     }
 
+    // Serializes items on the grid for writing to disk.
+    serialize() {
+        let result = [];
+        for (let i = 0; i < this.#items.length; ++i) {
+            let item = this.#items[i].deref();
+            if (item) {
+                result.push(item.serialize());
+            }
+        }
+        return result;
+    }
+
+    // Creates grid items from given serialized object.
+    unserialize(data) {
+        for (let item of data) {
+            let cname = item._.c;
+            let cargs = item._.a;
+            let instance;
+            if (cname === 'Component') {
+                instance = new Component(this, ...cargs);
+            } else if (cname === 'Port') {
+                instance = new Port(this, ...cargs);
+            } else if (cname === 'Gate') {
+                instance = new Gate(this, ...cargs);
+            } else if (cname === 'Connection') {
+                instance = new Connection(this, ...cargs);
+            } else {
+                throw 'Invalid component type "' + cname + '"';
+            }
+            for (let [ k, v ] of Object.entries(data)) {
+                if (k !== '_') {
+                    instance[k] = v;
+                }
+            }
+        }
+    }
+
     // Registers an item with the grids renderloop. Automatically done by GridItem constructor.
     registerItem(item) {
         this.#items.push(new WeakRef(item));
