@@ -25,7 +25,7 @@ class Prefabs {
             right.push(i === outputAt ? String.fromCharCode(Prefabs.START_LETTER + 16) : null);
         }
         // drop onto grid
-        return new Component(grid, fn, x, y, 0, { 'left': left, 'right': right });
+        return new Gate(grid, fn, x, y, 0, { 'left': left, 'right': right });
     }
 
     static createPortLeft(grid, x, y, name) {

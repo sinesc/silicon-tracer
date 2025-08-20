@@ -104,10 +104,3 @@ class Circuit {
 
     }
 }
-
-class Gate {
-    type;
-    constructor(type) {
-        this.type = type;
-    }
-}
