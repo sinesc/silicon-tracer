@@ -331,6 +331,13 @@ div.component[data-port-state="0"] > div.component-inner:has(+div[data-component
 div.component[data-port-state="1"] > div.component-inner:has(+div[data-component-port-color="9"])  {
     outline-color: var(--wire-color9-high);
 }
+/*tmp*/
+div.component[data-port-net-state="0"][data-port-state=""] {
+    background-color: red !important;
+}
+div.component[data-port-net-state="1"][data-port-state=""] {
+    background-color: lime !important;
+}
 
 /*
  * connection

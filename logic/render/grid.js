@@ -112,7 +112,7 @@ class Grid {
             }
             for (let port of net.ports) {
                 let component = port[2];
-                let portName = port[1].split('-')[1];
+                let portName = port[1].split(':')[1];
                 component.portByName(portName)[1].color = color; // FIXME: don't override user set color
             }
             color = (color + 1) % 10;
@@ -122,7 +122,7 @@ class Grid {
         }
         for (let port of netList.unconnected.ports) {
             let component = port[2];
-            let portName = port[1].split('-')[1];
+            let portName = port[1].split(':')[1];
             component.portByName(portName)[1].color = null;
         }
 
@@ -163,7 +163,7 @@ class Grid {
         let ports = [];
         let componentMap = new Map();
         for (let [c, component] of components.entries()) {
-            let componentPrefix = 'c' + c + '-';
+            let componentPrefix = 'c' + c + ':';
             componentMap.set(componentPrefix, component);
             for (let port of component.getPorts()) {
                 ports.push([ new Point(port.x + component.x, port.y + component.y), componentPrefix + port.name, component ]); // TODO refactor to use class, e.g. NetPort(p, name, component) where component is arbitrary meta data since we need this for schematics that aren't currently on the grid too

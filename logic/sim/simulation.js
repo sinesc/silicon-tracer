@@ -27,6 +27,7 @@ class Simulation {
 
     // Declares a net (which inputs/outputs are connected) and returns the net-index.
     netDecl(attachedIONames) {
+        console.log('netDecl', attachedIONames);
         const index = this.#nets.length;
         this.#nets.push({ offset: this.#alloc(), io: attachedIONames });
         return index;
@@ -34,6 +35,9 @@ class Simulation {
 
     // Declares a named input or output.
     ioDecl(name, type, delay) {
+        if (!/^[a-z_][a-z0-9_:]*$/.test(name)) {
+            throw 'Invalid io name "' + name + '"';
+        }
         this.#ioMap.set(name, { offset: this.#alloc(), delay: delay ?? Simulation.DEFAULT_DELAY, in: type.indexOf('i') !== -1, out: type.indexOf('o') !== -1 });
     }
 
@@ -49,6 +53,7 @@ class Simulation {
 
     // Convenience method to declare gate inputs and function.
     gateDecl(type, inputs, output, delay) {
+        console.log('gateDecl', type, inputs, output, delay);
         this.fnDecl(type, inputs, output);
         for (let input of inputs) {
             this.ioDecl(input, 'i', delay ?? Simulation.DEFAULT_DELAY);
@@ -62,8 +67,14 @@ class Simulation {
         result += 'let mask, signal, result' + this.#endl();
         result += this.#compileTick();
         result += '}';
+        console.log(result);
         this.#compiled = eval(result);
         this.#mem = new Simulation.ARRAY_CONSTRUCTOR(this.#allocBase);
+    }
+
+    // Returns whether the simulation is ready to run (has been compiled).
+    get ready() {
+        return typeof this.#compiled === 'function';
     }
 
     // Runs the simulation.
@@ -73,6 +84,7 @@ class Simulation {
 
     // Sets the value of a net in the simulation. null to unset, true/false/1/0 to set value.
     setNet(netIndex, value) {
+        //console.log('set ' + netIndex + ' to ' + value);
         let offset = this.#nets[netIndex].offset;
         this.#mem[offset] = ((value !== null) << Simulation.MAX_DELAY) | value;
     }
@@ -81,7 +93,9 @@ class Simulation {
     getNet(netIndex) {
         let offset = this.#nets[netIndex].offset;
         let value = this.#mem[offset];
-        return value & (1 << Simulation.MAX_DELAY) ? value & 1 : null;
+        let ret = value & (1 << Simulation.MAX_DELAY) ? value & 1 : null;
+        //console.log('get ' + netIndex + ' = ' + ret);
+        return ret;
     }
 
     // Compiles a net to input assertion.
@@ -100,7 +114,7 @@ class Simulation {
     #compileGate(gateIndex, ioReplacements) {
         let gate = this.#gates[gateIndex];
         let io = this.#getIO(gate.output);
-        let op = gate.template.replace(/[a-z_][a-z0-9_]*/g, (match) => ioReplacements[match]);
+        let op = gate.template.replace(/[a-z_][a-z0-9_:]*/g, (match) => ioReplacements[match]);
         let ioValue = this.#compileIOValue(gate.output);
         let delayMask = this.#compileDelayMask(io.delay);
         let signalBit = this.#compileConst(1 << Simulation.MAX_DELAY);

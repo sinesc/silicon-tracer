@@ -33,10 +33,13 @@ setInterval(() => {
 
 // MISC TESTING STUFF
 
-toolbar.createActionButton('Simulate', 'Simulate circuit', () => {// Temporary simulation trigger
+let sim;
+
+toolbar.createActionButton('Compile', 'Compile circuit', () => {
+
     let [ netList, componentMap ] = mainGrid.identifyNets();
 
-    let sim = new Simulation();
+    sim = new Simulation();
 
     // declare gates from component map
     for (let [ prefix, component ] of componentMap.entries()) {
@@ -47,11 +50,32 @@ toolbar.createActionButton('Simulate', 'Simulate circuit', () => {// Temporary s
 
     // declare nets
     for (let net of netList.nets) {
-        sim.netDecl(net.ports.map((p) => p[1]));
+        let netId = sim.netDecl(net.ports.filter((p) => p[2] instanceof Gate).map((p) => p[1]));
+        // check for ports on net we need to hook up to the ui
+        for (let [ point, name, component ] of net.ports) {
+            if (component instanceof Port) {
+                // store netId on port to allow it to fetch the current net state
+                component.netId = netId;
+                // if the port enforces a state set the net to it
+                if (component.state !== null) {
+                    sim.setNet(netId, component.state);
+                }
+            }
+        }
     }
 
-    console.log(sim);
+    sim.compile();
+    mainGrid.render();
 });
+
+setInterval(() => {
+    if (sim && sim.ready) {
+        sim.simulate();
+        sim.simulate();
+        sim.simulate();
+        mainGrid.render();
+    }
+}, 100);
 
 /*
 // test flipflop

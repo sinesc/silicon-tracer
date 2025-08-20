@@ -1,6 +1,7 @@
 class Port extends Component {
 
     state = null;
+    netId = null;
 
     constructor(grid, x, y, side, name = 'Port') {
 
@@ -31,6 +32,9 @@ class Port extends Component {
             } else if (this.state === 0) {
                 this.state = null;
             }
+            if (this.state !== null && this.netId !== null && sim && sim.ready) {
+                sim.setNet(this.netId, this.state);
+            }
             this.render();
         }
     }
@@ -39,5 +43,7 @@ class Port extends Component {
     render(reason) {
         super.render(reason);
         this.element.setAttribute('data-port-state', this.state ?? '');
+        // TODO: better way to get simulation
+        this.element.setAttribute('data-port-net-state', this.netId !== null && sim && sim.ready ? sim.getNet(this.netId) : '');
     }
 }
