@@ -1,3 +1,5 @@
+"use strict";
+
 // Net identification
 class NetList {
     nets;

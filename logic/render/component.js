@@ -1,3 +1,5 @@
+"use strict";
+
 class Component extends GridItem {
 
     static SIDES = [ 'top', 'right', 'bottom', 'left' ];
@@ -64,7 +66,6 @@ class Component extends GridItem {
         });
 
         grid.addVisual(this.element);
-        this.render();
     }
 
     // Hover hotkey actions

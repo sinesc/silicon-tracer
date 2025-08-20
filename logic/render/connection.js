@@ -1,3 +1,5 @@
+"use strict";
+
 class Connection extends GridItem {
 
     static DEBUG_BOX = false;
@@ -47,8 +49,6 @@ class Connection extends GridItem {
                 this.grid.addVisual(this['debug' + i]);
             }
         }
-
-        this.render();
     }
 
     // Create connection from exiting connection.

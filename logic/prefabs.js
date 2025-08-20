@@ -1,3 +1,5 @@
+"use strict";
+
 class Prefabs {
     // keep around for complex prefab components
 /*

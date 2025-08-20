@@ -1,3 +1,5 @@
+"use strict";
+
 // Create grid and toolbar
 let mainGrid = new Grid(document.querySelector('#grid'));
 let toolbar = new Toolbar(document.querySelector('#toolbar'));
@@ -33,46 +35,48 @@ setInterval(() => {
 
 // MISC TESTING STUFF
 
-let sim;
+let global = { };
 
 toolbar.createActionButton('Compile', 'Compile circuit', () => {
 
     let [ netList, componentMap ] = mainGrid.identifyNets();
 
-    sim = new Simulation();
+    global.sim = new Simulation();
 
     // declare gates from component map
     for (let [ prefix, component ] of componentMap.entries()) {
         if (component instanceof Gate) {
-            sim.gateDecl(component.type, component.inputs.map((i) => prefix + i), prefix + component.output);
+            global.sim.gateDecl(component.type, component.inputs.map((i) => prefix + i), prefix + component.output);
         }
     }
 
     // declare nets
     for (let net of netList.nets) {
-        let netId = sim.netDecl(net.ports.filter((p) => p[2] instanceof Gate).map((p) => p[1]));
+        let netId = global.sim.netDecl(net.ports.filter((p) => p[2] instanceof Gate).map((p) => p[1]));
         // check for ports on net we need to hook up to the ui
         for (let [ point, name, component ] of net.ports) {
             if (component instanceof Port) {
+                console.log('updating', component);
                 // store netId on port to allow it to fetch the current net state
+                if (netId === undefined) debugger;
                 component.netId = netId;
                 // if the port enforces a state set the net to it
                 if (component.state !== null) {
-                    sim.setNet(netId, component.state);
+                    global.sim.setNet(netId, component.state);
                 }
             }
         }
     }
 
-    sim.compile();
+    global.sim.compile();
     mainGrid.render();
 });
 
 setInterval(() => {
-    if (sim && sim.ready) {
-        sim.simulate();
-        sim.simulate();
-        sim.simulate();
+    if (global.sim && global.sim.ready) {
+        global.sim.simulate();
+        global.sim.simulate();
+        global.sim.simulate();
         mainGrid.render();
     }
 }, 100);

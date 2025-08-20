@@ -12,8 +12,8 @@
     --wire-color7: rgb(87, 76, 136);
     --wire-color8: rgb(76, 100, 136);
     --wire-color9: rgb(76, 136, 133);
-    --wire-high-factor: 1.25;
-    --wire-low-factor: 0.75;
+    --wire-high-factor: 1.15;
+    --wire-low-factor: 0.60;
     --wire-color-low: oklch(from var(--wire-color) calc(l * var(--wire-low-factor)) c h);
     --wire-color-high: oklch(from var(--wire-color) calc(l * var(--wire-high-factor)) c h);
     --wire-color0-low: oklch(from var(--wire-color0) calc(l * var(--wire-low-factor)) c h);
@@ -40,6 +40,7 @@
     --component-color-transition-duration: 0.15s;
     --component-body-color: #444;
     --component-border-color: #222;
+    --component-hover-color: #666;
     --component-preview-color: #444;
     --component-port-body-color: #444;
     --component-port-border-color: #6d6d6d;
@@ -217,7 +218,7 @@ body.no-focus #focus-hint:has(+div#grid:hover) {
     display: none;
 }
 .component-inner:hover {
-    border: 1px solid #aaa;
+    background-color: var(--component-hover-color);
 }
 .component-port {
     z-index: 14;
@@ -266,10 +267,10 @@ body.no-focus #focus-hint:has(+div#grid:hover) {
  * port
  */
 div.component[data-port-state="0"] > div.component-inner {
-    outline: 3px solid var(--wire-color-low);
+    outline: 4px solid var(--wire-color-low);
 }
 div.component[data-port-state="1"] > div.component-inner {
-    outline: 3px solid var(--wire-color-high);
+    outline: 4px solid var(--wire-color-high);
 }
 div.component[data-port-state="0"] > div.component-inner:has(+div[data-component-port-color="0"]) {
     outline-color: var(--wire-color0-low);

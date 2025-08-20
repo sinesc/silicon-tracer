@@ -1,3 +1,5 @@
+"use strict";
+
 class Gate extends Component {
 
     static START_LETTER = 97; // 65 for capitalized

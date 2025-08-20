@@ -1,3 +1,5 @@
+"use strict";
+
 class Grid {
 
     static DEBUG_COORDS = false;
@@ -81,17 +83,19 @@ class Grid {
     render(reason) {
 
         // add below/above/current zoom level classes to grid to enable zoom based styling
-        for (let zoom of Grid.ZOOM_LEVELS) {
-            let name = zoom * 100;
-            this.#element.classList.remove('grid-zoom-above-' + name);
-            this.#element.classList.remove('grid-zoom-' + name);
-            this.#element.classList.remove('grid-zoom-below-' + name);
-            if (this.zoom > zoom) {
-                this.#element.classList.add('grid-zoom-above-' + name);
-            } else if (this.zoom < zoom) {
-                this.#element.classList.add('grid-zoom-below-' + name);
-            } else {
-                this.#element.classList.add('grid-zoom-' + name);
+        if (!this.#element.classList.contains('grid-zoom-' + (this.zoom * 100))) {
+            for (let zoom of Grid.ZOOM_LEVELS) {
+                let name = zoom * 100;
+                this.#element.classList.remove('grid-zoom-above-' + name);
+                this.#element.classList.remove('grid-zoom-' + name);
+                this.#element.classList.remove('grid-zoom-below-' + name);
+                if (this.zoom > zoom) {
+                    this.#element.classList.add('grid-zoom-above-' + name);
+                } else if (this.zoom < zoom) {
+                    this.#element.classList.add('grid-zoom-below-' + name);
+                } else {
+                    this.#element.classList.add('grid-zoom-' + name);
+                }
             }
         }
 

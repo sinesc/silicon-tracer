@@ -1,3 +1,5 @@
+"use strict";
+
 class Simulation {
 
     static DEBUG = true;
