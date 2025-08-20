@@ -225,7 +225,6 @@ class Component extends GridItem {
     // Renders component ports. Only required during scaling/rotation.
     #renderPorts() {
         let visualPortSize = Component.PORT_SIZE * this.grid.zoom;
-        let visualPortCenterOffset = visualPortSize / 2;
         let visualPortInset = visualPortSize / 4;
         let visualLabelPadding = 1 * this.grid.zoom;
         let visualLabelLineHeight = visualPortSize + 2 * visualLabelPadding;
@@ -235,12 +234,12 @@ class Component extends GridItem {
             // minor inset to move ports inward into the component just a little
             let visualPortInsetX = side === 'left' ? visualPortInset : (side === 'right' ? -visualPortInset : 0);
             let visualPortInsetY = side === 'top' ? visualPortInset : (side === 'bottom' ? -visualPortInset : 0);
-            // apply grid zoom
-            x *= this.grid.zoom;
-            y *= this.grid.zoom;
+            // apply port center offset and grid zoom
+            x = (x - Component.PORT_SIZE / 2) * this.grid.zoom;
+            y = (y - Component.PORT_SIZE / 2) * this.grid.zoom;
             // set visual coordinates
-            port.style.left = (x - visualPortCenterOffset + visualPortInsetX) + "px";
-            port.style.top = (y - visualPortCenterOffset + visualPortInsetY) + "px";
+            port.style.left = (x + visualPortInsetX) + "px";
+            port.style.top = (y + visualPortInsetY) + "px";
             port.style.width = visualPortSize + "px";
             port.style.height = visualPortSize + "px";
             port.style.lineHeight = visualPortSize + 'px';
@@ -257,7 +256,7 @@ class Component extends GridItem {
                     style = {
                         writingMode: 'vertical-rl',
                         left: (x - visualLabelPadding) + "px",
-                        top: (y - visualLabelPadding) + "px",
+                        top: (y - visualLabelPadding - visualPortInset) + "px",
                         paddingTop: visualLabelLineHeight + "px",
                         paddingBottom: visualLabelPadding + "px",
                         width: visualLabelLineHeight + "px",
@@ -266,7 +265,7 @@ class Component extends GridItem {
                     style = {
                         writingMode: 'sideways-lr',
                         left: (x - visualLabelPadding) + "px",
-                        bottom: (this.visualHeight - visualPortSize - visualLabelPadding) + "px",
+                        bottom: (this.visualHeight - visualPortSize - visualLabelPadding + visualPortInset) + "px",
                         paddingTop: visualLabelPadding + "px",
                         paddingBottom: visualLabelLineHeight + "px",
                         width: visualLabelLineHeight + "px",
@@ -275,7 +274,7 @@ class Component extends GridItem {
                     style = {
                         writingMode: 'horizontal-tb',
                         top: (y - visualLabelPadding) + "px",
-                        right: (this.visualWidth - visualPortSize - visualLabelPadding) + "px",
+                        right: (this.visualWidth - visualPortSize - visualLabelPadding + visualPortInset) + "px",
                         paddingLeft: visualLabelPadding + "px",
                         paddingRight: visualLabelLineHeight + "px",
                         height: visualLabelLineHeight + "px",
@@ -283,7 +282,7 @@ class Component extends GridItem {
                 } else if (side === 'right') {
                     style = {
                         writingMode: 'horizontal-tb',
-                        left: (x - visualLabelPadding) + "px",
+                        left: (x - visualLabelPadding - visualPortInset) + "px",
                         top: (y - visualLabelPadding) + "px",
                         paddingLeft: visualLabelLineHeight + "px",
                         paddingRight: visualLabelPadding + "px",
