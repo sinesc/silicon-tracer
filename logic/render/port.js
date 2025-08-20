@@ -34,6 +34,11 @@ class Port extends Component {
         };
     }
 
+    // Detach port from simulation.
+    detachSimulation() {
+        this.netId = null;
+    }
+
     // Hover hotkey actions
     onHotkey(key, what) {
         super.onHotkey(key, what);

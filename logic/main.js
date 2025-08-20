@@ -74,6 +74,7 @@ let global = { };
 
 toolbar.createActionButton('Compile', 'Compile circuit', () => {
 
+    mainGrid.detachSimulation();
     let [ netList, componentMap ] = mainGrid.identifyNets();
 
     global.sim = new Simulation();

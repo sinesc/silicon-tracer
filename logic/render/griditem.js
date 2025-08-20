@@ -31,6 +31,9 @@ class GridItem {
     // Implement to remove the item from the grid.
     remove() { }
 
+    // Implement to detach the item from the simulation.
+    detachSimulation() { }
+
     // Serializes the object for writing to disk.
     serialize() {
         return {

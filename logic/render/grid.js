@@ -80,13 +80,17 @@ class Grid {
 
     // Removes all items from the grid.
     clear() {
-        for (let i = 0; i < this.#items.length; ++i) {
-            let item = this.#items[i].deref();
-            if (item) {
-                item.remove();
-            }
-        }
+        this.#iterItems((item) => {
+            item.remove();
+        });
         this.#items = [];
+    }
+
+    // Detaches all items from the simulation.
+    detachSimulation() {
+        this.#iterItems((item) => {
+            item.detachSimulation();
+        });
     }
 
     // Registers an item with the grids renderloop. Automatically done by GridItem constructor.
@@ -130,8 +134,9 @@ class Grid {
     // Renders the grid and its components. If the optional reason is 'move' some render steps may be optimized out.
     render(reason) {
 
-        // add below/above/current zoom level classes to grid to enable zoom based styling
         if (!this.#element.classList.contains('grid-zoom-' + (this.zoom * 100))) {
+
+            // add below/above/current zoom level classes to grid to enable zoom based styling
             for (let zoom of Grid.ZOOM_LEVELS) {
                 let name = zoom * 100;
                 this.#element.classList.remove('grid-zoom-above-' + name);
@@ -145,17 +150,17 @@ class Grid {
                     this.#element.classList.add('grid-zoom-' + name);
                 }
             }
+
+            // create background grid pattern
+            let spacing = Grid.SPACING * this.zoom;
+            let offsetX = this.offsetX * this.zoom;
+            let offsetY = this.offsetY * this.zoom;
+            this.#element.style.backgroundSize = spacing + 'px ' + spacing + 'px';
+            this.#element.style.backgroundPositionX = (offsetX % spacing) + 'px';
+            this.#element.style.backgroundPositionY = (offsetY % spacing) + 'px';
         }
 
-        // create background grid pattern
-        let spacing = Grid.SPACING * this.zoom;
-        let offsetX = this.offsetX * this.zoom;
-        let offsetY = this.offsetY * this.zoom;
-        this.#element.style.backgroundSize = spacing + 'px ' + spacing + 'px';
-        this.#element.style.backgroundPositionX = (offsetX % spacing) + 'px';
-        this.#element.style.backgroundPositionY = (offsetY % spacing) + 'px';
-
-        // apply net colors to wires
+        // apply net colors to wires // FIXME: only identify on change (the sim also calls render and doesn't need net recalculation)
         let [ netList ] = this.identifyNets();
         let color = 0;
         for (let net of netList.nets) {
@@ -179,10 +184,17 @@ class Grid {
         }
 
         // render components
+        this.#iterItems((item) => {
+            item.render(reason);
+        });
+    }
+
+    // Iterate over grid items.
+    #iterItems(fn) {
         for (let i = 0; i < this.#items.length; ++i) {
             let item = this.#items[i].deref();
             if (item) {
-                item.render(reason);
+                fn(item);
             } else {
                 // remove from array by replacing with last entry. afterwards next iteration has to repeat this index.
                 if (i < this.#items.length - 1) {

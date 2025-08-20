@@ -188,7 +188,10 @@ class Component extends GridItem {
 
     // Renders the component onto the grid.
     render(reason) {
-        let ports = this.#rotatedPorts();
+        
+        if (this.element.classList.contains('component-rotate-animation')) {
+            return;
+        }
 
         // don't need to update ports when only moving
         if (reason !== 'move') {
@@ -199,6 +202,7 @@ class Component extends GridItem {
         this.element.style.top = this.visualY + "px";
         this.element.style.width = this.visualWidth + "px";
         this.element.style.height = this.visualHeight + "px";
+        let ports = this.#rotatedPorts();
 
         if ((this.width < this.height || (this.width === this.height && ports.top.length === 0 && ports.bottom.length === 0)) && this.visualWidth < 200) {
             this.inner.style.lineHeight = (this.visualWidth - (Component.INNER_MARGIN * 2)) + "px";
