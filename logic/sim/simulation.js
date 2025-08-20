@@ -40,7 +40,7 @@ class Simulation {
     // Declares a gate function for the given inputs/output and returns the gate-index.
     fnDecl(type, inputs, output) {
         let rules = Simulation.GATE_MAP[type];
-        let inner = inputs.map((v) => (rules.negIn ? '(!' + v + ')' : v)).join(' ' + rules.joinOp + ' ');
+        let inner = inputs.map((v) => (rules.negIn ? '(!' + v + ')' : v)).join(' ' + rules.joinOp + ' '); // TODO: I have '1 &' only on negOut, why?
         let template = rules.negOut ? '!(1 & (' + inner + '))' : inner;
         const index = this.#nets.length;
         this.#gates.push({ inputs, output, template });

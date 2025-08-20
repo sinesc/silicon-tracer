@@ -71,7 +71,7 @@ class Connection extends GridItem {
             this.dragConnection = null;
             this.grid.clearMessage(true);
             this.grid.releaseHotkeyTarget(this, true);
-            identifyNets();
+            this.grid.render();
         }
     }
 
@@ -91,8 +91,7 @@ class Connection extends GridItem {
             let y = this.dragConnection.y + this.dragConnection.height;
             let color = this.dragConnection.color;
             this.dragConnection = new Connection(this.grid, x, y, x, y, what.ordering, color);
-            this.dragConnection.render();
-            identifyNets();
+            this.grid.render();
         }
     }
 

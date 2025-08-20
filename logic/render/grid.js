@@ -79,9 +79,6 @@ class Grid {
 
     // Renders the grid and its components. If the optional reason is 'move' some render steps may be optimized out.
     render(reason) {
-        let spacing = Grid.SPACING * this.zoom;
-        let offsetX = this.offsetX * this.zoom;
-        let offsetY = this.offsetY * this.zoom;
 
         // add below/above/current zoom level classes to grid to enable zoom based styling
         for (let zoom of Grid.ZOOM_LEVELS) {
@@ -98,10 +95,38 @@ class Grid {
             }
         }
 
+        // create background grid pattern
+        let spacing = Grid.SPACING * this.zoom;
+        let offsetX = this.offsetX * this.zoom;
+        let offsetY = this.offsetY * this.zoom;
         this.#element.style.backgroundSize = spacing + 'px ' + spacing + 'px';
         this.#element.style.backgroundPositionX = (offsetX % spacing) + 'px';
         this.#element.style.backgroundPositionY = (offsetY % spacing) + 'px';
 
+        // apply net colors to wires
+        let netList = this.identifyNets();
+        let color = 0;
+        for (let net of netList.nets) {
+            for (let wire of net.wires) {
+                wire[2].color = color;
+            }
+            for (let port of net.ports) {
+                let component = port[1];
+                let portName = port[2].split('-')[1];
+                component.portByName(portName)[1].color = color; // FIXME: don't override user set color
+            }
+            color = (color + 1) % 10;
+        }
+        for (let wire of netList.unconnected.wires) {
+            wire[2].color = null;
+        }
+        for (let port of netList.unconnected.ports) {
+            let component = port[1];
+            let portName = port[2].split('-')[1];
+            component.portByName(portName)[1].color = null;
+        }
+
+        // render components
         for (let i = 0; i < this.#items.length; ++i) {
             let item = this.#items[i].deref();
             if (item) {
@@ -117,6 +142,36 @@ class Grid {
             }
         }
     }
+
+    // Identifies nets on the grid and returns a NetList.
+    identifyNets() {
+        // get all individual wires
+        let connections = this.getItems((i) => i instanceof Connection);
+        let wires = [];
+        for (let connection of connections) {
+            let points = connection.getPoints();
+            if (points.length >= 2) {
+                wires.push([ points[0], points[1], connection ]);
+            }
+            if (points.length === 3) {
+                wires.push([ points[1], points[2], connection ]);
+            }
+        }
+        //console.log(wires.map((w) => [ w[0].x, w[0].y, w[1].x, w[1].y ]));
+        // get all component ports
+        let components = this.getItems((i) => i instanceof Component);
+        let ports = [];
+        for (let [c, component] of components.entries()) {
+            for (let port of component.getPorts()) {
+                ports.push([ new Point(port.x + component.x, port.y + component.y), component, 'c' + c + '-' + port.name ]);
+            }
+        }
+        //console.log(ports.map((p) => [ p[0].x, p[0].y, p[2] ]));
+        let netList = NetList.fromWires(wires.toReversed(), ports); /* toReversed just avoids complete net reassign on new wire. not required, just for testing */
+        //console.log(netList.nets.map((n) => n.ports));
+        return netList;
+    }
+
 
     // Sets a status message. Pass null to unset and revert back to default status.
     setMessage(message, lock) {

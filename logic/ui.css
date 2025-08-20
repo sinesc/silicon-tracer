@@ -66,7 +66,7 @@ html {
 #toolbar {
     margin-left: 10px;
 }
-#toolbar .toolbar-button {
+.toolbar .toolbar-button {
     cursor: default;
     background-color: var(--component-body-color);
     border: 1px solid var(--component-border-color);
@@ -81,8 +81,12 @@ html {
     min-width: 50px;
     line-height: 2;
 }
-#toolbar .toolbar-button:hover {
+.toolbar .toolbar-button:hover {
     border: 1px solid #fff;
+}
+.toolbar .toolbar-action-button {
+    background-color: #bbb;
+    color: #000;
 }
 
 /*

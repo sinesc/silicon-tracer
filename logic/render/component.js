@@ -83,8 +83,7 @@ class Component extends GridItem {
             this.element.classList.add('component-rotate-animation');
             setTimeout(() => {
                 this.element.classList.remove('component-rotate-animation');
-                this.render();
-                identifyNets();
+                this.grid.render();
             }, 150);
         } else if (key === 'r' && what.type === 'connect') {
             // add connection point when pressing R while dragging a connection
@@ -98,7 +97,7 @@ class Component extends GridItem {
             this.dragStop(x, y, what);
             this.dragConnection.dragStart(x, y, dragConnectionWhat);
             this.dragConnection = null;
-            identifyNets();
+            this.grid.render();
         }
     }
 
@@ -124,14 +123,14 @@ class Component extends GridItem {
             this.dropPreview.style.top = visualY + "px";
             this.dropPreview.style.width = this.visualWidth + "px";
             this.dropPreview.style.height = this.visualHeight + "px";
+            this.render('move');
         } else {
             this.grid.removeVisual(this.dropPreview);
             this.dropPreview = null;
             what.grabOffsetX = null;
             what.grabOffsetY = null;
-            identifyNets();
+            this.grid.render();
         }
-        this.render('move');
     }
 
     // Create connection from port.
@@ -159,7 +158,7 @@ class Component extends GridItem {
             this.dragConnection = null;
             this.grid.clearMessage(true);
             this.grid.releaseHotkeyTarget(this, true);
-            identifyNets();
+            this.grid.render();
         }
     }
 

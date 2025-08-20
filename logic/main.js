@@ -2,16 +2,18 @@
 let mainGrid = new Grid(document.querySelector('#grid'));
 let toolbar = new Toolbar(document.querySelector('#toolbar'));
 
-toolbar.createButton('Port ·', 'Component IO pin. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => new Port(grid, x, y, 'right'));
-toolbar.createButton('· Port', 'Component IO pin. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => new Port(grid, x, y, 'left'));
+toolbar.createComponentButton('Port ·', 'Component IO pin. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => new Port(grid, x, y, 'right'));
+toolbar.createComponentButton('· Port', 'Component IO pin. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => new Port(grid, x, y, 'left'));
 
 for (let [ gateType, { joinOp } ] of Object.entries(Simulation.GATE_MAP)) {
     let gateLabel = gateType.toUpperFirst();
-    toolbar.createButton(gateLabel, '<b>' + gateLabel + '</b> gate. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => {
+    toolbar.createComponentButton(gateLabel, '<b>' + gateLabel + '</b> gate. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => {
         let numInputs = 2; // TODO: configurable somewhere
         return new Gate(grid, x, y, gateType, joinOp !== null ? numInputs : 1);
     });
 }
+
+toolbar.createActionButton('Simulate', 'Simulate circuit', () => console.log(' IW AS pressed')); // Temporary simulation trigger
 
 // Show warning when not focussed to avoid confusion. In this state mouse wheel events still register but hotkeys don't.
 let hadFocus = null;
@@ -33,57 +35,6 @@ setInterval(() => {
 
 // MISC TESTING STUFF
 
-function identifyNets() {
-    // get all individual wires
-    let connections = mainGrid.getItems((i) => i instanceof Connection);
-    let wires = [];
-    for (let connection of connections) {
-        let points = connection.getPoints();
-        if (points.length >= 2) {
-            wires.push([ points[0], points[1], connection ]);
-        }
-        if (points.length === 3) {
-            wires.push([ points[1], points[2], connection ]);
-        }
-    }
-    //console.log(wires.map((w) => [ w[0].x, w[0].y, w[1].x, w[1].y ]));
-    // get all component ports
-    let components = mainGrid.getItems((i) => i instanceof Component);
-    let ports = [];
-    for (let [c, component] of components.entries()) {
-        for (let port of component.getPorts()) {
-            ports.push([ new Point(port.x + component.x, port.y + component.y), component, 'c' + c + '-' + port.name ]);
-        }
-    }
-    //console.log(ports.map((p) => [ p[0].x, p[0].y, p[2] ]));
-
-
-    let netList = NetList.fromWires(wires.toReversed(), ports); /* toReversed just avoids complete net reassign on new wire. not required, just for testing */
-    console.log(netList.nets.map((n) => n.ports));
-
-    // colorize nets
-    let color = 0;
-    for (let net of netList.nets) {
-        for (let wire of net.wires) {
-            wire[2].color = color;
-        }
-        for (let port of net.ports) {
-            let component = port[1];
-            let portName = port[2].split('-')[1];
-            component.portByName(portName)[1].color = color;
-        }
-        color = (color + 1) % 10;
-    }
-    for (let wire of netList.unconnected.wires) {
-        wire[2].color = null;
-    }
-    for (let port of netList.unconnected.ports) {
-        let component = port[1];
-        let portName = port[2].split('-')[1];
-        component.portByName(portName)[1].color = null;
-    }
-    mainGrid.render();
-}
 
 /*
 // test flipflop
