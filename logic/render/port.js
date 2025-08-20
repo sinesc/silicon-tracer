@@ -2,8 +2,21 @@ class Port extends Component {
 
     state = null;
 
-    constructor(grid, name, x, y, rotation, ports) {
-        super(grid, name, x, y, rotation, ports);
+    constructor(grid, x, y, side, name = 'Port') {
+
+        let ports;
+
+        if (side === 'left') {
+            ports = { 'left': [ '' ], 'top': [ null, null ] }
+        } else if (side === 'right') {
+            ports = { 'right': [ '' ], 'top': [ null, null ] };
+        } else if (side === 'top') {
+            ports = { 'top': [ '' ], 'left': [ null, null ] };
+        } else if (side === 'bottom') {
+            ports = { 'bottom': [ '' ], 'left': [ null, null ] };
+        }
+
+        super(grid, x, y, ports, name);
         this.setHoverMessage(this.inner, 'Port <b>' + name + '</b>. <i>LMB</i>: Drag to move. <i>R</i>: Rotate, <i>Space</i>: Toggle high/low/-', { type: 'hover' });
     }
 

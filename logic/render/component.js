@@ -11,10 +11,9 @@ class Component extends GridItem {
     dragConnection = null;
     rotation = 0;
 
-    constructor(grid, name, x, y, rotation, ports) {
+    constructor(grid, x, y, ports, name) {
 
         super(grid);
-        this.rotation = rotation & 3;
 
         [ this.x, this.y ] = this.gridAlign(x, y);
 

@@ -90,7 +90,7 @@ class Circuit {
 
     // Drops this circuit as a component onto the grid.
     createComponent(grid, x, y) {
-        let component = new Component(grid, this.name, x, y, 0, this);
+        let component = new Component(grid, x, y, this.ports);
         return component;
     }
 

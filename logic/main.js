@@ -2,14 +2,14 @@
 let mainGrid = new Grid(document.querySelector('#grid'));
 let toolbar = new Toolbar(document.querySelector('#toolbar'));
 
-toolbar.createButton('Port ·', 'Component IO pin. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => Prefabs.createPortRight(grid, x, y, 'Port'));
-toolbar.createButton('· Port', 'Component IO pin. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => Prefabs.createPortLeft(grid, x, y, 'Port'));
+toolbar.createButton('Port ·', 'Component IO pin. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => new Port(grid, x, y, 'right'));
+toolbar.createButton('· Port', 'Component IO pin. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => new Port(grid, x, y, 'left'));
 
 for (let [ gateType, { joinOp } ] of Object.entries(Simulation.GATE_MAP)) {
     let gateLabel = gateType.toUpperFirst();
     toolbar.createButton(gateLabel, '<b>' + gateLabel + '</b> gate. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => {
         let numInputs = 2; // TODO: configurable somewhere
-        return Prefabs.createGate(grid, x, y, gateType, joinOp !== null ? numInputs : 1);
+        return new Gate(grid, x, y, gateType, joinOp !== null ? numInputs : 1);
     });
 }
 
