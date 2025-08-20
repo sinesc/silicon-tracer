@@ -52,7 +52,7 @@
 html {
     background-color: black;
     color: white;
-    font-family: sans-serif;
+    font-family: Roboto, sans-serif;
     user-select: none;
 }
 #header h1, #toolbar, #toolbar .toolbar-button {
@@ -109,10 +109,9 @@ html {
     width: 800px;
     padding: 10px;
     text-align: center;
-    font-size: 1.5em;
-    font-weight: bold;
-    border: 3px solid red;
-    background: maroon;
+    font-size: 1.3em;
+    border: 3px solid rgba(255, 0, 0, 0.5);
+    background: rgba(128, 0, 0, 0.5);
     opacity: 0.0;
     border-radius: 10px;
     transition: opacity 0.5s;
@@ -121,7 +120,7 @@ body.no-focus #focus-hint, body.focus-changing #focus-hint {
     display: block;
 }
 body.no-focus #focus-hint:has(+div#grid:hover) {
-    opacity: 0.3;
+    opacity: 0.5;
 }
 
 /*
