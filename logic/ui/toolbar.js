@@ -20,8 +20,8 @@ class Toolbar {
             component.render();
         };
         this.element.appendChild(button);
-        button.onmouseenter = () => mainGrid.setStatus(hoverMessage);
-        button.onmouseleave = () => mainGrid.clearStatus();
+        button.onmouseenter = () => mainGrid.setMessage(hoverMessage);
+        button.onmouseleave = () => mainGrid.clearMessage();
     }
 
 }

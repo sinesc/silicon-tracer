@@ -139,9 +139,9 @@ class GridItem {
         let message = this.#hoverMessages.get(element);
         if (message) {
             if (status === 'start') {
-                this.grid.setStatus(message);
+                this.grid.setMessage(message);
             } else {
-                this.grid.clearStatus();
+                this.grid.clearMessage();
             }
         }
     }

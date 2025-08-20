@@ -31,7 +31,7 @@ class Grid {
 
         document.addEventListener('mousemove', this.#handleMouse.bind(this));
         parent.appendChild(this.#element);
-        this.clearStatus();
+        this.clearMessage();
         this.render();
 
         // TODO: may have to go to parent UI
@@ -119,7 +119,7 @@ class Grid {
     }
 
     // Sets a status message. Pass null to unset and revert back to default status.
-    setStatus(message, lock) {
+    setMessage(message, lock) {
         if (this.#statusLocked && !lock) {
             return;
         }
@@ -143,7 +143,7 @@ class Grid {
     }
 
     // Clears the current status message.
-    clearStatus(unlock) {
+    clearMessage(unlock) {
         if (this.#statusLocked && !unlock) {
             return;
         }
@@ -152,7 +152,7 @@ class Grid {
             clearTimeout(this.#statusTimer);
         }
         this.#status.classList.add('grid-status-faded');
-        this.#statusTimer = setTimeout(() => this.setStatus(), Grid.STATUS_DELAY);
+        this.#statusTimer = setTimeout(() => this.setMessage(), Grid.STATUS_DELAY);
     }
 
     // Makes given gridelement become the hotkey-target and when locked also prevents hover events from stealing hotkey focus until released.

@@ -139,7 +139,7 @@ class Component extends GridItem {
     onConnect(x, y, status, what) {
         let [ side, port ] = this.portByName(what.name);
         if (!this.dragConnection /* start */) {
-            this.grid.setStatus(Connection.DRAWING_CONNECTION_MESSAGE, true);
+            this.grid.setMessage(Connection.DRAWING_CONNECTION_MESSAGE, true);
             what.ordering = side === 'top' || side === 'bottom' ? 'vh' : 'hv';
             this.grid.requestHotkeyTarget(this, true, { ...what, type: 'connect' }); // pass 'what' to onHotkey()
             this.dragConnection = new Connection(this.grid, this.x + port.x, this.y + port.y, x, y, what.ordering);
@@ -158,7 +158,7 @@ class Component extends GridItem {
         } else {
             // FIXME: delete connection if no wires were produced (not dragged far enough)
             this.dragConnection = null;
-            this.grid.clearStatus(true);
+            this.grid.clearMessage(true);
             this.grid.releaseHotkeyTarget(this, true);
             identifyNets();
         }
