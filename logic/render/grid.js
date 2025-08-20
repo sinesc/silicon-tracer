@@ -78,6 +78,17 @@ class Grid {
         }
     }
 
+    // Removes all items from the grid.
+    clear() {
+        for (let i = 0; i < this.#items.length; ++i) {
+            let item = this.#items[i].deref();
+            if (item) {
+                item.remove();
+            }
+        }
+        this.#items = [];
+    }
+
     // Registers an item with the grids renderloop. Automatically done by GridItem constructor.
     registerItem(item) {
         this.#items.push(new WeakRef(item));

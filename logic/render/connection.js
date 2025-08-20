@@ -59,6 +59,12 @@ class Connection extends GridItem {
         };
     }
 
+    // Removes the component from the grid.
+    remove() {
+        this.grid.removeVisual(this.elementH);
+        this.grid.removeVisual(this.elementV);
+    }
+
     // Create connection from exiting connection.
     onConnect(x, y, status, what) {
         if (status === 'start') {

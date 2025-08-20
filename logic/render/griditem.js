@@ -19,11 +19,17 @@ class GridItem {
         this.#hoverMessages = new Map();
     }
 
+    // Implement to render the item to the grid.
     render() { }
 
+    // Implement to handle drag events.
     onDrag(x, y, status, ...args) { }
 
+    // Implement to handle hover hotkey events.
     onHotkey(key, ...args) { }
+
+    // Implement to remove the item from the grid.
+    remove() { }
 
     // Serializes the object for writing to disk.
     serialize() {

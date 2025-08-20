@@ -6,6 +6,11 @@ let toolbar = new Toolbar(document.querySelector('#toolbar'));
 
 // Add file operations to toolbar
 
+toolbar.createActionButton('New', 'Clear circuit', async () => {
+    mainGrid.clear();
+    mainGrid.render();
+});
+
 toolbar.createActionButton('Open...', 'Load circuit from disk', async () => {
     let [fileHandle] = await window.showOpenFilePicker();
     const file = await fileHandle.getFile();

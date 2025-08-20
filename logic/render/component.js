@@ -77,6 +77,11 @@ class Component extends GridItem {
         };
     }
 
+    // Removes the component from the grid.
+    remove() {
+        this.grid.removeVisual(this.element);
+    }
+
     // Hover hotkey actions
     onHotkey(key, what) {
         if (key === 'r' && what.type === 'hover') {
