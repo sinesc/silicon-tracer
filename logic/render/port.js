@@ -44,7 +44,7 @@ class Port extends Component {
                 }
             }
             if (prevState !== this.state) {
-                if (this.state !== null && this.netId !== null && global.sim && global.sim.ready) {
+                if (/*this.state !== null &&*/ this.netId !== null && global.sim && global.sim.ready) {
                     global.sim.setNet(this.netId, this.state);
                 }
                 this.render();

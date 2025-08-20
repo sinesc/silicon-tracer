@@ -29,7 +29,7 @@ class Simulation {
 
     // Declares a net (which inputs/outputs are connected) and returns the net-index.
     netDecl(attachedIONames) {
-        console.log('netDecl', attachedIONames);
+        //console.log('netDecl', attachedIONames);
         const index = this.#nets.length;
         this.#nets.push({ offset: this.#alloc(), io: attachedIONames });
         return index;
@@ -55,7 +55,7 @@ class Simulation {
 
     // Convenience method to declare gate inputs and function.
     gateDecl(type, inputs, output, delay) {
-        console.log('gateDecl', type, inputs, output, delay);
+        //console.log('gateDecl', type, inputs, output, delay);
         this.fnDecl(type, inputs, output);
         for (let input of inputs) {
             this.ioDecl(input, 'i', delay ?? Simulation.DEFAULT_DELAY);
@@ -65,11 +65,11 @@ class Simulation {
 
     // Compiles the circuit to a function.
     compile() {
-        let result = "(mem) => {\n";
+        let result = "'use strict';(mem) => {\n";
         result += 'let mask, signal, result' + this.#endl();
         result += this.#compileTick();
         result += '}';
-        console.log(result);
+        //console.log(result);
         this.#compiled = eval(result);
         this.#mem = new Simulation.ARRAY_CONSTRUCTOR(this.#allocBase);
     }

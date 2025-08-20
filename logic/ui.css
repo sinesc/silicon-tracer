@@ -13,7 +13,7 @@
     --wire-color8: rgb(76, 100, 136);
     --wire-color9: rgb(76, 136, 133);
     --wire-high-factor: 1.15;
-    --wire-low-factor: 0.60;
+    --wire-low-factor: 0.75;
     --wire-color-low: oklch(from var(--wire-color) calc(l * var(--wire-low-factor)) c h);
     --wire-color-high: oklch(from var(--wire-color) calc(l * var(--wire-high-factor)) c h);
     --wire-color0-low: oklch(from var(--wire-color0) calc(l * var(--wire-low-factor)) c h);
@@ -64,6 +64,7 @@ html {
     text-decoration: underline;
     margin-top: 0;
     margin-bottom: 5px;
+    font-style: italic;
 }
 #toolbar {
     margin-left: 10px;
@@ -266,79 +267,85 @@ body.no-focus #focus-hint:has(+div#grid:hover) {
 /*
  * port
  */
-div.component[data-port-state="0"] > div.component-inner {
+div.component[data-port-net-state="0"] > div.component-inner {
     outline: 4px solid var(--wire-color-low);
+    outline-offset: -4px;
 }
-div.component[data-port-state="1"] > div.component-inner {
+div.component[data-port-net-state="1"] > div.component-inner {
     outline: 4px solid var(--wire-color-high);
+    outline-offset: -4px;
 }
-div.component[data-port-state="0"] > div.component-inner:has(+div[data-component-port-color="0"]) {
+div.component[data-port-net-state="0"] > div.component-inner:has(+div[data-component-port-color="0"]) {
     outline-color: var(--wire-color0-low);
 }
-div.component[data-port-state="1"] > div.component-inner:has(+div[data-component-port-color="0"])  {
+div.component[data-port-net-state="1"] > div.component-inner:has(+div[data-component-port-color="0"])  {
     outline-color: var(--wire-color0-high);
 }
-div.component[data-port-state="0"] > div.component-inner:has(+div[data-component-port-color="1"]) {
+div.component[data-port-net-state="0"] > div.component-inner:has(+div[data-component-port-color="1"]) {
     outline-color: var(--wire-color1-low);
 }
-div.component[data-port-state="1"] > div.component-inner:has(+div[data-component-port-color="1"])  {
+div.component[data-port-net-state="1"] > div.component-inner:has(+div[data-component-port-color="1"])  {
     outline-color: var(--wire-color1-high);
 }
-div.component[data-port-state="0"] > div.component-inner:has(+div[data-component-port-color="2"]) {
+div.component[data-port-net-state="0"] > div.component-inner:has(+div[data-component-port-color="2"]) {
     outline-color: var(--wire-color2-low);
 }
-div.component[data-port-state="1"] > div.component-inner:has(+div[data-component-port-color="2"])  {
+div.component[data-port-net-state="1"] > div.component-inner:has(+div[data-component-port-color="2"])  {
     outline-color: var(--wire-color2-high);
 }
-div.component[data-port-state="0"] > div.component-inner:has(+div[data-component-port-color="3"]) {
+div.component[data-port-net-state="0"] > div.component-inner:has(+div[data-component-port-color="3"]) {
     outline-color: var(--wire-color3-low);
 }
-div.component[data-port-state="1"] > div.component-inner:has(+div[data-component-port-color="3"])  {
+div.component[data-port-net-state="1"] > div.component-inner:has(+div[data-component-port-color="3"])  {
     outline-color: var(--wire-color3-high);
 }
-div.component[data-port-state="0"] > div.component-inner:has(+div[data-component-port-color="4"]) {
+div.component[data-port-net-state="0"] > div.component-inner:has(+div[data-component-port-color="4"]) {
     outline-color: var(--wire-color4-low);
 }
-div.component[data-port-state="1"] > div.component-inner:has(+div[data-component-port-color="4"])  {
+div.component[data-port-net-state="1"] > div.component-inner:has(+div[data-component-port-color="4"])  {
     outline-color: var(--wire-color4-high);
 }
-div.component[data-port-state="0"] > div.component-inner:has(+div[data-component-port-color="5"]) {
+div.component[data-port-net-state="0"] > div.component-inner:has(+div[data-component-port-color="5"]) {
     outline-color: var(--wire-color5-low);
 }
-div.component[data-port-state="1"] > div.component-inner:has(+div[data-component-port-color="5"])  {
+div.component[data-port-net-state="1"] > div.component-inner:has(+div[data-component-port-color="5"])  {
     outline-color: var(--wire-color5-high);
 }
-div.component[data-port-state="0"] > div.component-inner:has(+div[data-component-port-color="6"]) {
+div.component[data-port-net-state="0"] > div.component-inner:has(+div[data-component-port-color="6"]) {
     outline-color: var(--wire-color6-low);
 }
-div.component[data-port-state="1"] > div.component-inner:has(+div[data-component-port-color="6"])  {
+div.component[data-port-net-state="1"] > div.component-inner:has(+div[data-component-port-color="6"])  {
     outline-color: var(--wire-color6-high);
 }
-div.component[data-port-state="0"] > div.component-inner:has(+div[data-component-port-color="7"]) {
+div.component[data-port-net-state="0"] > div.component-inner:has(+div[data-component-port-color="7"]) {
     outline-color: var(--wire-color7-low);
 }
-div.component[data-port-state="1"] > div.component-inner:has(+div[data-component-port-color="7"])  {
+div.component[data-port-net-state="1"] > div.component-inner:has(+div[data-component-port-color="7"])  {
     outline-color: var(--wire-color7-high);
 }
-div.component[data-port-state="0"] > div.component-inner:has(+div[data-component-port-color="8"]) {
+div.component[data-port-net-state="0"] > div.component-inner:has(+div[data-component-port-color="8"]) {
     outline-color: var(--wire-color8-low);
 }
-div.component[data-port-state="1"] > div.component-inner:has(+div[data-component-port-color="8"])  {
+div.component[data-port-net-state="1"] > div.component-inner:has(+div[data-component-port-color="8"])  {
     outline-color: var(--wire-color8-high);
 }
-div.component[data-port-state="0"] > div.component-inner:has(+div[data-component-port-color="9"]) {
+div.component[data-port-net-state="0"] > div.component-inner:has(+div[data-component-port-color="9"]) {
     outline-color: var(--wire-color9-low);
 }
-div.component[data-port-state="1"] > div.component-inner:has(+div[data-component-port-color="9"])  {
+div.component[data-port-net-state="1"] > div.component-inner:has(+div[data-component-port-color="9"])  {
     outline-color: var(--wire-color9-high);
 }
-/*tmp*/
-div.component[data-port-net-state="0"][data-port-state=""] {
-    background-color: red !important;
+div.component[data-port-state="0"] {
+    outline: 3px solid rgb(0, 70, 0);
+    outline-offset: -4px;
+    border-radius: 5px;
 }
-div.component[data-port-net-state="1"][data-port-state=""] {
-    background-color: lime !important;
+div.component[data-port-state="1"] {
+    outline: 3px solid rgb(0, 143, 0);
+    outline-offset: -4px;
+    border-radius: 5px;
 }
+
 
 /*
  * connection

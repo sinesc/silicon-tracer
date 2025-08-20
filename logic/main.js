@@ -51,32 +51,38 @@ toolbar.createActionButton('Compile', 'Compile circuit', () => {
     }
 
     // declare nets
+    let setPorts = [];
     for (let net of netList.nets) {
         let netId = global.sim.netDecl(net.ports.filter((p) => p[2] instanceof Gate).map((p) => p[1]));
         // check for ports on net we need to hook up to the ui
         for (let [ point, name, component ] of net.ports) {
             if (component instanceof Port) {
-                console.log('updating', component);
                 // store netId on port to allow it to fetch the current net state
-                if (netId === undefined) debugger;
                 component.netId = netId;
-                // if the port enforces a state set the net to it
+                // if the port enforces a state remember it to set after compilation
                 if (component.state !== null) {
-                    global.sim.setNet(netId, component.state);
+                    setPorts.push([ netId, component.state]);
                 }
             }
         }
     }
 
+    // compile
     global.sim.compile();
+
+    // set port states
+    for (let [ netId, state ] of setPorts) {
+        global.sim.setNet(netId, state);
+    }
+
     mainGrid.render();
 });
 
 setInterval(() => {
     if (global.sim && global.sim.ready) {
-        global.sim.simulate();
-        global.sim.simulate();
-        global.sim.simulate();
+        for (let i = 0; i < 1000; ++i) {
+            global.sim.simulate();
+        }
         mainGrid.render();
     }
 }, 100);
