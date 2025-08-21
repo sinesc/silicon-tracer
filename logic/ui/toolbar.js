@@ -28,15 +28,34 @@ class Toolbar {
         button.onmouseleave = () => mainGrid.clearMessage();
     }
 
-    // Creates a button that can be clicked to trigger an action
+    // Creates a button that can be clicked to trigger an action.
     createActionButton(label, hoverMessage, action) {
         let button = document.createElement('div');
         button.innerHTML = label;
         button.classList.add('toolbar-button', 'toolbar-action-button');
-        button.onmousedown= function(e) {
+        button.onclick= function(e) {
             e.preventDefault();
             e.stopPropagation();
             action();
+        };
+        this.element.appendChild(button);
+        button.onmouseenter = () => mainGrid.setMessage(hoverMessage);
+        button.onmouseleave = () => mainGrid.clearMessage();
+    }
+
+    // Creates a button that can be toggled on or off.
+    createToggleButton(label, hoverMessage, defaultState, action) {
+        let button = document.createElement('div');
+        button.innerHTML = label;
+        let state = defaultState;
+        button.classList.add('toolbar-button', 'toolbar-toggle-button', state ? 'toolbar-toggle-button-on' : 'toolbar-toggle-button-off');
+        button.onclick= function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            button.classList.remove(state ? 'toolbar-toggle-button-on' : 'toolbar-toggle-button-off');
+            state = !state;
+            button.classList.add(state ? 'toolbar-toggle-button-on' : 'toolbar-toggle-button-off');
+            action(state);
         };
         this.element.appendChild(button);
         button.onmouseenter = () => mainGrid.setMessage(hoverMessage);

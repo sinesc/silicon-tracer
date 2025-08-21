@@ -40,10 +40,16 @@
     --component-color-transition-duration: 0.15s;
     --component-body-color: #444;
     --component-border-color: #222;
-    --component-hover-color: #666;
+    --component-body-hover-color: #666;
+    --component-border-hover-color: #333;
     --component-preview-color: #444;
     --component-port-body-color: #444;
     --component-port-border-color: #6d6d6d;
+    --button-hover-factor: 1.2;
+    --button-bg-color: #bbb;
+    --button-border-color: #888;
+    --button-bg-hover-color: oklch(from var(--button-bg-color) calc(l * var(--button-hover-factor)) c h);
+    --button-border-hover-color: oklch(from var(--button-border-color) calc(l * var(--button-hover-factor)) c h);
 }
 
 /*
@@ -99,10 +105,14 @@ html {
     vertical-align: top;
     margin-left: 10px;
 }
+
+/*
+ * Toolbar UI element
+ */
 .toolbar .toolbar-button {
     cursor: default;
     background-color: var(--component-body-color);
-    border: 1px solid var(--component-border-color);
+    border: 2px solid var(--component-border-color);
     transition: border-color var(--component-color-transition-duration);
     border-radius: 3px;
     color: #ffffff;
@@ -116,13 +126,45 @@ html {
     padding: 0 5px;
 }
 .toolbar .toolbar-button:hover {
-    border: 1px solid #fff;
+    background-color: var(--component-body-hover-color);
+    border-color: var(--component-border-hover-color);
 }
+
 .toolbar .toolbar-action-button {
     text-shadow: none;
-    background-color: #bbb;
+    border: 2px solid var(--button-border-color);
+    background-color: var(--button-bg-color);
     color: #000;
     font-weight: bold;
+}
+.toolbar .toolbar-action-button:hover {
+    border-color: var(--button-border-hover-color);
+    background-color: var(--button-bg-hover-color);
+}
+.toolbar .toolbar-toggle-button {
+    border: 2px solid var(--button-border-color);
+    text-shadow: none;
+    background-color: var(--button-bg-color);
+    color: #000;
+    font-weight: bold;
+}
+.toolbar .toolbar-toggle-button:hover {
+    border-color: var(--button-border-hover-color);
+    background-color: var(--button-bg-hover-color);
+}
+.toolbar .toolbar-toggle-button-on {
+    border-style: inset;
+    background-color: var(--button-bg-color);
+}
+.toolbar .toolbar-toggle-button-on:before {
+    content: '☑ ';
+}
+.toolbar .toolbar-toggle-button-off {
+    border-style: outset;
+    background-color: var(--button-bg-color);
+}
+.toolbar .toolbar-toggle-button-off:before {
+    content: '☐ ';
 }
 
 /*
@@ -205,7 +247,7 @@ body.no-focus #focus-hint:has(+div#grid:hover) {
 }
 
 /*
- * component
+ * Component
  */
 .component {
     z-index: 11;
@@ -251,7 +293,8 @@ body.no-focus #focus-hint:has(+div#grid:hover) {
     display: none;
 }
 .component-inner:hover {
-    background-color: var(--component-hover-color);
+    background-color: var(--component-body-hover-color);
+    border-color: var(--component-border-hover-color);
 }
 .component-port {
     z-index: 14;
@@ -297,7 +340,7 @@ body.no-focus #focus-hint:has(+div#grid:hover) {
 }
 
 /*
- * port
+ * Port
  */
 div.component[data-port-net-state="0"] > div.component-inner {
     outline: 4px solid var(--wire-color-low);
@@ -380,7 +423,7 @@ div.component[data-port-state="1"] {
 
 
 /*
- * connection
+ * Connection
  */
 .connection-h, .connection-v {
     z-index: 10;

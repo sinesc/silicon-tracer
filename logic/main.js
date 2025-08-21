@@ -5,12 +5,10 @@ let mainGrid = new Grid(document.querySelector('#grid'));
 let toolbar = new Toolbar(document.querySelector('#toolbar'));
 
 // Add file operations to toolbar
-
 toolbar.createActionButton('New', 'Clear circuit', async () => {
     mainGrid.clear();
     mainGrid.render();
 });
-
 toolbar.createActionButton('Open...', 'Load circuit from disk', async () => {
     let [fileHandle] = await window.showOpenFilePicker();
     const file = await fileHandle.getFile();
@@ -18,7 +16,6 @@ toolbar.createActionButton('Open...', 'Load circuit from disk', async () => {
     mainGrid.unserialize(JSON.parse(content));
     mainGrid.render();
 });
-
 toolbar.createActionButton('Save as...', 'Save circuit to disk', async () => {
     const options = {
         types: [
@@ -38,7 +35,6 @@ toolbar.createActionButton('Save as...', 'Save circuit to disk', async () => {
 
 
 // Add standard components to toolbar
-
 toolbar.createComponentButton('Port ·', 'Component IO pin. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => new Port(grid, x, y, 'right'));
 toolbar.createComponentButton('· Port', 'Component IO pin. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => new Port(grid, x, y, 'left'));
 
@@ -71,6 +67,10 @@ setInterval(() => {
 // MISC TESTING STUFF
 
 let global = { };
+
+toolbar.createToggleButton('Simulate', 'Toggle on to keep running the simulation', true, (state) => {
+    console.log(state);
+});
 
 toolbar.createActionButton('Compile', 'Compile circuit', () => {
 
