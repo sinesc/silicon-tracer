@@ -20,6 +20,7 @@ class Grid {
     #mouseX = 0;
     #mouseY = 0;
     #hotkeyTarget = null;
+    #netCache = null;
 
     constructor(parent) {
         this.#element = document.createElement('div');
@@ -76,6 +77,7 @@ class Grid {
                 }
             }
         }
+        this.invalidateNets();
     }
 
     // Removes all items from the grid.
@@ -84,6 +86,7 @@ class Grid {
             item.remove();
         });
         this.#items = [];
+        this.invalidateNets();
     }
 
     // Detaches all items from the simulation.
@@ -160,7 +163,7 @@ class Grid {
             this.#element.style.backgroundPositionY = (offsetY % spacing) + 'px';
         }
 
-        // apply net colors to wires // FIXME: only identify on change (the sim also calls render and doesn't need net recalculation)
+        // apply net colors to wires
         let [ netList ] = this.identifyNets();
         let color = 0;
         for (let net of netList.nets) {
@@ -209,6 +212,9 @@ class Grid {
 
     // Identifies nets on the grid and returns a [ NetList, Map<String, Component> ].
     identifyNets() {
+        if (this.#netCache) {
+            return this.#netCache;
+        }
         // get all individual wires
         let connections = this.getItems((i) => i instanceof Connection);
         let wires = [];
@@ -237,7 +243,12 @@ class Grid {
         //console.log(ports.map((p) => [ p[0].x, p[0].y, p[2] ]));
         let netList = NetList.fromWires(wires.toReversed(), ports); /* toReversed just avoids complete net reassign on new wire. not required, just for testing */
         //console.log(netList.nets.map((n) => n.ports));
-        return [ netList, componentMap ];
+        return this.#netCache = [ netList, componentMap ];
+    }
+
+    // Invalidates grid nets.
+    invalidateNets() {
+        this.#netCache = null;
     }
 
     // Sets a status message. Pass null to unset and revert back to default status.

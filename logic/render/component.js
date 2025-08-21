@@ -126,6 +126,7 @@ class Component extends GridItem {
             this.element.classList.add('component-rotate-animation');
             setTimeout(() => {
                 this.element.classList.remove('component-rotate-animation');
+                this.grid.invalidateNets();
                 this.grid.render();
             }, 150);
         } else if (key === 'r' && what.type === 'connect') {
@@ -140,6 +141,7 @@ class Component extends GridItem {
             this.dragStop(x, y, what);
             this.dragConnection.dragStart(x, y, dragConnectionWhat);
             this.dragConnection = null;
+            this.grid.invalidateNets();
             this.grid.render();
         }
     }
@@ -172,6 +174,7 @@ class Component extends GridItem {
             this.dropPreview = null;
             what.grabOffsetX = null;
             what.grabOffsetY = null;
+            this.grid.invalidateNets();
             this.grid.render();
         }
     }
@@ -203,6 +206,7 @@ class Component extends GridItem {
             this.dragConnection = null;
             this.grid.clearMessage(true);
             this.grid.releaseHotkeyTarget(this, true);
+            this.grid.invalidateNets();
             this.grid.render();
         }
     }

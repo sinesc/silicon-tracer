@@ -123,7 +123,7 @@ setInterval(() => {
     }
 }, 100);
 
-/*
-// test flipflop
-
-*/
+let logo = document.querySelector('#header h1');
+logo.onmouseenter = () => mainGrid.setMessage('Cheesy 80s logo. It is ticklish.');
+logo.onmouseleave = () => mainGrid.clearMessage();
+logo.onclick = () => logo.setAttribute('data-c', ((parseInt(logo.getAttribute('data-c') ?? 0) + 1) % 5));
