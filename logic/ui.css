@@ -88,18 +88,20 @@ html {
         0 -18px 40px #F00;
 }
 #header h1[data-c="3"] {
-    transform: skew(20deg, 0deg);
+    transform: skew(15deg, 0deg);
     text-shadow:
-        -6px -6px #33476683,
-        -5px -5px #557c8881,
-        -3px -3px #aacbcc83,
-        -1px -1px #ddfeff81;
+        0 -4px 4px #FFF,
+        0 -8px 10px rgb(118, 250, 243),
+        0 0px 20px #2ac3ff,
+        0 8px 40px rgb(0, 89, 255);
 }
 #header h1[data-c="4"] {
-    color: #888;
-    text-shadow: none;
+    color: #779;
+    text-shadow:
+        1px 1px 3px #ddf,
+        -5px -5px 10px #00f;
     transform: none;
-    text-decoration-color: black;
+    text-decoration-color: #00f;
 }
 #toolbar {
     vertical-align: top;

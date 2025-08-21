@@ -11,6 +11,8 @@ class Grid {
     offsetX = 0;
     offsetY = 0;
 
+    sim = null; // TODO: find better place for sim
+
     #element;
     #status;
     #items = [];
@@ -87,13 +89,6 @@ class Grid {
         });
         this.#items = [];
         this.invalidateNets();
-    }
-
-    // Detaches all items from the simulation.
-    detachSimulation() {
-        this.#iterItems((item) => {
-            item.detachSimulation();
-        });
     }
 
     // Registers an item with the grids renderloop. Automatically done by GridItem constructor.
@@ -245,9 +240,20 @@ class Grid {
         return this.#netCache = [ netList, componentMap ];
     }
 
-    // Invalidates grid nets.
+    // Invalidates grid nets and detaches components.
     invalidateNets() {
-        this.#netCache = null;
+        if (this.#netCache) {
+            this.#netCache = null;
+            this.sim = null;
+            this.detachSimulation();
+        }
+    }
+
+    // Detaches all items from the simulation.
+    detachSimulation() {
+        this.#iterItems((item) => {
+            item.detachSimulation();
+        });
     }
 
     // Sets a status message. Pass null to unset and revert back to default status.

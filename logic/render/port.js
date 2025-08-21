@@ -52,8 +52,8 @@ class Port extends Component {
                 this.state = null;
             }
             if (prevState !== this.state) {
-                if (/*this.state !== null &&*/ this.netId !== null && global.sim && global.sim.ready) {
-                    global.sim.setNet(this.netId, this.state);
+                if (/*this.state !== null &&*/ this.netId !== null && this.grid.sim && this.grid.sim.ready) {
+                    this.grid.sim.setNet(this.netId, this.state);
                 }
                 this.render();
             }
@@ -65,6 +65,6 @@ class Port extends Component {
         super.render(reason);
         this.element.setAttribute('data-port-state', this.state ?? '');
         // TODO: better way to get simulation
-        this.element.setAttribute('data-port-net-state', this.netId !== null && global.sim && global.sim.ready ? global.sim.getNet(this.netId) : '');
+        this.element.setAttribute('data-port-net-state', this.netId !== null && this.grid.sim && this.grid.sim.ready ? this.grid.sim.getNet(this.netId) : '');
     }
 }

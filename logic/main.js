@@ -66,30 +66,25 @@ setInterval(() => {
 
 // MISC TESTING STUFF
 
-let global = { };
+let autoCompile = true;
 
-toolbar.createToggleButton('Simulate', 'Toggle on to keep running the simulation', true, (state) => {
-    console.log(state);
-});
+function compileSimulation(grid) {
 
-toolbar.createActionButton('Compile', 'Compile circuit', () => {
+    let [ netList, componentMap ] = grid.identifyNets();
 
-    mainGrid.detachSimulation();
-    let [ netList, componentMap ] = mainGrid.identifyNets();
-
-    global.sim = new Simulation();
+    let sim = new Simulation();
 
     // declare gates from component map
     for (let [ prefix, component ] of componentMap.entries()) {
         if (component instanceof Gate) {
-            global.sim.gateDecl(component.type, component.inputs.map((i) => prefix + i), prefix + component.output);
+            sim.gateDecl(component.type, component.inputs.map((i) => prefix + i), prefix + component.output);
         }
     }
 
     // declare nets
     let setPorts = [];
     for (let net of netList.nets) {
-        let netId = global.sim.netDecl(net.ports.filter((p) => p[2] instanceof Gate).map((p) => p[1]));
+        let netId = sim.netDecl(net.ports.filter((p) => p[2] instanceof Gate).map((p) => p[1]));
         // check for ports on net we need to hook up to the ui
         for (let [ point, name, component ] of net.ports) {
             if (component instanceof Port) {
@@ -104,24 +99,37 @@ toolbar.createActionButton('Compile', 'Compile circuit', () => {
     }
 
     // compile
-    global.sim.compile();
+    sim.compile();
 
     // set port states
     for (let [ netId, state ] of setPorts) {
-        global.sim.setNet(netId, state);
+        sim.setNet(netId, state);
     }
 
-    mainGrid.render();
+    return sim;
+}
+
+toolbar.createToggleButton('Simulate', 'Toggle enable or disable continuous simulation', autoCompile, (state) => {
+    mainGrid.detachSimulation();
+    autoCompile = state;
+    if (!state) {
+        mainGrid.sim = null;
+    } else {
+        mainGrid.sim = compileSimulation(mainGrid);
+    }
 });
 
 setInterval(() => {
-    if (global.sim && global.sim.ready) {
+    if (autoCompile && !mainGrid.sim) {
+        mainGrid.sim = compileSimulation(mainGrid);
+    }
+    if (mainGrid.sim && mainGrid.sim.ready) {
         for (let i = 0; i < 1000; ++i) {
-            global.sim.simulate();
+            mainGrid.sim.simulate();
         }
         mainGrid.render();
     }
-}, 100);
+}, 18);
 
 let logo = document.querySelector('#header h1');
 logo.onmouseenter = () => mainGrid.setMessage('Cheesy 80s logo. It is ticklish.');
