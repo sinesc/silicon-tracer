@@ -138,7 +138,6 @@ class Grid {
     render(reason) {
 
         if (!this.#element.classList.contains('grid-zoom-' + (this.zoom * 100))) {
-
             // add below/above/current zoom level classes to grid to enable zoom based styling
             for (let zoom of Grid.ZOOM_LEVELS) {
                 let name = zoom * 100;
@@ -153,15 +152,15 @@ class Grid {
                     this.#element.classList.add('grid-zoom-' + name);
                 }
             }
-
-            // create background grid pattern
-            let spacing = Grid.SPACING * this.zoom;
-            let offsetX = this.offsetX * this.zoom;
-            let offsetY = this.offsetY * this.zoom;
-            this.#element.style.backgroundSize = spacing + 'px ' + spacing + 'px';
-            this.#element.style.backgroundPositionX = (offsetX % spacing) + 'px';
-            this.#element.style.backgroundPositionY = (offsetY % spacing) + 'px';
         }
+
+        // create background grid pattern
+        let spacing = Grid.SPACING * this.zoom;
+        let offsetX = this.offsetX * this.zoom;
+        let offsetY = this.offsetY * this.zoom;
+        this.#element.style.backgroundSize = spacing + 'px ' + spacing + 'px';
+        this.#element.style.backgroundPositionX = (offsetX % spacing) + 'px';
+        this.#element.style.backgroundPositionY = (offsetY % spacing) + 'px';
 
         // apply net colors to wires
         let [ netList ] = this.identifyNets();
