@@ -56,8 +56,8 @@ class Grid {
     // Creates grid items from given serialized object.
     unserialize(data) {
         for (let item of data) {
-            let cname = item._.c;
-            let cargs = item._.a;
+            const cname = item._.c;
+            const cargs = item._.a;
             let instance;
             if (cname === 'Component') {
                 instance = new Component(this, ...cargs);
@@ -70,7 +70,7 @@ class Grid {
             } else {
                 throw 'Invalid component type "' + cname + '"';
             }
-            for (let [ k, v ] of Object.entries(data)) {
+            for (let [ k, v ] of Object.entries(item)) {
                 if (k !== '_') {
                     instance[k] = v;
                 }
