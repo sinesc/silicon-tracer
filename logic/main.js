@@ -64,8 +64,6 @@ setInterval(() => {
 }, 100);
 
 // Simulation handling
-let autoCompile = true;
-
 function compileSimulation(grid) {
 
     let [ netList, componentMap ] = grid.identifyNets();
@@ -107,9 +105,8 @@ function compileSimulation(grid) {
     return sim;
 }
 
-toolbar.createToggleButton('Simulate', 'Toggle enable or disable continuous simulation', autoCompile, (state) => {
+let autoCompile = toolbar.createToggleButton('Simulate', 'Toggle enable or disable continuous simulation', true, (state) => {
     mainGrid.detachSimulation();
-    autoCompile = state;
     if (!state) {
         mainGrid.sim = null;
     } else {
@@ -118,7 +115,7 @@ toolbar.createToggleButton('Simulate', 'Toggle enable or disable continuous simu
 });
 
 setInterval(() => {
-    if (autoCompile && !mainGrid.sim) {
+    if (autoCompile() && !mainGrid.sim) {
         mainGrid.sim = compileSimulation(mainGrid);
     }
     if (mainGrid.sim && mainGrid.sim.ready) {

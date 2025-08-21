@@ -43,7 +43,7 @@ class Toolbar {
         button.onmouseleave = () => mainGrid.clearMessage();
     }
 
-    // Creates a button that can be toggled on or off.
+    // Creates a button that can be toggled on or off. Returns a function that returns the current button state.
     createToggleButton(label, hoverMessage, defaultState, action) {
         let button = document.createElement('div');
         button.innerHTML = label;
@@ -60,6 +60,7 @@ class Toolbar {
         this.element.appendChild(button);
         button.onmouseenter = () => mainGrid.setMessage(hoverMessage);
         button.onmouseleave = () => mainGrid.clearMessage();
+        return () => state;
     }
 
 }

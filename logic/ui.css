@@ -98,8 +98,8 @@ html {
 }
 #header h1[data-c="1"] {
     text-shadow:
-        #fc0 -1px -1px 10px,
-        rgb(255, 136, 0) 1px 1px 10px;
+        rgba(0, 255, 13, 0.76) -2px -2px 10px,
+        rgba(255, 72, 0, 0.712) 2px 2px 10px;
 }
 #header h1[data-c="2"] {
     color: rgba(255, 255, 255, 0.75);
