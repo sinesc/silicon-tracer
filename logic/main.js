@@ -1,7 +1,7 @@
 "use strict";
 
 // Create grid and toolbar
-let mainGrid = new Grid(document.querySelector('#grid'));
+let mainGrid = new Grid(document.querySelector('#content'));
 let toolbar = new Toolbar(document.querySelector('#toolbar'));
 
 // Add file operations to toolbar
@@ -63,9 +63,7 @@ setInterval(() => {
     }
 }, 100);
 
-
-// MISC TESTING STUFF
-
+// Simulation handling
 let autoCompile = true;
 
 function compileSimulation(grid) {
@@ -131,6 +129,7 @@ setInterval(() => {
     }
 }, 18);
 
+// A blast from before you bought things to not own them.
 let logo = document.querySelector('#header h1');
 logo.onmouseenter = () => mainGrid.setMessage('Cheesy 80s logo. It is ticklish.');
 logo.onmouseleave = () => mainGrid.clearMessage();

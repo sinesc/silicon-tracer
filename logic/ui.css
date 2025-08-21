@@ -12,7 +12,7 @@
     --wire-color7: rgb(87, 76, 136);
     --wire-color8: rgb(76, 100, 136);
     --wire-color9: rgb(76, 136, 133);
-    --wire-high-factor: 1.15;
+    --wire-high-factor: 1.25;
     --wire-low-factor: 0.75;
     --wire-color-low: oklch(from var(--wire-color) calc(l * var(--wire-low-factor)) c h);
     --wire-color-high: oklch(from var(--wire-color) calc(l * var(--wire-high-factor)) c h);
@@ -53,7 +53,27 @@
 }
 
 /*
- * General UI
+ * Flex layout
+ */
+html, body {
+    height: 100%;
+    margin: 0;
+}
+#flex-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+#header {
+    flex: 0 1 auto;
+    padding: 5px;
+}
+#content {
+    flex: 1 1 auto;
+}
+
+/*
+ * General UI/layout
  */
 html {
     background-color: black;
@@ -61,26 +81,28 @@ html {
     font-family: Roboto, sans-serif;
     user-select: none;
 }
-#header h1, #toolbar, #toolbar .toolbar-button {
-    display: inline-block;
-}
 #header h1 {
+    display: inline-block;
     font-variant: small-caps;
-    text-shadow:#fc0 1px 0 10px;
     text-decoration: underline;
     text-decoration-color: white;
     margin-top: 0;
     margin-bottom: 5px;
+    margin-left: 10px;
     transform: skew(-15deg, 0deg);
     transition: text-shadow 1s, transform 1s, color 1s, text-decoration-color 1s;
-}
-#header h1[data-c="1"] {
     text-shadow:
         2px 2px 4px rgba(255, 0, 0, 0.822),
         -4px -4px 8px rgba(0, 174, 255, 0.747),
         4px 4px 8px rgba(247, 0, 255, 0.801);
 }
+#header h1[data-c="1"] {
+    text-shadow:
+        #fc0 -1px -1px 10px,
+        rgb(255, 136, 0) 1px 1px 10px;
+}
 #header h1[data-c="2"] {
+    color: rgba(255, 255, 255, 0.75);
     text-shadow:
         0 -1px 4px #FFF,
         0 -2px 10px #ff0,
@@ -88,6 +110,7 @@ html {
         0 -18px 40px #F00;
 }
 #header h1[data-c="3"] {
+    color: rgba(255, 255, 255, 0.75);
     transform: skew(15deg, 0deg);
     text-shadow:
         0 -4px 4px #FFF,
@@ -96,7 +119,7 @@ html {
         0 8px 40px rgb(0, 89, 255);
 }
 #header h1[data-c="4"] {
-    color: #779;
+    color: rgba(127, 127, 184, 0.75);
     text-shadow:
         1px 1px 3px #ddf,
         -5px -5px 10px #00f;
@@ -104,6 +127,7 @@ html {
     text-decoration-color: #00f;
 }
 #toolbar {
+    display: inline-block;
     vertical-align: top;
     margin-left: 10px;
 }
@@ -112,6 +136,7 @@ html {
  * Toolbar UI element
  */
 .toolbar .toolbar-button {
+    display: inline-block;
     cursor: default;
     background-color: var(--component-body-color);
     border: 2px solid var(--component-border-color);
@@ -193,7 +218,7 @@ html {
 body.no-focus #focus-hint, body.focus-changing #focus-hint {
     display: block;
 }
-body.no-focus #focus-hint:has(+div#grid:hover) {
+body.no-focus #focus-hint:has(+div.grid:hover) {
     opacity: 0.5;
 }
 
@@ -201,12 +226,10 @@ body.no-focus #focus-hint:has(+div#grid:hover) {
  * Grid
  */
 .grid {
-    /*background-image: radial-gradient(circle, #888 1px, #000 1px);  in JS to avoid looking to bright on low zoom */
     position: relative;
     overflow: hidden;
     width: 100%;
     height: 100%;
-    background-color: black;
     background-image: radial-gradient(circle, #888 1px, #000 1px);
 }
 .grid.grid-zoom-100 {
@@ -413,12 +436,12 @@ div.component[data-port-net-state="1"] > div.component-inner:has(+div[data-compo
     outline-color: var(--wire-color9-high);
 }
 div.component[data-port-state="0"] {
-    outline: 3px solid rgb(0, 70, 0);
+    outline: 3px solid #aaa;
     outline-offset: -4px;
     border-radius: 5px;
 }
 div.component[data-port-state="1"] {
-    outline: 3px solid rgb(0, 143, 0);
+    outline: 3px solid #fff;
     outline-offset: -4px;
     border-radius: 5px;
 }

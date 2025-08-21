@@ -6,12 +6,15 @@
         <link rel="stylesheet" href="logic/ui.css" />
     </head>
     <body>
-        <div id="header">
-            <h1>Silicon Tracer</h1>
-            <div id="toolbar"></div>
+        <div id="flex-container">
+            <div id="header">
+                <h1>Silicon Tracer</h1>
+                <div id="toolbar"></div>
+            </div>
+            <div id="content">
+                <div id="focus-hint"><span>This window is currently not focused and cannot receive key strokes.</span><br><small>Click anywhere to focus.</small></div>
+            </div>
         </div>
-        <div id="focus-hint"><span>This window is currently not focused and cannot receive key strokes.</span><br><small>Click anywhere to focus.</small></div>
-        <div id="grid" style="width: 2000px; height: 1200px;"></div>
         <script src="logic/common.js"></script>
         <script src="logic/ui/toolbar.js"></script>
         <script src="logic/render/grid.js"></script>
