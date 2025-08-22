@@ -7,6 +7,7 @@ class ComponentPort {
     color;
     port;
     portLabel;
+    netId = null;
     constructor(name, originalSide, index, color = null, port = null, portLabel = null) {
         this.name = name;
         this.originalSide = originalSide;
@@ -329,7 +330,8 @@ class Component extends GridItem {
             item.port.style.height = visualPortSize + "px";
             item.port.style.lineHeight = visualPortSize + 'px';
             item.port.innerHTML = '<span>' + item.name.slice(0, 1) + '</span>';
-            item.port.setAttribute('data-component-port-color', item.color ?? '');
+            item.port.setAttribute('data-net-color', item.color ?? '');
+            item.port.setAttribute('data-net-state', item.netId !== null && this.grid.sim ? this.grid.sim.getNet(item.netId) : '');
             if (item.name.length <= 1) {
                 item.portLabel.style.display = 'none';
             } else {

@@ -54,6 +54,6 @@ class Port extends Component {
         super.render(reason);
         this.element.setAttribute('data-port-state', this.state ?? '');
         // TODO: better way to get simulation
-        this.element.setAttribute('data-port-net-state', this.netId !== null && this.grid.sim ? this.grid.sim.getNet(this.netId) : '');
+        this.element.setAttribute('data-net-state', this.netId !== null && this.grid.sim ? this.grid.sim.getNet(this.netId) : '');
     }
 }
