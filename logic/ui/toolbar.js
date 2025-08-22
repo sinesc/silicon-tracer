@@ -2,12 +2,14 @@
 
 class Toolbar {
 
-    element;
+    #element;
+    #grid;
 
-    constructor(parent) {
-        this.element = document.createElement('div');
-        this.element.classList.add('toolbar');
-        parent.appendChild(this.element);
+    constructor(grid, parent) {
+        this.#grid = grid;
+        this.#element = document.createElement('div');
+        this.#element.classList.add('toolbar');
+        parent.appendChild(this.#element);
     }
 
     // Creates a button that can be dragged onto the grid.
@@ -15,17 +17,17 @@ class Toolbar {
         let button = document.createElement('div');
         button.innerHTML = label;
         button.classList.add('toolbar-button', 'toolbar-component-button');
-        button.onmousedown = function(e) {
+        button.onmousedown = (e) => {
             e.preventDefault();
             e.stopPropagation();
-            let [ x, y ] = mainGrid.screenToGrid(e.clientX, e.clientY);
-            let component = create(mainGrid, x, y);
+            let [ x, y ] = this.#grid.screenToGrid(e.clientX, e.clientY);
+            let component = create(this.#grid, x, y);
             component.dragStart(x, y, { type: "component", grabOffsetX: component.width / 2, grabOffsetY: component.height / 2 });
             component.render();
         };
-        this.element.appendChild(button);
-        button.onmouseenter = () => mainGrid.setMessage(hoverMessage);
-        button.onmouseleave = () => mainGrid.clearMessage();
+        this.#element.appendChild(button);
+        button.onmouseenter = () => this.#grid.setMessage(hoverMessage);
+        button.onmouseleave = () => this.#grid.clearMessage();
     }
 
     // Creates a button that can be clicked to trigger an action.
@@ -33,23 +35,23 @@ class Toolbar {
         let button = document.createElement('div');
         button.innerHTML = label;
         button.classList.add('toolbar-button', 'toolbar-action-button');
-        button.onclick= function(e) {
+        button.onclick= (e) => {
             e.preventDefault();
             e.stopPropagation();
             action();
         };
-        this.element.appendChild(button);
-        button.onmouseenter = () => mainGrid.setMessage(hoverMessage);
-        button.onmouseleave = () => mainGrid.clearMessage();
+        this.#element.appendChild(button);
+        button.onmouseenter = () => this.#grid.setMessage(hoverMessage);
+        button.onmouseleave = () => this.#grid.clearMessage();
     }
 
-    // Creates a button that can be toggled on or off. Returns a function that returns the current button state.
+    // Creates a button that can be toggled on or off. Returns a function that sets/returns the current button state.
     createToggleButton(label, hoverMessage, defaultState, action) {
         let button = document.createElement('div');
         button.innerHTML = label;
         let state = defaultState;
         button.classList.add('toolbar-button', 'toolbar-toggle-button', state ? 'toolbar-toggle-button-on' : 'toolbar-toggle-button-off');
-        button.onclick= function(e) {
+        button.onclick= (e) => {
             e.preventDefault();
             e.stopPropagation();
             button.classList.remove(state ? 'toolbar-toggle-button-on' : 'toolbar-toggle-button-off');
@@ -57,10 +59,10 @@ class Toolbar {
             button.classList.add(state ? 'toolbar-toggle-button-on' : 'toolbar-toggle-button-off');
             action(state);
         };
-        this.element.appendChild(button);
-        button.onmouseenter = () => mainGrid.setMessage(hoverMessage);
-        button.onmouseleave = () => mainGrid.clearMessage();
-        return () => state;
+        this.#element.appendChild(button);
+        button.onmouseenter = () => this.#grid.setMessage(hoverMessage);
+        button.onmouseleave = () => this.#grid.clearMessage();
+        return (newState) => newState !== undefined ? state = newState : state;
     }
 
 }

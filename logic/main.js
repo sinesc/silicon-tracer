@@ -2,7 +2,7 @@
 
 // Create grid and toolbar
 let mainGrid = new Grid(document.querySelector('#content'));
-let toolbar = new Toolbar(document.querySelector('#toolbar'));
+let toolbar = new Toolbar(mainGrid, document.querySelector('#toolbar'));
 
 // Add file operations to toolbar
 toolbar.createActionButton('New', 'Clear circuit', async () => {
@@ -46,28 +46,10 @@ for (let [ gateType, { joinOp } ] of Object.entries(Simulation.GATE_MAP)) {
     });
 }
 
-// Show warning when not focussed to avoid confusion. In this state mouse wheel events still register but hotkeys don't.
-let hadFocus = null;
-let focusTimer = null;
-setInterval(() => {
-    let hasFocus = document.hasFocus();
-    if (hasFocus !== hadFocus) {
-        // remove display: none first
-        document.body.classList.add('focus-changing');
-        // then change focus class
-        setTimeout(hasFocus ? () => document.body.classList.remove('no-focus') : () => document.body.classList.add('no-focus'), 1);
-        hadFocus = hasFocus;
-        // later add general display none again, but overriden by focus state
-        clearTimeout(focusTimer);
-        focusTimer = setTimeout(() => document.body.classList.remove('focus-changing'), 750);
-    }
-}, 100);
-
-// Simulation handling
+// Simulation handling // TODO: where to put this better?
 function compileSimulation(grid) {
 
     let [ netList, componentMap ] = grid.identifyNets();
-
     let sim = new Simulation();
 
     // declare gates from component map
@@ -105,29 +87,48 @@ function compileSimulation(grid) {
     return sim;
 }
 
-let autoCompile = toolbar.createToggleButton('Simulate', 'Toggle enable or disable continuous simulation', true, (state) => {
-    mainGrid.detachSimulation();
-    if (!state) {
-        mainGrid.sim = null;
-    } else {
-        mainGrid.sim = compileSimulation(mainGrid);
-    }
-});
-
-setInterval(() => {
-    if (autoCompile() && !mainGrid.sim) {
-        mainGrid.sim = compileSimulation(mainGrid);
-    }
-    if (mainGrid.sim && mainGrid.sim.ready) {
-        for (let i = 0; i < 1000; ++i) {
-            mainGrid.sim.simulate();
+// Continuous simulation toggle
+{
+    let autoCompile = toolbar.createToggleButton('Simulate', 'Toggle enable or disable continuous simulation', true, (enabled) => {
+        mainGrid.detachSimulation();
+        mainGrid.sim = enabled ? compileSimulation(mainGrid) : null;
+    });
+    setInterval(() => {
+        if (autoCompile() && !mainGrid.sim) {
+            mainGrid.sim = compileSimulation(mainGrid);
         }
-        mainGrid.render();
-    }
-}, 18);
+        if (mainGrid.sim && mainGrid.sim.ready) {
+            for (let i = 0; i < 10; ++i) {
+                mainGrid.sim.simulate();
+            }
+            mainGrid.render();
+        }
+    }, 18);
+}
 
-// A blast from before you bought things to not own them.
-let logo = document.querySelector('#header h1');
-logo.onmouseenter = () => mainGrid.setMessage('Cheesy 80s logo. It is ticklish.');
-logo.onmouseleave = () => mainGrid.clearMessage();
-logo.onclick = () => logo.setAttribute('data-c', ((parseInt(logo.getAttribute('data-c') ?? 0) + 1) % 5));
+// Show warning when not focussed to avoid confusion. In this state mouse wheel events still register but hotkeys don't.
+{
+    let hadFocus = null;
+    let focusTimer = null;
+    setInterval(() => {
+        let hasFocus = document.hasFocus();
+        if (hasFocus !== hadFocus) {
+            // remove display: none first
+            document.body.classList.add('focus-changing');
+            // then change focus class
+            setTimeout(hasFocus ? () => document.body.classList.remove('no-focus') : () => document.body.classList.add('no-focus'), 1);
+            hadFocus = hasFocus;
+            // later add general display none again, but overriden by focus state
+            clearTimeout(focusTimer);
+            focusTimer = setTimeout(() => document.body.classList.remove('focus-changing'), 750);
+        }
+    }, 100);
+}
+
+// A blast from when we still owned our stuff.
+{
+    let logo = document.querySelector('#header h1');
+    logo.onmouseenter = () => mainGrid.setMessage('Cheesy 80s logo. It is ticklish.');
+    logo.onmouseleave = () => mainGrid.clearMessage();
+    logo.onclick = () => logo.setAttribute('data-c', ((parseInt(logo.getAttribute('data-c') ?? 0) + 1) % 5));
+}

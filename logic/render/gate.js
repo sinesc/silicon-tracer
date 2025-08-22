@@ -46,7 +46,7 @@ class Gate extends Component {
         this.inputs = inputs;
         this.output = output;
         this.type = type;
-        this.setHoverMessage(this.inner, '<b>' + name + '-Gate</b>. <i>LMB</i>: Drag to move. <i>R</i>: Rotate', { type: 'hover' });
+        this.setHoverMessage(this.inner, '<b>' + name + '-Gate</b>. <i>LMB</i>: Drag to move. <i>R</i>: Rotate, <i>D</i>: Delete', { type: 'hover' });
     }
 
     // Serializes the object for writing to disk.

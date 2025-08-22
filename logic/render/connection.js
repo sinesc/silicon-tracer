@@ -7,12 +7,11 @@ class Connection extends GridItem {
     static DRAWING_CONNECTION_MESSAGE = 'Drawing connection. <i>R</i>: Add point, continue drawing from here.';
     static THICKNESS = 3;
 
-    elementH;
-    elementV;
+    #elementH;
+    #elementV;
+    #dragConnection;
     ordering;
     color;
-    dragConnection;
-    points;
 
     constructor(grid, x1, y1, x2, y2, ordering, color) {
 
@@ -27,17 +26,17 @@ class Connection extends GridItem {
         this.ordering = ordering ?? 'hv';
         this.color = color ?? 0;
 
-        this.elementH = document.createElement('div');
-        this.elementH.classList.add('connection-h');
-        this.registerDrag(this.elementH, { type: 'connect', ordering: 'vh' });
-        this.setHoverMessage(this.elementH, Connection.HOVER_MESSAGE, { type: 'hover' });
-        this.grid.addVisual(this.elementH);
+        this.#elementH = document.createElement('div');
+        this.#elementH.classList.add('connection-h');
+        this.registerDrag(this.#elementH, { type: 'connect', ordering: 'vh' });
+        this.setHoverMessage(this.#elementH, Connection.HOVER_MESSAGE, { type: 'hover' });
+        this.grid.addVisual(this.#elementH);
 
-        this.elementV = document.createElement('div');
-        this.elementV.classList.add('connection-v');
-        this.registerDrag(this.elementV, { type: 'connect', ordering: 'hv' });
-        this.setHoverMessage(this.elementV, Connection.HOVER_MESSAGE, { type: 'hover' });
-        this.grid.addVisual(this.elementV);
+        this.#elementV = document.createElement('div');
+        this.#elementV.classList.add('connection-v');
+        this.registerDrag(this.#elementV, { type: 'connect', ordering: 'hv' });
+        this.setHoverMessage(this.#elementV, Connection.HOVER_MESSAGE, { type: 'hover' });
+        this.grid.addVisual(this.#elementV);
 
         if (Connection.DEBUG_BOX) {
             this.debug = document.createElement('div');
@@ -61,8 +60,8 @@ class Connection extends GridItem {
 
     // Removes the component from the grid.
     remove() {
-        this.grid.removeVisual(this.elementH);
-        this.grid.removeVisual(this.elementV);
+        this.grid.removeVisual(this.#elementH);
+        this.grid.removeVisual(this.#elementV);
     }
 
     // Create connection from exiting connection.
@@ -71,18 +70,18 @@ class Connection extends GridItem {
             what.startX = x;
             what.startY = y;
         }
-        if (!this.dragConnection) {
+        if (!this.#dragConnection) {
             // TODO: when dragging forward (i.e. not perpendicular) from the end of a wire, ordering should be reversed.
             // this requires getting a mouse movement vector because the user might still want to drag along the normal at the end of a wire
             this.grid.setMessage(Connection.DRAWING_CONNECTION_MESSAGE, true);
             this.grid.requestHotkeyTarget(this, true, { ...what, type: 'connect' }); // pass 'what' to onHotkey()
-            this.dragConnection = new Connection(this.grid, what.startX, what.startY, x, y, what.ordering, this.color);
-            this.dragConnection.render();
+            this.#dragConnection = new Connection(this.grid, what.startX, what.startY, x, y, what.ordering, this.color);
+            this.#dragConnection.render();
         } else if (status !== 'stop') {
-            this.dragConnection.setEndpoints(this.dragConnection.x, this.dragConnection.y, x, y, true);
-            this.dragConnection.render();
+            this.#dragConnection.setEndpoints(this.#dragConnection.x, this.#dragConnection.y, x, y, true);
+            this.#dragConnection.render();
         } else {
-            this.dragConnection = null;
+            this.#dragConnection = null;
             this.grid.clearMessage(true);
             this.grid.releaseHotkeyTarget(this, true);
             this.grid.invalidateNets();
@@ -102,10 +101,10 @@ class Connection extends GridItem {
             this.render();
         } else if (what.type === 'connect' && key === 'r') {
             // add connection point when pressing R while dragging a connection
-            let x = this.dragConnection.x + this.dragConnection.width;
-            let y = this.dragConnection.y + this.dragConnection.height;
-            let color = this.dragConnection.color;
-            this.dragConnection = new Connection(this.grid, x, y, x, y, what.ordering, color);
+            let x = this.#dragConnection.x + this.#dragConnection.width;
+            let y = this.#dragConnection.y + this.#dragConnection.height;
+            let color = this.#dragConnection.color;
+            this.#dragConnection = new Connection(this.grid, x, y, x, y, what.ordering, color);
             this.grid.invalidateNets();
             this.grid.render();
         }
@@ -150,51 +149,51 @@ class Connection extends GridItem {
         let height = this.visualHeight;
         let t = thickness / 2;
 
-        this.elementH.style.display = this.width !== 0 ? 'block' : 'none';
-        this.elementV.style.display = this.height !== 0 ? 'block' : 'none';
+        this.#elementH.style.display = this.width !== 0 ? 'block' : 'none';
+        this.#elementV.style.display = this.height !== 0 ? 'block' : 'none';
 
-        this.elementH.setAttribute('data-connection-color', this.color ?? '');
-        this.elementV.setAttribute('data-connection-color', this.color ?? '');
+        this.#elementH.setAttribute('data-connection-color', this.color ?? '');
+        this.#elementV.setAttribute('data-connection-color', this.color ?? '');
 
         if (this.ordering === 'hv') {
             // horizontal first, then vertical
             if (this.width !== 0) {
                 let hx = width < 0 ? x + width : x;
                 let hw = Math.abs(width);
-                this.elementH.style.left = (hx - t) + "px";
-                this.elementH.style.top = (y - t) + "px";
-                this.elementH.style.width = (hw + 2 * t) + "px";
-                this.elementH.style.minWidth = thickness + 'px';
-                this.elementH.style.minHeight = thickness + 'px';
+                this.#elementH.style.left = (hx - t) + "px";
+                this.#elementH.style.top = (y - t) + "px";
+                this.#elementH.style.width = (hw + 2 * t) + "px";
+                this.#elementH.style.minWidth = thickness + 'px';
+                this.#elementH.style.minHeight = thickness + 'px';
             }
             if (this.height !== 0) {
                 let vy = height < 0 ? y + height : y;
                 let vh = Math.abs(height);
-                this.elementV.style.left = (x + width - t) + "px";
-                this.elementV.style.top = (vy - t) + "px";
-                this.elementV.style.height = (vh + 2 * t) + "px";
-                this.elementV.style.minWidth = thickness + 'px';
-                this.elementV.style.minHeight = thickness + 'px';
+                this.#elementV.style.left = (x + width - t) + "px";
+                this.#elementV.style.top = (vy - t) + "px";
+                this.#elementV.style.height = (vh + 2 * t) + "px";
+                this.#elementV.style.minWidth = thickness + 'px';
+                this.#elementV.style.minHeight = thickness + 'px';
             }
         } else {
             // vertical first, then horizontal
             if (this.height !== 0) {
                 let vy = height < 0 ? y + height : y;
                 let vh = Math.abs(height);
-                this.elementV.style.left = (x - t) + "px";
-                this.elementV.style.top = (vy - t) + "px";
-                this.elementV.style.height = (vh + 2 * t) + "px";
-                this.elementV.style.minWidth = thickness + 'px';
-                this.elementV.style.minHeight = thickness + 'px';
+                this.#elementV.style.left = (x - t) + "px";
+                this.#elementV.style.top = (vy - t) + "px";
+                this.#elementV.style.height = (vh + 2 * t) + "px";
+                this.#elementV.style.minWidth = thickness + 'px';
+                this.#elementV.style.minHeight = thickness + 'px';
             }
             if (this.width !== 0) {
                 let hx = width < 0 ? x + width : x;
                 let hw = Math.abs(width);
-                this.elementH.style.left = (hx - t) + "px";
-                this.elementH.style.top = (y + height - t) + "px";
-                this.elementH.style.width = (hw + 2 * t) + "px";
-                this.elementH.style.minWidth = thickness + 'px';
-                this.elementH.style.minHeight = thickness + 'px';
+                this.#elementH.style.left = (hx - t) + "px";
+                this.#elementH.style.top = (y + height - t) + "px";
+                this.#elementH.style.width = (hw + 2 * t) + "px";
+                this.#elementH.style.minWidth = thickness + 'px';
+                this.#elementH.style.minHeight = thickness + 'px';
             }
         }
 

@@ -14,9 +14,9 @@ class GridItem {
 
     constructor(grid) {
         this.grid = grid;
-        grid.registerItem(this);
-        this.#hoverRegistered = new Map();
-        this.#hoverMessages = new Map();
+        grid.addItem(this);
+        this.#hoverRegistered = new WeakMap();
+        this.#hoverMessages = new WeakMap();
     }
 
     // Implement to render the item to the grid.
@@ -28,8 +28,12 @@ class GridItem {
     // Implement to handle hover hotkey events.
     onHotkey(key, ...args) { }
 
-    // Implement to remove the item from the grid.
-    remove() { }
+    // Remove the item from the grid. // TBD: maybe refactor to onRemove() and then have grid.removeItem() call it?
+    remove() {
+        this.hoverMessages = null;
+        this.#hoverRegistered = null;
+        this.grid.removeItem(this);
+    }
 
     // Implement to detach the item from the simulation.
     detachSimulation() { }

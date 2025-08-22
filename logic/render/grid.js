@@ -14,14 +14,14 @@ class Grid {
     sim = null; // TODO: find better place for sim
 
     #element;
-    #status;
-    #items = [];
+    #status; // TODO: refactor status stuff into separate class
     #statusMessage = null;
     #statusTimer = null;
     #statusLocked = false;
     #mouseX = 0;
     #mouseY = 0;
     #hotkeyTarget = null;
+    #items;
     #netCache = null;
 
     constructor(parent) {
@@ -36,6 +36,7 @@ class Grid {
 
         document.addEventListener('mousemove', this.#handleMouse.bind(this));
         parent.appendChild(this.#element);
+        this.#items = new Set();
         this.clearMessage();
         this.render();
 
@@ -47,11 +48,8 @@ class Grid {
     // Serializes items on the grid for writing to disk.
     serialize() {
         let result = [];
-        for (let i = 0; i < this.#items.length; ++i) {
-            let item = this.#items[i].deref();
-            if (item) {
-                result.push(item.serialize());
-            }
+        for (let item of this.#items) {
+            result.push(item.serialize());
         }
         return result;
     }
@@ -84,21 +82,27 @@ class Grid {
 
     // Removes all items from the grid.
     clear() {
-        this.#iterItems((item) => {
+        for (let item of this.#items) {
+            // call item's removal code
             item.remove();
-        });
-        this.#items = [];
+        };
+        this.#items = new Set();
         this.invalidateNets();
     }
 
-    // Registers an item with the grids renderloop. Automatically done by GridItem constructor.
-    registerItem(item) {
-        this.#items.push(new WeakRef(item));
+    // Adds an item to the grid. Automatically done by GridItem constructor.
+    addItem(item) {
+        this.#items.add(item);
+    }
+
+    // Removes an item from the grid.
+    removeItem(item) {
+        this.#items.delete(item);
     }
 
     // Returns items that passed the given filter (c) => bool.
-    getItems(filter) {
-        return this.#items.map((c) => c.deref()).filter((c) => c !== null && filter(c));
+    filterItems(filter) {
+        return this.#items.values().filter((c) => c !== null && filter(c));
     }
 
     // Adds a visual element for a grid item to the grid.
@@ -181,27 +185,9 @@ class Grid {
         }
 
         // render components
-        this.#iterItems((item) => {
+        for (let item of this.#items) {
             item.render(reason);
-        });
-    }
-
-    // Iterate over grid items.
-    #iterItems(fn) {
-        for (let i = 0; i < this.#items.length; ++i) {
-            let item = this.#items[i].deref();
-            if (item) {
-                fn(item);
-            } else {
-                // remove from array by replacing with last entry. afterwards next iteration has to repeat this index.
-                if (i < this.#items.length - 1) {
-                    this.#items[i] = this.#items.pop();
-                    --i;
-                } else {
-                    this.#items.pop()
-                }
-            }
-        }
+        };
     }
 
     // Identifies nets on the grid and returns a [ NetList, Map<String, Component> ].
@@ -210,7 +196,7 @@ class Grid {
             return this.#netCache;
         }
         // get all individual wires
-        let connections = this.getItems((i) => i instanceof Connection);
+        let connections = this.filterItems((i) => i instanceof Connection);
         let wires = [];
         for (let connection of connections) {
             let points = connection.getPoints();
@@ -223,11 +209,12 @@ class Grid {
         }
         //console.log(wires.map((w) => [ w[0].x, w[0].y, w[1].x, w[1].y ]));
         // get all component ports
-        let components = this.getItems((i) => i instanceof Component);
+        let components = this.filterItems((i) => i instanceof Component);
         let ports = [];
         let componentMap = new Map();
-        for (let [c, component] of components.entries()) {
-            let componentPrefix = 'c' + c + ':';
+        let id = 0;
+        for (let component of components) {
+            let componentPrefix = 'c' + (id++) + ':';
             componentMap.set(componentPrefix, component);
             for (let port of component.getPorts()) {
                 let { x, y } = port.coords(component.width, component.height, component.rotation);
@@ -251,9 +238,9 @@ class Grid {
 
     // Detaches all items from the simulation.
     detachSimulation() {
-        this.#iterItems((item) => {
+        for (let item of this.#items) {
             item.detachSimulation();
-        });
+        };
     }
 
     // Sets a status message. Pass null to unset and revert back to default status.

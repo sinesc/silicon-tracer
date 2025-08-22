@@ -38,6 +38,7 @@
     --wire-color9-high: oklch(from var(--wire-color9) calc(l * var(--wire-high-factor)) c h);
     --component-rotate-duration: 0.15s;
     --component-color-transition-duration: 0.15s;
+    --component-delete-duration: 0.25s;
     --component-body-color: #444;
     --component-border-color: #222;
     --component-body-hover-color: #666;
@@ -280,6 +281,7 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
     background-color: transparent;
     cursor: default;
     box-sizing: border-box;
+    opacity: 1;
 }
 .component-drop-preview {
     z-index: 9;
@@ -296,6 +298,10 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
     display: block;
     transition: transform var(--component-rotate-duration);
     transform: rotate(-90deg);
+}
+.component-delete-animation {
+    transition: opacity var(--component-delete-duration);
+    opacity: 0;
 }
 .component-inner {
     z-index: 12;

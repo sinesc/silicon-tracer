@@ -15,6 +15,13 @@ class ComponentPort {
         this.port = port;
         this.portLabel = portLabel;
     }
+    // Removes port dom elements
+    remove() {
+        this.portLabel?.remove();
+        this.portLabel = null;
+        this.port?.remove();
+        this.port = null;
+    }
     // Returns the port coordinates after component rotation is considered. Also requires component width and height as input.
     coords(width, height, rotation) {
         // for correct rotation required: top: left->right, right: top->bottom, bottom: right->left, left: bottom->top
@@ -42,11 +49,11 @@ class Component extends GridItem {
     static PORT_SIZE = 14;
     static INNER_MARGIN = 5;
 
-    element;
-    inner;
-    dropPreview;
-    ports;
-    dragConnection = null;
+    #element;
+    #inner;
+    #dropPreview;
+    #ports;
+    #dragConnection = null;
     rotation = 0;
 
     constructor(grid, x, y, ports, name) {
@@ -56,41 +63,41 @@ class Component extends GridItem {
         [ this.x, this.y ] = this.gridAlign(x, y);
 
         // container
-        this.element = document.createElement('div');
-        this.element.classList.add('component');
-        this.element.setAttribute('data-component-name', name); // setAttribtute: dislike dataset-api name transcription when they could have just used [index] access to avoid the hyphen issue.
+        this.#element = document.createElement('div');
+        this.#element.classList.add('component');
+        this.#element.setAttribute('data-component-name', name); // setAttribtute: dislike dataset-api name transcription when they could have just used [index] access to avoid the hyphen issue.
 
         // inner area with name
-        this.inner = document.createElement('div');
-        this.inner.innerHTML = '<span>' + name + '</span>';
-        this.inner.classList.add('component-inner');
-        this.setHoverMessage(this.inner, 'Component <b>' + name + '</b>. <i>LMB</i>: Drag to move. <i>R</i>: Rotate', { type: 'hover' });
-        this.registerDrag(this.inner, { type: "component", grabOffsetX: null, grabOffsetY: null });
-        this.element.appendChild(this.inner);
+        this.#inner = document.createElement('div');
+        this.#inner.innerHTML = '<span>' + name + '</span>';
+        this.#inner.classList.add('component-inner');
+        this.setHoverMessage(this.#inner, 'Component <b>' + name + '</b>. <i>LMB</i>: Drag to move. <i>R</i>: Rotate, <i>D</i>: Delete', { type: 'hover' });
+        this.registerDrag(this.#inner, { type: "component", grabOffsetX: null, grabOffsetY: null });
+        this.#element.appendChild(this.#inner);
 
         // ensure ports are completely defined
 
-        this.ports = { left: [], right: [], top: [], bottom: [], ...ports };
+        this.#ports = { left: [], right: [], top: [], bottom: [], ...ports };
 
         for (let [ side, other ] of Object.entries({ 'left': 'right', 'right': 'left', 'top': 'bottom', 'bottom': 'top' })) {
-            while (this.ports[side].length < this.ports[other].length) {
-                this.ports[side].push(null);
+            while (this.#ports[side].length < this.#ports[other].length) {
+                this.#ports[side].push(null);
             }
         }
 
-        this.ports = this.ports.map((side, sidePorts) => sidePorts.map((name, index) => new ComponentPort(name, side, index)));
+        this.#ports = this.#ports.map((side, sidePorts) => sidePorts.map((name, index) => new ComponentPort(name, side, index)));
 
         // ports
         this.#updateDimensions();
         this.getPorts().forEach((item) => {
             let port = document.createElement('div');
             port.classList.add('component-port');
-            this.element.appendChild(port);
+            this.#element.appendChild(port);
             this.setHoverMessage(port, 'Port <b>' + item.name + '</b> of <b>' + name + '</b>. <i>LMB</i>: Drag to connect.', { type: 'hover-port' });
             // port hover label
             let portLabel = document.createElement('div');
             portLabel.classList.add('component-port-label');
-            this.element.appendChild(portLabel);
+            this.#element.appendChild(portLabel);
             // update this.ports with computed port properties
             item.port = port;
             item.portLabel = portLabel;
@@ -98,21 +105,41 @@ class Component extends GridItem {
             this.registerDrag(port, { type: "port", name: item.name });
         });
 
-        grid.addVisual(this.element);
+        grid.addVisual(this.#element);
+    }
+
+    get element() {
+        return this.#element;
+    }
+
+    get inner() {
+        return this.#inner;
     }
 
     // Serializes the object for writing to disk.
     serialize() {
         return {
             ...super.serialize(),
-            _: { c: this.constructor.name, a: [ this.x, this.y, this.ports.map((p) => p.name), this.element.getAttribute('data-component-name') ]},
+            _: { c: this.constructor.name, a: [ this.x, this.y, this.#ports.map((p) => p.name), this.#element.getAttribute('data-component-name') ]},
             rotation: this.rotation,
         };
     }
 
     // Removes the component from the grid.
     remove() {
-        this.grid.removeVisual(this.element);
+        this.getPorts().forEach((item) => {
+            item.remove();
+        });
+        this.#ports = null;
+        this.#inner?.remove();
+        this.#inner = null;
+        this.grid.removeVisual(this.#element);
+        this.#element = null;
+        this.#dropPreview?.remove();
+        this.#dropPreview = null;
+        this.#dragConnection?.remove();
+        this.#dragConnection = null;
+        super.remove();
     }
 
     // Hover hotkey actions
@@ -123,24 +150,31 @@ class Component extends GridItem {
             this.x += (this.width - this.height) / 2;
             this.y -= (this.width - this.height) / 2;
             this.#updateDimensions();
-            this.element.classList.add('component-rotate-animation');
+            this.#element.classList.add('component-rotate-animation');
             setTimeout(() => {
-                this.element.classList.remove('component-rotate-animation');
+                this.#element.classList.remove('component-rotate-animation');
                 this.grid.invalidateNets();
                 this.grid.render();
             }, 150);
+        } else if (key === 'd' && what.type === 'hover') {
+            this.#element.classList.add('component-delete-animation');
+            setTimeout(() => {
+                this.#element.classList.remove('component-delete-animation');
+                this.grid.invalidateNets();
+                this.remove();
+            }, 150);
         } else if (key === 'r' && what.type === 'connect') {
             // add connection point when pressing R while dragging a connection
-            let x = this.dragConnection.x + this.dragConnection.width;
-            let y = this.dragConnection.y + this.dragConnection.height;
-            let color = this.dragConnection.color;
+            let x = this.#dragConnection.x + this.#dragConnection.width;
+            let y = this.#dragConnection.y + this.#dragConnection.height;
+            let color = this.#dragConnection.color;
             // pass handling off to the previously created connection
-            let flippedOrdering = this.dragConnection.ordering !== what.ordering;
+            let flippedOrdering = this.#dragConnection.ordering !== what.ordering;
             let dragConnectionWhat = { ...what, ordering: flippedOrdering ? what.ordering == 'hv' ? 'vh' : 'hv' : what.ordering, x, y, color };
             this.grid.releaseHotkeyTarget(this, true);
             this.dragStop(x, y, what);
-            this.dragConnection.dragStart(x, y, dragConnectionWhat);
-            this.dragConnection = null;
+            this.#dragConnection.dragStart(x, y, dragConnectionWhat);
+            this.#dragConnection = null;
             this.grid.invalidateNets();
             this.grid.render();
         }
@@ -157,21 +191,21 @@ class Component extends GridItem {
         this.setPosition(x - what.grabOffsetX, y - what.grabOffsetY, status === 'stop');
         // draw grid-aligned drop-preview outline
         if (status !== 'stop') {
-            if (!this.dropPreview) {
-                this.dropPreview = document.createElement('div');
-                this.dropPreview.classList.add('component-drop-preview');
-                this.grid.addVisual(this.dropPreview);
+            if (!this.#dropPreview) {
+                this.#dropPreview = document.createElement('div');
+                this.#dropPreview.classList.add('component-drop-preview');
+                this.grid.addVisual(this.#dropPreview);
             }
             let [ alignedX, alignedY ] = this.gridAlign(this.x, this.y);
             let [ visualX, visualY ] = this.gridToVisual(alignedX, alignedY);
-            this.dropPreview.style.left = visualX + "px";
-            this.dropPreview.style.top = visualY + "px";
-            this.dropPreview.style.width = this.visualWidth + "px";
-            this.dropPreview.style.height = this.visualHeight + "px";
+            this.#dropPreview.style.left = visualX + "px";
+            this.#dropPreview.style.top = visualY + "px";
+            this.#dropPreview.style.width = this.visualWidth + "px";
+            this.#dropPreview.style.height = this.visualHeight + "px";
             this.render('move');
         } else {
-            this.grid.removeVisual(this.dropPreview);
-            this.dropPreview = null;
+            this.grid.removeVisual(this.#dropPreview);
+            this.#dropPreview = null;
             what.grabOffsetX = null;
             what.grabOffsetY = null;
             this.grid.invalidateNets();
@@ -184,26 +218,26 @@ class Component extends GridItem {
         let port = this.portByName(what.name);
         let portCoords = port.coords(this.width, this.height, this.rotation);
         let portSide = port.side(this.rotation);
-        if (!this.dragConnection /* start */) {
+        if (!this.#dragConnection /* start */) {
             this.grid.setMessage(Connection.DRAWING_CONNECTION_MESSAGE, true);
             what.ordering = portSide === 'top' || portSide === 'bottom' ? 'vh' : 'hv';
             this.grid.requestHotkeyTarget(this, true, { ...what, type: 'connect' }); // pass 'what' to onHotkey()
-            this.dragConnection = new Connection(this.grid, this.x + portCoords.x, this.y + portCoords.y, x, y, what.ordering);
-            this.dragConnection.render();
+            this.#dragConnection = new Connection(this.grid, this.x + portCoords.x, this.y + portCoords.y, x, y, what.ordering);
+            this.#dragConnection.render();
         } else if (status !== 'stop') {
             // flip ordering when draggin towards component, effetively routing around the component
-            if (what.ordering === 'hv' && ((portSide === 'left' ? this.dragConnection.x < x : this.dragConnection.x > x))) {
-                this.dragConnection.ordering = 'vh';
-            } else if (what.ordering === 'vh' && (portSide === 'top' ? this.dragConnection.y < y : this.dragConnection.y > y)) {
-                this.dragConnection.ordering = 'hv';
+            if (what.ordering === 'hv' && ((portSide === 'left' ? this.#dragConnection.x < x : this.#dragConnection.x > x))) {
+                this.#dragConnection.ordering = 'vh';
+            } else if (what.ordering === 'vh' && (portSide === 'top' ? this.#dragConnection.y < y : this.#dragConnection.y > y)) {
+                this.#dragConnection.ordering = 'hv';
             } else {
-                this.dragConnection.ordering = what.ordering;
+                this.#dragConnection.ordering = what.ordering;
             }
-            this.dragConnection.setEndpoints(this.dragConnection.x, this.dragConnection.y, x, y, true);
-            this.dragConnection.render();
+            this.#dragConnection.setEndpoints(this.#dragConnection.x, this.#dragConnection.y, x, y, true);
+            this.#dragConnection.render();
         } else {
             // FIXME: delete connection if no wires were produced (not dragged far enough)
-            this.dragConnection = null;
+            this.#dragConnection = null;
             this.grid.clearMessage(true);
             this.grid.releaseHotkeyTarget(this, true);
             this.grid.invalidateNets();
@@ -223,7 +257,7 @@ class Component extends GridItem {
     // Renders the component onto the grid.
     render(reason) {
 
-        if (this.element.classList.contains('component-rotate-animation')) {
+        if (this.#element.classList.contains('component-rotate-animation')) {
             return;
         }
 
@@ -232,24 +266,24 @@ class Component extends GridItem {
             this.#renderPorts();
         }
 
-        this.element.style.left = this.visualX + "px";
-        this.element.style.top = this.visualY + "px";
-        this.element.style.width = this.visualWidth + "px";
-        this.element.style.height = this.visualHeight + "px";
+        this.#element.style.left = this.visualX + "px";
+        this.#element.style.top = this.visualY + "px";
+        this.#element.style.width = this.visualWidth + "px";
+        this.#element.style.height = this.visualHeight + "px";
 
-        if ((this.width < this.height || (this.width === this.height && this.ports[this.rotatedTop].length === 0 && this.ports[this.rotatedBottom].length === 0)) && this.visualWidth < 200) {
-            this.inner.style.lineHeight = (this.visualWidth - (Component.INNER_MARGIN * 2)) + "px";
-            this.inner.style.writingMode = 'vertical-rl';
+        if ((this.width < this.height || (this.width === this.height && this.#ports[this.rotatedTop].length === 0 && this.#ports[this.rotatedBottom].length === 0)) && this.visualWidth < 200) {
+            this.#inner.style.lineHeight = (this.visualWidth - (Component.INNER_MARGIN * 2)) + "px";
+            this.#inner.style.writingMode = 'vertical-rl';
         } else {
-            this.inner.style.lineHeight = (this.visualHeight - (Component.INNER_MARGIN * 2)) + "px";
-            this.inner.style.writingMode = 'horizontal-tb';
+            this.#inner.style.lineHeight = (this.visualHeight - (Component.INNER_MARGIN * 2)) + "px";
+            this.#inner.style.writingMode = 'horizontal-tb';
         }
     }
 
     // Returns flat list of ports.
     getPorts() {
         let ports = [  ];
-        for (const items of Object.values(this.ports)) {
+        for (const items of Object.values(this.#ports)) {
             for (const item of items) {
                 if (item.name !== null) {
                     ports.push(item);
@@ -261,7 +295,7 @@ class Component extends GridItem {
 
     // Gets a port by its name.
     portByName(name) {
-        for (const items of Object.values(this.ports)) {
+        for (const items of Object.values(this.#ports)) {
             for (const item of items) {
                 if (item.name === name) {
                     return item;
@@ -361,7 +395,7 @@ class Component extends GridItem {
 
     // Update component width/height from given ports.
     #updateDimensions() {
-        this.width = Math.max(Grid.SPACING * 2, (this.ports[this.rotatedTop].length + 1) * Grid.SPACING, (this.ports[this.rotatedBottom].length + 1) * Grid.SPACING);
-        this.height = Math.max(Grid.SPACING * 2, (this.ports[this.rotatedLeft].length + 1) * Grid.SPACING, (this.ports[this.rotatedRight].length + 1) * Grid.SPACING);
+        this.width = Math.max(Grid.SPACING * 2, (this.#ports[this.rotatedTop].length + 1) * Grid.SPACING, (this.#ports[this.rotatedBottom].length + 1) * Grid.SPACING);
+        this.height = Math.max(Grid.SPACING * 2, (this.#ports[this.rotatedLeft].length + 1) * Grid.SPACING, (this.#ports[this.rotatedRight].length + 1) * Grid.SPACING);
     }
 }
