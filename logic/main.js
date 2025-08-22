@@ -97,6 +97,7 @@ function compileSimulation(grid) {
         mainGrid.detachSimulation();
         if (!enabled) {
             mainGrid.sim = null;
+            mainGrid.render();
         }
     });
 
@@ -113,13 +114,17 @@ function compileSimulation(grid) {
     }, 18);
 
     toolbar.createActionButton('Dump ASM', 'Outputs simulation code to console', () => {
-        let portInfo = [];
-        for (let { offset, meta } of mainGrid.sim.nets) {
-            for (let port of meta) {
-                portInfo.push('// port ' + port + ' @ mem[' + offset + ']');
+        if (mainGrid.sim) {
+            let portInfo = [];
+            for (let { offset, meta } of mainGrid.sim.nets) {
+                for (let port of meta) {
+                    portInfo.push('// port ' + port + ' @ mem[' + offset + ']');
+                }
             }
+            console.log(mainGrid.sim.code() + portInfo.join("\n"));
+        } else {
+            console.log('No simulation running');
         }
-        console.log(mainGrid.sim ? mainGrid.sim.code() + portInfo.join("\n") : 'No simulation running');
     });
 }
 

@@ -161,8 +161,8 @@ class Connection extends GridItem {
         this.#elementH.setAttribute('data-connection-color', this.color ?? '');
         this.#elementV.setAttribute('data-connection-color', this.color ?? '');
 
-        this.#elementH.setAttribute('data-connection-net-state', this.netId !== null && this.grid.sim && this.grid.sim.ready ? this.grid.sim.getNet(this.netId) : '');
-        this.#elementV.setAttribute('data-connection-net-state', this.netId !== null && this.grid.sim && this.grid.sim.ready ? this.grid.sim.getNet(this.netId) : '');
+        this.#elementH.setAttribute('data-connection-net-state', this.netId !== null && this.grid.sim ? this.grid.sim.getNet(this.netId) : '');
+        this.#elementV.setAttribute('data-connection-net-state', this.netId !== null && this.grid.sim ? this.grid.sim.getNet(this.netId) : '');
 
         if (this.ordering === 'hv') {
             // horizontal first, then vertical
