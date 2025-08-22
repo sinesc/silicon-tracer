@@ -74,6 +74,10 @@ function compileSimulation(grid) {
                 setPorts.push([ netId, component.state]);
             }
         }
+        // check for wires to hook up
+        for (let [ point, name, component ] of net.wires) {
+            component.netId = netId;
+        }
     }
 
     // compile

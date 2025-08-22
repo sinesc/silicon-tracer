@@ -12,6 +12,7 @@ class Connection extends GridItem {
     #dragConnection;
     ordering;
     color;
+    netId = null;
 
     constructor(grid, x1, y1, x2, y2, ordering, color) {
 
@@ -62,6 +63,11 @@ class Connection extends GridItem {
     remove() {
         this.grid.removeVisual(this.#elementH);
         this.grid.removeVisual(this.#elementV);
+    }
+
+    // Detach wire from simulation.
+    detachSimulation() {
+        this.netId = null;
     }
 
     // Create connection from exiting connection.
@@ -154,6 +160,9 @@ class Connection extends GridItem {
 
         this.#elementH.setAttribute('data-connection-color', this.color ?? '');
         this.#elementV.setAttribute('data-connection-color', this.color ?? '');
+
+        this.#elementH.setAttribute('data-connection-net-state', this.netId !== null && this.grid.sim && this.grid.sim.ready ? this.grid.sim.getNet(this.netId) : '');
+        this.#elementV.setAttribute('data-connection-net-state', this.netId !== null && this.grid.sim && this.grid.sim.ready ? this.grid.sim.getNet(this.netId) : '');
 
         if (this.ordering === 'hv') {
             // horizontal first, then vertical

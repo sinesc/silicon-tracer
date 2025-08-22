@@ -12,8 +12,8 @@
     --wire-color7: rgb(87, 76, 136);
     --wire-color8: rgb(76, 100, 136);
     --wire-color9: rgb(76, 136, 133);
-    --wire-high-factor: 1.25;
-    --wire-low-factor: 0.75;
+    --wire-high-factor: 1.2;
+    --wire-low-factor: 0.6;
     --wire-color-low: oklch(from var(--wire-color) calc(l * var(--wire-low-factor)) c h);
     --wire-color-high: oklch(from var(--wire-color) calc(l * var(--wire-high-factor)) c h);
     --wire-color0-low: oklch(from var(--wire-color0) calc(l * var(--wire-low-factor)) c h);
@@ -518,6 +518,69 @@ div[data-connection-color="8"], div[data-component-port-color="8"] {
 div[data-connection-color="9"], div[data-component-port-color="9"] {
     background-color: var(--wire-color9);
 }
+/* connection colors low */
+div[data-connection-color="0"][data-connection-net-state="0"] {
+    background-color: var(--wire-color0-low);
+}
+div[data-connection-color="1"][data-connection-net-state="0"] {
+    background-color: var(--wire-color1-low);
+}
+div[data-connection-color="2"][data-connection-net-state="0"] {
+    background-color: var(--wire-color2-low);
+}
+div[data-connection-color="3"][data-connection-net-state="0"] {
+    background-color: var(--wire-color3-low);
+}
+div[data-connection-color="4"][data-connection-net-state="0"] {
+    background-color: var(--wire-color4-low);
+}
+div[data-connection-color="5"][data-connection-net-state="0"] {
+    background-color: var(--wire-color5-low);
+}
+div[data-connection-color="6"][data-connection-net-state="0"] {
+    background-color: var(--wire-color6-low);
+}
+div[data-connection-color="7"][data-connection-net-state="0"] {
+    background-color: var(--wire-color7-low);
+}
+div[data-connection-color="8"][data-connection-net-state="0"] {
+    background-color: var(--wire-color8-low);
+}
+div[data-connection-color="9"][data-connection-net-state="0"] {
+    background-color: var(--wire-color9-low);
+}
+/* connection colors high */
+div[data-connection-color="0"][data-connection-net-state="1"] {
+    background-color: var(--wire-color0-high);
+}
+div[data-connection-color="1"][data-connection-net-state="1"] {
+    background-color: var(--wire-color1-high);
+}
+div[data-connection-color="2"][data-connection-net-state="1"] {
+    background-color: var(--wire-color2-high);
+}
+div[data-connection-color="3"][data-connection-net-state="1"] {
+    background-color: var(--wire-color3-high);
+}
+div[data-connection-color="4"][data-connection-net-state="1"] {
+    background-color: var(--wire-color4-high);
+}
+div[data-connection-color="5"][data-connection-net-state="1"] {
+    background-color: var(--wire-color5-high);
+}
+div[data-connection-color="6"][data-connection-net-state="1"] {
+    background-color: var(--wire-color6-high);
+}
+div[data-connection-color="7"][data-connection-net-state="1"] {
+    background-color: var(--wire-color7-high);
+}
+div[data-connection-color="8"][data-connection-net-state="1"] {
+    background-color: var(--wire-color8-high);
+}
+div[data-connection-color="9"][data-connection-net-state="1"] {
+    background-color: var(--wire-color9-high);
+}
+
 /* connection debugging */
 .connection-debug {
     pointer-events: none;
