@@ -27,11 +27,10 @@ class Simulation {
     #compiled;
     #mem;
 
-    // Declares a net (which inputs/outputs are connected) and returns the net-index.
-    netDecl(attachedIONames) {
-        //console.log('netDecl', attachedIONames);
+    // Declares a net (which inputs/outputs are connected) and returns the net-index. meta can be any custom data.
+    netDecl(attachedIONames, meta) {
         const index = this.#nets.length;
-        this.#nets.push({ offset: this.#alloc(), io: attachedIONames });
+        this.#nets.push({ offset: this.#alloc(), io: attachedIONames, meta });
         return index;
     }
 
@@ -55,7 +54,6 @@ class Simulation {
 
     // Convenience method to declare gate inputs and function.
     gateDecl(type, inputs, output, delay) {
-        //console.log('gateDecl', type, inputs, output, delay);
         this.fnDecl(type, inputs, output);
         for (let input of inputs) {
             this.ioDecl(input, 'i', delay ?? Simulation.DEFAULT_DELAY);
@@ -72,6 +70,12 @@ class Simulation {
         //console.log(result);
         this.#compiled = eval(result);
         this.#mem = new Simulation.ARRAY_CONSTRUCTOR(this.#allocBase);
+    }
+
+    // Returns code for the simulation.
+    code() {
+        const compiled = this.#compileTick();
+        return "// alloc mem[" + this.#allocBase + "]\n" + compiled;
     }
 
     // Returns whether the simulation is ready to run (has been compiled).
@@ -98,6 +102,11 @@ class Simulation {
         let ret = value & (1 << Simulation.MAX_DELAY) ? value & 1 : null;
         //console.log('get ' + netIndex + ' = ' + ret);
         return ret;
+    }
+
+    // Returns a list of defined nets.
+    get nets() {
+        return this.#nets;
     }
 
     // Compiles a net to input assertion.

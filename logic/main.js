@@ -62,16 +62,16 @@ function compileSimulation(grid) {
     // declare nets
     let setPorts = [];
     for (let net of netList.nets) {
-        let netId = sim.netDecl(net.ports.filter((p) => p[2] instanceof Gate).map((p) => p[1]));
+        // create new net from connected gate i/o-ports
+        let netPortList = net.ports.filter((p) => p[2] instanceof Port);
+        let netId = sim.netDecl(net.ports.filter((p) => p[2] instanceof Gate).map((p) => p[1]), netPortList.map((p) => p[1]));
         // check for ports on net we need to hook up to the ui
-        for (let [ point, name, component ] of net.ports) {
-            if (component instanceof Port) {
-                // store netId on port to allow it to fetch the current net state
-                component.netId = netId;
-                // if the port enforces a state remember it to set after compilation
-                if (component.state !== null) {
-                    setPorts.push([ netId, component.state]);
-                }
+        for (let [ point, name, component ] of netPortList) {
+            // store netId on port-component to allow it to fetch the current net state
+            component.netId = netId;
+            // if the port enforces a state remember it to set after compilation
+            if (component.state !== null) {
+                setPorts.push([ netId, component.state]);
             }
         }
     }
@@ -91,19 +91,32 @@ function compileSimulation(grid) {
 {
     let autoCompile = toolbar.createToggleButton('Simulate', 'Toggle enable or disable continuous simulation', true, (enabled) => {
         mainGrid.detachSimulation();
-        mainGrid.sim = enabled ? compileSimulation(mainGrid) : null;
-    });
-    setInterval(() => {
-        if (autoCompile() && !mainGrid.sim) {
-            mainGrid.sim = compileSimulation(mainGrid);
+        if (!enabled) {
+            mainGrid.sim = null;
         }
-        if (mainGrid.sim && mainGrid.sim.ready) {
-            for (let i = 0; i < 10; ++i) {
+    });
+
+    setInterval(() => {
+        if (autoCompile()) {
+            if (!mainGrid.sim) {
+                mainGrid.sim = compileSimulation(mainGrid);
+            }
+            for (let i = 0; i < 10; ++i) {  // TODO: bleh temp code, look into webworkers
                 mainGrid.sim.simulate();
             }
             mainGrid.render();
         }
     }, 18);
+
+    toolbar.createActionButton('Dump ASM', 'Outputs simulation code to console', () => {
+        let portInfo = [];
+        for (let { offset, meta } of mainGrid.sim.nets) {
+            for (let port of meta) {
+                portInfo.push('// port ' + port + ' @ mem[' + offset + ']');
+            }
+        }
+        console.log(mainGrid.sim ? mainGrid.sim.code() + portInfo.join("\n") : 'No simulation running');
+    });
 }
 
 // Show warning when not focussed to avoid confusion. In this state mouse wheel events still register but hotkeys don't.
