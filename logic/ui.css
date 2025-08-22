@@ -15,11 +15,7 @@
 
     --wire-high-factor: 1.2;
     --wire-low-factor: 0.6;
-    --wire-null-factor: 0.25;
-
-    --wire-color-low: oklch(from var(--wire-color) calc(l * var(--wire-low-factor)) c h);
-    --wire-color-high: oklch(from var(--wire-color) calc(l * var(--wire-high-factor)) c h);
-    --wire-color-null: oklch(from var(--wire-color) calc(l * var(--wire-high-factor)) c h);
+    --wire-null-factor: 0.4;
 
     --wire-color0-high: oklch(from var(--wire-color0) calc(l * var(--wire-high-factor)) c h);
     --wire-color1-high: oklch(from var(--wire-color1) calc(l * var(--wire-high-factor)) c h);
@@ -32,16 +28,16 @@
     --wire-color8-high: oklch(from var(--wire-color8) calc(l * var(--wire-high-factor)) c h);
     --wire-color9-high: oklch(from var(--wire-color9) calc(l * var(--wire-high-factor)) c h);
 
-    --wire-color0-low: oklch(from var(--wire-color0) calc(l * var(--wire-low-factor)) c h);
-    --wire-color1-low: oklch(from var(--wire-color1) calc(l * var(--wire-low-factor)) c h);
-    --wire-color2-low: oklch(from var(--wire-color2) calc(l * var(--wire-low-factor)) c h);
-    --wire-color3-low: oklch(from var(--wire-color3) calc(l * var(--wire-low-factor)) c h);
-    --wire-color4-low: oklch(from var(--wire-color4) calc(l * var(--wire-low-factor)) c h);
-    --wire-color5-low: oklch(from var(--wire-color5) calc(l * var(--wire-low-factor)) c h);
-    --wire-color6-low: oklch(from var(--wire-color6) calc(l * var(--wire-low-factor)) c h);
-    --wire-color7-low: oklch(from var(--wire-color7) calc(l * var(--wire-low-factor)) c h);
-    --wire-color8-low: oklch(from var(--wire-color8) calc(l * var(--wire-low-factor)) c h);
-    --wire-color9-low: oklch(from var(--wire-color9) calc(l * var(--wire-low-factor)) c h);
+    --wire-color0-low: oklch(from var(--wire-color0) calc(l * var(--wire-low-factor)) calc(c * var(--wire-low-factor)) h);
+    --wire-color1-low: oklch(from var(--wire-color1) calc(l * var(--wire-low-factor)) calc(c * var(--wire-low-factor)) h);
+    --wire-color2-low: oklch(from var(--wire-color2) calc(l * var(--wire-low-factor)) calc(c * var(--wire-low-factor)) h);
+    --wire-color3-low: oklch(from var(--wire-color3) calc(l * var(--wire-low-factor)) calc(c * var(--wire-low-factor)) h);
+    --wire-color4-low: oklch(from var(--wire-color4) calc(l * var(--wire-low-factor)) calc(c * var(--wire-low-factor)) h);
+    --wire-color5-low: oklch(from var(--wire-color5) calc(l * var(--wire-low-factor)) calc(c * var(--wire-low-factor)) h);
+    --wire-color6-low: oklch(from var(--wire-color6) calc(l * var(--wire-low-factor)) calc(c * var(--wire-low-factor)) h);
+    --wire-color7-low: oklch(from var(--wire-color7) calc(l * var(--wire-low-factor)) calc(c * var(--wire-low-factor)) h);
+    --wire-color8-low: oklch(from var(--wire-color8) calc(l * var(--wire-low-factor)) calc(c * var(--wire-low-factor)) h);
+    --wire-color9-low: oklch(from var(--wire-color9) calc(l * var(--wire-low-factor)) calc(c * var(--wire-low-factor)) h);
 
     --wire-color0-null: oklch(from var(--wire-color0) calc(l * var(--wire-low-factor)) calc(c * var(--wire-null-factor)) h);
     --wire-color1-null: oklch(from var(--wire-color1) calc(l * var(--wire-low-factor)) calc(c * var(--wire-null-factor)) h);
@@ -589,33 +585,43 @@ div[data-net-color="9"][data-net-state=""] {
 /* connection colors null */
 div[data-net-color="0"][data-net-state="null"] {
     background-color: var(--wire-color0-null);
+    opacity: 0.75;
 }
 div[data-net-color="1"][data-net-state="null"] {
     background-color: var(--wire-color1-null);
+    opacity: 0.75;
 }
 div[data-net-color="2"][data-net-state="null"] {
     background-color: var(--wire-color2-null);
+    opacity: 0.75;
 }
 div[data-net-color="3"][data-net-state="null"] {
     background-color: var(--wire-color3-null);
+    opacity: 0.75;
 }
 div[data-net-color="4"][data-net-state="null"] {
     background-color: var(--wire-color4-null);
+    opacity: 0.75;
 }
 div[data-net-color="5"][data-net-state="null"] {
     background-color: var(--wire-color5-null);
+    opacity: 0.75;
 }
 div[data-net-color="6"][data-net-state="null"] {
     background-color: var(--wire-color6-null);
+    opacity: 0.75;
 }
 div[data-net-color="7"][data-net-state="null"] {
     background-color: var(--wire-color7-null);
+    opacity: 0.75;
 }
 div[data-net-color="8"][data-net-state="null"] {
     background-color: var(--wire-color8-null);
+    opacity: 0.75;
 }
 div[data-net-color="9"][data-net-state="null"] {
     background-color: var(--wire-color9-null);
+    opacity: 0.75;
 }
 /* connection colors low */
 div[data-net-color="0"][data-net-state="0"] {
