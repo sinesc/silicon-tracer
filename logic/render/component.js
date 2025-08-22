@@ -88,7 +88,7 @@ class Component extends GridItem {
         this.#ports = this.#ports.map((side, sidePorts) => sidePorts.map((name, index) => new ComponentPort(name, side, index)));
 
         // ports
-        this.#updateDimensions();
+        this.updateDimensions();
         this.getPorts().forEach((item) => {
             let port = document.createElement('div');
             port.classList.add('component-port');
@@ -149,7 +149,7 @@ class Component extends GridItem {
             this.rotation = (this.rotation + 1) & 3;
             this.x += (this.width - this.height) / 2;
             this.y -= (this.width - this.height) / 2;
-            this.#updateDimensions();
+            this.updateDimensions();
             this.#element.classList.add('component-rotate-animation');
             setTimeout(() => {
                 this.#element.classList.remove('component-rotate-animation');
@@ -270,6 +270,7 @@ class Component extends GridItem {
         this.#element.style.top = this.visualY + "px";
         this.#element.style.width = this.visualWidth + "px";
         this.#element.style.height = this.visualHeight + "px";
+        this.element.setAttribute('data-component-rotation', this.rotation);
 
         if ((this.width < this.height || (this.width === this.height && this.#ports[this.rotatedTop].length === 0 && this.#ports[this.rotatedBottom].length === 0)) && this.visualWidth < 200) {
             this.#inner.style.lineHeight = (this.visualWidth - (Component.INNER_MARGIN * 2)) + "px";
@@ -394,7 +395,7 @@ class Component extends GridItem {
     }
 
     // Update component width/height from given ports.
-    #updateDimensions() {
+    updateDimensions() {
         this.width = Math.max(Grid.SPACING * 2, (this.#ports[this.rotatedTop].length + 1) * Grid.SPACING, (this.#ports[this.rotatedBottom].length + 1) * Grid.SPACING);
         this.height = Math.max(Grid.SPACING * 2, (this.#ports[this.rotatedLeft].length + 1) * Grid.SPACING, (this.#ports[this.rotatedRight].length + 1) * Grid.SPACING);
     }

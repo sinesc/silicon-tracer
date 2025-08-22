@@ -41,7 +41,7 @@
     --component-delete-duration: 0.25s;
     --component-body-color: #444;
     --component-border-color: #222;
-    --component-body-hover-color: #666;
+    --component-body-hover-color: #555;
     --component-border-hover-color: #333;
     --component-preview-color: #444;
     --component-port-body-color: #444;
@@ -441,17 +441,31 @@ div.component[data-port-net-state="0"] > div.component-inner:has(+div[data-compo
 div.component[data-port-net-state="1"] > div.component-inner:has(+div[data-component-port-color="9"])  {
     outline-color: var(--wire-color9-high);
 }
-div.component[data-port-state="0"] {
-    outline: 3px solid #aaa;
-    outline-offset: -4px;
-    border-radius: 5px;
+/* meh, ugly, lot's of css, overall garbage */
+div.component[data-port-state="0"][data-component-rotation="0"] {
+    box-shadow: inset 0px -4px rgb(92, 92, 92);
 }
-div.component[data-port-state="1"] {
-    outline: 3px solid #fff;
-    outline-offset: -4px;
-    border-radius: 5px;
+div.component[data-port-state="0"][data-component-rotation="1"] {
+    box-shadow: inset 4px 0px rgb(92, 92, 92);;
 }
-
+div.component[data-port-state="0"][data-component-rotation="2"] {
+    box-shadow: inset 0px 4px rgb(92, 92, 92);;
+}
+div.component[data-port-state="0"][data-component-rotation="3"] {
+    box-shadow: inset -4px 0px rgb(92, 92, 92);;
+}
+div.component[data-port-state="1"][data-component-rotation="0"] {
+    box-shadow: inset 0px -4px rgb(255, 246, 124);
+}
+div.component[data-port-state="1"][data-component-rotation="1"] {
+    box-shadow: inset 4px 0px rgb(255, 246, 124);
+}
+div.component[data-port-state="1"][data-component-rotation="2"] {
+    box-shadow: inset 0px 4px rgb(255, 246, 124);
+}
+div.component[data-port-state="1"][data-component-rotation="3"] {
+    box-shadow: inset -4px 0px rgb(255, 246, 124);
+}
 
 /*
  * Connection
