@@ -5,18 +5,23 @@ let mainGrid = new Grid(document.querySelector('#content'));
 let toolbar = new Toolbar(mainGrid, document.querySelector('#toolbar'));
 
 // Add file operations to toolbar
-toolbar.createActionButton('New', 'Clear circuit', async () => {
+let [ fileMenu, fileMenuState ] = toolbar.createMenuButton('File', 'File menu. <i>LMB</i> Open menu.');
+
+fileMenu.createActionButton('New', 'Clear circuit', async () => {
+    fileMenuState(false);
     mainGrid.clear();
     mainGrid.render();
 });
-toolbar.createActionButton('Open...', 'Load circuit from disk', async () => {
+fileMenu.createActionButton('Open...', 'Load circuit from disk', async () => {
+    fileMenuState(false);
     let [fileHandle] = await window.showOpenFilePicker();
     const file = await fileHandle.getFile();
     const content = await file.text();
     mainGrid.unserialize(JSON.parse(content));
     mainGrid.render();
 });
-toolbar.createActionButton('Save as...', 'Save circuit to disk', async () => {
+fileMenu.createActionButton('Save as...', 'Save circuit to disk', async () => {
+    fileMenuState(false);
     const options = {
         types: [
             {
@@ -32,11 +37,6 @@ toolbar.createActionButton('Save as...', 'Save circuit to disk', async () => {
     await writable.write(JSON.stringify(mainGrid.serialize()));
     await writable.close();
 });
-
-
-let [ fileToolbar, fileMenuState ] = toolbar.createMenuButton('File', 'Opens the file menu.');
-fileToolbar.createActionButton('Test button', 'Test button hover', () => { console.log('first'); fileMenuState(false); });
-fileToolbar.createToggleButton('Test button2', 'Test button2 hover', false, (state) => { console.log('second', state); fileMenuState(false); });
 
 // Add standard components to toolbar
 toolbar.createComponentButton('Port ·', 'Component IO pin. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => new Port(grid, x, y, 'right'));
