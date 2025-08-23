@@ -4,12 +4,19 @@ class Toolbar {
 
     #element;
     #grid;
+    #menuStates;
 
     constructor(grid, parent) {
         this.#grid = grid;
+        this.#menuStates = new WeakUnorderedSet();
         this.#element = document.createElement('div');
         this.#element.classList.add('toolbar');
         parent.appendChild(this.#element);
+    }
+
+    // Removes all buttons from the toolbar.
+    clear() {
+        this.#element.textContent = '';
     }
 
     // Creates a button that can be dragged onto the grid.
@@ -59,6 +66,13 @@ class Toolbar {
         subToolbarContainer.classList.add('toolbar-menu-container');
         let [ button, stateFn ] = this.#createToggleButton(label, hoverMessage, false, (open) => {
             if (open) {
+                // close other menus
+                this.#menuStates.forEach((otherstateFn) => {
+                    if (otherstateFn !== stateFn) {
+                        otherstateFn(false);
+                    }
+                });
+                // close menu on click outside of menu
                 document.onclick = (e) => {
                     e.preventDefault();
                     e.stopPropagation();
@@ -69,6 +83,7 @@ class Toolbar {
                 document.onclick = null;
             }
         });
+        this.#menuStates.add(stateFn);
         button.classList.add('toolbar-menu-button');
         button.appendChild(subToolbarContainer);
         this.#element.appendChild(button);

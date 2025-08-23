@@ -39,3 +39,32 @@ class Point {
         this.y = y;
     }
 }
+
+class WeakUnorderedSet {
+    #items;
+    constructor(array = []) {
+        this.#items = array.map((i) => new WeakRef(i));
+    }
+    clear() {
+        this.#items = [];
+    }
+    add(item) {
+        this.#items.push(new WeakRef(item));
+    }
+    forEach(fn) {
+        for (let i = 0; i < this.#items.length; ++i) {
+            let item = this.#items[i].deref();
+            if (item) {
+                fn(item)
+            } else {
+                // remove from array by replacing with last entry. afterwards next iteration has to repeat this index.
+                if (i < this.#items.length - 1) {
+                    this.#items[i] = this.#items.pop();
+                    --i;
+                } else {
+                    this.#items.pop()
+                }
+            }
+        }
+    }
+}
