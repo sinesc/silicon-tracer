@@ -43,6 +43,7 @@ class Gate extends Component {
         const name = type.toUpperFirst();
         super(grid, x, y, { 'left': left, 'right': right }, name);
 
+        this.element.classList.add('gate');
         this.inputs = inputs;
         this.output = output;
         this.type = type;

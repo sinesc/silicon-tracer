@@ -8,6 +8,7 @@ class Port extends Component {
 
     constructor(grid, x, y, side, name = 'Port') {
         super(grid, x, y, { 'top': [ '' ], 'left': [ null, null ] }, name);
+        this.element.classList.add('port');
         this.rotation = Component.SIDES.indexOf(side);
         this.updateDimensions();
         this.#side = side;
