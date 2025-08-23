@@ -133,18 +133,14 @@ html {
 }
 #header h1[data-c="2"] {
     text-shadow:
-        -1px -1px 0 #535353bb,
-        -2px -2px 0 #464646aa,
-        -3px -3px 0 #3f3f3f99,
-        -4px -4px 0 #35353588,
-        -5px -5px 0 #2c2c2c77,
-        -6px -6px 1px rgba(127,127,255,.1),
-        0 -0 5px rgba(127,127,255,.2),
-        -1px -1px 3px rgba(127,127,255,.6),
-        -3px -3px 5px rgba(127,127,255,.4),
-        -5px -5px 10px rgba(127,127,255,.5),
-        -10px -10px 10px rgba(127,127,255,.4),
-        -2px -20px 20px rgba(127,127,255,.3);
+        -1px -1px 0 hsla(0, 0%, 75%, 0.7),
+        -2px -2px 0 hsla(0, 0%, 70%, 0.6),
+        -3px -3px 0 hsla(0, 0%, 65%, 0.5),
+        -4px -4px 0 hsla(0, 0%, 60%, 0.4),
+        -5px -5px 0 hsla(0, 0%, 55%, 0.3),
+        -5px -5px 20px rgba(127,127,255,1.0),
+        0px 0px 15px rgba(127,127,255,0.6),
+        -5px -5px 3px rgba(127,127,255,0.9);
 }
 #header h1[data-c="3"] {
     color: rgba(255, 255, 255, 0.75);
@@ -316,7 +312,7 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
 }
 
 /*
- * Component
+ * Base component
  */
 .component {
     z-index: 11;
@@ -523,6 +519,26 @@ div.component.port[data-port-state="1"][data-component-rotation="2"] {
 }
 div.component.port[data-port-state="1"][data-component-rotation="3"] {
     box-shadow: inset -4px 0px rgb(255, 246, 124);
+}
+
+/*
+ * Gates
+ */
+div.component.gate[data-component-rotation="0"] > div.component-inner {
+    border-top-right-radius: 50px;
+    border-bottom-right-radius: 50px;
+}
+div.component.gate[data-component-rotation="1"] > div.component-inner {
+    border-bottom-right-radius: 50px;
+    border-bottom-left-radius: 50px;
+}
+div.component.gate[data-component-rotation="2"] > div.component-inner {
+    border-bottom-left-radius: 50px;
+    border-top-left-radius: 50px;
+}
+div.component.gate[data-component-rotation="3"] > div.component-inner {
+    border-top-left-radius: 50px;
+    border-top-right-radius: 50px;
 }
 
 /*
