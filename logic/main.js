@@ -124,7 +124,7 @@ function compileSimulation(grid) {
             let portInfo = [];
             for (let { offset, meta } of mainGrid.sim.nets) {
                 for (let port of meta) {
-                    portInfo.push('// port ' + port + ' @ mem[' + offset + ']');
+                    portInfo.push('// port ' + port + ' mem[' + offset + ']');
                 }
             }
             console.log(mainGrid.sim.code() + portInfo.join("\n"));
@@ -158,5 +158,5 @@ function compileSimulation(grid) {
     let logo = document.querySelector('#header h1');
     logo.onmouseenter = () => mainGrid.setMessage('Cheesy 80s logo. It is ticklish.');
     logo.onmouseleave = () => mainGrid.clearMessage();
-    logo.onclick = () => logo.setAttribute('data-c', ((parseInt(logo.getAttribute('data-c') ?? 0) + 1) % 5));
+    logo.onclick = () => logo.setAttribute('data-c', ((parseInt(logo.getAttribute('data-c') ?? 0) + 1) % 6));
 }

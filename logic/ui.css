@@ -13,9 +13,11 @@
     --wire-color8: rgb(76, 100, 136);
     --wire-color9: rgb(76, 136, 133);
 
-    --wire-high-factor: 1.2;
+    --wire-high-factor: 1.15;
     --wire-low-factor: 0.6;
     --wire-null-factor: 0.4;
+    --wire-null-alpha: 0.75;
+    --wire-high-alpha: 0.75;
 
     --wire-color0-high: oklch(from var(--wire-color0) calc(l * var(--wire-high-factor)) c h);
     --wire-color1-high: oklch(from var(--wire-color1) calc(l * var(--wire-high-factor)) c h);
@@ -28,6 +30,17 @@
     --wire-color8-high: oklch(from var(--wire-color8) calc(l * var(--wire-high-factor)) c h);
     --wire-color9-high: oklch(from var(--wire-color9) calc(l * var(--wire-high-factor)) c h);
 
+    --wire-color0-high-alpha: oklch(from var(--wire-color0) calc(l * var(--wire-high-factor)) c h / var(--wire-high-alpha));
+    --wire-color1-high-alpha: oklch(from var(--wire-color1) calc(l * var(--wire-high-factor)) c h / var(--wire-high-alpha));
+    --wire-color2-high-alpha: oklch(from var(--wire-color2) calc(l * var(--wire-high-factor)) c h / var(--wire-high-alpha));
+    --wire-color3-high-alpha: oklch(from var(--wire-color3) calc(l * var(--wire-high-factor)) c h / var(--wire-high-alpha));
+    --wire-color4-high-alpha: oklch(from var(--wire-color4) calc(l * var(--wire-high-factor)) c h / var(--wire-high-alpha));
+    --wire-color5-high-alpha: oklch(from var(--wire-color5) calc(l * var(--wire-high-factor)) c h / var(--wire-high-alpha));
+    --wire-color6-high-alpha: oklch(from var(--wire-color6) calc(l * var(--wire-high-factor)) c h / var(--wire-high-alpha));
+    --wire-color7-high-alpha: oklch(from var(--wire-color7) calc(l * var(--wire-high-factor)) c h / var(--wire-high-alpha));
+    --wire-color8-high-alpha: oklch(from var(--wire-color8) calc(l * var(--wire-high-factor)) c h / var(--wire-high-alpha));
+    --wire-color9-high-alpha: oklch(from var(--wire-color9) calc(l * var(--wire-high-factor)) c h / var(--wire-high-alpha));
+
     --wire-color0-low: oklch(from var(--wire-color0) calc(l * var(--wire-low-factor)) calc(c * var(--wire-low-factor)) h);
     --wire-color1-low: oklch(from var(--wire-color1) calc(l * var(--wire-low-factor)) calc(c * var(--wire-low-factor)) h);
     --wire-color2-low: oklch(from var(--wire-color2) calc(l * var(--wire-low-factor)) calc(c * var(--wire-low-factor)) h);
@@ -39,16 +52,16 @@
     --wire-color8-low: oklch(from var(--wire-color8) calc(l * var(--wire-low-factor)) calc(c * var(--wire-low-factor)) h);
     --wire-color9-low: oklch(from var(--wire-color9) calc(l * var(--wire-low-factor)) calc(c * var(--wire-low-factor)) h);
 
-    --wire-color0-null: oklch(from var(--wire-color0) calc(l * var(--wire-low-factor)) calc(c * var(--wire-null-factor)) h);
-    --wire-color1-null: oklch(from var(--wire-color1) calc(l * var(--wire-low-factor)) calc(c * var(--wire-null-factor)) h);
-    --wire-color2-null: oklch(from var(--wire-color2) calc(l * var(--wire-low-factor)) calc(c * var(--wire-null-factor)) h);
-    --wire-color3-null: oklch(from var(--wire-color3) calc(l * var(--wire-low-factor)) calc(c * var(--wire-null-factor)) h);
-    --wire-color4-null: oklch(from var(--wire-color4) calc(l * var(--wire-low-factor)) calc(c * var(--wire-null-factor)) h);
-    --wire-color5-null: oklch(from var(--wire-color5) calc(l * var(--wire-low-factor)) calc(c * var(--wire-null-factor)) h);
-    --wire-color6-null: oklch(from var(--wire-color6) calc(l * var(--wire-low-factor)) calc(c * var(--wire-null-factor)) h);
-    --wire-color7-null: oklch(from var(--wire-color7) calc(l * var(--wire-low-factor)) calc(c * var(--wire-null-factor)) h);
-    --wire-color8-null: oklch(from var(--wire-color8) calc(l * var(--wire-low-factor)) calc(c * var(--wire-null-factor)) h);
-    --wire-color9-null: oklch(from var(--wire-color9) calc(l * var(--wire-low-factor)) calc(c * var(--wire-null-factor)) h);
+    --wire-color0-null: oklch(from var(--wire-color0) calc(l * var(--wire-low-factor)) calc(c * var(--wire-null-factor)) h / var(--wire-null-alpha));
+    --wire-color1-null: oklch(from var(--wire-color1) calc(l * var(--wire-low-factor)) calc(c * var(--wire-null-factor)) h / var(--wire-null-alpha));
+    --wire-color2-null: oklch(from var(--wire-color2) calc(l * var(--wire-low-factor)) calc(c * var(--wire-null-factor)) h / var(--wire-null-alpha));
+    --wire-color3-null: oklch(from var(--wire-color3) calc(l * var(--wire-low-factor)) calc(c * var(--wire-null-factor)) h / var(--wire-null-alpha));
+    --wire-color4-null: oklch(from var(--wire-color4) calc(l * var(--wire-low-factor)) calc(c * var(--wire-null-factor)) h / var(--wire-null-alpha));
+    --wire-color5-null: oklch(from var(--wire-color5) calc(l * var(--wire-low-factor)) calc(c * var(--wire-null-factor)) h / var(--wire-null-alpha));
+    --wire-color6-null: oklch(from var(--wire-color6) calc(l * var(--wire-low-factor)) calc(c * var(--wire-null-factor)) h / var(--wire-null-alpha));
+    --wire-color7-null: oklch(from var(--wire-color7) calc(l * var(--wire-low-factor)) calc(c * var(--wire-null-factor)) h / var(--wire-null-alpha));
+    --wire-color8-null: oklch(from var(--wire-color8) calc(l * var(--wire-low-factor)) calc(c * var(--wire-null-factor)) h / var(--wire-null-alpha));
+    --wire-color9-null: oklch(from var(--wire-color9) calc(l * var(--wire-low-factor)) calc(c * var(--wire-null-factor)) h / var(--wire-null-alpha));
 
     --component-rotate-duration: 0.15s;
     --component-color-transition-duration: 0.15s;
@@ -117,19 +130,26 @@ html {
         rgba(255, 72, 0, 0.712) 2px 2px 10px;
 }
 #header h1[data-c="2"] {
-    color: rgba(255, 255, 255, 0.75);
     text-shadow:
-        0 -1px 4px #FFF,
-        0 -2px 10px #ff0,
-        0 -10px 20px #ff8000,
-        0 -18px 40px #F00;
+        -1px -1px 0 #535353bb,
+        -2px -2px 0 #464646aa,
+        -3px -3px 0 #3f3f3f99,
+        -4px -4px 0 #35353588,
+        -5px -5px 0 #2c2c2c77,
+        -6px -6px 1px rgba(127,127,255,.1),
+        0 -0 5px rgba(127,127,255,.2),
+        -1px -1px 3px rgba(127,127,255,.6),
+        -3px -3px 5px rgba(127,127,255,.4),
+        -5px -5px 10px rgba(127,127,255,.5),
+        -10px -10px 10px rgba(127,127,255,.4),
+        -2px -20px 20px rgba(127,127,255,.3);
 }
 #header h1[data-c="3"] {
     color: rgba(255, 255, 255, 0.75);
     transform: skew(15deg, 0deg);
     text-shadow:
-        0 -4px 4px #FFF,
-        0 -8px 10px rgb(118, 250, 243),
+        0 -2px 4px #FFF,
+        0 -4px 10px rgb(118, 250, 243),
         0 0px 20px #2ac3ff,
         0 8px 40px rgb(0, 89, 255);
 }
@@ -139,7 +159,15 @@ html {
         1px 1px 3px #ddf,
         -5px -5px 10px #00f;
     transform: none;
-    text-decoration-color: #00f;
+    text-decoration-color: rgba(0, 0, 255, 0.63);
+}
+#header h1[data-c="5"] {
+    color: rgba(255, 255, 255, 0.75);
+    text-shadow:
+        0 -1px 4px #FFF,
+        0 -2px 10px #ff0,
+        0 -10px 20px #ff8000,
+        0 -18px 40px #F00;
 }
 #toolbar {
     display: inline-block;
@@ -549,139 +577,49 @@ div.component[data-port-state="1"][data-component-rotation="3"] {
 }
 
 /*
- * net colors
+ * Net colors
  */
 /* connection colors when not simulating */
-div[data-net-color="0"][data-net-state=""] {
-    background-color: var(--wire-color0);
-}
-div[data-net-color="1"][data-net-state=""] {
-    background-color: var(--wire-color1);
-}
-div[data-net-color="2"][data-net-state=""] {
-    background-color: var(--wire-color2);
-}
-div[data-net-color="3"][data-net-state=""] {
-    background-color: var(--wire-color3);
-}
-div[data-net-color="4"][data-net-state=""] {
-    background-color: var(--wire-color4);
-}
-div[data-net-color="5"][data-net-state=""] {
-    background-color: var(--wire-color5);
-}
-div[data-net-color="6"][data-net-state=""] {
-    background-color: var(--wire-color6);
-}
-div[data-net-color="7"][data-net-state=""] {
-    background-color: var(--wire-color7);
-}
-div[data-net-color="8"][data-net-state=""] {
-    background-color: var(--wire-color8);
-}
-div[data-net-color="9"][data-net-state=""] {
-    background-color: var(--wire-color9);
-}
+div[data-net-color="0"][data-net-state=""] { background-color: var(--wire-color0); }
+div[data-net-color="1"][data-net-state=""] { background-color: var(--wire-color1); }
+div[data-net-color="2"][data-net-state=""] { background-color: var(--wire-color2); }
+div[data-net-color="3"][data-net-state=""] { background-color: var(--wire-color3); }
+div[data-net-color="4"][data-net-state=""] { background-color: var(--wire-color4); }
+div[data-net-color="5"][data-net-state=""] { background-color: var(--wire-color5); }
+div[data-net-color="6"][data-net-state=""] { background-color: var(--wire-color6); }
+div[data-net-color="7"][data-net-state=""] { background-color: var(--wire-color7); }
+div[data-net-color="8"][data-net-state=""] { background-color: var(--wire-color8); }
+div[data-net-color="9"][data-net-state=""] { background-color: var(--wire-color9); }
 /* connection colors null */
-div[data-net-color="0"][data-net-state="null"] {
-    background-color: var(--wire-color0-null);
-    opacity: 0.75;
-}
-div[data-net-color="1"][data-net-state="null"] {
-    background-color: var(--wire-color1-null);
-    opacity: 0.75;
-}
-div[data-net-color="2"][data-net-state="null"] {
-    background-color: var(--wire-color2-null);
-    opacity: 0.75;
-}
-div[data-net-color="3"][data-net-state="null"] {
-    background-color: var(--wire-color3-null);
-    opacity: 0.75;
-}
-div[data-net-color="4"][data-net-state="null"] {
-    background-color: var(--wire-color4-null);
-    opacity: 0.75;
-}
-div[data-net-color="5"][data-net-state="null"] {
-    background-color: var(--wire-color5-null);
-    opacity: 0.75;
-}
-div[data-net-color="6"][data-net-state="null"] {
-    background-color: var(--wire-color6-null);
-    opacity: 0.75;
-}
-div[data-net-color="7"][data-net-state="null"] {
-    background-color: var(--wire-color7-null);
-    opacity: 0.75;
-}
-div[data-net-color="8"][data-net-state="null"] {
-    background-color: var(--wire-color8-null);
-    opacity: 0.75;
-}
-div[data-net-color="9"][data-net-state="null"] {
-    background-color: var(--wire-color9-null);
-    opacity: 0.75;
-}
+div[data-net-color="0"][data-net-state="null"] { background-color: var(--wire-color0-null); }
+div[data-net-color="1"][data-net-state="null"] { background-color: var(--wire-color1-null); }
+div[data-net-color="2"][data-net-state="null"] { background-color: var(--wire-color2-null); }
+div[data-net-color="3"][data-net-state="null"] { background-color: var(--wire-color3-null); }
+div[data-net-color="4"][data-net-state="null"] { background-color: var(--wire-color4-null); }
+div[data-net-color="5"][data-net-state="null"] { background-color: var(--wire-color5-null); }
+div[data-net-color="6"][data-net-state="null"] { background-color: var(--wire-color6-null); }
+div[data-net-color="7"][data-net-state="null"] { background-color: var(--wire-color7-null); }
+div[data-net-color="8"][data-net-state="null"] { background-color: var(--wire-color8-null); }
+div[data-net-color="9"][data-net-state="null"] { background-color: var(--wire-color9-null); }
 /* connection colors low */
-div[data-net-color="0"][data-net-state="0"] {
-    background-color: var(--wire-color0-low);
-}
-div[data-net-color="1"][data-net-state="0"] {
-    background-color: var(--wire-color1-low);
-}
-div[data-net-color="2"][data-net-state="0"] {
-    background-color: var(--wire-color2-low);
-}
-div[data-net-color="3"][data-net-state="0"] {
-    background-color: var(--wire-color3-low);
-}
-div[data-net-color="4"][data-net-state="0"] {
-    background-color: var(--wire-color4-low);
-}
-div[data-net-color="5"][data-net-state="0"] {
-    background-color: var(--wire-color5-low);
-}
-div[data-net-color="6"][data-net-state="0"] {
-    background-color: var(--wire-color6-low);
-}
-div[data-net-color="7"][data-net-state="0"] {
-    background-color: var(--wire-color7-low);
-}
-div[data-net-color="8"][data-net-state="0"] {
-    background-color: var(--wire-color8-low);
-}
-div[data-net-color="9"][data-net-state="0"] {
-    background-color: var(--wire-color9-low);
-}
+div[data-net-color="0"][data-net-state="0"] { background-color: var(--wire-color0-low); }
+div[data-net-color="1"][data-net-state="0"] { background-color: var(--wire-color1-low); }
+div[data-net-color="2"][data-net-state="0"] { background-color: var(--wire-color2-low); }
+div[data-net-color="3"][data-net-state="0"] { background-color: var(--wire-color3-low); }
+div[data-net-color="4"][data-net-state="0"] { background-color: var(--wire-color4-low); }
+div[data-net-color="5"][data-net-state="0"] { background-color: var(--wire-color5-low); }
+div[data-net-color="6"][data-net-state="0"] { background-color: var(--wire-color6-low); }
+div[data-net-color="7"][data-net-state="0"] { background-color: var(--wire-color7-low); }
+div[data-net-color="8"][data-net-state="0"] { background-color: var(--wire-color8-low); }
+div[data-net-color="9"][data-net-state="0"] { background-color: var(--wire-color9-low); }
 /* connection colors high */
-div[data-net-color="0"][data-net-state="1"] {
-    background-color: var(--wire-color0-high);
-}
-div[data-net-color="1"][data-net-state="1"] {
-    background-color: var(--wire-color1-high);
-}
-div[data-net-color="2"][data-net-state="1"] {
-    background-color: var(--wire-color2-high);
-}
-div[data-net-color="3"][data-net-state="1"] {
-    background-color: var(--wire-color3-high);
-}
-div[data-net-color="4"][data-net-state="1"] {
-    background-color: var(--wire-color4-high);
-}
-div[data-net-color="5"][data-net-state="1"] {
-    background-color: var(--wire-color5-high);
-}
-div[data-net-color="6"][data-net-state="1"] {
-    background-color: var(--wire-color6-high);
-}
-div[data-net-color="7"][data-net-state="1"] {
-    background-color: var(--wire-color7-high);
-}
-div[data-net-color="8"][data-net-state="1"] {
-    background-color: var(--wire-color8-high);
-}
-div[data-net-color="9"][data-net-state="1"] {
-    background-color: var(--wire-color9-high);
-}
+div[data-net-color="0"][data-net-state="1"] { background-color: var(--wire-color0-high); box-shadow: 1px 1px 3px var(--wire-color0-high-alpha), -1px -1px 3px var(--wire-color0-high-alpha); }
+div[data-net-color="1"][data-net-state="1"] { background-color: var(--wire-color1-high); box-shadow: 1px 1px 3px var(--wire-color1-high-alpha), -1px -1px 3px var(--wire-color1-high-alpha); }
+div[data-net-color="2"][data-net-state="1"] { background-color: var(--wire-color2-high); box-shadow: 1px 1px 3px var(--wire-color2-high-alpha), -1px -1px 3px var(--wire-color2-high-alpha); }
+div[data-net-color="3"][data-net-state="1"] { background-color: var(--wire-color3-high); box-shadow: 1px 1px 3px var(--wire-color3-high-alpha), -1px -1px 3px var(--wire-color3-high-alpha); }
+div[data-net-color="4"][data-net-state="1"] { background-color: var(--wire-color4-high); box-shadow: 1px 1px 3px var(--wire-color4-high-alpha), -1px -1px 3px var(--wire-color4-high-alpha); }
+div[data-net-color="5"][data-net-state="1"] { background-color: var(--wire-color5-high); box-shadow: 1px 1px 3px var(--wire-color5-high-alpha), -1px -1px 3px var(--wire-color5-high-alpha); }
+div[data-net-color="6"][data-net-state="1"] { background-color: var(--wire-color6-high); box-shadow: 1px 1px 3px var(--wire-color6-high-alpha), -1px -1px 3px var(--wire-color6-high-alpha); }
+div[data-net-color="7"][data-net-state="1"] { background-color: var(--wire-color7-high); box-shadow: 1px 1px 3px var(--wire-color7-high-alpha), -1px -1px 3px var(--wire-color7-high-alpha); }
+div[data-net-color="8"][data-net-state="1"] { background-color: var(--wire-color8-high); box-shadow: 1px 1px 3px var(--wire-color8-high-alpha), -1px -1px 3px var(--wire-color8-high-alpha); }
+div[data-net-color="9"][data-net-state="1"] { background-color: var(--wire-color9-high); box-shadow: 1px 1px 3px var(--wire-color9-high-alpha), -1px -1px 3px var(--wire-color9-high-alpha); }
