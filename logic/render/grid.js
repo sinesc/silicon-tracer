@@ -236,6 +236,57 @@ class Grid {
         }
     }
 
+    // Compiles a simulation for the grid contents and returns it.
+    compileSimulation() {
+
+        let [ netList, componentMap ] = this.identifyNets();
+        let sim = new Simulation();
+
+        // declare gates from component map
+        for (let [ prefix, component ] of componentMap.entries()) {
+            if (component instanceof Gate) {
+                sim.gateDecl(component.type, component.inputs.map((i) => prefix + i), prefix + component.output);
+            }
+        }
+
+        // declare nets
+        let setPorts = [];
+        for (let net of netList.nets) {
+            // create new net from connected gate i/o-ports
+            let netPortList = net.ports.filter((p) => p[2] instanceof Port); // port-component, NOT a port on a component
+            let netId = sim.netDecl(net.ports.filter((p) => p[2] instanceof Gate).map((p) => p[1]), netPortList.map((p) => p[1]));
+            // link port-components on the net to the ui
+            for (let [ , , component ] of netPortList) {
+                // store netId on port-component to allow it to fetch the current net state
+                component.netId = netId;
+                // if the port enforces a state remember it to set after compilation
+                if (component.state !== null) {
+                    setPorts.push([ netId, component.state]);
+                }
+            }
+            // link ports on components
+            for (let [ , name, component ] of net.ports) {
+                let portName = name.split(':')[1]; // TODO: getting ports by name is slow, should also store some kind of id in net.ports
+                let port = component.portByName(portName);
+                port.netId = netId;
+            }
+            // link wires
+            for (let [ , , component ] of net.wires) {
+                component.netId = netId;
+            }
+        }
+
+        // compile
+        sim.compile();
+
+        // set port states
+        for (let [ netId, state ] of setPorts) {
+            sim.setNet(netId, state);
+        }
+
+        return sim;
+    }
+
     // Detaches all items from the simulation.
     detachSimulation() {
         for (let item of this.#items) {

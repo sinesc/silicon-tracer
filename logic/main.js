@@ -3,9 +3,10 @@
 // Create grid and toolbar
 let mainGrid = new Grid(document.querySelector('#content'));
 let toolbar = new Toolbar(mainGrid, document.querySelector('#toolbar'));
+let circuits = new Map(Object.entries({ 'unnamed circuit': [] }));
 
 // Add file operations to toolbar
-let [ fileMenu, fileMenuState ] = toolbar.createMenuButton('File', 'File menu. <i>LMB</i> Open menu.');
+let [ fileMenu, fileMenuState ] = toolbar.createMenuButton('File', 'File operations menu. <i>LMB</i> Open menu.');
 
 fileMenu.createActionButton('New', 'Clear circuit', async () => {
     fileMenuState(false);
@@ -38,6 +39,15 @@ fileMenu.createActionButton('Save as...', 'Save circuit to disk', async () => {
     await writable.close();
 });
 
+// Circuit selection menu
+
+let [ circuitMenu, circuitMenuState ] = toolbar.createMenuButton('Circuit', 'Circuit management menu. <i>LMB</i> Open menu.');
+circuitMenu.createActionButton('Create...', 'Create a new circuit.', () => alert('TODO'));
+
+for (let [ label ] of circuits) {
+    circuitMenu.createActionButton(label, 'Switch grid to circuit "' + label + '"', () => alert('TODO'));
+}
+
 // Add standard components to toolbar
 toolbar.createComponentButton('Port ·', 'Component IO pin. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => new Port(grid, x, y, 'right'));
 toolbar.createComponentButton('· Port', 'Component IO pin. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => new Port(grid, x, y, 'left'));
@@ -48,57 +58,6 @@ for (let [ gateType, { joinOp } ] of Object.entries(Simulation.GATE_MAP)) {
         let numInputs = 2; // TODO: configurable somewhere
         return new Gate(grid, x, y, gateType, joinOp !== null ? numInputs : 1);
     });
-}
-
-// Simulation handling // TODO: where to put this better?
-function compileSimulation(grid) {
-
-    let [ netList, componentMap ] = grid.identifyNets();
-    let sim = new Simulation();
-
-    // declare gates from component map
-    for (let [ prefix, component ] of componentMap.entries()) {
-        if (component instanceof Gate) {
-            sim.gateDecl(component.type, component.inputs.map((i) => prefix + i), prefix + component.output);
-        }
-    }
-
-    // declare nets
-    let setPorts = [];
-    for (let net of netList.nets) {
-        // create new net from connected gate i/o-ports
-        let netPortList = net.ports.filter((p) => p[2] instanceof Port); // port-component, NOT a port on a component
-        let netId = sim.netDecl(net.ports.filter((p) => p[2] instanceof Gate).map((p) => p[1]), netPortList.map((p) => p[1]));
-        // link port-components on the net to the ui
-        for (let [ , , component ] of netPortList) {
-            // store netId on port-component to allow it to fetch the current net state
-            component.netId = netId;
-            // if the port enforces a state remember it to set after compilation
-            if (component.state !== null) {
-                setPorts.push([ netId, component.state]);
-            }
-        }
-        // link ports on components
-        for (let [ , name, component ] of net.ports) {
-            let portName = name.split(':')[1]; // TODO: getting ports by name is slow, should also store some kind of id in net.ports
-            let port = component.portByName(portName);
-            port.netId = netId;
-        }
-        // link wires
-        for (let [ , , component ] of net.wires) {
-            component.netId = netId;
-        }
-    }
-
-    // compile
-    sim.compile();
-
-    // set port states
-    for (let [ netId, state ] of setPorts) {
-        sim.setNet(netId, state);
-    }
-
-    return sim;
 }
 
 // Continuous simulation toggle
@@ -114,7 +73,7 @@ function compileSimulation(grid) {
     setInterval(() => {
         if (autoCompile()) {
             if (!mainGrid.sim) {
-                mainGrid.sim = compileSimulation(mainGrid);
+                mainGrid.sim = mainGrid.compileSimulation(mainGrid);
             }
             for (let i = 0; i < 10; ++i) {  // TODO: bleh temp code, look into webworkers
                 mainGrid.sim.simulate();
