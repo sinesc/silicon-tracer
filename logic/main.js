@@ -34,6 +34,10 @@ toolbar.createActionButton('Save as...', 'Save circuit to disk', async () => {
 });
 
 
+let [ fileToolbar, fileMenuState ] = toolbar.createMenuButton('File', 'Opens the file menu.');
+fileToolbar.createActionButton('Test button', 'Test button hover', () => { console.log('first'); fileMenuState(false); });
+fileToolbar.createToggleButton('Test button2', 'Test button2 hover', false, (state) => { console.log('second', state); fileMenuState(false); });
+
 // Add standard components to toolbar
 toolbar.createComponentButton('Port ·', 'Component IO pin. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => new Port(grid, x, y, 'right'));
 toolbar.createComponentButton('· Port', 'Component IO pin. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => new Port(grid, x, y, 'left'));

@@ -47,22 +47,57 @@ class Toolbar {
 
     // Creates a button that can be toggled on or off. Returns a function that sets/returns the current button state.
     createToggleButton(label, hoverMessage, defaultState, action) {
+        let [ button, stateFn ] = this.#createToggleButton(label, hoverMessage, defaultState, action);
+        this.#element.appendChild(button);
+        return stateFn;
+    }
+
+    // Creates a menu-button to open/close a sub-toolbar acting as a menu. Returns a new toolbar
+    // as well as a state function to get/set the menu state.
+    createMenuButton(label, hoverMessage) {
+        let subToolbarContainer = document.createElement('div');
+        subToolbarContainer.classList.add('toolbar-menu-container');
+        let [ button, stateFn ] = this.#createToggleButton(label, hoverMessage, false, (open) => {
+            if (open) {
+                document.onclick = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    document.onclick = null;
+                    stateFn(false);
+                }
+            } else {
+                document.onclick = null;
+            }
+        });
+        button.classList.add('toolbar-menu-button');
+        button.appendChild(subToolbarContainer);
+        this.#element.appendChild(button);
+        let subToolbar = new Toolbar(this.#grid, subToolbarContainer);
+        return [ subToolbar, stateFn ];
+    }
+
+    // Creates a toggle button and returns the button element as well as a function that sets/returns the current button state.
+    #createToggleButton(label, hoverMessage, defaultState, action) {
         let button = document.createElement('div');
         button.innerHTML = label;
         let state = defaultState;
         button.classList.add('toolbar-button', 'toolbar-toggle-button', state ? 'toolbar-toggle-button-on' : 'toolbar-toggle-button-off');
+        let stateFn = (newState) => {
+            if (newState !== undefined) {
+                button.classList.remove(state ? 'toolbar-toggle-button-on' : 'toolbar-toggle-button-off');
+                state = newState;
+                button.classList.add(state ? 'toolbar-toggle-button-on' : 'toolbar-toggle-button-off');
+            }
+            return state;
+        };
         button.onclick= (e) => {
             e.preventDefault();
             e.stopPropagation();
-            button.classList.remove(state ? 'toolbar-toggle-button-on' : 'toolbar-toggle-button-off');
-            state = !state;
-            button.classList.add(state ? 'toolbar-toggle-button-on' : 'toolbar-toggle-button-off');
+            stateFn(!state);
             action(state);
         };
-        this.#element.appendChild(button);
         button.onmouseenter = () => this.#grid.setMessage(hoverMessage);
         button.onmouseleave = () => this.#grid.clearMessage();
-        return (newState) => newState !== undefined ? state = newState : state;
+        return [ button, stateFn ];
     }
-
 }
