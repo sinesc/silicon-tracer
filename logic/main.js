@@ -3,7 +3,8 @@
 // Create grid and toolbar
 let mainGrid = new Grid(document.querySelector('#content'));
 let toolbar = new Toolbar(mainGrid, document.querySelector('#toolbar'));
-let circuits = new Map(Object.entries({ 'unnamed circuit': [] }));
+let circuits = [ { label: 'unnamed circuit', data: [] } ];
+let currentCircuit = 0;
 
 // Add file operations to toolbar
 let [ fileMenu, fileMenuState ] = toolbar.createMenuButton('File', 'File operations menu. <i>LMB</i> Open menu.');
@@ -42,11 +43,37 @@ fileMenu.createActionButton('Save as...', 'Save circuit to disk', async () => {
 // Circuit selection menu
 
 let [ circuitMenu, circuitMenuState ] = toolbar.createMenuButton('Circuit', 'Circuit management menu. <i>LMB</i> Open menu.');
-circuitMenu.createActionButton('Create...', 'Create a new circuit.', () => alert('TODO'));
 
-for (let [ label ] of circuits) {
-    circuitMenu.createActionButton(label, 'Switch grid to circuit "' + label + '"', () => alert('TODO'));
+function selectCircuit(index) {
+    circuitMenuState(false);
+    circuits[currentCircuit].data = mainGrid.serialize();
+    mainGrid.clear();
+    mainGrid.unserialize(circuits[index].data);
+    currentCircuit = index;
+    mainGrid.render();
 }
+
+function createCircuit() {
+    circuitMenuState(false);
+    circuits[currentCircuit].data = mainGrid.serialize();
+    mainGrid.clear();
+    currentCircuit = circuits.length;
+    circuits.push({ label: 'new circuit #' + circuits.length, data: [] });
+    updateCircuitMenu();
+    mainGrid.render();
+}
+
+function updateCircuitMenu() {
+    circuitMenu.clear();
+    circuitMenu.createActionButton('Create...', 'Create a new circuit.', createCircuit);
+
+    for (let [ index, { label } ] of circuits.entries()) {
+        circuitMenu.createActionButton(label, 'Switch grid to circuit "' + label + '"', () => selectCircuit(index));
+    }
+}
+
+updateCircuitMenu();
+
 
 // Add standard components to toolbar
 toolbar.createComponentButton('Port ·', 'Component IO pin. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => new Port(grid, x, y, 'right'));
