@@ -2,8 +2,8 @@
 
 This is a logic circuit simulator that is intended to be useful for designing circuits with discrete logic components (e.g. 74 series chips) for
 hobby projects. It compiles circuits to branchless code and should eventually be able to simulate at MHz frequencies.
-It is planned to eventually have an EDA software export and the ability to automatically convert groups of gates to the
-appropriate chip-equivalent during export, ideally also translating gate logic to whichever representation results in the fewest logic chips,
+It is planned to have an EDA software export and the ability to automatically convert groups of gates to the
+appropriate chip-equivalent during export. Ideally it should also translate gate logic to whichever representation results in the fewest logic chips,
 e.g. `(a and b) or (c and d)`, which is one 74x08 and one 74x32, to `(a nand b) nand (c nand d)` which is just one 74x00.
 
 It is usable offline (open index.html in a browser) or [online](https://sinesc.github.io/silicon-tracer/).
@@ -12,7 +12,7 @@ It is usable offline (open index.html in a browser) or [online](https://sinesc.g
 
 Very early days. Successfully simulates but UI not yet practically useful and simulation tied to 10x frame rate. Cheesy neon colors non-optional.
 
-![Early UI showing an edge triggered d-flipflop](https://sinesc.github.io/silicon-tracer/neon.png).
+![Early UI showing an edge triggered d-flipflop](https://sinesc.github.io/silicon-tracer/neon.png)
 
 The pictured flipflop in code. Each gate IO port is represented by 1 byte with the bits encoding the state history (0/1/floating) of the port.
 Bits are shifted in on one side and read from the other to simulate gate delay.
