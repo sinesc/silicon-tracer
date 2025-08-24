@@ -3,23 +3,61 @@
 // Create grid and toolbar
 let mainGrid = new Grid(document.querySelector('#content'));
 let toolbar = new Toolbar(mainGrid, document.querySelector('#toolbar'));
-let circuits = [ { label: 'unnamed circuit', data: [] } ];
+
+let circuits = [ ];
 let currentCircuit = 0;
+
+function circuitName(name) {
+    return name ?? 'New circuit #' + (circuits.length + 1);
+};
+
+circuits.push({ label: circuitName(), data: [] });
 
 // Add file operations to toolbar
 let [ fileMenu, fileMenuState ] = toolbar.createMenuButton('File', 'File operations menu. <i>LMB</i> Open menu.');
 
-fileMenu.createActionButton('New', 'Clear circuit', async () => {
+function switchGridCircuit(newCircuit) {
+    if (currentCircuit !== -1) {
+        circuits[currentCircuit].data = mainGrid.serialize();
+    }
+    mainGrid.clear();
+    mainGrid.unserialize(circuits[newCircuit].data);
+    currentCircuit = newCircuit;
+}
+function pruneEmptyCircuits() {
+    for (let i = circuits.length - 1; i >= 0; --i) {
+        if (circuits[i].data.length === 0) {
+            circuits.splice(i, 1);
+            if (currentCircuit === i) {
+                currentCircuit = -1;
+            }
+        }
+    }
+}
+
+fileMenu.createActionButton('New', 'Close all open circuits', async () => {
     fileMenuState(false);
+    circuits = [ ];
+    circuits.push({ label: circuitName(), data: [] });
+    updateCircuitMenu();
     mainGrid.clear();
     mainGrid.render();
 });
 fileMenu.createActionButton('Open...', 'Load circuit from disk', async () => {
     fileMenuState(false);
-    let [fileHandle] = await window.showOpenFilePicker();
+    let [ fileHandle ] = await window.showOpenFilePicker();
     const file = await fileHandle.getFile();
-    const content = await file.text();
-    mainGrid.unserialize(JSON.parse(content));
+    const content = JSON.parse(await file.text());
+    pruneEmptyCircuits();
+    const newCircuitIndex = circuits.length;
+    if (typeof content.version === 'undefined') {
+        circuits.push({ label: circuitName(file.name.replace(/\.stc$/, '')), data: content });
+        switchGridCircuit(newCircuitIndex);
+    } else if (content.circuits.length > 0) {
+        circuits.push(...content.circuits);
+        switchGridCircuit(newCircuitIndex);
+    }
+    updateCircuitMenu();
     mainGrid.render();
 });
 fileMenu.createActionButton('Save as...', 'Save circuit to disk', async () => {
@@ -29,14 +67,15 @@ fileMenu.createActionButton('Save as...', 'Save circuit to disk', async () => {
             {
                 description: "Silicon Tracer circuit",
                 accept: {
-                    "text/plain": [".stc"],
+                    "text/plain": [ ".stc" ],
                 },
             },
         ],
     };
     const handle = await window.showSaveFilePicker(options);
     const writable = await handle.createWritable();
-    await writable.write(JSON.stringify(mainGrid.serialize()));
+    circuits[currentCircuit].data = mainGrid.serialize();
+    await writable.write(JSON.stringify({ version: 1, circuits }));
     await writable.close();
 });
 
@@ -58,7 +97,8 @@ function createCircuit() {
     circuits[currentCircuit].data = mainGrid.serialize();
     mainGrid.clear();
     currentCircuit = circuits.length;
-    circuits.push({ label: 'new circuit #' + circuits.length, data: [] });
+    const name = prompt('Circuit name', circuitName());
+    circuits.push({ label: name, data: [] });
     updateCircuitMenu();
     mainGrid.render();
 }
