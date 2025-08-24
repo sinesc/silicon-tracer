@@ -48,6 +48,7 @@ class Grid {
     // Serializes items on the grid for writing to disk.
     serialize() {
         let result = [];
+        result.push({ "_": { c: "Grid" }, zoom: this.zoom, offsetX: this.offsetX, offsetY: this.offsetY });
         for (let item of this.#items) {
             result.push(item.serialize());
         }
@@ -68,6 +69,8 @@ class Grid {
                 instance = new Gate(this, ...cargs);
             } else if (cname === 'Connection') {
                 instance = new Connection(this, ...cargs);
+            } else if (cname === 'Grid') {
+                instance = this;
             } else {
                 throw 'Invalid component type "' + cname + '"';
             }

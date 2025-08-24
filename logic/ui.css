@@ -3,7 +3,7 @@
 :root {
     --wire-color-lightness: 50%;
     --wire-color-chroma: 0.25;
-    --wire-high-factor: 1.15;
+    --wire-high-factor: 1.25;
     --wire-low-factor: 0.55;
     --wire-null-factor: 0.4;
     --wire-null-alpha: 0.75;
