@@ -3,7 +3,7 @@
 class Connection extends GridItem {
 
     static DEBUG_BOX = false;
-    static HOVER_MESSAGE = 'Connection. <i>LMB</i>: Branch off new connection. <i>0</i> - <i>9</i>: Set net color.';// TODO: <i>Shift+LMB</i>: Drag along the normal.
+    static HOVER_MESSAGE = 'Connection. <i>LMB</i>: Branch off new connection. <i>D</i> Delete, <i>0</i> - <i>9</i>: Set net color.';// TODO: <i>Shift+LMB</i>: Drag along the normal.
     static DRAWING_CONNECTION_MESSAGE = 'Drawing connection. <i>R</i>: Add point, continue drawing from here.';
     static THICKNESS = 3;
 
@@ -62,7 +62,10 @@ class Connection extends GridItem {
     // Removes the component from the grid.
     remove() {
         this.grid.removeVisual(this.#elementH);
+        this.#elementH = null;
         this.grid.removeVisual(this.#elementV);
+        this.#elementV = null;
+        super.remove();
     }
 
     // Detach wire from simulation.
@@ -105,6 +108,15 @@ class Connection extends GridItem {
         if (what.type === 'hover' && key >= '0' && key <= '9') {
             this.color = parseInt(key);
             this.render();
+        } else if (key === 'd' && what.type === 'hover') {
+            this.#elementH.classList.add('connection-delete-animation');
+            this.#elementV.classList.add('connection-delete-animation');
+            setTimeout(() => {
+                this.#elementH.classList.remove('connection-delete-animation');
+                this.#elementV.classList.remove('connection-delete-animation');
+                this.grid.invalidateNets();
+                this.remove();
+            }, 150);
         } else if (what.type === 'connect' && key === 'r') {
             // add connection point when pressing R while dragging a connection
             let x = this.#dragConnection.x + this.#dragConnection.width;
