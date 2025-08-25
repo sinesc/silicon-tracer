@@ -65,6 +65,17 @@ class Circuits {
         this.#grid.render();
     }
 
+    // Returns whether at least one circuit is non-empty.
+    haveNonEmpty() {
+        this.#saveGrid();
+        for (let circuit of this.#circuits) {
+            if (circuit.data.length > 1 || circuit.data.filter((i) => i['_']['c'] !== 'Grid').length > 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     // Returns a generated name if the given name is empty.
     #generateName(name) {
         return name || 'New circuit #' + (this.#circuits.length + 1);

@@ -19,13 +19,18 @@ fileMenu.createActionButton('New', 'Close all open circuits', async () => {
 });
 fileMenu.createActionButton('Open...', 'Load circuit from a file.', async () => {
     fileMenuState(false);
-    [ fileHandle ] = await File.openFile();
-    const file = await fileHandle.getFile();
+    let haveCircuits = circuits.haveNonEmpty();
+    let [ handle ] = await File.openFile();
+    const file = await handle.getFile();
     const content = JSON.parse(await file.text());
     circuits.unserialize(content, true, file.name);
+    if (!haveCircuits) {
+        // no other circuits loaded, make this the new file handle
+        fileHandle = handle;
+        saveButton.innerHTML = 'Save ' + file.name;
+        saveButton.classList.remove('save-disabled');
+    }
     updateCircuitMenu();
-    saveButton.innerHTML = 'Save ' + file.name;
-    saveButton.classList.remove('save-disabled');
 });
 let [ saveButton ] = fileMenu.createActionButton('Save', 'Save circuit to file.', async () => {
     fileMenuState(false);
@@ -41,10 +46,15 @@ let [ saveButton ] = fileMenu.createActionButton('Save', 'Save circuit to file.'
 });
 fileMenu.createActionButton('Save as...', 'Save circuit to a new file.', async () => {
     fileMenuState(false);
-    const handle = await File.saveAs();
+    let all = circuits.list();
+    const handle = await File.saveAs(all[0]);
     const writable = await handle.createWritable();
     await writable.write(JSON.stringify(circuits.serialize()));
     await writable.close();
+    // make this the new file handle
+    fileHandle = handle;
+    saveButton.innerHTML = 'Save ' + handle.name;
+    saveButton.classList.remove('save-disabled');
 });
 
 saveButton.classList.add('save-disabled');

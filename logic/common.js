@@ -92,11 +92,19 @@ class File {
         return false;
     }
 
-    static async saveAs() {
-        return await window.showSaveFilePicker(File.OPTIONS);
+    static async saveAs(suggestedName) {
+        let name = File.makeName(suggestedName);
+        return await window.showSaveFilePicker({
+            ...File.OPTIONS,
+            suggestedName: name,
+        });
     }
-    
+
     static async openFile() {
         return await window.showOpenFilePicker(File.OPTIONS);
+    }
+
+    static makeName(name) {
+        return (name || 'unnamed').replace(/\.stc$/, '').replace(/[^a-zA-Z0-9\-\_]/g, '-').replace(/^-+/, '') + '.stc';
     }
 }
