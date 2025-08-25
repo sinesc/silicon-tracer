@@ -9,15 +9,7 @@ let circuits = new Circuits(mainGrid);
 let [ , fileMenuState, fileMenu ] = toolbar.createMenuButton('File', 'File operations menu. <i>LMB</i> Open menu.');
 let fileHandle;
 
-fileMenu.createActionButton('New', 'Close all open circuits', async () => {
-    fileHandle = null;
-    fileMenuState(false);
-    circuits.clear();
-    updateCircuitMenu();
-    saveButton.innerHTML = 'Save';
-    saveButton.classList.add('save-disabled');
-});
-fileMenu.createActionButton('Open...', 'Load circuit from a file.', async () => {
+fileMenu.createActionButton('Open...', 'Load circuits from a file.', async () => {
     fileMenuState(false);
     let haveCircuits = circuits.haveNonEmpty();
     let [ handle ] = await File.openFile();
@@ -32,7 +24,8 @@ fileMenu.createActionButton('Open...', 'Load circuit from a file.', async () => 
     }
     updateCircuitMenu();
 });
-let [ saveButton ] = fileMenu.createActionButton('Save', 'Save circuit to file.', async () => {
+fileMenu.createSeparator();
+let [ saveButton ] = fileMenu.createActionButton('Save', 'Save circuits to file.', async () => {
     fileMenuState(false);
     let writable;
     if (!fileHandle || !File.verifyPermission(fileHandle)) {
@@ -44,7 +37,7 @@ let [ saveButton ] = fileMenu.createActionButton('Save', 'Save circuit to file.'
     await writable.write(JSON.stringify(circuits.serialize()));
     await writable.close();
 });
-fileMenu.createActionButton('Save as...', 'Save circuit to a new file.', async () => {
+fileMenu.createActionButton('Save as...', 'Save circuits to a new file.', async () => {
     fileMenuState(false);
     let all = circuits.list();
     const handle = await File.saveAs(all[0]);
@@ -55,6 +48,15 @@ fileMenu.createActionButton('Save as...', 'Save circuit to a new file.', async (
     fileHandle = handle;
     saveButton.innerHTML = 'Save ' + handle.name;
     saveButton.classList.remove('save-disabled');
+});
+fileMenu.createSeparator();
+fileMenu.createActionButton('Close', 'Close all open circuits', async () => {
+    fileHandle = null;
+    fileMenuState(false);
+    circuits.clear();
+    updateCircuitMenu();
+    saveButton.innerHTML = 'Save';
+    saveButton.classList.add('save-disabled');
 });
 
 saveButton.classList.add('save-disabled');
