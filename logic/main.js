@@ -9,63 +9,29 @@ let circuits = new Circuits(mainGrid);
 let [ , fileMenuState, fileMenu ] = toolbar.createMenuButton('File', 'File operations menu. <i>LMB</i> Open menu.');
 let fileHandle;
 
-async function verifyPermission(fileHandle) {
-    const opts = { mode: "readwrite" };
-    if ((await fileHandle.queryPermission(opts)) === "granted") {
-        return true;
-    }
-    if ((await fileHandle.requestPermission(opts)) === "granted") {
-        return true;
-    }
-    return false;
-}
-
-async function saveAs() {
-    const options = {
-        types: [
-            {
-                description: "Silicon Tracer circuit",
-                accept: {
-                    "text/plain": [ ".stc" ],
-                },
-            },
-        ],
-    };
-    return await window.showSaveFilePicker(options);
-}
-async function openFile() {
-    const options = {
-        types: [
-            {
-                description: "Silicon Tracer circuit",
-                accept: {
-                    "text/plain": [ ".stc" ],
-                },
-            },
-        ],
-    };
-    return await window.showOpenFilePicker(options);
-}
-
 fileMenu.createActionButton('New', 'Close all open circuits', async () => {
     fileHandle = null;
     fileMenuState(false);
     circuits.clear();
     updateCircuitMenu();
+    saveButton.innerHTML = 'Save';
+    saveButton.classList.add('save-disabled');
 });
 fileMenu.createActionButton('Open...', 'Load circuit from a file.', async () => {
     fileMenuState(false);
-    [ fileHandle ] = await openFile();
+    [ fileHandle ] = await File.openFile();
     const file = await fileHandle.getFile();
     const content = JSON.parse(await file.text());
     circuits.unserialize(content, true, file.name);
     updateCircuitMenu();
+    saveButton.innerHTML = 'Save ' + file.name;
+    saveButton.classList.remove('save-disabled');
 });
 let [ saveButton ] = fileMenu.createActionButton('Save', 'Save circuit to file.', async () => {
     fileMenuState(false);
     let writable;
-    if (!fileHandle || !verifyPermission(fileHandle)) {
-        const handle = await saveAs();
+    if (!fileHandle || !File.verifyPermission(fileHandle)) {
+        const handle = await File.saveAs();
         writable = await handle.createWritable();
     } else {
         writable = await fileHandle.createWritable();
@@ -75,11 +41,13 @@ let [ saveButton ] = fileMenu.createActionButton('Save', 'Save circuit to file.'
 });
 fileMenu.createActionButton('Save as...', 'Save circuit to a new file.', async () => {
     fileMenuState(false);
-    const handle = await saveAs();
+    const handle = await File.saveAs();
     const writable = await handle.createWritable();
     await writable.write(JSON.stringify(circuits.serialize()));
     await writable.close();
 });
+
+saveButton.classList.add('save-disabled');
 
 // Circuit selection menu
 
@@ -92,6 +60,7 @@ function updateCircuitMenu() {
         circuits.create();
         updateCircuitMenu();
     });
+    circuitMenu.createSeparator();
     for (let [ index, label ] of circuits.list().entries()) {
         circuitMenu.createActionButton(label, 'Switch grid to circuit "' + label + '"', () => {
             circuitMenuState(false);

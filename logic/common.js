@@ -68,3 +68,35 @@ class WeakUnorderedSet {
         }
     }
 }
+
+class File {
+    static OPTIONS = {
+        types: [
+            {
+                description: "Silicon Tracer circuit",
+                accept: {
+                    "text/plain": [ ".stc" ],
+                },
+            },
+        ],
+    };
+
+    static async verifyPermission(fileHandle) {
+        const opts = { mode: "readwrite" };
+        if ((await fileHandle.queryPermission(opts)) === "granted") {
+            return true;
+        }
+        if ((await fileHandle.requestPermission(opts)) === "granted") {
+            return true;
+        }
+        return false;
+    }
+
+    static async saveAs() {
+        return await window.showSaveFilePicker(File.OPTIONS);
+    }
+    
+    static async openFile() {
+        return await window.showOpenFilePicker(File.OPTIONS);
+    }
+}

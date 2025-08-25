@@ -93,6 +93,14 @@ class Toolbar {
         return [ button, stateFn, subToolbar ];
     }
 
+    // Creates a separator
+    createSeparator() {
+        let separator = document.createElement('div');
+        separator.classList.add('toolbar-separator');
+        this.#element.appendChild(separator);
+        return [ separator ];
+    }
+
     // Creates a toggle button and returns the button element as well as a function that sets/returns the current button state.
     #createToggleButton(label, hoverMessage, defaultState, action) {
         let button = document.createElement('div');
