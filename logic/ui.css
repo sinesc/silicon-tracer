@@ -277,6 +277,14 @@ html {
     border: 1px solid var(--button-border-color);
     border-radius: 0;
 }
+.toolbar > .toolbar-button i::before {
+    content: '»';
+    font-weight: normal;
+}
+.toolbar > .toolbar-button i::after {
+    content: '«';
+    font-weight: normal;
+}
 
 /*
  * Focus hint, see main.js.
