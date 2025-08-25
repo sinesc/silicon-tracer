@@ -35,6 +35,7 @@ class Toolbar {
         this.#element.appendChild(button);
         button.onmouseenter = () => this.#grid.setMessage(hoverMessage);
         button.onmouseleave = () => this.#grid.clearMessage();
+        return [ button ];
     }
 
     // Creates a button that can be clicked to trigger an action.
@@ -50,13 +51,14 @@ class Toolbar {
         this.#element.appendChild(button);
         button.onmouseenter = () => this.#grid.setMessage(hoverMessage);
         button.onmouseleave = () => this.#grid.clearMessage();
+        return [ button ];
     }
 
     // Creates a button that can be toggled on or off. Returns a function that sets/returns the current button state.
     createToggleButton(label, hoverMessage, defaultState, action) {
         let [ button, stateFn ] = this.#createToggleButton(label, hoverMessage, defaultState, action);
         this.#element.appendChild(button);
-        return stateFn;
+        return [ button, stateFn ];
     }
 
     // Creates a menu-button to open/close a sub-toolbar acting as a menu. Returns a new toolbar
@@ -88,7 +90,7 @@ class Toolbar {
         button.appendChild(subToolbarContainer);
         this.#element.appendChild(button);
         let subToolbar = new Toolbar(this.#grid, subToolbarContainer);
-        return [ subToolbar, stateFn ];
+        return [ button, stateFn, subToolbar ];
     }
 
     // Creates a toggle button and returns the button element as well as a function that sets/returns the current button state.

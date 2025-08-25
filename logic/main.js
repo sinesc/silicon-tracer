@@ -6,23 +6,21 @@ let toolbar = new Toolbar(mainGrid, document.querySelector('#toolbar'));
 let circuits = new Circuits(mainGrid);
 
 // Add file operations to toolbar
-let [ fileMenu, fileMenuState ] = toolbar.createMenuButton('File', 'File operations menu. <i>LMB</i> Open menu.');
+let [ , fileMenuState, fileMenu ] = toolbar.createMenuButton('File', 'File operations menu. <i>LMB</i> Open menu.');
+let fileHandle;
 
-fileMenu.createActionButton('New', 'Close all open circuits', async () => {
-    fileMenuState(false);
-    circuits.clear();
-    updateCircuitMenu();
-});
-fileMenu.createActionButton('Open...', 'Load circuit from disk', async () => {
-    fileMenuState(false);
-    let [ fileHandle ] = await window.showOpenFilePicker();
-    const file = await fileHandle.getFile();
-    const content = JSON.parse(await file.text());
-    circuits.unserialize(content, true, file.name);
-    updateCircuitMenu();
-});
-fileMenu.createActionButton('Save as...', 'Save circuit to disk', async () => {
-    fileMenuState(false);
+async function verifyPermission(fileHandle) {
+    const opts = { mode: "readwrite" };
+    if ((await fileHandle.queryPermission(opts)) === "granted") {
+        return true;
+    }
+    if ((await fileHandle.requestPermission(opts)) === "granted") {
+        return true;
+    }
+    return false;
+}
+
+async function saveAs() {
     const options = {
         types: [
             {
@@ -33,7 +31,51 @@ fileMenu.createActionButton('Save as...', 'Save circuit to disk', async () => {
             },
         ],
     };
-    const handle = await window.showSaveFilePicker(options);
+    return await window.showSaveFilePicker(options);
+}
+async function openFile() {
+    const options = {
+        types: [
+            {
+                description: "Silicon Tracer circuit",
+                accept: {
+                    "text/plain": [ ".stc" ],
+                },
+            },
+        ],
+    };
+    return await window.showOpenFilePicker(options);
+}
+
+fileMenu.createActionButton('New', 'Close all open circuits', async () => {
+    fileHandle = null;
+    fileMenuState(false);
+    circuits.clear();
+    updateCircuitMenu();
+});
+fileMenu.createActionButton('Open...', 'Load circuit from a file.', async () => {
+    fileMenuState(false);
+    [ fileHandle ] = await openFile();
+    const file = await fileHandle.getFile();
+    const content = JSON.parse(await file.text());
+    circuits.unserialize(content, true, file.name);
+    updateCircuitMenu();
+});
+let [ saveButton ] = fileMenu.createActionButton('Save', 'Save circuit to file.', async () => {
+    fileMenuState(false);
+    let writable;
+    if (!fileHandle || !verifyPermission(fileHandle)) {
+        const handle = await saveAs();
+        writable = await handle.createWritable();
+    } else {
+        writable = await fileHandle.createWritable();
+    }
+    await writable.write(JSON.stringify(circuits.serialize()));
+    await writable.close();
+});
+fileMenu.createActionButton('Save as...', 'Save circuit to a new file.', async () => {
+    fileMenuState(false);
+    const handle = await saveAs();
     const writable = await handle.createWritable();
     await writable.write(JSON.stringify(circuits.serialize()));
     await writable.close();
@@ -41,7 +83,7 @@ fileMenu.createActionButton('Save as...', 'Save circuit to disk', async () => {
 
 // Circuit selection menu
 
-let [ circuitMenu, circuitMenuState ] = toolbar.createMenuButton('Circuit', 'Circuit management menu. <i>LMB</i> Open menu.');
+let [ , circuitMenuState, circuitMenu ] = toolbar.createMenuButton('Circuit', 'Circuit management menu. <i>LMB</i> Open menu.');
 
 function updateCircuitMenu() {
     circuitMenu.clear();
@@ -81,7 +123,7 @@ for (let [ builtinType, ] of Object.entries(Simulation.BUILTIN_MAP)) {
 
 // Continuous simulation toggle
 {
-    let autoCompile = toolbar.createToggleButton('Simulate', 'Toggle enable or disable continuous simulation', true, (enabled) => {
+    let [ , autoCompile ] = toolbar.createToggleButton('Simulate', 'Toggle enable or disable continuous simulation', true, (enabled) => {
         mainGrid.detachSimulation();
         if (!enabled) {
             mainGrid.sim = null;
