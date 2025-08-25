@@ -12,7 +12,7 @@ It is usable offline (open index.html in a browser) or [online](https://sinesc.g
 
 Very early days. Successfully simulates but UI not yet practically useful and simulation tied to 10x frame rate. Cheesy neon colors non-optional.
 
-![Early UI showing an edge triggered d-flipflop](https://sinesc.github.io/silicon-tracer/neon.png)
+![Early UI showing an edge triggered d-flipflop](https://sinesc.github.io/silicon-tracer/doc/neon.png)
 
 The pictured flipflop in code. Each gate IO port is represented by 1 byte with the bits encoding the state history (0/1/floating) of the port.
 Bits are shifted in on one side and read from the other to simulate gate delay.
