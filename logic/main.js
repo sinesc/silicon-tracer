@@ -16,17 +16,19 @@ circuits.push({ label: circuitName(), data: [] });
 // Add file operations to toolbar
 let [ fileMenu, fileMenuState ] = toolbar.createMenuButton('File', 'File operations menu. <i>LMB</i> Open menu.');
 
-function switchGridCircuit(newCircuit) {
+function saveGridCircuit() {
     if (currentCircuit !== -1) {
         circuits[currentCircuit].data = mainGrid.serialize();
     }
+}
+function switchGridCircuit(newCircuit) {
     mainGrid.clear();
     mainGrid.unserialize(circuits[newCircuit].data);
     currentCircuit = newCircuit;
 }
 function pruneEmptyCircuits() {
     for (let i = circuits.length - 1; i >= 0; --i) {
-        if (circuits[i].data.length === 0) {
+        if (circuits[i].data.length <= 1 && circuits[i].data.filter((i) => i['_']['c'] !== 'Grid').length === 0) {
             circuits.splice(i, 1);
             if (currentCircuit === i) {
                 currentCircuit = -1;
@@ -39,6 +41,7 @@ fileMenu.createActionButton('New', 'Close all open circuits', async () => {
     fileMenuState(false);
     circuits = [ ];
     circuits.push({ label: circuitName(), data: [] });
+    currentCircuit = 0;
     updateCircuitMenu();
     mainGrid.clear();
     mainGrid.render();
@@ -48,6 +51,7 @@ fileMenu.createActionButton('Open...', 'Load circuit from disk', async () => {
     let [ fileHandle ] = await window.showOpenFilePicker();
     const file = await fileHandle.getFile();
     const content = JSON.parse(await file.text());
+    saveGridCircuit();
     pruneEmptyCircuits();
     const newCircuitIndex = circuits.length;
     if (typeof content.version === 'undefined') {
@@ -74,7 +78,7 @@ fileMenu.createActionButton('Save as...', 'Save circuit to disk', async () => {
     };
     const handle = await window.showSaveFilePicker(options);
     const writable = await handle.createWritable();
-    circuits[currentCircuit].data = mainGrid.serialize();
+    saveGridCircuit();
     await writable.write(JSON.stringify({ version: 1, circuits }));
     await writable.close();
 });
@@ -83,18 +87,16 @@ fileMenu.createActionButton('Save as...', 'Save circuit to disk', async () => {
 
 let [ circuitMenu, circuitMenuState ] = toolbar.createMenuButton('Circuit', 'Circuit management menu. <i>LMB</i> Open menu.');
 
-function selectCircuit(index) {
+function selectCircuit(newCircuitIndex) {
     circuitMenuState(false);
-    circuits[currentCircuit].data = mainGrid.serialize();
-    mainGrid.clear();
-    mainGrid.unserialize(circuits[index].data);
-    currentCircuit = index;
+    saveGridCircuit();
+    switchGridCircuit(newCircuitIndex);
     mainGrid.render();
 }
 
 function createCircuit() {
     circuitMenuState(false);
-    circuits[currentCircuit].data = mainGrid.serialize();
+    saveGridCircuit();
     mainGrid.clear();
     currentCircuit = circuits.length;
     const name = prompt('Circuit name', circuitName());
