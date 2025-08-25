@@ -12,14 +12,17 @@ class Circuits {
     }
 
     // Loads circuits from file, returning the filename if circuits was previously empty.
-    async loadFile() {
+    async loadFile(clear) {
         const haveCircuits = this.haveNonEmpty();
         const [ handle ] = await File.openFile();
         const file = await handle.getFile();
         const content = JSON.parse(await file.text());
+        if (clear) {
+            this.clear();
+        }
         this.unserialize(content, true, file.name);
-        if (!haveCircuits) {
-            // no other circuits loaded, make this the new file handle // todo: add menu entry to clear/load, not append
+        if (clear || !haveCircuits) {
+            // no other circuits loaded, make this the new file handle
             this.#fileHandle = handle;
             return file.name;
         } else {
