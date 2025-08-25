@@ -72,6 +72,13 @@ for (let [ gateType, { joinOp } ] of Object.entries(Simulation.GATE_MAP)) {
     });
 }
 
+for (let [ builtinType, ] of Object.entries(Simulation.BUILTIN_MAP)) {
+    let builtinLabel = builtinType.toUpperFirst();
+    toolbar.createComponentButton(builtinLabel, '<b>' + builtinLabel + '</b> builtin. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => {
+        return new Builtin(grid, x, y, builtinType);
+    });
+}
+
 // Continuous simulation toggle
 {
     let autoCompile = toolbar.createToggleButton('Simulate', 'Toggle enable or disable continuous simulation', true, (enabled) => {

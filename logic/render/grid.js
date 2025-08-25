@@ -67,6 +67,8 @@ class Grid {
                 instance = new Port(this, ...cargs);
             } else if (cname === 'Gate') {
                 instance = new Gate(this, ...cargs);
+            } else if (cname === 'Builtin') {
+                instance = new Builtin(this, ...cargs);
             } else if (cname === 'Connection') {
                 instance = new Connection(this, ...cargs);
             } else if (cname === 'Grid') {
@@ -247,8 +249,10 @@ class Grid {
 
         // declare gates from component map
         for (let [ prefix, component ] of componentMap.entries()) {
-            if (component instanceof Gate) {
+            if (component instanceof Gate) { // TODO: exclude unconnected gates via netList.unconnected.ports when all gate ports are listed as unconnected
                 sim.gateDecl(component.type, component.inputs.map((i) => prefix + i), prefix + component.output);
+            } else if (component instanceof Builtin) {
+                sim.builtinDecl(component.type, prefix);
             }
         }
 
@@ -257,7 +261,7 @@ class Grid {
         for (let net of netList.nets) {
             // create new net from connected gate i/o-ports
             let netPortList = net.ports.filter((p) => p[2] instanceof Port); // port-component, NOT a port on a component
-            let netId = sim.netDecl(net.ports.filter((p) => p[2] instanceof Gate).map((p) => p[1]), netPortList.map((p) => p[1]));
+            let netId = sim.netDecl(net.ports.filter((p) => (p[2] instanceof Gate) || (p[2] instanceof Builtin)).map((p) => p[1]), netPortList.map((p) => p[1]));
             // link port-components on the net to the ui
             for (let [ , , component ] of netPortList) {
                 // store netId on port-component to allow it to fetch the current net state

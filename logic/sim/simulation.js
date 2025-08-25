@@ -20,6 +20,10 @@ class Simulation {
         'xnor'  : { negIn: false, negOut: false, joinOp: '===' },
     };
 
+    static BUILTIN_MAP = {
+        'latch' : { template: '(l & d) | (~l & q)', inputs: [ 'l', 'd' ], output: 'q' },
+    }
+
     #allocBase = 0;
     #ioMap = new Map();
     #nets = [];
@@ -42,22 +46,32 @@ class Simulation {
         this.#ioMap.set(name, { offset: this.#alloc(), delay: delay ?? Simulation.DEFAULT_DELAY, in: type.indexOf('i') !== -1, out: type.indexOf('o') !== -1 });
     }
 
-    // Declares a gate function for the given inputs/output and returns the gate-index.
-    fnDecl(type, inputs, output) {
-        let rules = Simulation.GATE_MAP[type];
-        let inner = inputs.map((v) => (rules.negIn ? '(!' + v + ')' : v)).join(' ' + rules.joinOp + ' '); // TODO: I have '1 &' only on negOut, why?
-        let template = rules.negOut ? '!(1 & (' + inner + '))' : inner;
-        const index = this.#nets.length;
-        this.#gates.push({ inputs, output, template });
-        return index;
-    }
+    // Declares a basic builtin gate-like function.
+    builtinDecl(type, prefix, delay) {
+        let rules = Simulation.BUILTIN_MAP[type];
+        let template = rules.template.replace(/([a-z])/g, (m) => prefix + m);
+        let inputs = rules.inputs.map((i) => prefix + i);
+        let output = prefix + rules.output;
+        this.#gates.push({ inputs, output: output, template });
 
-    // Convenience method to declare gate inputs and function.
-    gateDecl(type, inputs, output, delay) {
-        this.fnDecl(type, inputs, output);
         for (let input of inputs) {
             this.ioDecl(input, 'i', delay ?? Simulation.DEFAULT_DELAY);
         }
+
+        this.ioDecl(output, 'o', delay ?? Simulation.DEFAULT_DELAY);
+    }
+
+    // Declares a gate with the given inputs/output.
+    gateDecl(type, inputs, output, delay) {
+        let rules = Simulation.GATE_MAP[type];
+        let inner = inputs.map((v) => (rules.negIn ? '(!' + v + ')' : v)).join(' ' + rules.joinOp + ' '); // TODO: I have '1 &' only on negOut, why?
+        let template = rules.negOut ? '!(1 & (' + inner + '))' : inner;
+        this.#gates.push({ inputs, output, template });
+
+        for (let input of inputs) {
+            this.ioDecl(input, 'i', delay ?? Simulation.DEFAULT_DELAY);
+        }
+
         this.ioDecl(output, 'o', delay ?? Simulation.DEFAULT_DELAY);
     }
 
@@ -67,7 +81,6 @@ class Simulation {
         result += 'let mask, signal, result' + this.#endl();
         result += this.#compileTick();
         result += '}';
-        //console.log(result);
         this.#compiled = eval(result);
         this.#mem = new Simulation.ARRAY_CONSTRUCTOR(this.#allocBase);
     }
@@ -118,6 +131,7 @@ class Simulation {
         let netValue = this.#compileNetValue(netIndex);
         let ioValue = this.#compileIOValue(name);
         let delayMask = this.#compileDelayMask(io.delay);
+        // TODO: perf test: write back to temporary, then after computation back to input
         return `${ioValue} = (${ioValue} & ${delayMask}) | (${netValue} << ${io.delay})`;   // shift net value up to newest io-data/signal bits and apply
     }
 
@@ -130,6 +144,7 @@ class Simulation {
         let delayMask = this.#compileDelayMask(io.delay);
         let signalBit = this.#compileConst(1 << Simulation.MAX_DELAY);
         let code = `result = ${signalBit} | (${op}); `;                                     // set signal bit on computed result
+        // TODO: perf test: first write back io state (see todo in compileNetToInput)
         code += `${ioValue} = (${ioValue} & ${delayMask}) | (result << ${io.delay})`;       // shift result up to newest io-data/signal bits and apply
         return code;
     }
