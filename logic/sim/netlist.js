@@ -85,8 +85,9 @@ class Circuit {
     items;
 
     // Constructs a new circuit with the given name and ports. Name must be unique
-    constructor(name, ports) {
+    constructor(name, items, ports) {
         this.name = name;
+        this.items = items;
         this.ports = { left: [], right: [], top: [], bottom: [], ...ports };
     }
 
