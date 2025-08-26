@@ -26,6 +26,7 @@ class Port extends Component {
 
     // Detach port from simulation.
     detachSimulation() {
+        super.detachSimulation();
         this.netId = null;
     }
 

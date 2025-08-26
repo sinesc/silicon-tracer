@@ -3,17 +3,13 @@
 class WireBuilder extends GridItem {
 
     static DEBUG_BOX = false;
-    static HOVER_MESSAGE = 'Wire. <i>LMB</i>: Branch off new wire. <i>D</i> Delete, <i>0</i> - <i>9</i>: Set net color.';// TODO: <i>Shift+LMB</i>: Drag along the normal.
-    static DRAWING_CONNECTION_MESSAGE = 'Drawing wire. <i>R</i>: Add point, continue drawing from here.';
 
     #wireH;
     #wireV;
-    #wireBuilder;
     width;
     height;
     ordering;
     color;
-    netId = null;
 
     constructor(grid, x1, y1, x2, y2, ordering, color) {
 
@@ -54,22 +50,15 @@ class WireBuilder extends GridItem {
         return this.height * this.grid.zoom;
     }
 
-    // Called while a registered visual is being dragged.
-    onDrag(x, y, status, what) {
-        this.onConnect(x, y, status, what);
-    }
-
-    // Hover hotkey actions
-    onHotkey(key, what) {
-        if (what.type === 'connect' && key === 'r') {
-            // add new corner when pressing R while dragging a wire
-            let x = this.#wireBuilder.x + this.#wireBuilder.width;
-            let y = this.#wireBuilder.y + this.#wireBuilder.height;
-            let color = this.#wireBuilder.color;
-            this.#wireBuilder = new WireBuilder(this.grid, x, y, x, y, what.ordering, color);
-            this.grid.invalidateNets();
-            this.grid.render();
+    // Upon removal of the builder also remove any zero length wires produced by it.
+    remove() {
+        if (this.width === 0) {
+            this.#wireH.remove();
         }
+        if (this.height === 0) {
+            this.#wireV.remove();
+        }
+        super.remove();
     }
 
     // Sets wire corner endpoints, optionally aligned to the grid.
@@ -104,6 +93,8 @@ class WireBuilder extends GridItem {
 
     // Renders the wires onto the grid.
     render() {
+        this.#wireH.render();
+        this.#wireV.render();
         if (WireBuilder.DEBUG_BOX) {
             let z = this.grid.zoom;
             let x0 = this.grid.offsetX;
@@ -116,14 +107,14 @@ class WireBuilder extends GridItem {
             this.debug.style.height = Math.abs(height * z) + "px";
             let points = this.getPoints();
             for (let i = 0; i < 3; ++i) {
-                this.debugPoint(i, i < points.length ? points[i] : null);
+                this.#debugPoint(i, i < points.length ? points[i] : null);
             }
             this.debug.innerHTML = '<span>' + points.map((p) => JSON.stringify(p)).join('<br>') + '</span>';
         }
     }
 
     // Renders a debug point on one of the 3 distinct wire corner/end points.
-    debugPoint(i, c) {
+    #debugPoint(i, c) {
         if (c === null) {
             this['debug' + i].style.display = 'none';
         } else {
@@ -145,28 +136,22 @@ class WireBuilder extends GridItem {
         const height = this.height;
         if (this.ordering === 'hv') {
             // horizontal first, then vertical
-            if (width !== 0) {
-                let hx = width < 0 ? x + width : x;
-                let hw = Math.abs(width);
-                this.#wireH.setEndpoints(hx, y, hw, 'h');
-            }
-            if (height !== 0) {
-                let vy = height < 0 ? y + height : y;
-                let vh = Math.abs(height);
-                this.#wireV.setEndpoints(x + width, vy, vh, 'v');
-            }
+            let hx = width < 0 ? x + width : x;
+            let hw = Math.abs(width);
+            this.#wireH.setEndpoints(hx, y, hw, 'h');
+
+            let vy = height < 0 ? y + height : y;
+            let vh = Math.abs(height);
+            this.#wireV.setEndpoints(x + width, vy, vh, 'v');
         } else {
             // vertical first, then horizontal
-            if (height !== 0) {
-                let vy = height < 0 ? y + height : y;
-                let vh = Math.abs(height);
-                this.#wireH.setEndpoints(x, vy, vh, 'v');
-            }
-            if (width !== 0) {
-                let hx = width < 0 ? x + width : x;
-                let hw = Math.abs(width);
-                this.#wireV.setEndpoints(hx, y + height, hw, 'h');
-            }
+            let vy = height < 0 ? y + height : y;
+            let vh = Math.abs(height);
+            this.#wireH.setEndpoints(x, vy, vh, 'v');
+
+            let hx = width < 0 ? x + width : x;
+            let hw = Math.abs(width);
+            this.#wireV.setEndpoints(hx, y + height, hw, 'h');
         }
     }
 }

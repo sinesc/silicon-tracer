@@ -69,6 +69,7 @@ class Wire extends GridItem {
             this.#wireBuilder.setEndpoints(this.#wireBuilder.x, this.#wireBuilder.y, x, y, true);
             this.#wireBuilder.render();
         } else {
+            this.#wireBuilder.remove();
             this.#wireBuilder = null;
             this.grid.clearMessage(true);
             this.grid.releaseHotkeyTarget(this, true);
@@ -88,11 +89,11 @@ class Wire extends GridItem {
             this.color = parseInt(key);
             this.render();
         } else if (key === 'd' && what.type === 'hover') {
-            this.#element.classList.add('connection-delete-animation');
+            this.#element.classList.add('wire-delete-animation');
             setTimeout(() => {
-                this.#element.classList.remove('connection-delete-animation');
-                this.grid.invalidateNets();
+                this.#element.classList.remove('wire-delete-animation');
                 this.remove();
+                this.grid.invalidateNets();
             }, 150);
         } else if (what.type === 'connect' && key === 'r') {
             // add new corner when pressing R while dragging a wire
@@ -143,8 +144,7 @@ class Wire extends GridItem {
             this.#element.style.top = (y - t) + "px";
             this.#element.style.width = (hw + 2 * t) + "px";
             this.#element.style.height = thickness + "px";
-            this.#element.style.minWidth = thickness + 'px';
-            this.#element.style.minHeight = thickness + 'px';
+            this.#element.style.display = '';
         } else if (this.height !== 0) {
             let vy = height < 0 ? y + height : y;
             let vh = Math.abs(height);
@@ -152,8 +152,9 @@ class Wire extends GridItem {
             this.#element.style.top = (vy - t) + "px";
             this.#element.style.width = thickness + "px";
             this.#element.style.height = (vh + 2 * t) + "px";
-            this.#element.style.minWidth = thickness + 'px';
-            this.#element.style.minHeight = thickness + 'px';
+            this.#element.style.display = '';
+        } else {
+            this.#element.style.display = 'none';
         }
     }
 }

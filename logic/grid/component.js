@@ -178,6 +178,13 @@ class Component extends GridItem {
         super.remove();
     }
 
+    // Detach component ports from simulation.
+    detachSimulation() {
+        this.getPorts().forEach((item) => {
+            item.netId = null;
+        });
+    }
+
     // Hover hotkey actions
     onHotkey(key, what) {
         if (key === 'r' && what.type === 'hover') {
@@ -272,7 +279,7 @@ class Component extends GridItem {
             this.#wireBuilder.setEndpoints(this.#wireBuilder.x, this.#wireBuilder.y, x, y, true);
             this.#wireBuilder.render();
         } else {
-            // FIXME: delete connection if no wires were produced (not dragged far enough)
+            this.#wireBuilder.remove();
             this.#wireBuilder = null;
             this.grid.clearMessage(true);
             this.grid.releaseHotkeyTarget(this, true);

@@ -615,6 +615,10 @@ div.component.gate[data-component-rotation="3"] > div.component-inner {
     inset-block: -8px;
     inset-inline: -8px;
 }
+.wire-delete-animation {
+    transition: opacity var(--component-delete-duration);
+    opacity: 0;
+}
 /* wirebuilder debugging */
 .wirebuilder-debug {
     pointer-events: none;
