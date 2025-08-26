@@ -189,6 +189,7 @@ class Component extends GridItem {
             this.rotation = (this.rotation + 1) & 3;
             this.x += (this.width - this.height) / 2;
             this.y -= (this.width - this.height) / 2;
+            [ this.x, this.y ] = this.gridAlign(this.x, this.y);
             this.updateDimensions();
             this.#element.classList.add('component-rotate-animation');
             setTimeout(() => {

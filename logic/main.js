@@ -8,7 +8,7 @@ let circuits = new Circuits(mainGrid);
 // Add file operations to toolbar
 let [ , fileMenuState, fileMenu ] = toolbar.createMenuButton('File', 'File operations menu. <i>LMB</i> Open menu.');
 
-fileMenu.createActionButton('Open new...', 'Close all circuits and load new circuits from a file.', async () => {
+fileMenu.createActionButton('Open...', 'Close all circuits and load new circuits from a file.', async () => {
     fileMenuState(false);
     let fileName = await circuits.loadFile(true);
     saveButton.innerHTML = 'Save <i>' + fileName + '</i>';
