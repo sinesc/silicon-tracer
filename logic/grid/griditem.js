@@ -6,8 +6,6 @@ class GridItem {
 
     x;
     y;
-    width;
-    height;
 
     #hoverMessages;
     #hoverRegistered;
@@ -17,6 +15,16 @@ class GridItem {
         grid.addItem(this);
         this.#hoverRegistered = new WeakMap();
         this.#hoverMessages = new WeakMap();
+    }
+
+    // Gets the grid-relative screen x-coordinate for this grid item.
+    get visualX() {
+        return (this.x + this.grid.offsetX) * this.grid.zoom;
+    }
+
+    // Gets the grid-relative screen y-coordinate for this grid item.
+    get visualY() {
+        return (this.y + this.grid.offsetY) * this.grid.zoom;
     }
 
     // Implement to render the item to the grid.
@@ -43,26 +51,6 @@ class GridItem {
         return {
             _: { c: this.constructor.name, a: [] },
         };
-    }
-
-    // Gets the grid-relative screen x-coordinate for this grid item.
-    get visualX() {
-        return (this.x + this.grid.offsetX) * this.grid.zoom;
-    }
-
-    // Gets the grid-relative screen y-coordinate for this grid item.
-    get visualY() {
-        return (this.y + this.grid.offsetY) * this.grid.zoom;
-    }
-
-    // Gets the screen width for this grid item.
-    get visualWidth() {
-        return this.width * this.grid.zoom;
-    }
-
-    // Gets the screen height for this grid item.
-    get visualHeight() {
-        return this.height * this.grid.zoom;
     }
 
     // Utility function to align given x/y to grid coordinates and return them.

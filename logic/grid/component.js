@@ -55,6 +55,9 @@ class Component extends GridItem {
     #dropPreview;
     #ports;
     #dragConnection = null;
+
+    width;
+    height;
     rotation = 0;
 
     constructor(grid, x, y, ports, name) {
@@ -109,12 +112,44 @@ class Component extends GridItem {
         grid.addVisual(this.#element);
     }
 
+    // Returns the component root element.
     get element() {
         return this.#element;
     }
 
+    // Returns the inner element of the component.
     get inner() {
         return this.#inner;
+    }
+
+    // Gets the screen width for this component.
+    get visualWidth() {
+        return this.width * this.grid.zoom;
+    }
+
+    // Gets the screen height for this component.
+    get visualHeight() {
+        return this.height * this.grid.zoom;
+    }
+
+    // Returns the name of the side that is currently rotated to the top of the component.
+    get rotatedTop() {
+        return Component.SIDES[(0 + this.rotation) % 4];
+    }
+
+    // Returns the name of the side that is currently rotated to the right of the component.
+    get rotatedRight() {
+        return Component.SIDES[(1 + this.rotation) % 4];
+    }
+
+    // Returns the name of the side that is currently rotated to the bottom of the component.
+    get rotatedBottom() {
+        return Component.SIDES[(2 + this.rotation) % 4];
+    }
+
+    // Returns the name of the side that is currently rotated to the left of the component.
+    get rotatedLeft() {
+        return Component.SIDES[(3 + this.rotation) % 4];
     }
 
     // Serializes the object for writing to disk.
@@ -307,6 +342,12 @@ class Component extends GridItem {
         return null;
     }
 
+    // Update component width/height from given ports.
+    updateDimensions() {
+        this.width = Math.max(Grid.SPACING * 2, (this.#ports[this.rotatedTop].length + 1) * Grid.SPACING, (this.#ports[this.rotatedBottom].length + 1) * Grid.SPACING);
+        this.height = Math.max(Grid.SPACING * 2, (this.#ports[this.rotatedLeft].length + 1) * Grid.SPACING, (this.#ports[this.rotatedRight].length + 1) * Grid.SPACING);
+    }
+
     // Renders component ports. Only required during scaling/rotation.
     #renderPorts() {
         let visualPortSize = Component.PORT_SIZE * this.grid.zoom;
@@ -381,24 +422,5 @@ class Component extends GridItem {
                 }
             }
         });
-    }
-
-    get rotatedTop() {
-        return Component.SIDES[(0 + this.rotation) % 4];
-    }
-    get rotatedRight() {
-        return Component.SIDES[(1 + this.rotation) % 4];
-    }
-    get rotatedBottom() {
-        return Component.SIDES[(2 + this.rotation) % 4];
-    }
-    get rotatedLeft() {
-        return Component.SIDES[(3 + this.rotation) % 4];
-    }
-
-    // Update component width/height from given ports.
-    updateDimensions() {
-        this.width = Math.max(Grid.SPACING * 2, (this.#ports[this.rotatedTop].length + 1) * Grid.SPACING, (this.#ports[this.rotatedBottom].length + 1) * Grid.SPACING);
-        this.height = Math.max(Grid.SPACING * 2, (this.#ports[this.rotatedLeft].length + 1) * Grid.SPACING, (this.#ports[this.rotatedRight].length + 1) * Grid.SPACING);
     }
 }

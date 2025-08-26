@@ -10,6 +10,8 @@ class Connection extends GridItem {
     #elementH;
     #elementV;
     #dragConnection;
+    width;
+    height;
     ordering;
     color;
     netId = null;
@@ -51,6 +53,16 @@ class Connection extends GridItem {
         }
     }
 
+    // Gets the screen width for this connection.
+    get visualWidth() {
+        return this.width * this.grid.zoom;
+    }
+
+    // Gets the screen height for this connection.
+    get visualHeight() {
+        return this.height * this.grid.zoom;
+    }
+
     // Serializes the object for writing to disk.
     serialize() {
         return {
@@ -59,7 +71,7 @@ class Connection extends GridItem {
         };
     }
 
-    // Removes the component from the grid.
+    // Removes the connection from the grid.
     remove() {
         this.grid.removeVisual(this.#elementH);
         this.#elementH = null;
