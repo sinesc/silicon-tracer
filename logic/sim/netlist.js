@@ -11,6 +11,17 @@ class NetList {
         this.unconnected = { wires: unconnectedWires, ports: unconnectedPorts };
     }
 
+    // Returns the netId of the given wire.
+    findWire(wire) {
+        for (let [ index, net ] of this.nets.entries()) {
+            for (let [ , , netWire ] of net.wires) {
+                if (netWire === wire) {
+                    return index;
+                }
+            }
+        }
+    }
+
     // Creates a netlist from wires and ports. Both wires and ports will be emptied during this process.
     static fromWires(wires, ports) {
         let nets = [];

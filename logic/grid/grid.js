@@ -177,13 +177,15 @@ class Grid {
         let [ netList ] = this.identifyNets();
         let color = 0;
         for (let net of netList.nets) {
-            for (let wire of net.wires) {
-                wire[2].color = color;
+            let applyColor = null;
+            for (let [ , , wire ] of net.wires) {
+                applyColor ??= wire.color ?? color;
+                wire.color = applyColor;
             }
             for (let port of net.ports) {
                 let component = port[2];
                 let portName = port[1].split(':')[1];
-                component.portByName(portName).color = color; // FIXME: don't override user set color
+                component.portByName(portName).color = applyColor;
             }
             color = (color + 1) % 10;
         }

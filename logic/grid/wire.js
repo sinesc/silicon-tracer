@@ -21,7 +21,7 @@ class Wire extends GridItem {
         this.y = y1;
         this.width = direction === 'h' ? length : 0;
         this.height = direction === 'v' ? length : 0;
-        this.color = color ?? 0;
+        this.color = color ?? null;
 
         this.#element = document.createElement('div');
         this.#element.classList.add('wire-' + direction);
@@ -72,8 +72,13 @@ class Wire extends GridItem {
     // Hover hotkey actions
     onHotkey(key, what) {
         if (what.type === 'hover' && key >= '0' && key <= '9') {
-            this.color = parseInt(key);
-            this.render();
+            let [ netList ] = this.grid.identifyNets();
+            let myNetId = netList.findWire(this);
+            let color = parseInt(key);
+            for (let [ , , wire ] of netList.nets[myNetId].wires) {
+                wire.color = color;
+            }
+            this.grid.render();
         } else if (key === 'd' && what.type === 'hover') {
             this.#element.classList.add('wire-delete-animation');
             setTimeout(() => {
