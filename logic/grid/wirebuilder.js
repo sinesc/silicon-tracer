@@ -6,8 +6,8 @@ class WireBuilder extends GridItem {
     static HOVER_MESSAGE = 'Wire. <i>LMB</i>: Branch off new wire. <i>D</i> Delete, <i>0</i> - <i>9</i>: Set net color.';// TODO: <i>Shift+LMB</i>: Drag along the normal.
     static DRAWING_CONNECTION_MESSAGE = 'Drawing wire. <i>R</i>: Add point, continue drawing from here.';
 
-    #elementH;
-    #elementV;
+    #wireH;
+    #wireV;
     #wireBuilder;
     width;
     height;
@@ -28,8 +28,9 @@ class WireBuilder extends GridItem {
         this.ordering = ordering ?? 'hv';
         this.color = color ?? 0;
 
-        this.#elementH = new Wire(this.grid, x1, y1, this.width, 'h', this.color);
-        this.#elementV = new Wire(this.grid, x1, y1, this.height, 'v', this.color);
+        this.#wireH = new Wire(this.grid, x1, y1, this.width, 'h', this.color);
+        this.#wireV = new Wire(this.grid, x1, y1, this.height, 'v', this.color);
+        this.#updateWires();
 
         if (WireBuilder.DEBUG_BOX) {
             this.debug = document.createElement('div');
@@ -81,6 +82,7 @@ class WireBuilder extends GridItem {
         this.y = y1;
         this.width = x2 - x1;
         this.height = y2 - y1;
+        this.#updateWires();
     };
 
     // Returns the 2 or 3 distinct endpoint coordinates of this wire corner.
@@ -102,38 +104,6 @@ class WireBuilder extends GridItem {
 
     // Renders the wires onto the grid.
     render() {
-
-        let x = this.x;
-        let y = this.y ;
-        let width = this.width;
-        let height = this.height;
-
-        if (this.ordering === 'hv') {
-            // horizontal first, then vertical
-            if (this.width !== 0) {
-                let hx = width < 0 ? x + width : x;
-                let hw = Math.abs(width);
-                this.#elementH.setEndpoints(hx, y, hw, 'h');
-            }
-            if (this.height !== 0) {
-                let vy = height < 0 ? y + height : y;
-                let vh = Math.abs(height);
-                this.#elementV.setEndpoints(x + width, vy, vh, 'v');
-            }
-        } else {
-            // vertical first, then horizontal
-            if (this.height !== 0) {
-                let vy = height < 0 ? y + height : y;
-                let vh = Math.abs(height);
-                this.#elementH.setEndpoints(x, vy, vh, 'v');
-            }
-            if (this.width !== 0) {
-                let hx = width < 0 ? x + width : x;
-                let hw = Math.abs(width);
-                this.#elementV.setEndpoints(hx, y + height, hw, 'h');
-            }
-        }
-
         if (WireBuilder.DEBUG_BOX) {
             let z = this.grid.zoom;
             let x0 = this.grid.offsetX;
@@ -164,6 +134,39 @@ class WireBuilder extends GridItem {
             this['debug' + i].style.display = 'block';
             this['debug' + i].style.left = (vx - 6) + 'px';
             this['debug' + i].style.top = (vy - 6) + 'px';
+        }
+    }
+
+    // Updates wire positions from endpoints.
+    #updateWires() {
+        const x = this.x;
+        const y = this.y ;
+        const width = this.width;
+        const height = this.height;
+        if (this.ordering === 'hv') {
+            // horizontal first, then vertical
+            if (width !== 0) {
+                let hx = width < 0 ? x + width : x;
+                let hw = Math.abs(width);
+                this.#wireH.setEndpoints(hx, y, hw, 'h');
+            }
+            if (height !== 0) {
+                let vy = height < 0 ? y + height : y;
+                let vh = Math.abs(height);
+                this.#wireV.setEndpoints(x + width, vy, vh, 'v');
+            }
+        } else {
+            // vertical first, then horizontal
+            if (height !== 0) {
+                let vy = height < 0 ? y + height : y;
+                let vh = Math.abs(height);
+                this.#wireH.setEndpoints(x, vy, vh, 'v');
+            }
+            if (width !== 0) {
+                let hx = width < 0 ? x + width : x;
+                let hw = Math.abs(width);
+                this.#wireV.setEndpoints(hx, y + height, hw, 'h');
+            }
         }
     }
 }

@@ -69,7 +69,8 @@ class Grid {
                 instance = new Gate(this, ...cargs);
             } else if (cname === 'Builtin') {
                 instance = new Builtin(this, ...cargs);
-            } else if (cname === 'Connection') { //TODO convert legacy Connection to Wires
+            } else if (cname === 'Connection') {
+                // legacy "Connection" class converted to WireBuilder
                 instance = new WireBuilder(this, ...cargs);
             } else if (cname === 'Wire') {
                 instance = new Wire(this, ...cargs);
@@ -82,6 +83,10 @@ class Grid {
                 if (k !== '_') {
                     instance[k] = v;
                 }
+            }
+            // remove WireBuilders created by legacy import, leave Wires behind
+            if (instance instanceof WireBuilder) {
+                instance.remove();
             }
         }
         this.invalidateNets();
