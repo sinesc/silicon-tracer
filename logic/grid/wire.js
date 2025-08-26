@@ -3,11 +3,11 @@
 class Wire extends GridItem {
 
     static DEBUG_BOX = false;
-    static HOVER_MESSAGE = 'Connection. <i>LMB</i>: Branch off new connection. <i>D</i> Delete, <i>0</i> - <i>9</i>: Set net color.';// TODO: <i>Shift+LMB</i>: Drag along the normal.
+    static HOVER_MESSAGE = 'Wire. <i>LMB</i>: Branch off new wire. <i>D</i> Delete, <i>0</i> - <i>9</i>: Set net color.';// TODO: <i>Shift+LMB</i>: Drag along the normal.
     static THICKNESS = 3;
 
     #element;
-    #dragConnection;
+    #wireBuilder;
     color;
     netId = null;
     width;
@@ -25,9 +25,9 @@ class Wire extends GridItem {
         this.color = color ?? 0;
 
         this.#element = document.createElement('div');
-        this.#element.classList.add('connection-' + direction);
+        this.#element.classList.add('wire-' + direction);
         this.registerDrag(this.#element, { type: 'connect', ordering: direction === 'h' ? 'vh' : 'hv' });
-        this.setHoverMessage(this.#element, Connection.HOVER_MESSAGE, { type: 'hover' });
+        this.setHoverMessage(this.#element, Wire.HOVER_MESSAGE, { type: 'hover' });
         this.grid.addVisual(this.#element);
     }
 
@@ -58,18 +58,18 @@ class Wire extends GridItem {
             what.startX = x;
             what.startY = y;
         }
-        if (!this.#dragConnection) {
+        if (!this.#wireBuilder) {
             // TODO: when dragging forward (i.e. not perpendicular) from the end of a wire, ordering should be reversed.
             // this requires getting a mouse movement vector because the user might still want to drag along the normal at the end of a wire
-            this.grid.setMessage(Connection.DRAWING_CONNECTION_MESSAGE, true);
+            this.grid.setMessage(WireBuilder.DRAWING_CONNECTION_MESSAGE, true);
             this.grid.requestHotkeyTarget(this, true, { ...what, type: 'connect' }); // pass 'what' to onHotkey()
-            this.#dragConnection = new Connection(this.grid, what.startX, what.startY, x, y, what.ordering, this.color);
-            this.#dragConnection.render();
+            this.#wireBuilder = new WireBuilder(this.grid, what.startX, what.startY, x, y, what.ordering, this.color);
+            this.#wireBuilder.render();
         } else if (status !== 'stop') {
-            this.#dragConnection.setEndpoints(this.#dragConnection.x, this.#dragConnection.y, x, y, true);
-            this.#dragConnection.render();
+            this.#wireBuilder.setEndpoints(this.#wireBuilder.x, this.#wireBuilder.y, x, y, true);
+            this.#wireBuilder.render();
         } else {
-            this.#dragConnection = null;
+            this.#wireBuilder = null;
             this.grid.clearMessage(true);
             this.grid.releaseHotkeyTarget(this, true);
             this.grid.invalidateNets();
@@ -95,11 +95,11 @@ class Wire extends GridItem {
                 this.remove();
             }, 150);
         } else if (what.type === 'connect' && key === 'r') {
-            // add connection point when pressing R while dragging a connection
-            let x = this.#dragConnection.x + this.#dragConnection.width;
-            let y = this.#dragConnection.y + this.#dragConnection.height;
-            let color = this.#dragConnection.color;
-            this.#dragConnection = new Connection(this.grid, x, y, x, y, what.ordering, color);
+            // add new corner when pressing R while dragging a wire
+            let x = this.#wireBuilder.x + this.#wireBuilder.width;
+            let y = this.#wireBuilder.y + this.#wireBuilder.height;
+            let color = this.#wireBuilder.color;
+            this.#wireBuilder = new WireBuilder(this.grid, x, y, x, y, what.ordering, color);
             this.grid.invalidateNets();
             this.grid.render();
         }
@@ -118,26 +118,15 @@ class Wire extends GridItem {
     };
 
     // Returns the 2 or 3 distinct endpoint coordinates of this connection.
-    getPoints() {
-
+    points() {
         let mk = (x, y) => new Point(x, y);
-        let points = [ mk(this.x, this.y) ];
-
-        if (this.width !== 0) {
-            points.push(this.ordering === 'hv' ? mk(this.x + this.width, this.y) : mk(this.x + (this.height === 0 ? this.width : 0), this.y + this.height));
-        }
-
-        if (this.height !== 0) {
-            points.push(mk(this.x + this.width, this.y + this.height));
-        }
-
-        return points;
+        return [ mk(this.x, this.y), mk(this.x + this.width, this.y + this.height) ];
     }
 
     // Renders the connection onto the grid.
     render() {
 
-        let thickness = Connection.THICKNESS * this.grid.zoom;
+        let thickness = Wire.THICKNESS * this.grid.zoom;
         let x = this.visualX;
         let y = this.visualY ;
         let width = this.width * this.grid.zoom;

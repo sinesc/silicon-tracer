@@ -69,8 +69,10 @@ class Grid {
                 instance = new Gate(this, ...cargs);
             } else if (cname === 'Builtin') {
                 instance = new Builtin(this, ...cargs);
-            } else if (cname === 'Connection') {
-                instance = new Connection(this, ...cargs);
+            } else if (cname === 'Connection') { //TODO convert legacy Connection to Wires
+                instance = new WireBuilder(this, ...cargs);
+            } else if (cname === 'Wire') {
+                instance = new Wire(this, ...cargs);
             } else if (cname === 'Grid') {
                 instance = this;
             } else {
@@ -201,17 +203,7 @@ class Grid {
             return this.#netCache;
         }
         // get all individual wires
-        let connections = this.filterItems((i) => i instanceof Connection);
-        let wires = [];
-        for (let connection of connections) {
-            let points = connection.getPoints();
-            if (points.length >= 2) {
-                wires.push([ points[0], points[1], connection ]); // TODO refactor to use class, e.g. NetWire(p1, p2, connection) where connection is arbitrary meta data since we need this for schematics that aren't currently on the grid too
-            }
-            if (points.length === 3) {
-                wires.push([ points[1], points[2], connection ]);
-            }
-        }
+        let wires = this.filterItems((i) => i instanceof Wire).map((w) => [ ...w.points(), w ]).toArray();
         //console.log(wires.map((w) => [ w[0].x, w[0].y, w[1].x, w[1].y ]));
         // get all component ports
         let components = this.filterItems((i) => i instanceof Component);

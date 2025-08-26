@@ -54,7 +54,7 @@ class Component extends GridItem {
     #inner;
     #dropPreview;
     #ports;
-    #dragConnection = null;
+    #wireBuilder = null;
 
     width;
     height;
@@ -173,8 +173,8 @@ class Component extends GridItem {
         this.#element = null;
         this.#dropPreview?.remove();
         this.#dropPreview = null;
-        this.#dragConnection?.remove();
-        this.#dragConnection = null;
+        this.#wireBuilder?.remove();
+        this.#wireBuilder = null;
         super.remove();
     }
 
@@ -200,17 +200,17 @@ class Component extends GridItem {
                 this.remove();
             }, 150);
         } else if (key === 'r' && what.type === 'connect') {
-            // add connection point when pressing R while dragging a connection
-            let x = this.#dragConnection.x + this.#dragConnection.width;
-            let y = this.#dragConnection.y + this.#dragConnection.height;
-            let color = this.#dragConnection.color;
-            // pass handling off to the previously created connection
-            let flippedOrdering = this.#dragConnection.ordering !== what.ordering;
+            // add new corner when pressing R while dragging a wire
+            let x = this.#wireBuilder.x + this.#wireBuilder.width;
+            let y = this.#wireBuilder.y + this.#wireBuilder.height;
+            let color = this.#wireBuilder.color;
+            // pass handling off to the previously created wirebuilder
+            let flippedOrdering = this.#wireBuilder.ordering !== what.ordering;
             let dragConnectionWhat = { ...what, ordering: flippedOrdering ? what.ordering == 'hv' ? 'vh' : 'hv' : what.ordering, x, y, color };
             this.grid.releaseHotkeyTarget(this, true);
             this.dragStop(x, y, what);
-            this.#dragConnection.dragStart(x, y, dragConnectionWhat);
-            this.#dragConnection = null;
+            this.#wireBuilder.dragStart(x, y, dragConnectionWhat);
+            this.#wireBuilder = null;
             this.grid.invalidateNets();
             this.grid.render();
         }
@@ -254,26 +254,26 @@ class Component extends GridItem {
         let port = this.portByName(what.name);
         let portCoords = port.coords(this.width, this.height, this.rotation);
         let portSide = port.side(this.rotation);
-        if (!this.#dragConnection /* start */) {
-            this.grid.setMessage(Connection.DRAWING_CONNECTION_MESSAGE, true);
+        if (!this.#wireBuilder /* start */) {
+            this.grid.setMessage(WireBuilder.DRAWING_CONNECTION_MESSAGE, true);
             what.ordering = portSide === 'top' || portSide === 'bottom' ? 'vh' : 'hv';
             this.grid.requestHotkeyTarget(this, true, { ...what, type: 'connect' }); // pass 'what' to onHotkey()
-            this.#dragConnection = new Connection(this.grid, this.x + portCoords.x, this.y + portCoords.y, x, y, what.ordering);
-            this.#dragConnection.render();
+            this.#wireBuilder = new WireBuilder(this.grid, this.x + portCoords.x, this.y + portCoords.y, x, y, what.ordering);
+            this.#wireBuilder.render();
         } else if (status !== 'stop') {
             // flip ordering when draggin towards component, effetively routing around the component
-            if (what.ordering === 'hv' && ((portSide === 'left' ? this.#dragConnection.x < x : this.#dragConnection.x > x))) {
-                this.#dragConnection.ordering = 'vh';
-            } else if (what.ordering === 'vh' && (portSide === 'top' ? this.#dragConnection.y < y : this.#dragConnection.y > y)) {
-                this.#dragConnection.ordering = 'hv';
+            if (what.ordering === 'hv' && ((portSide === 'left' ? this.#wireBuilder.x < x : this.#wireBuilder.x > x))) {
+                this.#wireBuilder.ordering = 'vh';
+            } else if (what.ordering === 'vh' && (portSide === 'top' ? this.#wireBuilder.y < y : this.#wireBuilder.y > y)) {
+                this.#wireBuilder.ordering = 'hv';
             } else {
-                this.#dragConnection.ordering = what.ordering;
+                this.#wireBuilder.ordering = what.ordering;
             }
-            this.#dragConnection.setEndpoints(this.#dragConnection.x, this.#dragConnection.y, x, y, true);
-            this.#dragConnection.render();
+            this.#wireBuilder.setEndpoints(this.#wireBuilder.x, this.#wireBuilder.y, x, y, true);
+            this.#wireBuilder.render();
         } else {
             // FIXME: delete connection if no wires were produced (not dragged far enough)
-            this.#dragConnection = null;
+            this.#wireBuilder = null;
             this.grid.clearMessage(true);
             this.grid.releaseHotkeyTarget(this, true);
             this.grid.invalidateNets();

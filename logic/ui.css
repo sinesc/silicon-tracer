@@ -596,27 +596,27 @@ div.component.gate[data-component-rotation="3"] > div.component-inner {
 }
 
 /*
- * Connection
+ * Wire
  */
-.connection-h, .connection-v {
+.wire-h, .wire-v {
     z-index: 10;
     position: absolute;
     box-sizing: border-box;
     background-color: #6d6d6d;
 }
-/* extends clickable area around connections */
-.connection-h::after, .connection-v::after {
+/* extends clickable area around wires */
+.wire-h::after, .wire-v::after {
     content: '';
     position: absolute;
     inset-block: -4px;
     inset-inline: -4px;
 }
-.grid-zoom-above-100 .connection-h::after, .grid-zoom-above-100 .connection-v::after {
+.grid-zoom-above-100 .wire-h::after, .grid-zoom-above-100 .wire-v::after {
     inset-block: -8px;
     inset-inline: -8px;
 }
-/* connection debugging */
-.connection-debug {
+/* wirebuilder debugging */
+.wirebuilder-debug {
     pointer-events: none;
     z-index: 11;
     position: absolute;
@@ -628,7 +628,7 @@ div.component.gate[data-component-rotation="3"] > div.component-inner {
     border-right-color: turquoise;
     opacity: 0.5;
 }
-.connection-debug span {
+.wirebuilder-debug span {
     pointer-events: none;
     z-index: 11;
     display: block;
@@ -641,26 +641,26 @@ div.component.gate[data-component-rotation="3"] > div.component-inner {
     margin-top: -20px;
     text-align: center;
 }
-.connection-debug-point {
+.wirebuilder-debug-point {
     pointer-events: none;
     z-index: 11;
     display: block;
     position: absolute;
 }
-.connection-debug-point0::after {
+.wirebuilder-debug-point0::after {
     content: '0';
 }
-.connection-debug-point1::after {
+.wirebuilder-debug-point1::after {
     content: '1';
 }
-.connection-debug-point2::after {
+.wirebuilder-debug-point2::after {
     content: '2';
 }
 
 /*
  * Net colors
  */
-/* connection colors when not simulating */
+/* wire colors when not simulating */
 div[data-net-color="0"][data-net-state=""] { background-color: var(--wire-color0); }
 div[data-net-color="1"][data-net-state=""] { background-color: var(--wire-color1); }
 div[data-net-color="2"][data-net-state=""] { background-color: var(--wire-color2); }
@@ -671,7 +671,7 @@ div[data-net-color="6"][data-net-state=""] { background-color: var(--wire-color6
 div[data-net-color="7"][data-net-state=""] { background-color: var(--wire-color7); }
 div[data-net-color="8"][data-net-state=""] { background-color: var(--wire-color8); }
 div[data-net-color="9"][data-net-state=""] { background-color: var(--wire-color9); }
-/* connection colors null */
+/* wire colors null */
 div[data-net-color="0"][data-net-state="null"] { background-color: var(--wire-color0-null); }
 div[data-net-color="1"][data-net-state="null"] { background-color: var(--wire-color1-null); }
 div[data-net-color="2"][data-net-state="null"] { background-color: var(--wire-color2-null); }
@@ -682,7 +682,7 @@ div[data-net-color="6"][data-net-state="null"] { background-color: var(--wire-co
 div[data-net-color="7"][data-net-state="null"] { background-color: var(--wire-color7-null); }
 div[data-net-color="8"][data-net-state="null"] { background-color: var(--wire-color8-null); }
 div[data-net-color="9"][data-net-state="null"] { background-color: var(--wire-color9-null); }
-/* connection colors low */
+/* wire colors low */
 div[data-net-color="0"][data-net-state="0"] { background-color: var(--wire-color0-low); }
 div[data-net-color="1"][data-net-state="0"] { background-color: var(--wire-color1-low); }
 div[data-net-color="2"][data-net-state="0"] { background-color: var(--wire-color2-low); }
@@ -693,7 +693,7 @@ div[data-net-color="6"][data-net-state="0"] { background-color: var(--wire-color
 div[data-net-color="7"][data-net-state="0"] { background-color: var(--wire-color7-low); }
 div[data-net-color="8"][data-net-state="0"] { background-color: var(--wire-color8-low); }
 div[data-net-color="9"][data-net-state="0"] { background-color: var(--wire-color9-low); }
-/* connection colors high */
+/* wire colors high */
 div[data-net-color="0"][data-net-state="1"] { background-color: var(--wire-color0-high); box-shadow: 1px 1px 3px var(--wire-color0-high-alpha), -1px -1px 3px var(--wire-color0-high-alpha); }
 div[data-net-color="1"][data-net-state="1"] { background-color: var(--wire-color1-high); box-shadow: 1px 1px 3px var(--wire-color1-high-alpha), -1px -1px 3px var(--wire-color1-high-alpha); }
 div[data-net-color="2"][data-net-state="1"] { background-color: var(--wire-color2-high); box-shadow: 1px 1px 3px var(--wire-color2-high-alpha), -1px -1px 3px var(--wire-color2-high-alpha); }

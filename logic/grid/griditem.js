@@ -116,7 +116,7 @@ class GridItem {
     // Called when mouse drag starts, invokes onDrag().
     #handleDragStart(args, e) {
         e.preventDefault();
-        if (e.which !== 1) { // don't stop propagation for other buttons so we can drag the grid while hovering over a connection/component
+        if (e.which !== 1) { // don't stop propagation for other buttons so we can drag the grid while hovering over a wire/component
             return;
         }
         e.stopPropagation();

@@ -1,15 +1,14 @@
 "use strict";
 
-class Connection extends GridItem {
+class WireBuilder extends GridItem {
 
     static DEBUG_BOX = false;
-    static HOVER_MESSAGE = 'Connection. <i>LMB</i>: Branch off new connection. <i>D</i> Delete, <i>0</i> - <i>9</i>: Set net color.';// TODO: <i>Shift+LMB</i>: Drag along the normal.
-    static DRAWING_CONNECTION_MESSAGE = 'Drawing connection. <i>R</i>: Add point, continue drawing from here.';
-    static THICKNESS = 3;
+    static HOVER_MESSAGE = 'Wire. <i>LMB</i>: Branch off new wire. <i>D</i> Delete, <i>0</i> - <i>9</i>: Set net color.';// TODO: <i>Shift+LMB</i>: Drag along the normal.
+    static DRAWING_CONNECTION_MESSAGE = 'Drawing wire. <i>R</i>: Add point, continue drawing from here.';
 
     #elementH;
     #elementV;
-    #dragConnection;
+    #wireBuilder;
     width;
     height;
     ordering;
@@ -32,24 +31,24 @@ class Connection extends GridItem {
         this.#elementH = new Wire(this.grid, x1, y1, this.width, 'h', this.color);
         this.#elementV = new Wire(this.grid, x1, y1, this.height, 'v', this.color);
 
-        if (Connection.DEBUG_BOX) {
+        if (WireBuilder.DEBUG_BOX) {
             this.debug = document.createElement('div');
-            this.debug.classList.add('connection-debug');
+            this.debug.classList.add('wirebuilder-debug');
             this.grid.addVisual(this.debug);
             for (let i = 0; i < 3; ++i) {
                 this['debug' + i] = document.createElement('div');
-                this['debug' + i].classList.add('connection-debug-point', 'connection-debug-point' + i);
+                this['debug' + i].classList.add('wirebuilder-debug-point', 'wirebuilder-debug-point' + i);
                 this.grid.addVisual(this['debug' + i]);
             }
         }
     }
 
-    // Gets the screen width for this connection.
+    // Gets the screen width for this wire corner.
     get visualWidth() {
         return this.width * this.grid.zoom;
     }
 
-    // Gets the screen height for this connection.
+    // Gets the screen height for this wire corner.
     get visualHeight() {
         return this.height * this.grid.zoom;
     }
@@ -62,17 +61,17 @@ class Connection extends GridItem {
     // Hover hotkey actions
     onHotkey(key, what) {
         if (what.type === 'connect' && key === 'r') {
-            // add connection point when pressing R while dragging a connection
-            let x = this.#dragConnection.x + this.#dragConnection.width;
-            let y = this.#dragConnection.y + this.#dragConnection.height;
-            let color = this.#dragConnection.color;
-            this.#dragConnection = new Connection(this.grid, x, y, x, y, what.ordering, color);
+            // add new corner when pressing R while dragging a wire
+            let x = this.#wireBuilder.x + this.#wireBuilder.width;
+            let y = this.#wireBuilder.y + this.#wireBuilder.height;
+            let color = this.#wireBuilder.color;
+            this.#wireBuilder = new WireBuilder(this.grid, x, y, x, y, what.ordering, color);
             this.grid.invalidateNets();
             this.grid.render();
         }
     }
 
-    // Sets connection endpoints, optionally aligned to the grid.
+    // Sets wire corner endpoints, optionally aligned to the grid.
     setEndpoints(x1, y1, x2, y2, aligned) {
         if (aligned) {
             [ x1, y1 ] = this.gridAlign(x1, y1);
@@ -84,7 +83,7 @@ class Connection extends GridItem {
         this.height = y2 - y1;
     };
 
-    // Returns the 2 or 3 distinct endpoint coordinates of this connection.
+    // Returns the 2 or 3 distinct endpoint coordinates of this wire corner.
     getPoints() {
 
         let mk = (x, y) => new Point(x, y);
@@ -101,7 +100,7 @@ class Connection extends GridItem {
         return points;
     }
 
-    // Renders the connection onto the grid.
+    // Renders the wires onto the grid.
     render() {
 
         let x = this.x;
@@ -135,7 +134,7 @@ class Connection extends GridItem {
             }
         }
 
-        if (Connection.DEBUG_BOX) {
+        if (WireBuilder.DEBUG_BOX) {
             let z = this.grid.zoom;
             let x0 = this.grid.offsetX;
             let y0 = this.grid.offsetY;
@@ -153,7 +152,7 @@ class Connection extends GridItem {
         }
     }
 
-    // Renders a debug point on one of the 3 distinct connection end points.
+    // Renders a debug point on one of the 3 distinct wire corner/end points.
     debugPoint(i, c) {
         if (c === null) {
             this['debug' + i].style.display = 'none';
