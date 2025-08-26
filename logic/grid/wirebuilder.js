@@ -3,15 +3,17 @@
 class WireBuilder extends GridItem {
 
     static DEBUG_BOX = false;
+    static DRAWING_CONNECTION_MESSAGE = 'Drawing connection. <i>R</i>: Add point, continue drawing from here.';
 
     #wireH;
     #wireV;
+    #ordering;
+    #fliptest;
     width;
     height;
-    ordering;
     color;
 
-    constructor(grid, x1, y1, x2, y2, ordering, color) {
+    constructor(grid, x1, y1, x2, y2, ordering, color, fliptest) {
 
         super(grid);
 
@@ -21,8 +23,9 @@ class WireBuilder extends GridItem {
         this.y = y1;
         this.width = x2 - x1;
         this.height = y2 - y1;
-        this.ordering = ordering ?? 'hv';
+        this.#ordering = ordering ?? 'hv';
         this.color = color ?? 0;
+        this.#fliptest = fliptest ?? ( (x, y) => false );
 
         this.#wireH = new Wire(this.grid, x1, y1, this.width, 'h', this.color);
         this.#wireV = new Wire(this.grid, x1, y1, this.height, 'v', this.color);
@@ -40,14 +43,45 @@ class WireBuilder extends GridItem {
         }
     }
 
-    // Gets the screen width for this wire corner.
-    get visualWidth() {
-        return this.width * this.grid.zoom;
+    // Returns potentially flipped ordering.
+    get ordering() {
+        return this.#fliptest(this.x + this.width, this.y + this.height) ? this.#ordering === 'hv' ? 'vh' : 'hv' : this.#ordering;
     }
 
-    // Gets the screen height for this wire corner.
-    get visualHeight() {
-        return this.height * this.grid.zoom;
+    // Hover hotkey actions
+    onHotkey(key, what) {
+        if (key === 'r' && what.type === 'connect') {
+            // add new corner when pressing R while dragging a wire
+            let x = this.x + this.width;
+            let y = this.y + this.height;
+            let color = this.color;
+            // pass handling off to the previously created wirebuilder
+            let flippedOrdering = this.#ordering !== what.ordering;
+            let dragConnectionWhat = { ...what, ordering: flippedOrdering ? what.ordering == 'hv' ? 'vh' : 'hv' : what.ordering, x, y, color };
+            this.dragStop(x, y, what);
+            this.grid.releaseHotkeyTarget(this, true);
+            let wireBuilder = new WireBuilder(this.grid, what.startX, what.startY, x, y, what.ordering, this.color);
+            wireBuilder.dragStart(x, y, dragConnectionWhat);
+        }
+    }
+
+    // Called while a registered visual is being dragged.
+    onDrag(x, y, status, what) {
+        if (status === 'start') {
+            what.startX = x;
+            what.startY = y;
+            this.grid.setMessage(WireBuilder.DRAWING_CONNECTION_MESSAGE, true);
+            this.grid.requestHotkeyTarget(this, true, { ...what, type: 'connect' }); // pass 'what' to onHotkey()
+        } else if (status !== 'stop') {
+            this.setBounding(what.startX, what.startY, x, y);
+            this.render();
+        } else {
+            this.grid.clearMessage(true);
+            this.grid.releaseHotkeyTarget(this, true);
+            this.grid.invalidateNets();
+            this.remove();
+            this.grid.render();
+        }
     }
 
     // Upon removal of the builder also remove any zero length wires produced by it.
@@ -58,15 +92,19 @@ class WireBuilder extends GridItem {
         if (this.height === 0) {
             this.#wireV.remove();
         }
+        if (WireBuilder.DEBUG_BOX) {
+            this.grid.removeVisual(this.debug);
+            for (let i = 0; i < 3; ++i) {
+                this.grid.removeVisual(this['debug' + i]);
+            }
+        }
         super.remove();
     }
 
-    // Sets wire corner endpoints, optionally aligned to the grid.
-    setEndpoints(x1, y1, x2, y2, aligned) {
-        if (aligned) {
-            [ x1, y1 ] = this.gridAlign(x1, y1);
-            [ x2, y2 ] = this.gridAlign(x2, y2);
-        }
+    // Sets wire corner bounding box.
+    setBounding(x1, y1, x2, y2) {
+        [ x1, y1 ] = this.gridAlign(x1, y1);
+        [ x2, y2 ] = this.gridAlign(x2, y2);
         this.x = x1;
         this.y = y1;
         this.width = x2 - x1;
@@ -74,57 +112,12 @@ class WireBuilder extends GridItem {
         this.#updateWires();
     };
 
-    // Returns the 2 or 3 distinct endpoint coordinates of this wire corner.
-    getPoints() {
-
-        let mk = (x, y) => new Point(x, y);
-        let points = [ mk(this.x, this.y) ];
-
-        if (this.width !== 0) {
-            points.push(this.ordering === 'hv' ? mk(this.x + this.width, this.y) : mk(this.x + (this.height === 0 ? this.width : 0), this.y + this.height));
-        }
-
-        if (this.height !== 0) {
-            points.push(mk(this.x + this.width, this.y + this.height));
-        }
-
-        return points;
-    }
-
     // Renders the wires onto the grid.
     render() {
         this.#wireH.render();
         this.#wireV.render();
         if (WireBuilder.DEBUG_BOX) {
-            let z = this.grid.zoom;
-            let x0 = this.grid.offsetX;
-            let y0 = this.grid.offsetY;
-            let hx = width < 0 ? x + width : x;
-            let hy = height < 0 ? y + height : y;
-            this.debug.style.left = (x0 + hx * z) + "px";
-            this.debug.style.top = (y0 + hy * z) + "px";
-            this.debug.style.width = Math.abs(width * z) + "px";
-            this.debug.style.height = Math.abs(height * z) + "px";
-            let points = this.getPoints();
-            for (let i = 0; i < 3; ++i) {
-                this.#debugPoint(i, i < points.length ? points[i] : null);
-            }
-            this.debug.innerHTML = '<span>' + points.map((p) => JSON.stringify(p)).join('<br>') + '</span>';
-        }
-    }
-
-    // Renders a debug point on one of the 3 distinct wire corner/end points.
-    #debugPoint(i, c) {
-        if (c === null) {
-            this['debug' + i].style.display = 'none';
-        } else {
-            let x = c.x;
-            let y = c.y;
-            let vx = (x + this.grid.offsetX) * this.grid.zoom;
-            let vy = (y + this.grid.offsetY) * this.grid.zoom;
-            this['debug' + i].style.display = 'block';
-            this['debug' + i].style.left = (vx - 6) + 'px';
-            this['debug' + i].style.top = (vy - 6) + 'px';
+            this.#debugRenderBox();
         }
     }
 
@@ -147,11 +140,57 @@ class WireBuilder extends GridItem {
             // vertical first, then horizontal
             let vy = height < 0 ? y + height : y;
             let vh = Math.abs(height);
-            this.#wireH.setEndpoints(x, vy, vh, 'v');
+            this.#wireV.setEndpoints(x, vy, vh, 'v');
 
             let hx = width < 0 ? x + width : x;
             let hw = Math.abs(width);
-            this.#wireV.setEndpoints(hx, y + height, hw, 'h');
+            this.#wireH.setEndpoints(hx, y + height, hw, 'h');
+        }
+    }
+
+    // Returns the 2 or 3 distinct endpoint coordinates of this wire corner.
+    #points() {
+        let mk = (x, y) => new Point(x, y);
+        let points = [ mk(this.x, this.y) ];
+        if (this.width !== 0) {
+            points.push(this.ordering === 'hv' ? mk(this.x + this.width, this.y) : mk(this.x + (this.height === 0 ? this.width : 0), this.y + this.height));
+        }
+        if (this.height !== 0) {
+            points.push(mk(this.x + this.width, this.y + this.height));
+        }
+        return points;
+    }
+
+    // Renders a debug bounding box around for the wire corner.
+    #debugRenderBox() {
+        let z = this.grid.zoom;
+        let x0 = this.grid.offsetX;
+        let y0 = this.grid.offsetY;
+        let hx = this.width < 0 ? this.x + this.width : this.x;
+        let hy = this.height < 0 ? this.y + this.height : this.y;
+        this.debug.style.left = (x0 + hx * z) + "px";
+        this.debug.style.top = (y0 + hy * z) + "px";
+        this.debug.style.width = Math.abs(this.width * z) + "px";
+        this.debug.style.height = Math.abs(this.height * z) + "px";
+        let points = this.#points();
+        for (let i = 0; i < 3; ++i) {
+            this.#debugRenderPoint(i, i < points.length ? points[i] : null);
+        }
+        this.debug.innerHTML = '<span>' + points.map((p) => JSON.stringify(p)).join('<br>') + '</span>';
+    }
+
+    // Renders a debug point on one of the 3 distinct wire corner/end points.
+    #debugRenderPoint(i, c) {
+        if (c === null) {
+            this['debug' + i].style.display = 'none';
+        } else {
+            let x = c.x;
+            let y = c.y;
+            let vx = (x + this.grid.offsetX) * this.grid.zoom;
+            let vy = (y + this.grid.offsetY) * this.grid.zoom;
+            this['debug' + i].style.display = 'block';
+            this['debug' + i].style.left = (vx - 6) + 'px';
+            this['debug' + i].style.top = (vy - 6) + 'px';
         }
     }
 }

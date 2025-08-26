@@ -7,7 +7,6 @@ class Wire extends GridItem {
     static THICKNESS = 3;
 
     #element;
-    #wireBuilder;
     color;
     netId = null;
     width;
@@ -54,33 +53,20 @@ class Wire extends GridItem {
 
     // Create connection from exiting connection.
     onConnect(x, y, status, what) {
-        if (status === 'start') {
-            what.startX = x;
-            what.startY = y;
-        }
-        if (!this.#wireBuilder) {
-            // TODO: when dragging forward (i.e. not perpendicular) from the end of a wire, ordering should be reversed.
-            // this requires getting a mouse movement vector because the user might still want to drag along the normal at the end of a wire
-            this.grid.setMessage(WireBuilder.DRAWING_CONNECTION_MESSAGE, true);
-            this.grid.requestHotkeyTarget(this, true, { ...what, type: 'connect' }); // pass 'what' to onHotkey()
-            this.#wireBuilder = new WireBuilder(this.grid, what.startX, what.startY, x, y, what.ordering, this.color);
-            this.#wireBuilder.render();
-        } else if (status !== 'stop') {
-            this.#wireBuilder.setEndpoints(this.#wireBuilder.x, this.#wireBuilder.y, x, y, true);
-            this.#wireBuilder.render();
-        } else {
-            this.#wireBuilder.remove();
-            this.#wireBuilder = null;
-            this.grid.clearMessage(true);
-            this.grid.releaseHotkeyTarget(this, true);
-            this.grid.invalidateNets();
-            this.grid.render();
-        }
+        // TODO: when dragging forward (i.e. not perpendicular) from the end of a wire, ordering should be reversed.
+        // this requires getting a mouse movement vector because the user might still want to drag along the normal at the end of a wire
+        this.dragStop(x, y, what);
+        this.grid.releaseHotkeyTarget(this, true);
+        let wireBuilder = new WireBuilder(this.grid, x, y, x, y, what.ordering, this.color);
+        wireBuilder.render();
+        wireBuilder.dragStart(x, y, what);
     }
 
     // Called while a registered visual is being dragged.
     onDrag(x, y, status, what) {
-        this.onConnect(x, y, status, what);
+        if (status === 'start') {
+            this.onConnect(x, y, status, what);
+        }
     }
 
     // Hover hotkey actions
@@ -95,14 +81,6 @@ class Wire extends GridItem {
                 this.remove();
                 this.grid.invalidateNets();
             }, 150);
-        } else if (what.type === 'connect' && key === 'r') {
-            // add new corner when pressing R while dragging a wire
-            let x = this.#wireBuilder.x + this.#wireBuilder.width;
-            let y = this.#wireBuilder.y + this.#wireBuilder.height;
-            let color = this.#wireBuilder.color;
-            this.#wireBuilder = new WireBuilder(this.grid, x, y, x, y, what.ordering, color);
-            this.grid.invalidateNets();
-            this.grid.render();
         }
     }
 

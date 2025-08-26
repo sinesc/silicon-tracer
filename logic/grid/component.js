@@ -54,7 +54,6 @@ class Component extends GridItem {
     #inner;
     #dropPreview;
     #ports;
-    #wireBuilder = null;
 
     width;
     height;
@@ -173,8 +172,6 @@ class Component extends GridItem {
         this.#element = null;
         this.#dropPreview?.remove();
         this.#dropPreview = null;
-        this.#wireBuilder?.remove();
-        this.#wireBuilder = null;
         super.remove();
     }
 
@@ -206,20 +203,6 @@ class Component extends GridItem {
                 this.grid.invalidateNets();
                 this.remove();
             }, 150);
-        } else if (key === 'r' && what.type === 'connect') {
-            // add new corner when pressing R while dragging a wire
-            let x = this.#wireBuilder.x + this.#wireBuilder.width;
-            let y = this.#wireBuilder.y + this.#wireBuilder.height;
-            let color = this.#wireBuilder.color;
-            // pass handling off to the previously created wirebuilder
-            let flippedOrdering = this.#wireBuilder.ordering !== what.ordering;
-            let dragConnectionWhat = { ...what, ordering: flippedOrdering ? what.ordering == 'hv' ? 'vh' : 'hv' : what.ordering, x, y, color };
-            this.grid.releaseHotkeyTarget(this, true);
-            this.dragStop(x, y, what);
-            this.#wireBuilder.dragStart(x, y, dragConnectionWhat);
-            this.#wireBuilder = null;
-            this.grid.invalidateNets();
-            this.grid.render();
         }
     }
 
@@ -258,41 +241,30 @@ class Component extends GridItem {
 
     // Create connection from port.
     onConnect(x, y, status, what) {
+        this.dragStop(x, y, what);
+        this.grid.releaseHotkeyTarget(this, true);
         let port = this.portByName(what.name);
         let portCoords = port.coords(this.width, this.height, this.rotation);
         let portSide = port.side(this.rotation);
-        if (!this.#wireBuilder /* start */) {
-            this.grid.setMessage(WireBuilder.DRAWING_CONNECTION_MESSAGE, true);
-            what.ordering = portSide === 'top' || portSide === 'bottom' ? 'vh' : 'hv';
-            this.grid.requestHotkeyTarget(this, true, { ...what, type: 'connect' }); // pass 'what' to onHotkey()
-            this.#wireBuilder = new WireBuilder(this.grid, this.x + portCoords.x, this.y + portCoords.y, x, y, what.ordering);
-            this.#wireBuilder.render();
-        } else if (status !== 'stop') {
-            // flip ordering when draggin towards component, effetively routing around the component
-            if (what.ordering === 'hv' && ((portSide === 'left' ? this.#wireBuilder.x < x : this.#wireBuilder.x > x))) {
-                this.#wireBuilder.ordering = 'vh';
-            } else if (what.ordering === 'vh' && (portSide === 'top' ? this.#wireBuilder.y < y : this.#wireBuilder.y > y)) {
-                this.#wireBuilder.ordering = 'hv';
-            } else {
-                this.#wireBuilder.ordering = what.ordering;
-            }
-            this.#wireBuilder.setEndpoints(this.#wireBuilder.x, this.#wireBuilder.y, x, y, true);
-            this.#wireBuilder.render();
-        } else {
-            this.#wireBuilder.remove();
-            this.#wireBuilder = null;
-            this.grid.clearMessage(true);
-            this.grid.releaseHotkeyTarget(this, true);
-            this.grid.invalidateNets();
-            this.grid.render();
-        }
+        let ordering = portSide === 'top' || portSide === 'bottom' ? 'vh' : 'hv';
+        let px = this.x + portCoords.x;
+        let py = this.y + portCoords.y;
+        const MINIMA = {
+            left: (x, y) => x > px,
+            right: (x, y) => x < px,
+            top: (x, y) => y > py,
+            bottom: (x, y) => y < py,
+        };
+        let wireBuilder = new WireBuilder(this.grid, px, py, x, y, ordering, port.color, MINIMA[portSide]);
+        wireBuilder.render();
+        wireBuilder.dragStart(x, y, what);
     }
 
     // Called while a registered visual is being dragged.
     onDrag(x, y, status, what) {
         if (what.type === 'component') {
             this.onMove(x, y, status, what);
-        } else if (what.type === 'port') {
+        } else if (what.type === 'port' && status === 'start') {
             this.onConnect(x, y, status, what);
         }
     }
