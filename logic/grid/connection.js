@@ -29,17 +29,8 @@ class Connection extends GridItem {
         this.ordering = ordering ?? 'hv';
         this.color = color ?? 0;
 
-        this.#elementH = document.createElement('div');
-        this.#elementH.classList.add('connection-h');
-        this.registerDrag(this.#elementH, { type: 'connect', ordering: 'vh' });
-        this.setHoverMessage(this.#elementH, Connection.HOVER_MESSAGE, { type: 'hover' });
-        this.grid.addVisual(this.#elementH);
-
-        this.#elementV = document.createElement('div');
-        this.#elementV.classList.add('connection-v');
-        this.registerDrag(this.#elementV, { type: 'connect', ordering: 'hv' });
-        this.setHoverMessage(this.#elementV, Connection.HOVER_MESSAGE, { type: 'hover' });
-        this.grid.addVisual(this.#elementV);
+        this.#elementH = new Wire(this.grid, x1, y1, this.width, 'h', this.color);
+        this.#elementV = new Wire(this.grid, x1, y1, this.height, 'v', this.color);
 
         if (Connection.DEBUG_BOX) {
             this.debug = document.createElement('div');
@@ -63,53 +54,6 @@ class Connection extends GridItem {
         return this.height * this.grid.zoom;
     }
 
-    // Serializes the object for writing to disk.
-    serialize() {
-        return {
-            ...super.serialize(),
-            _: { c: this.constructor.name, a: [ this.x, this.y, this.x + this.width, this.y + this.height, this.ordering, this.color ]},
-        };
-    }
-
-    // Removes the connection from the grid.
-    remove() {
-        this.grid.removeVisual(this.#elementH);
-        this.#elementH = null;
-        this.grid.removeVisual(this.#elementV);
-        this.#elementV = null;
-        super.remove();
-    }
-
-    // Detach wire from simulation.
-    detachSimulation() {
-        this.netId = null;
-    }
-
-    // Create connection from exiting connection.
-    onConnect(x, y, status, what) {
-        if (status === 'start') {
-            what.startX = x;
-            what.startY = y;
-        }
-        if (!this.#dragConnection) {
-            // TODO: when dragging forward (i.e. not perpendicular) from the end of a wire, ordering should be reversed.
-            // this requires getting a mouse movement vector because the user might still want to drag along the normal at the end of a wire
-            this.grid.setMessage(Connection.DRAWING_CONNECTION_MESSAGE, true);
-            this.grid.requestHotkeyTarget(this, true, { ...what, type: 'connect' }); // pass 'what' to onHotkey()
-            this.#dragConnection = new Connection(this.grid, what.startX, what.startY, x, y, what.ordering, this.color);
-            this.#dragConnection.render();
-        } else if (status !== 'stop') {
-            this.#dragConnection.setEndpoints(this.#dragConnection.x, this.#dragConnection.y, x, y, true);
-            this.#dragConnection.render();
-        } else {
-            this.#dragConnection = null;
-            this.grid.clearMessage(true);
-            this.grid.releaseHotkeyTarget(this, true);
-            this.grid.invalidateNets();
-            this.grid.render();
-        }
-    }
-
     // Called while a registered visual is being dragged.
     onDrag(x, y, status, what) {
         this.onConnect(x, y, status, what);
@@ -117,19 +61,7 @@ class Connection extends GridItem {
 
     // Hover hotkey actions
     onHotkey(key, what) {
-        if (what.type === 'hover' && key >= '0' && key <= '9') {
-            this.color = parseInt(key);
-            this.render();
-        } else if (key === 'd' && what.type === 'hover') {
-            this.#elementH.classList.add('connection-delete-animation');
-            this.#elementV.classList.add('connection-delete-animation');
-            setTimeout(() => {
-                this.#elementH.classList.remove('connection-delete-animation');
-                this.#elementV.classList.remove('connection-delete-animation');
-                this.grid.invalidateNets();
-                this.remove();
-            }, 150);
-        } else if (what.type === 'connect' && key === 'r') {
+        if (what.type === 'connect' && key === 'r') {
             // add connection point when pressing R while dragging a connection
             let x = this.#dragConnection.x + this.#dragConnection.width;
             let y = this.#dragConnection.y + this.#dragConnection.height;
@@ -172,71 +104,47 @@ class Connection extends GridItem {
     // Renders the connection onto the grid.
     render() {
 
-        let thickness = Connection.THICKNESS * this.grid.zoom;
-        let x = this.visualX;
-        let y = this.visualY ;
-        let width = this.visualWidth;
-        let height = this.visualHeight;
-        let t = thickness / 2;
-
-        this.#elementH.style.display = this.width !== 0 ? 'block' : 'none';
-        this.#elementV.style.display = this.height !== 0 ? 'block' : 'none';
-
-        this.#elementH.setAttribute('data-net-color', this.color ?? '');
-        this.#elementV.setAttribute('data-net-color', this.color ?? '');
-
-        this.#elementH.setAttribute('data-net-state', this.netId !== null && this.grid.sim ? this.grid.sim.getNet(this.netId) : '');
-        this.#elementV.setAttribute('data-net-state', this.netId !== null && this.grid.sim ? this.grid.sim.getNet(this.netId) : '');
+        let x = this.x;
+        let y = this.y ;
+        let width = this.width;
+        let height = this.height;
 
         if (this.ordering === 'hv') {
             // horizontal first, then vertical
             if (this.width !== 0) {
                 let hx = width < 0 ? x + width : x;
                 let hw = Math.abs(width);
-                this.#elementH.style.left = (hx - t) + "px";
-                this.#elementH.style.top = (y - t) + "px";
-                this.#elementH.style.width = (hw + 2 * t) + "px";
-                this.#elementH.style.minWidth = thickness + 'px';
-                this.#elementH.style.minHeight = thickness + 'px';
+                this.#elementH.setEndpoints(hx, y, hw, 'h');
             }
             if (this.height !== 0) {
                 let vy = height < 0 ? y + height : y;
                 let vh = Math.abs(height);
-                this.#elementV.style.left = (x + width - t) + "px";
-                this.#elementV.style.top = (vy - t) + "px";
-                this.#elementV.style.height = (vh + 2 * t) + "px";
-                this.#elementV.style.minWidth = thickness + 'px';
-                this.#elementV.style.minHeight = thickness + 'px';
+                this.#elementV.setEndpoints(x + width, vy, vh, 'v');
             }
         } else {
             // vertical first, then horizontal
             if (this.height !== 0) {
                 let vy = height < 0 ? y + height : y;
                 let vh = Math.abs(height);
-                this.#elementV.style.left = (x - t) + "px";
-                this.#elementV.style.top = (vy - t) + "px";
-                this.#elementV.style.height = (vh + 2 * t) + "px";
-                this.#elementV.style.minWidth = thickness + 'px';
-                this.#elementV.style.minHeight = thickness + 'px';
+                this.#elementH.setEndpoints(x, vy, vh, 'v');
             }
             if (this.width !== 0) {
                 let hx = width < 0 ? x + width : x;
                 let hw = Math.abs(width);
-                this.#elementH.style.left = (hx - t) + "px";
-                this.#elementH.style.top = (y + height - t) + "px";
-                this.#elementH.style.width = (hw + 2 * t) + "px";
-                this.#elementH.style.minWidth = thickness + 'px';
-                this.#elementH.style.minHeight = thickness + 'px';
+                this.#elementV.setEndpoints(hx, y + height, hw, 'h');
             }
         }
 
         if (Connection.DEBUG_BOX) {
+            let z = this.grid.zoom;
+            let x0 = this.grid.offsetX;
+            let y0 = this.grid.offsetY;
             let hx = width < 0 ? x + width : x;
             let hy = height < 0 ? y + height : y;
-            this.debug.style.left = hx + "px";
-            this.debug.style.top = hy + "px";
-            this.debug.style.width = Math.abs(width) + "px";
-            this.debug.style.height = Math.abs(height) + "px";
+            this.debug.style.left = (x0 + hx * z) + "px";
+            this.debug.style.top = (y0 + hy * z) + "px";
+            this.debug.style.width = Math.abs(width * z) + "px";
+            this.debug.style.height = Math.abs(height * z) + "px";
             let points = this.getPoints();
             for (let i = 0; i < 3; ++i) {
                 this.debugPoint(i, i < points.length ? points[i] : null);
@@ -250,8 +158,8 @@ class Connection extends GridItem {
         if (c === null) {
             this['debug' + i].style.display = 'none';
         } else {
-            let x = c[0];
-            let y = c[1];
+            let x = c.x;
+            let y = c.y;
             let vx = (x + this.grid.offsetX) * this.grid.zoom;
             let vy = (y + this.grid.offsetY) * this.grid.zoom;
             this['debug' + i].style.display = 'block';
