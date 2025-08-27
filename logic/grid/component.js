@@ -201,8 +201,9 @@ class Component extends GridItem {
             this.#element.classList.add('component-delete-animation');
             setTimeout(() => {
                 this.#element.classList.remove('component-delete-animation');
-                this.grid.invalidateNets();
                 this.remove();
+                this.grid.invalidateNets();
+                this.grid.render();
             }, 150);
         }
     }

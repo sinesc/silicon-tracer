@@ -9,8 +9,9 @@ class Wire extends GridItem {
     #element;
     color;
     netId = null;
-    width;
+    width; // TODO: replace width/height with length/direction
     height;
+    direction;
 
     constructor(grid, x1, y1, length, direction, color) {
 
@@ -22,6 +23,7 @@ class Wire extends GridItem {
         this.width = direction === 'h' ? length : 0;
         this.height = direction === 'v' ? length : 0;
         this.color = color ?? null;
+        this.direction = direction;
 
         this.#element = document.createElement('div');
         this.#element.classList.add('wire-' + direction);

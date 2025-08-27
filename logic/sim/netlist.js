@@ -48,7 +48,7 @@ class NetList {
             let foundPorts = [];
             for (let w = 0; w < netWires.length; ++w) {
                 for (let p = ports.length - 1; p >= 0; --p) {
-                    if (NetList.#pointOnLine(ports[p][0], netWires[w])) {
+                    if (ports[p][0].onLine(netWires[w])) {
                         foundPorts.push(ports[p]);
                         ports.swapRemove(p);
                     }
@@ -64,24 +64,7 @@ class NetList {
     }
 
     static #endsIntersect(a, b) {
-        return NetList.#pointOnLine(a[0], b) || NetList.#pointOnLine(a[1], b) || NetList.#pointOnLine(b[0], a) || NetList.#pointOnLine(b[1], a);
-    }
-
-    static #pointOnLine(p, wire) {
-        let [ w1, w2 ] = wire;
-        if (w1.x === w2.x && w1.x === p.x) {
-            if (w1.y > w2.y) {
-                [ w2, w1 ] = [ w1, w2 ];
-            }
-            return w1.y <= p.y && w2.y >= p.y;
-        } else if (w1.y === w2.y && w1.y === p.y) {
-            if (w1.x > w2.x) {
-                [ w2, w1 ] = [ w1, w2 ];
-            }
-            return w1.x <= p.x && w2.x >= p.x;
-        } else {
-            return false;
-        }
+        return a[0].onLine(b) || a[1].onLine(b) || b[0].onLine(a) || b[1].onLine(a);
     }
 }
 

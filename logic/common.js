@@ -38,6 +38,24 @@ class Point {
         this.x = x;
         this.y = y;
     }
+    // Returns whether the point lies on the given horizontal/vertical line // TODO generalize using colinearity/distance
+    onLine(line) {
+        let p = this;
+        let [ w1, w2 ] = line;
+        if (w1.x === w2.x && w1.x === p.x) {
+            if (w1.y > w2.y) {
+                [ w2, w1 ] = [ w1, w2 ];
+            }
+            return w1.y <= p.y && w2.y >= p.y;
+        } else if (w1.y === w2.y && w1.y === p.y) {
+            if (w1.x > w2.x) {
+                [ w2, w1 ] = [ w1, w2 ];
+            }
+            return w1.x <= p.x && w2.x >= p.x;
+        } else {
+            return false;
+        }
+    }
 }
 
 class WeakUnorderedSet {

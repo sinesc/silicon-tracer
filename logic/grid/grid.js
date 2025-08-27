@@ -173,8 +173,9 @@ class Grid {
         this.#element.style.backgroundPositionX = (offsetX % spacing) + 'px';
         this.#element.style.backgroundPositionY = (offsetY % spacing) + 'px';
 
-        // apply net colors to wires if the nets have changed
+        // compact overlapping wires and apply net colors to wires if the nets have changed
         if (!this.#netCache) {
+            this.compactWires();
             this.applyNetColors();
         }
 
@@ -182,6 +183,50 @@ class Grid {
         for (let item of this.#items) {
             item.render(reason);
         };
+    }
+
+    // Compact/reduce overlapping wires
+    compactWires() {
+        for (let direction of [ 'h', 'v' ]) {
+            // TODO: works better than expected, would have thought I need to run it multiple times until no more wires go inactive
+            let axis = direction === 'h' ? 'x' : 'y';
+            let wires = this.filterItems((w) => w instanceof Wire && w.direction === direction)
+                            .map((w) => ({ active: true, points: w.points(), wire: w }))
+                            .toArray();
+
+            for (let wp of wires) {
+                if (!wp.active) {
+                    continue;
+                }
+                for (let wq of wires) {
+                    if (!wq.active || wq.wire === wp.wire) {
+                        continue;
+                    }
+                    if (wp.points[0].onLine(wq.points)) {
+                        if (wp.points[1].onLine(wq.points)) {
+                            // entirely contained in the other wire, disable wp
+                            wp.active = false;
+                        } else {
+                            // partially outside, enlarge wq, disable wp
+                            let min = Math.min(wp.points[0][axis], wp.points[1][axis], wq.points[0][axis], wq.points[1][axis]);
+                            let max = Math.max(wp.points[0][axis], wp.points[1][axis], wq.points[0][axis], wq.points[1][axis]);
+                            wq.points[0][axis] = min;
+                            wq.points[1][axis] = max;
+                            wp.active = false;
+                        }
+                    }
+                }
+            }
+
+            for (let w of wires) {
+                if (!w.active) {
+                    w.wire.remove();
+                } else {
+                    let length = w.points[1][axis] - w.points[0][axis];
+                    w.wire.setEndpoints(w.points[0].x, w.points[0].y, length, direction, false);
+                }
+            }
+        }
     }
 
     // Returns the next to be used net color.
