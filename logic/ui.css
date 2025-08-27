@@ -178,9 +178,6 @@ html {
     vertical-align: top;
     margin-left: 10px;
 }
-#toolbar > .toolbar > .toolbar-menu-button .save-disabled {
-    color: var(--disabled-text-color);
-}
 
 /*
  * Toolbar UI element
@@ -243,6 +240,9 @@ html {
 .toolbar > .toolbar-menu-button {
     padding: 0 10px;
     text-shadow: 1px 1px 2px #555;
+}
+.toolbar > .toolbar-menu-button .toolbar-menu-button-disabled {
+    color: var(--disabled-text-color);
 }
 .toolbar > .toolbar-toggle-button-on.toolbar-menu-button:before {
     content: '';

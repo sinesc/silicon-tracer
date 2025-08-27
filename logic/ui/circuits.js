@@ -5,6 +5,7 @@ class Circuits {
     #currentCircuit = 0;
     #grid;
     #fileHandle = null;
+    #fileName = null;
 
     constructor(grid) {
         this.#circuits.push({ label: this.#generateName(), data: [] });
@@ -13,17 +14,18 @@ class Circuits {
 
     // Loads circuits from file, returning the filename if circuits was previously empty.
     async loadFile(clear) {
-        const haveCircuits = this.haveNonEmpty();
+        const haveCircuits = !this.empty;
         const [ handle ] = await File.openFile();
         const file = await handle.getFile();
         const content = JSON.parse(await file.text());
         if (clear) {
             this.clear();
         }
-        this.unserialize(content, true, file.name);
+        this.#unserialize(content, file.name);
         if (clear || !haveCircuits) {
             // no other circuits loaded, make this the new file handle
             this.#fileHandle = handle;
+            this.#fileName = file.name;
             return file.name;
         } else {
             return null;
@@ -39,7 +41,7 @@ class Circuits {
         } else {
             writable = await this.#fileHandle.createWritable();
         }
-        await writable.write(JSON.stringify(this.serialize()));
+        await writable.write(JSON.stringify(this.#serialize()));
         await writable.close();
     }
 
@@ -48,17 +50,35 @@ class Circuits {
         const all = this.list();
         const handle = await File.saveAs(all[0]);
         const writable = await handle.createWritable();
-        await writable.write(JSON.stringify(this.serialize()));
+        await writable.write(JSON.stringify(this.#serialize()));
         await writable.close();
         // make this the new file handle
         this.#fileHandle = handle;
+        this.#fileName = handle.name;
         return handle.name;
     }
 
     // Clears all circuits and closes the currently open file.
     closeFile() {
         this.#fileHandle = null;
+        this.#fileName = null;
         this.clear();
+    }
+
+    // Returns name of currently opened file.
+    get fileName() {
+        return this.#fileName;
+    }
+
+    // Returns true while all existing circuits are empty.
+    get empty() {
+        this.#saveGrid();
+        for (let circuit of this.#circuits) {
+            if (circuit.data.length > 1 || circuit.data.filter((i) => i['_']['c'] !== 'Grid').length > 0) {
+                return false;
+            }
+        }
+        return true;
     }
 
     // Returns a list of loaded circuits.
@@ -95,13 +115,13 @@ class Circuits {
     }
 
     // Serializes loaded circuits for saving to file.
-    serialize() {
+    #serialize() {
         this.#saveGrid();
         return { version: 1, circuits: this.#circuits };
     }
 
     // Unserializes circuits from file.
-    unserialize(content, append, filename) { // TODO: option not to append
+    #unserialize(content, filename) { // TODO: option not to append
         this.#saveGrid();
         this.#pruneEmpty();
         const newCircuitIndex = this.#circuits.length;
@@ -115,17 +135,6 @@ class Circuits {
             this.#setGrid(newCircuitIndex);
         }
         this.#grid.render();
-    }
-
-    // Returns whether at least one circuit is non-empty.
-    haveNonEmpty() {
-        this.#saveGrid();
-        for (let circuit of this.#circuits) {
-            if (circuit.data.length > 1 || circuit.data.filter((i) => i['_']['c'] !== 'Grid').length > 0) {
-                return true;
-            }
-        }
-        return false;
     }
 
     // Returns a generated name if the given name is empty.

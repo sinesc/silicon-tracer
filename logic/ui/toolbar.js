@@ -63,11 +63,14 @@ class Toolbar {
 
     // Creates a menu-button to open/close a sub-toolbar acting as a menu. Returns a new toolbar
     // as well as a state function to get/set the menu state.
-    createMenuButton(label, hoverMessage) {
+    createMenuButton(label, hoverMessage, openAction) {
         let subToolbarContainer = document.createElement('div');
         subToolbarContainer.classList.add('toolbar-menu-container');
         let [ button, stateFn ] = this.#createToggleButton(label, hoverMessage, false, (open) => {
             if (open) {
+                if (openAction) {
+                    openAction();
+                }
                 // close other menus
                 this.#menuStates.forEach((otherstateFn) => {
                     if (otherstateFn !== stateFn) {

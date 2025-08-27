@@ -6,22 +6,18 @@ let toolbar = new Toolbar(mainGrid, document.querySelector('#toolbar'));
 let circuits = new Circuits(mainGrid);
 
 // Add file operations to toolbar
-let [ , fileMenuState, fileMenu ] = toolbar.createMenuButton('File', 'File operations menu. <i>LMB</i> Open menu.');
+let [ , fileMenuState, fileMenu ] = toolbar.createMenuButton('File', 'File operations menu. <i>LMB</i> Open menu.', () => updateFileMenu());
 
 fileMenu.createActionButton('Open...', 'Close all circuits and load new circuits from a file.', async () => {
     fileMenuState(false);
-    let fileName = await circuits.loadFile(true);
-    saveButton.innerHTML = 'Save <i>' + fileName + '</i>';
-    saveButton.classList.remove('save-disabled');
+    await circuits.loadFile(true);
+    updateFileMenu();
     updateCircuitMenu();
 });
-fileMenu.createActionButton('Open additional...', 'Load additional circuits from a file, keeping open circuits.', async () => {
+let [ addButton ] = fileMenu.createActionButton('Open additional...', 'Load additional circuits from a file, keeping open circuits.', async () => {
     fileMenuState(false);
-    let fileName = await circuits.loadFile(false);
-    if (fileName) {
-        saveButton.innerHTML = 'Save <i>' + fileName + '</i>';
-        saveButton.classList.remove('save-disabled');
-    }
+    await circuits.loadFile(false);
+    updateFileMenu();
     updateCircuitMenu();
 });
 fileMenu.createSeparator();
@@ -31,30 +27,42 @@ let [ saveButton ] = fileMenu.createActionButton('Save', 'Save circuits to file.
 });
 fileMenu.createActionButton('Save as...', 'Save circuits to a new file.', async () => {
     fileMenuState(false);
-    let fileName = await circuits.saveFileAs();
-    saveButton.innerHTML = 'Save <i>' + fileName + '</i>';
-    saveButton.classList.remove('save-disabled');
+    await circuits.saveFileAs();
+    updateFileMenu();
 });
 fileMenu.createSeparator();
 fileMenu.createActionButton('Close', 'Close all open circuits', async () => {
     fileMenuState(false);
     circuits.closeFile();
+    updateFileMenu();
     updateCircuitMenu();
-    saveButton.innerHTML = 'Save';
-    saveButton.classList.add('save-disabled');
 });
 
-saveButton.classList.add('save-disabled');
+function updateFileMenu() {
+    if (circuits.fileName) {
+        saveButton.innerHTML = 'Save <i>' + circuits.fileName + '</i>';
+        saveButton.classList.remove('toolbar-menu-button-disabled');
+    } else {
+        saveButton.innerHTML = 'Save';
+        saveButton.classList.add('toolbar-menu-button-disabled');
+    }
+    if (circuits.empty) {
+        addButton.classList.add('toolbar-menu-button-disabled');
+    } else {
+        addButton.classList.remove('toolbar-menu-button-disabled');
+    }
+}
 
 // Circuit selection menu
 
-let [ , circuitMenuState, circuitMenu ] = toolbar.createMenuButton('Circuit', 'Circuit management menu. <i>LMB</i> Open menu.');
+let [ , circuitMenuState, circuitMenu ] = toolbar.createMenuButton('Circuit', 'Circuit management menu. <i>LMB</i> Open menu.', () => updateCircuitMenu());
 
 function updateCircuitMenu() {
     circuitMenu.clear();
     circuitMenu.createActionButton('New...', 'Create a new circuit.', () => {
         circuitMenuState(false);
         circuits.create();
+        addButton.classList.remove('toolbar-menu-button-disabled');
         updateCircuitMenu();
     });
     circuitMenu.createSeparator();
@@ -65,8 +73,6 @@ function updateCircuitMenu() {
         });
     }
 }
-
-updateCircuitMenu();
 
 // Add standard components to toolbar
 toolbar.createComponentButton('Port ·', 'Component IO pin. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => new Port(grid, x, y, 'right'));
