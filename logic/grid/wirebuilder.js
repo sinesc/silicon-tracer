@@ -24,11 +24,13 @@ class WireBuilder extends GridItem {
         this.width = x2 - x1;
         this.height = y2 - y1;
         this.#ordering = ordering ?? 'hv';
-        this.color = color ?? 0;
+        this.color = color ?? this.grid.nextNetColor;
         this.#fliptest = fliptest ?? ( (x, y) => false );
 
         this.#wireH = new Wire(this.grid, x1, y1, this.width, 'h', this.color);
+        this.#wireH.element.classList.add('wire-building');
         this.#wireV = new Wire(this.grid, x1, y1, this.height, 'v', this.color);
+        this.#wireV.element.classList.add('wire-building');
         this.#updateWires();
 
         if (WireBuilder.DEBUG_BOX) {
@@ -86,6 +88,8 @@ class WireBuilder extends GridItem {
 
     // Upon removal of the builder also remove any zero length wires produced by it.
     remove() {
+        this.#wireH.element.classList.remove('wire-building');
+        this.#wireV.element.classList.remove('wire-building');
         if (this.width === 0) {
             this.#wireH.remove();
         }

@@ -303,8 +303,8 @@ html {
     padding: 10px;
     text-align: center;
     font-size: 1.3em;
-    border: 3px solid rgba(255, 0, 0, 0.5);
-    background: rgba(128, 0, 0, 0.5);
+    border: 3px solid rgba(255, 0, 0, 0.3);
+    background: rgba(128, 0, 0, 0.3);
     opacity: 0.0;
     border-radius: 10px;
     transition: opacity 0.5s;
@@ -313,7 +313,7 @@ body.no-focus #focus-hint, body.focus-changing #focus-hint {
     display: block;
 }
 body.no-focus #focus-hint:has(+div.grid:hover) {
-    opacity: 0.5;
+    opacity: 0.65;
 }
 
 /*
@@ -604,8 +604,8 @@ div.component.gate[data-component-rotation="3"] > div.component-inner {
     box-sizing: border-box;
     background-color: #6d6d6d;
 }
-.wire-h:hover, .wire-v:hover {
-    outline: 2px solid #fffa;
+.wire-h:hover:not(.wire-building), .wire-v:hover:not(.wire-building) {
+    outline: 1px solid #fff8;
 }
 /* extends clickable area around wires */
 .wire-h::after, .wire-v::after {

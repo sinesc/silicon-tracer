@@ -173,7 +173,24 @@ class Grid {
         this.#element.style.backgroundPositionX = (offsetX % spacing) + 'px';
         this.#element.style.backgroundPositionY = (offsetY % spacing) + 'px';
 
-        // apply net colors to wires
+        // apply net colors to wires if the nets have changed
+        if (!this.#netCache) {
+            this.applyNetColors();
+        }
+
+        // render components
+        for (let item of this.#items) {
+            item.render(reason);
+        };
+    }
+
+    // Returns the next to be used net color.
+    get nextNetColor() {
+        return this.applyNetColors();
+    }
+
+    // Applies net colors to components on the grid. Returns next to be used color.
+    applyNetColors() {
         let [ netList ] = this.identifyNets();
         let color = 0;
         for (let net of netList.nets) {
@@ -197,11 +214,7 @@ class Grid {
             let portName = port[1].split(':')[1];
             component.portByName(portName).color = null;
         }
-
-        // render components
-        for (let item of this.#items) {
-            item.render(reason);
-        };
+        return color;
     }
 
     // Identifies nets on the grid and returns a [ NetList, Map<String, Component> ].
@@ -211,7 +224,6 @@ class Grid {
         }
         // get all individual wires
         let wires = this.filterItems((i) => i instanceof Wire).map((w) => [ ...w.points(), w ]).toArray();
-        //console.log(wires.map((w) => [ w[0].x, w[0].y, w[1].x, w[1].y ]));
         // get all component ports
         let components = this.filterItems((i) => i instanceof Component);
         let ports = [];
@@ -225,9 +237,7 @@ class Grid {
                 ports.push([ new Point(x + component.x, y + component.y), componentPrefix + port.name, component ]); // TODO refactor to use class, e.g. NetPort(p, name, component) where component is arbitrary meta data since we need this for schematics that aren't currently on the grid too
             }
         }
-        //console.log(ports.map((p) => [ p[0].x, p[0].y, p[2] ]));
-        let netList = NetList.fromWires(wires.toReversed(), ports); /* toReversed just avoids complete net reassign on new wire. not required, just for testing */
-        //console.log(netList.nets.map((n) => n.ports));
+        let netList = NetList.fromWires(wires, ports);
         return this.#netCache = [ netList, componentMap ];
     }
 

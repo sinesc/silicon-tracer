@@ -30,6 +30,11 @@ class Wire extends GridItem {
         this.grid.addVisual(this.#element);
     }
 
+    // Returns the DOM element used by the wire.
+    get element() {
+        return this.#element;
+    }
+
     // Serializes the object for writing to disk.
     serialize() {
         let direction = this.width > 0 ? 'h' : 'v';
@@ -85,6 +90,7 @@ class Wire extends GridItem {
                 this.#element.classList.remove('wire-delete-animation');
                 this.remove();
                 this.grid.invalidateNets();
+                this.grid.render();
             }, 150);
         }
     }
