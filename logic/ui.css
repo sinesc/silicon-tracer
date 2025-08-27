@@ -604,6 +604,9 @@ div.component.gate[data-component-rotation="3"] > div.component-inner {
     box-sizing: border-box;
     background-color: #6d6d6d;
 }
+.wire-h:hover, .wire-v:hover {
+    outline: 2px solid #fffa;
+}
 /* extends clickable area around wires */
 .wire-h::after, .wire-v::after {
     content: '';
