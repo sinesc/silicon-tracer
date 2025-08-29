@@ -1,5 +1,6 @@
 "use strict";
 
+// Handles compiling and running the actual simulation.
 class Simulation {
 
     static DEBUG = true;

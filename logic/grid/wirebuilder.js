@@ -1,5 +1,6 @@
 "use strict";
 
+// Used to build wire corners.
 class WireBuilder extends GridItem {
 
     static DEBUG_BOX = false;

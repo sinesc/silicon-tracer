@@ -1,3 +1,5 @@
+"use strict";
+
 // Handles loading/saving/selecting circuits and keeping the grid updated.
 class Circuits {
 

@@ -1,5 +1,6 @@
 "use strict";
 
+// Handles tool/menubar.
 class Toolbar {
 
     #element;

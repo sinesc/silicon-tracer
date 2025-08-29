@@ -1,5 +1,6 @@
 "use strict";
 
+// Basic logic gate component.
 class Gate extends Component {
 
     static START_LETTER = 97; // 65 for capitalized

@@ -1,5 +1,6 @@
 "use strict";
 
+// Basic gate-like builtin component.
 class Builtin extends Component {
 
     type;

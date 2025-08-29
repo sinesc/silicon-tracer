@@ -1,5 +1,6 @@
 "use strict";
 
+// Base class for grid items.
 class GridItem {
 
     grid;
@@ -80,6 +81,7 @@ class GridItem {
 
     // Registers a visual element for hover events. Required for hover messages or hover hotkeys.
     // Note: setHoverMessage() automatically registers the element.
+    // TODO: some sort of error/result if already registered because this causes new args to be ignored
     registerHoverWatch(element, ...args) {
         if (!this.#hoverRegistered.has(element)) {
             element.addEventListener('mouseenter', this.#handleHover.bind(this, element, 'start', args));

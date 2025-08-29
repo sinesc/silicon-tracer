@@ -1,5 +1,6 @@
 "use strict";
 
+// IO port on a component.
 class ComponentPort {
     name;
     originalSide;
@@ -44,6 +45,7 @@ class ComponentPort {
     }
 }
 
+// General component used as a base class for Gates/Builtins or user defined circuits when represented within other circuits.
 class Component extends GridItem {
 
     static SIDES = [ 'top', 'right', 'bottom', 'left' ];
