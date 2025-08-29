@@ -1,10 +1,11 @@
 "use strict";
 
-class Port extends Component {
+// An IO port to interface with other circuits.
+class Port extends Interactive {
 
-    state = null;
-    netId = null;
+    #state = null;
     #side;
+    #port;
 
     constructor(grid, x, y, side, name = 'Port') {
         super(grid, x, y, { 'top': [ '' ], 'left': [ null, null, null ] }, name);
@@ -12,7 +13,13 @@ class Port extends Component {
         this.rotation = Component.SIDES.indexOf(side);
         this.updateDimensions();
         this.#side = side;
+        this.#port = this.portByName('');
         this.setHoverMessage(this.inner, 'Port <b>' + name + '</b>. <i>LMB</i>: Drag to move. <i>R</i>: Rotate, <i>1</i>: Set high, <i>2</i>: Set low, <i>3</i>: Unset', { type: 'hover' });
+    }
+
+    // Returns UI-enforced state for given port.
+    state(port) {
+        return this.#state;
     }
 
     // Serializes the object for writing to disk.
@@ -24,27 +31,21 @@ class Port extends Component {
         };
     }
 
-    // Detach port from simulation.
-    detachSimulation() {
-        super.detachSimulation();
-        this.netId = null;
-    }
-
     // Hover hotkey actions
     onHotkey(key, what) {
         super.onHotkey(key, what);
         if (what.type === 'hover') {
-            let prevState = this.state;
+            let prevState = this.#state;
             if (key === '1') {
-                this.state = 1;
+                this.#state = 1;
             } else if (key === '2') {
-                this.state = 0;
+                this.#state = 0;
             } else if (key === '3') {
-                this.state = null;
+                this.#state = null;
             }
-            if (prevState !== this.state) {
-                if (/*this.state !== null &&*/ this.netId !== null && this.grid.sim) {
-                    this.grid.sim.setNet(this.netId, this.state);
+            if (prevState !== this.#state) {
+                if (this.#port.netId !== null && this.grid.sim) {
+                    this.grid.sim.setNet(this.#port.netId, this.#state);
                 }
                 this.render();
             }
@@ -54,8 +55,8 @@ class Port extends Component {
     // Renders the port onto the grid.
     render(reason) {
         super.render(reason);
-        this.element.setAttribute('data-port-state', this.state ?? '');
+        this.element.setAttribute('data-port-state', this.#state ?? '');
         // TODO: better way to get simulation
-        this.element.setAttribute('data-net-state', this.netId !== null && this.grid.sim ? this.grid.sim.getNet(this.netId) : '');
+        this.element.setAttribute('data-net-state', this.#port.netId !== null && this.grid.sim ? this.grid.sim.getNet(this.#port.netId) : '');
     }
 }

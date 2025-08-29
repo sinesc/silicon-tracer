@@ -1,5 +1,6 @@
 "use strict";
 
+// The circuit drawing grid.
 class Grid {
 
     static DEBUG_COORDS = false;
@@ -245,8 +246,8 @@ class Grid {
                 wire.color = applyColor;
             }
             for (let port of net.ports) {
-                let component = port[2];
-                let portName = port[1].split(':')[1];
+                let component = port.component;
+                let portName = port.name;
                 component.portByName(portName).color = applyColor;
             }
             color = (color + 1) % 10;
@@ -255,8 +256,8 @@ class Grid {
             wire[2].color = null;
         }
         for (let port of netList.unconnected.ports) {
-            let component = port[2];
-            let portName = port[1].split(':')[1];
+            let component = port.component;
+            let portName = port.name;
             component.portByName(portName).color = null;
         }
         return color;
@@ -275,11 +276,11 @@ class Grid {
         let componentMap = new Map();
         let id = 0;
         for (let component of components) {
-            let componentPrefix = 'c' + (id++) + ':';
+            let componentPrefix = NetPort.prefix(id++);
             componentMap.set(componentPrefix, component);
             for (let port of component.getPorts()) {
                 let { x, y } = port.coords(component.width, component.height, component.rotation);
-                ports.push([ new Point(x + component.x, y + component.y), componentPrefix + port.name, component ]); // TODO refactor to use class, e.g. NetPort(p, name, component) where component is arbitrary meta data since we need this for schematics that aren't currently on the grid too
+                ports.push(new NetPort(new Point(x + component.x, y + component.y), componentPrefix, port.name, component));
             }
         }
         let netList = NetList.fromWires(wires, ports);
@@ -314,21 +315,21 @@ class Grid {
         let setPorts = [];
         for (let net of netList.nets) {
             // create new net from connected gate i/o-ports
-            let netPortList = net.ports.filter((p) => p[2] instanceof Port); // port-component, NOT a port on a component
-            let netId = sim.netDecl(net.ports.filter((p) => (p[2] instanceof Gate) || (p[2] instanceof Builtin)).map((p) => p[1]), netPortList.map((p) => p[1]));
-            // link port-components on the net to the ui
-            for (let [ , , component ] of netPortList) {
-                // store netId on port-component to allow it to fetch the current net state
-                component.netId = netId;
+            let interactiveComponents = net.ports.filter((p) => p.component instanceof Interactive);
+            let attachedPorts = net.ports.filter((p) => (p.component instanceof Gate) || (p.component instanceof Builtin)).map((p) => p.uniqueName);
+            let netId = sim.netDecl(attachedPorts, interactiveComponents.map((p) => p.uniqueName));
+            // link interactive components on the net to the ui
+            for (let netPort of interactiveComponents) {
                 // if the port enforces a state remember it to set after compilation
-                if (component.state !== null) {
-                    setPorts.push([ netId, component.state]);
+                let portName = netPort.name;
+                let uiPortState = netPort.component.state(portName);
+                if (uiPortState !== null) {
+                    setPorts.push([ netId, uiPortState ]);
                 }
             }
             // link ports on components
-            for (let [ , name, component ] of net.ports) {
-                let portName = name.split(':')[1]; // TODO: getting ports by name is slow, should also store some kind of id in net.ports
-                let port = component.portByName(portName);
+            for (let { name, component } of net.ports) {
+                let port = component.portByName(name);// TODO: getting ports by name might be slow, should also store some kind of id in net.ports
                 port.netId = netId;
             }
             // link wires
@@ -340,7 +341,7 @@ class Grid {
         // compile
         sim.compile();
 
-        // set port states
+        // set ui port states
         for (let [ netId, state ] of setPorts) {
             sim.setNet(netId, state);
         }

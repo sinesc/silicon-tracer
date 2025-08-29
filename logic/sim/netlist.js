@@ -48,7 +48,7 @@ class NetList {
             let foundPorts = [];
             for (let w = 0; w < netWires.length; ++w) {
                 for (let p = ports.length - 1; p >= 0; --p) {
-                    if (ports[p][0].onLine(netWires[w])) {
+                    if (ports[p].point.onLine(netWires[w])) {
                         foundPorts.push(ports[p]);
                         ports.swapRemove(p);
                     }
@@ -68,6 +68,26 @@ class NetList {
     }
 }
 
+// A port connected to a net.
+class NetPort {
+    point;
+    uniqueName;
+    component;
+    constructor(point, prefix, portName, component) {
+        this.point = point;
+        this.uniqueName = prefix + portName;
+        this.component = component;
+    }
+    static prefix(id) {
+        return 'c' + id + ':';
+    }
+    get name() {
+        return this.uniqueName.split(':')[1];
+    }
+    get prefix() {
+        return this.uniqueName.split(':')[0];
+    }
+}
 
 // A circuit is either a basic gate definition or a schematic for a component.
 class Circuit {
