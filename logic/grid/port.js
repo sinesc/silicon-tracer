@@ -46,8 +46,8 @@ class Port extends Interactive {
                 this.#state = null;
             }
             if (prevState !== this.#state) {
-                /*if (this.#port.netId !== null && this.grid.sim) {
-                    this.grid.sim.setNet(this.#port.netId, this.#state);
+                /*if (this.#port.netId !== null && app.sim) {
+                    app.sim.setNet(this.#port.netId, this.#state);
                 }*/
                 this.render();
             }
@@ -59,6 +59,6 @@ class Port extends Interactive {
         super.render(reason);
         this.element.setAttribute('data-port-state', this.#state ?? '');
         // TODO: better way to get simulation
-        this.element.setAttribute('data-net-state', this.#port.netId !== null && this.grid.sim ? this.grid.sim.getNet(this.#port.netId) : '');
+        this.element.setAttribute('data-net-state', this.#port.netId !== null && app.sim ? app.sim.getNet(this.#port.netId) : '');
     }
 }

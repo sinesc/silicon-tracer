@@ -12,9 +12,6 @@ class Grid {
     offsetX = 0;
     offsetY = 0;
 
-    sim = null; // TODO: find better place for sim
-    tickListener = null;
-
     #element;
     #status; // TODO: refactor status stuff into separate class
     #statusMessage = null;
