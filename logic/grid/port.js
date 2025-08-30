@@ -19,8 +19,10 @@ class Port extends Interactive {
 
     // Returns UI-enforced state for given port.
     applyState(port, sim) {
-        if (this.#state !== null) {
-            sim.setNet(this.#port.netId, this.#state);
+        if (this.#port.netId !== null) {
+            if (this.#state !== null) {
+                sim.setNet(this.#port.netId, this.#state);
+            }
         }
     }
 

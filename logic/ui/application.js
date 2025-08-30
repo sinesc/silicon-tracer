@@ -8,6 +8,7 @@ class Application {
     circuits;
 
     sim = null;
+    simStart = null;
     tickListener = null;
 
     constructor(gridParent, toolbarParent) {
@@ -16,7 +17,23 @@ class Application {
         this.circuits = new Circuits(this.grid);
     }
 
-    // Initialize main menu entries
+    // Start or continue simulation.
+    startSimulation() {
+        if (!this.sim) {
+            [ this.sim, this.tickListener ] = this.grid.compileSimulation();
+            this.simStart = performance.now();
+        }
+        for (let [ portName, component ] of this.tickListener) {
+            component.applyState(portName, this.sim);
+        }
+    }
+
+    // Stop current simulation.
+    stopSimulation() {
+        this.sim = null;
+    }
+
+    // Initialize main menu entries.
     initMenu() {
 
         // Add file operations to toolbar
@@ -91,6 +108,69 @@ class Application {
         }
     }
 
+    // Initialize tool bar entries.
+    initToolbar() {
+        // add conveniently pre-rotated ports
+        this.toolbar.createComponentButton('Port ·', 'Component IO pin. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => new Port(grid, x, y, 'right'));
+        this.toolbar.createComponentButton('· Port', 'Component IO pin. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => new Port(grid, x, y, 'left'));
+
+        // add gates
+        for (let [ gateType, { joinOp } ] of Object.entries(Simulation.GATE_MAP)) {
+            let gateLabel = gateType.toUpperFirst();
+            this.toolbar.createComponentButton(gateLabel, '<b>' + gateLabel + '</b> gate. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => {
+                let numInputs = 2; // TODO: configurable somewhere
+                return new Gate(grid, x, y, gateType, joinOp !== null ? numInputs : 1);
+            });
+        }
+
+        // add extra gate-like builtins
+        for (let [ builtinType, ] of Object.entries(Simulation.BUILTIN_MAP)) {
+            let builtinLabel = builtinType.toUpperFirst();
+            this.toolbar.createComponentButton(builtinLabel, '<b>' + builtinLabel + '</b> builtin. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => {
+                return new Builtin(grid, x, y, builtinType);
+            });
+        }
+
+        // add a clock component
+        this.toolbar.createComponentButton('Clock', '<b>Clock</b>. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => {
+            return new Clock(grid, x, y);
+        });
+
+        // Continuous simulation toggle
+        let [ , autoCompile ] = this.toolbar.createToggleButton('Simulate', 'Toggle enable or disable continuous simulation', true, (enabled) => {
+            if (enabled) {
+                this.startSimulation();
+            } else  {
+                this.stopSimulation();
+            }
+            this.grid.render();
+        });
+
+        setInterval(() => { // TODO: bleh
+            if (autoCompile()) {
+                this.startSimulation();
+                for (let i = 0; i < 10; ++i) {  // TODO: bleh temp code, look into webworkers
+                    this.sim.simulate();
+                }
+                this.grid.render();
+            }
+        }, 18);
+
+        this.toolbar.createActionButton('Dump ASM', 'Outputs simulation code to console', () => {
+            if (this.sim) {
+                let portInfo = [];
+                for (let { offset, meta } of this.sim.nets) {
+                    for (let port of meta) {
+                        portInfo.push('// port ' + port + ' mem[' + offset + ']');
+                    }
+                }
+                console.log(this.sim.code() + portInfo.join("\n"));
+            } else {
+                console.log('No simulation running');
+            }
+        });
+    }
+
     // Show warning when not focussed to avoid confusion. In this state mouse wheel events still register but hotkeys don't.
     startFocusMonitor() {
         let hadFocus = null;
@@ -110,7 +190,7 @@ class Application {
         }, 100);
     }
 
-    // Monitor logo for clicks
+    // Monitor logo for clicks.
     startLogoMonitor(logo) {
         // A blast from when we still owned our stuff.
         logo.onmouseenter = () => this.grid.setMessage('Cheesy 80s logo. It is ticklish.');

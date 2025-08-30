@@ -289,14 +289,15 @@ class Grid {
     invalidateNets() {
         if (this.#netCache) {
             this.#netCache = null;
-            this.sim = null;
-            this.detachSimulation();
+            this.#detachSimulation();
+            app.stopSimulation();
         }
     }
 
     // Compiles a simulation for the grid contents and returns it.
     compileSimulation() {
 
+        this.invalidateNets();
         let [ netList, componentMap ] = this.identifyNets();
         let sim = new Simulation();
 
@@ -335,13 +336,6 @@ class Grid {
         sim.compile();
 
         return [ sim, tickListener ];
-    }
-
-    // Detaches all items from the simulation.
-    detachSimulation() {
-        for (let item of this.#items) {
-            item.detachSimulation();
-        };
     }
 
     // Sets a status message. Pass null to unset and revert back to default status.
@@ -405,6 +399,13 @@ class Grid {
     set zoomLevel(level) {
         level = level < 0 ? 0 : (level >= Grid.ZOOM_LEVELS.length ? Grid.ZOOM_LEVELS.length - 1 : level);
         this.zoom = Grid.ZOOM_LEVELS[level];
+    }
+
+    // Detaches all items from the simulation.
+    #detachSimulation() {
+        for (let item of this.#items) {
+            item.detachSimulation();
+        };
     }
 
     // Called when a key is pressed and then repeatedly while being held.
