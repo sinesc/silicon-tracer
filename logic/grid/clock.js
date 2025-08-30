@@ -4,7 +4,7 @@
 class Clock extends Interactive {
 
     interval = 1000;
-    #start = null;
+    #state = null;
     #port;
 
     constructor(grid, x, y) {
@@ -15,11 +15,13 @@ class Clock extends Interactive {
     }
 
     applyState(port, sim) {
-        if (this.#start === null) {
-            sim.setNet(this.#port.netId, 0);
-        } else {
-            let delta = performance.now() - this.#start;
-            sim.setNet(this.#port.netId, (delta % this.interval) < (this.interval / 2) ? 1 : 0);
+        if (this.#port.netId !== null) {
+            if (this.#state === 0) {
+                sim.setNet(this.#port.netId, 0);
+            } else if (this.#state === 1) {
+                let delta = performance.now() - app.simStart;
+                sim.setNet(this.#port.netId, (delta % this.interval) < (this.interval / 2) ? 1 : 0);
+            }
         }
     }
 
@@ -32,15 +34,15 @@ class Clock extends Interactive {
         super.onHotkey(key, what);
         if (what.type === 'hover') {
             if (key === 'f') {
-                let freq = parseInt(prompt('Set new frequency in Hz', 1000 / this.interval));
+                let freq = parseInt(prompt('Set new frequency in Hz', Math.round(1000 / this.interval)));
                 this.interval = isNaN(freq) ? 1000 : 1000 / freq;
                 this.#updateMessage();
             } if (key === '1') {
-                this.#start = performance.now();
+                this.#state = 1;
             } else if (key === '2') {
-                this.#start = null; // TODO
+                this.#state = 0;
             } else if (key === '3') {
-                this.#start = null;
+                this.#state = null;
             }
         }
     }
