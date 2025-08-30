@@ -18,8 +18,10 @@ class Port extends Interactive {
     }
 
     // Returns UI-enforced state for given port.
-    state(port) {
-        return this.#state;
+    applyState(port, sim) {
+        if (this.#state !== null) {
+            sim.setNet(this.#port.netId, this.#state);
+        }
     }
 
     // Serializes the object for writing to disk.
@@ -44,9 +46,9 @@ class Port extends Interactive {
                 this.#state = null;
             }
             if (prevState !== this.#state) {
-                if (this.#port.netId !== null && this.grid.sim) {
+                /*if (this.#port.netId !== null && this.grid.sim) {
                     this.grid.sim.setNet(this.#port.netId, this.#state);
-                }
+                }*/
                 this.render();
             }
         }

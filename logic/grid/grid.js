@@ -13,6 +13,7 @@ class Grid {
     offsetY = 0;
 
     sim = null; // TODO: find better place for sim
+    tickListener = null;
 
     #element;
     #status; // TODO: refactor status stuff into separate class
@@ -312,7 +313,7 @@ class Grid {
         }
 
         // declare nets
-        let setPorts = [];
+        let tickListener = [];
         for (let net of netList.nets) {
             // create new net from connected gate i/o-ports
             let interactiveComponents = net.ports.filter((p) => p.component instanceof Interactive);
@@ -320,12 +321,7 @@ class Grid {
             let netId = sim.netDecl(attachedPorts, interactiveComponents.map((p) => p.uniqueName));
             // link interactive components on the net to the ui
             for (let netPort of interactiveComponents) {
-                // if the port enforces a state remember it to set after compilation
-                let portName = netPort.name;
-                let uiPortState = netPort.component.state(portName);
-                if (uiPortState !== null) {
-                    setPorts.push([ netId, uiPortState ]);
-                }
+                tickListener.push([ netPort.name, netPort.component ]);
             }
             // link ports on components
             for (let { name, component } of net.ports) {
@@ -341,12 +337,7 @@ class Grid {
         // compile
         sim.compile();
 
-        // set ui port states
-        for (let [ netId, state ] of setPorts) {
-            sim.setNet(netId, state);
-        }
-
-        return sim;
+        return [ sim, tickListener ];
     }
 
     // Detaches all items from the simulation.

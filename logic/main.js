@@ -93,6 +93,10 @@ for (let [ builtinType, ] of Object.entries(Simulation.BUILTIN_MAP)) {
     });
 }
 
+toolbar.createComponentButton('Clock', '<b>Clock</b>. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => {
+    return new Clock(grid, x, y);
+});
+
 // Continuous simulation toggle
 {
     let [ , autoCompile ] = toolbar.createToggleButton('Simulate', 'Toggle enable or disable continuous simulation', true, (enabled) => {
@@ -106,7 +110,10 @@ for (let [ builtinType, ] of Object.entries(Simulation.BUILTIN_MAP)) {
     setInterval(() => {
         if (autoCompile()) {
             if (!mainGrid.sim) {
-                mainGrid.sim = mainGrid.compileSimulation(mainGrid);
+                [ mainGrid.sim, mainGrid.tickListener ] = mainGrid.compileSimulation(mainGrid);
+            }
+            for (let [ portName, component ] of mainGrid.tickListener) {
+                component.applyState(portName, mainGrid.sim);
             }
             for (let i = 0; i < 10; ++i) {  // TODO: bleh temp code, look into webworkers
                 mainGrid.sim.simulate();
