@@ -26,14 +26,14 @@ class Clock extends Interactive {
     }
 
     #updateMessage() {
-        this.setHoverMessage(this.inner, '<b>' + (1000 / this.interval) + 'Hz Clock</b>. <i>LMB</i>: Drag to move, <i>R</i>: Rotate, <i>F</i>: Change frequency, <i>1</i>: Enable, <i>2</i>: Disable, <i>3</i>: Detach', { type: 'hover' });
+        this.setHoverMessage(this.inner, '<b>' + (1000 / this.interval) + 'Hz Clock</b>. <i>LMB</i>: Drag to move, <i>R</i>: Rotate, <i>E</i>: Edit frequency, <i>1</i>: Enable, <i>2</i>: Disable, <i>3</i>: Detach', { type: 'hover' });
     }
 
     // Hover hotkey actions
     onHotkey(key, what) {
         super.onHotkey(key, what);
         if (what.type === 'hover') {
-            if (key === 'f') {
+            if (key === 'e') {
                 let freq = parseInt(prompt('Set new frequency in Hz', Math.round(1000 / this.interval)));
                 this.interval = isNaN(freq) ? 1000 : 1000 / freq;
                 this.#updateMessage();
