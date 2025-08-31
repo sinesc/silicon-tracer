@@ -230,7 +230,8 @@ class Grid {
 
     // Returns the next to be used net color.
     get nextNetColor() {
-        return this.applyNetColors();
+        let [ netList ] = this.identifyNets();
+        return netList.nets.length % 10;
     }
 
     // Applies net colors to components on the grid. Returns next to be used color.
