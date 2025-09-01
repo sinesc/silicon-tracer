@@ -3,6 +3,8 @@
 // Handles loading/saving/selecting circuits and keeping the grid updated.
 class Circuits {
 
+    static STRINGIFY_SPACE = "\t";
+
     #circuits = [];
     #currentCircuit = 0;
     #grid;
@@ -43,16 +45,16 @@ class Circuits {
         } else {
             writable = await this.#fileHandle.createWritable();
         }
-        await writable.write(JSON.stringify(this.#serialize()));
+        await writable.write(JSON.stringify(this.#serialize(), null, Circuits.STRINGIFY_SPACE));
         await writable.close();
     }
 
     // Saves circuits as a new file.
     async saveFileAs() {
         const all = this.list();
-        const handle = await File.saveAs(all[0]);
+        const handle = await File.saveAs(this.#fileName ?? all[0]);
         const writable = await handle.createWritable();
-        await writable.write(JSON.stringify(this.#serialize()));
+        await writable.write(JSON.stringify(this.#serialize(), null, Circuits.STRINGIFY_SPACE));
         await writable.close();
         // make this the new file handle
         this.#fileHandle = handle;

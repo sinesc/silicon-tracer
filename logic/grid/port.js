@@ -3,11 +3,11 @@
 // An IO port to interface with other circuits.
 class Port extends Interactive {
 
-    #state = null;
     #side;
     #port;
-    label = '';
     #labelElement;
+    #state = null;
+    name = '';
 
     constructor(grid, x, y, side) {
         super(grid, x, y, { 'top': [ '' ], 'left': [ null, null, null ] }, 'Port');
@@ -19,7 +19,7 @@ class Port extends Interactive {
         this.#updateMessage();
 
         this.#labelElement = document.createElement('div');
-        this.#labelElement.classList.add('component-port-label');
+        this.#labelElement.classList.add('port-name');
         this.element.appendChild(this.#labelElement);
     }
 
@@ -36,8 +36,9 @@ class Port extends Interactive {
     serialize() {
         return {
             ...super.serialize(),
-            _: { c: this.constructor.name, a: [ this.x, this.y, this.#side, this.element.getAttribute('data-component-name') ]},
+            _: { c: this.constructor.name, a: [ this.x, this.y, this.#side ]},
             rotation: this.rotation,
+            name: this.name,
         };
     }
 
@@ -53,8 +54,9 @@ class Port extends Interactive {
             } else if (key === '3') {
                 this.#state = null;
             } else if (key === 'e') {
-                this.label = prompt('Set label');
+                this.name = prompt('Set port name', this.name);
                 this.#updateMessage();
+                this.render();
             }
             if (prevState !== this.#state) {
                 /*if (this.#port.netId !== null && app.sim) {
@@ -75,7 +77,7 @@ class Port extends Interactive {
 
         let side = ComponentPort.portSide(this.rotation, 'bottom');
         let labelCoords = ComponentPort.portCoords(this.width, this.height, side, 0, true);
-        this.renderLabel(this.#labelElement, side, labelCoords.x * this.grid.zoom, labelCoords.y * this.grid.zoom, this.label);
+        this.renderLabel(this.#labelElement, side, labelCoords.x * this.grid.zoom, labelCoords.y * this.grid.zoom, this.name, false);
 
         this.element.setAttribute('data-port-state', this.#state ?? '');
         this.element.setAttribute('data-net-state', this.#port.netId !== null && app.sim ? app.sim.getNet(this.#port.netId) : '');
@@ -83,6 +85,6 @@ class Port extends Interactive {
 
     // Update hover message
     #updateMessage() {
-        this.setHoverMessage(this.inner, 'Port <b>' + this.label + '</b>. <i>LMB</i>: Drag to move. <i>R</i>: Rotate, <i>E</i>: Edit name, <i>1</i>: Set high, <i>2</i>: Set low, <i>3</i>: Unset', { type: 'hover' });
+        this.setHoverMessage(this.inner, 'Port <b>' + this.name + '</b>. <i>LMB</i>: Drag to move. <i>R</i>: Rotate, <i>E</i>: Edit name, <i>1</i>: Set high, <i>2</i>: Set low, <i>3</i>: Unset', { type: 'hover' });
     }
 }

@@ -147,7 +147,6 @@ class GridItem {
 
     // Called when mouse hovers over a registered element, sets the grids status message.
     #handleHover(element, status, args, e) {
-
         if (status === 'start') {
             this.grid.requestHotkeyTarget(this, false, ...args);
         } else {

@@ -6,23 +6,23 @@ class ComponentPort {
     originalSide;
     index;
     color;
-    port;
-    portLabel;
+    element;
+    labelElement;
     netId = null;
-    constructor(name, originalSide, index, color = null, port = null, portLabel = null) {
+    constructor(name, originalSide, index, color = null, element = null, labelElement = null) {
         this.name = name;
         this.originalSide = originalSide;
         this.index = index;
         this.color = color;
-        this.port = port;
-        this.portLabel = portLabel;
+        this.element = element;
+        this.labelElement = labelElement;
     }
     // Removes port dom elements
     remove() {
-        this.portLabel?.remove();
-        this.portLabel = null;
-        this.port?.remove();
-        this.port = null;
+        this.labelElement?.remove();
+        this.labelElement = null;
+        this.element?.remove();
+        this.element = null;
     }
     // Returns port coordinates for the given parent component width/height.
     static portCoords(width, height, side, index, offsetCenter) {
@@ -69,7 +69,7 @@ class Component extends GridItem {
     height;
     rotation = 0;
 
-    constructor(grid, x, y, ports, name) {
+    constructor(grid, x, y, ports, type) {
 
         super(grid);
 
@@ -78,13 +78,13 @@ class Component extends GridItem {
         // container
         this.#element = document.createElement('div');
         this.#element.classList.add('component');
-        this.#element.setAttribute('data-component-name', name); // setAttribtute: dislike dataset-api name transcription when they could have just used [index] access to avoid the hyphen issue.
+        this.#element.setAttribute('data-component-type', type); // setAttribtute: dislike dataset-api name transcription when they could have just used [index] access to avoid the hyphen issue.
 
         // inner area with name
         this.#inner = document.createElement('div');
-        this.#inner.innerHTML = '<span>' + name + '</span>';
+        this.#inner.innerHTML = '<span>' + type + '</span>';
         this.#inner.classList.add('component-inner');
-        this.setHoverMessage(this.#inner, 'Component <b>' + name + '</b>. <i>LMB</i>: Drag to move. <i>R</i>: Rotate, <i>D</i>: Delete', { type: 'hover' });
+        this.setHoverMessage(this.#inner, 'Component <b>' + type + '</b>. <i>LMB</i>: Drag to move. <i>R</i>: Rotate, <i>D</i>: Delete', { type: 'hover' });
         this.registerDrag(this.#inner, { type: "component", grabOffsetX: null, grabOffsetY: null });
         this.#element.appendChild(this.#inner);
 
@@ -106,14 +106,14 @@ class Component extends GridItem {
             let port = document.createElement('div');
             port.classList.add('component-port');
             this.#element.appendChild(port);
-            this.setHoverMessage(port, 'Port <b>' + item.name + '</b> of <b>' + name + '</b>. <i>LMB</i>: Drag to connect.', { type: 'hover-port' });
+            this.setHoverMessage(port, 'Port <b>' + item.name + '</b> of <b>' + type + '</b>. <i>LMB</i>: Drag to connect.', { type: 'hover-port' });
             // port hover label
-            let portLabel = document.createElement('div');
-            portLabel.classList.add('component-port-label');
-            this.#element.appendChild(portLabel);
+            let labelElement = document.createElement('div');
+            labelElement.classList.add('component-port-label');
+            this.#element.appendChild(labelElement);
             // update this.ports with computed port properties
-            item.port = port;
-            item.portLabel = portLabel;
+            item.element = port;
+            item.labelElement = labelElement;
             // register a drag event for the port, will trigger onDrag with the port name
             this.registerDrag(port, { type: "port", name: item.name });
         });
@@ -165,7 +165,7 @@ class Component extends GridItem {
     serialize() {
         return {
             ...super.serialize(),
-            _: { c: this.constructor.name, a: [ this.x, this.y, this.#ports.map((p) => p.name), this.#element.getAttribute('data-component-name') ]},
+            _: { c: this.constructor.name, a: [ this.x, this.y, this.#ports.map((p) => p.name), this.#element.getAttribute('data-component-type') ]},
             rotation: this.rotation,
         };
     }
@@ -340,14 +340,15 @@ class Component extends GridItem {
     }
 
     // Renders a label next to a port.
-    renderLabel(element, side, x, y, label) {
+    renderLabel(element, side, x, y, label, containPort = true) {
         if (label.length <= 1) {
             element.style.display = 'none';
         } else {
             const visualPortSize = Component.PORT_SIZE * this.grid.zoom;
-            const visualPortInset = visualPortSize / 4;
+            const visualPortInset = visualPortSize / 4 + (visualPortSize * (containPort ? 0 : (side === 'left' || side === 'top' ? 1.1 : -1.1)));
             const visualLabelPadding = 1 * this.grid.zoom;
             const visualLabelLineHeight = visualPortSize + 2 * visualLabelPadding;
+            const visualPortPadding = containPort ? visualLabelLineHeight : 0;
             const properties = [ 'writingMode', 'left', 'top', 'right', 'bottom','paddingLeft', 'paddingTop', 'paddingRight', 'paddingBottom', 'width', 'height', ];
             element.style.display = 'block';
             element.innerHTML = label;
@@ -358,7 +359,7 @@ class Component extends GridItem {
                     writingMode: 'vertical-rl',
                     left: (x - visualLabelPadding) + "px",
                     top: (y - visualLabelPadding - visualPortInset) + "px",
-                    paddingTop: visualLabelLineHeight + "px",
+                    paddingTop: visualPortPadding + "px",
                     paddingBottom: visualLabelPadding + "px",
                     width: visualLabelLineHeight + "px",
                 };
@@ -368,7 +369,7 @@ class Component extends GridItem {
                     left: (x - visualLabelPadding) + "px",
                     bottom: (this.visualHeight - visualPortSize - visualLabelPadding + visualPortInset) + "px",
                     paddingTop: visualLabelPadding + "px",
-                    paddingBottom: visualLabelLineHeight + "px",
+                    paddingBottom: visualPortPadding + "px",
                     width: visualLabelLineHeight + "px",
                 };
             } else if (side === 'left') {
@@ -377,7 +378,7 @@ class Component extends GridItem {
                     top: (y - visualLabelPadding) + "px",
                     right: (this.visualWidth - visualPortSize - visualLabelPadding + visualPortInset) + "px",
                     paddingLeft: visualLabelPadding + "px",
-                    paddingRight: visualLabelLineHeight + "px",
+                    paddingRight: visualPortPadding + "px",
                     height: visualLabelLineHeight + "px",
                 };
             } else if (side === 'right') {
@@ -385,7 +386,7 @@ class Component extends GridItem {
                     writingMode: 'horizontal-tb',
                     left: (x - visualLabelPadding - visualPortInset) + "px",
                     top: (y - visualLabelPadding) + "px",
-                    paddingLeft: visualLabelLineHeight + "px",
+                    paddingLeft: visualPortPadding + "px",
                     paddingRight: visualLabelPadding + "px",
                     height: visualLabelLineHeight + "px",
                 };
@@ -410,15 +411,15 @@ class Component extends GridItem {
             x *= this.grid.zoom;
             y *= this.grid.zoom;
             // set visual coordinates
-            item.port.style.left = (x + visualPortInsetX) + "px";
-            item.port.style.top = (y + visualPortInsetY) + "px";
-            item.port.style.width = visualPortSize + "px";
-            item.port.style.height = visualPortSize + "px";
-            item.port.style.lineHeight = visualPortSize + 'px';
-            item.port.innerHTML = '<span>' + item.name.slice(0, 1) + '</span>';
-            item.port.setAttribute('data-net-color', item.color ?? '');
-            item.port.setAttribute('data-net-state', item.netId !== null && app.sim ? app.sim.getNet(item.netId) : '');
-            this.renderLabel(item.portLabel, side, x, y, item.name);
+            item.element.style.left = (x + visualPortInsetX) + "px";
+            item.element.style.top = (y + visualPortInsetY) + "px";
+            item.element.style.width = visualPortSize + "px";
+            item.element.style.height = visualPortSize + "px";
+            item.element.style.lineHeight = visualPortSize + 'px';
+            item.element.innerHTML = '<span>' + item.name.slice(0, 1) + '</span>';
+            item.element.setAttribute('data-net-color', item.color ?? '');
+            item.element.setAttribute('data-net-state', item.netId !== null && app.sim ? app.sim.getNet(item.netId) : '');
+            this.renderLabel(item.labelElement, side, x, y, item.name);
         });
     }
 }

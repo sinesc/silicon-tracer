@@ -47,7 +47,7 @@ class Grid {
     // Serializes items on the grid for writing to disk.
     serialize() {
         let result = [];
-        result.push({ "_": { c: "Grid" }, zoom: this.zoom, offsetX: this.offsetX, offsetY: this.offsetY });
+        result.push({ "_": { c: "Grid" }, zoom: this.zoom, offsetX: Math.round(this.offsetX), offsetY: Math.round(this.offsetY) });
         for (let item of this.#items) {
             result.push(item.serialize());
         }

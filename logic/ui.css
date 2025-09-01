@@ -466,6 +466,15 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
 /*
  * Port (the port-component, not a port on a component)
  */
+div.component.port .port-name {
+    pointer-events: none;
+    z-index: 13;
+    position: absolute;
+    white-space: nowrap;
+    background-color: #00000038;
+    box-sizing: border-box;
+    color: #ccc;
+}
 div.component.port[data-net-state] > div.component-inner {
     outline: 4px solid transparent;
     outline-offset: -4px;
