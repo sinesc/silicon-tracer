@@ -66,6 +66,8 @@ class Grid {
                 instance = new Port(this, ...cargs);
             } else if (cname === 'Gate') {
                 instance = new Gate(this, ...cargs);
+            } else if (cname === 'Clock') {
+                instance = new Clock(this, ...cargs);
             } else if (cname === 'Builtin') {
                 instance = new Builtin(this, ...cargs);
             } else if (cname === 'Connection') {
