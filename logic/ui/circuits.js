@@ -12,13 +12,13 @@ class Circuits {
     #fileName = null;
 
     constructor(grid) {
-        this.#circuits.push({ label: this.#generateName(), data: [] });
+        this.#circuits.push({ label: this.#generateName(), data: [], ports: [] });
         this.#grid = grid;
     }
 
     // Loads circuits from file, returning the filename if circuits was previously empty.
     async loadFile(clear) {
-        const haveCircuits = !this.empty;
+        const haveCircuits = !this.allEmpty;
         const [ handle ] = await File.openFile();
         const file = await handle.getFile();
         const content = JSON.parse(await file.text());
@@ -34,6 +34,20 @@ class Circuits {
         } else {
             return null;
         }
+    }
+
+    generateOutline(circuitIndex) {
+        let ports = this.#circuits[circuitIndex].data.filter((c) => c['_'].c === 'Port');
+        let outline = { 'left': [], 'right': [], 'top': [], 'bottom': [] };
+        for (let item of ports) {
+            // side of component-port on port-component is opposite of where the port-component is facing
+            let side = Component.SIDES[(item.rotation + 2) % 4];
+            // this is opposite of where t
+            outline[side].push(item.name);
+
+        }
+
+
     }
 
     // Saves circuits to previously opened file. Will fall back to file dialog if necessary.
@@ -74,8 +88,13 @@ class Circuits {
         return this.#fileName;
     }
 
+    // Returns the index of the circuit currently on the grid.
+    get currentIndex() {
+        return this.#currentCircuit;
+    }
+
     // Returns true while all existing circuits are empty.
-    get empty() {
+    get allEmpty() {
         this.#saveGrid();
         for (let circuit of this.#circuits) {
             if (circuit.data.length > 1 || circuit.data.filter((i) => i['_']['c'] !== 'Grid').length > 0) {
