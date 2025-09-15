@@ -77,7 +77,7 @@ class Port extends Interactive {
 
         let side = ComponentPort.portSide(this.rotation, 'bottom');
         let labelCoords = ComponentPort.portCoords(this.width, this.height, side, 0, true);
-        this.renderLabel(this.#labelElement, side, labelCoords.x * this.grid.zoom, labelCoords.y * this.grid.zoom, this.name, false);
+        this.renderLabel(this.#labelElement, side, labelCoords.x * this.grid.zoom, labelCoords.y * this.grid.zoom, this.name, false, true);
 
         this.element.setAttribute('data-port-state', this.#state ?? '');
         this.element.setAttribute('data-net-state', this.#port.netId !== null && app.sim ? app.sim.getNet(this.#port.netId) : '');

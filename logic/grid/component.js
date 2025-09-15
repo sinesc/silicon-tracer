@@ -340,8 +340,8 @@ class Component extends GridItem {
     }
 
     // Renders a label next to a port.
-    renderLabel(element, side, x, y, label, containPort = true) {
-        if (label.length <= 1) {
+    renderLabel(element, side, x, y, label, containPort = true, force = false) {
+        if (label.length <= 1 && !force) {
             element.style.display = 'none';
         } else {
             const visualPortSize = Component.PORT_SIZE * this.grid.zoom;
