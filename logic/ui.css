@@ -9,7 +9,8 @@
     --wire-null-alpha: 0.75;
     --wire-high-alpha: 0.75;
 
-    --wire-color: oklch(var(--wire-color-lightness) 0 0); /* disconnected wire */
+    --wire-colorD: oklch(var(--wire-color-lightness) 0 0); /* disconnected */
+    --wire-colorT: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 105); /* manual toggle */
     --wire-color0: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 145);
     --wire-color1: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 115);
     --wire-color2: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 90);
@@ -21,6 +22,7 @@
     --wire-color8: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 205);
     --wire-color9: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 180);
 
+    --wire-colorT-high: oklch(from var(--wire-colorT) calc(l * var(--wire-high-factor) * 1.2) c h);
     --wire-color0-high: oklch(from var(--wire-color0) calc(l * var(--wire-high-factor)) c h);
     --wire-color1-high: oklch(from var(--wire-color1) calc(l * var(--wire-high-factor)) c h);
     --wire-color2-high: oklch(from var(--wire-color2) calc(l * var(--wire-high-factor)) c h);
@@ -32,6 +34,7 @@
     --wire-color8-high: oklch(from var(--wire-color8) calc(l * var(--wire-high-factor)) c h);
     --wire-color9-high: oklch(from var(--wire-color9) calc(l * var(--wire-high-factor)) c h);
 
+    --wire-colorT-high-alpha: oklch(from var(--wire-colorT) calc(l * var(--wire-high-factor)) c h / var(--wire-high-alpha));
     --wire-color0-high-alpha: oklch(from var(--wire-color0) calc(l * var(--wire-high-factor)) c h / var(--wire-high-alpha));
     --wire-color1-high-alpha: oklch(from var(--wire-color1) calc(l * var(--wire-high-factor)) c h / var(--wire-high-alpha));
     --wire-color2-high-alpha: oklch(from var(--wire-color2) calc(l * var(--wire-high-factor)) c h / var(--wire-high-alpha));
@@ -43,6 +46,7 @@
     --wire-color8-high-alpha: oklch(from var(--wire-color8) calc(l * var(--wire-high-factor)) c h / var(--wire-high-alpha));
     --wire-color9-high-alpha: oklch(from var(--wire-color9) calc(l * var(--wire-high-factor)) c h / var(--wire-high-alpha));
 
+    --wire-colorT-low: oklch(from var(--wire-colorT) calc(l * var(--wire-low-factor)) calc(c * var(--wire-low-factor)) h);
     --wire-color0-low: oklch(from var(--wire-color0) calc(l * var(--wire-low-factor)) calc(c * var(--wire-low-factor)) h);
     --wire-color1-low: oklch(from var(--wire-color1) calc(l * var(--wire-low-factor)) calc(c * var(--wire-low-factor)) h);
     --wire-color2-low: oklch(from var(--wire-color2) calc(l * var(--wire-low-factor)) calc(c * var(--wire-low-factor)) h);
@@ -54,6 +58,7 @@
     --wire-color8-low: oklch(from var(--wire-color8) calc(l * var(--wire-low-factor)) calc(c * var(--wire-low-factor)) h);
     --wire-color9-low: oklch(from var(--wire-color9) calc(l * var(--wire-low-factor)) calc(c * var(--wire-low-factor)) h);
 
+    --wire-colorT-null: oklch(from var(--wire-colorT) calc(l * var(--wire-low-factor)) calc(c * var(--wire-null-factor)) h / var(--wire-null-alpha));
     --wire-color0-null: oklch(from var(--wire-color0) calc(l * var(--wire-low-factor)) calc(c * var(--wire-null-factor)) h / var(--wire-null-alpha));
     --wire-color1-null: oklch(from var(--wire-color1) calc(l * var(--wire-low-factor)) calc(c * var(--wire-null-factor)) h / var(--wire-null-alpha));
     --wire-color2-null: oklch(from var(--wire-color2) calc(l * var(--wire-low-factor)) calc(c * var(--wire-null-factor)) h / var(--wire-null-alpha));
@@ -558,30 +563,23 @@ div.component.port[data-net-state="1"] > div.component-inner:has(+div[data-net-c
     outline-color: var(--wire-color9-high);
     box-shadow: 1px 1px 3px var(--wire-color9-high-alpha), -1px -1px 3px var(--wire-color9-high-alpha);
 }
-/* meh, ugly, lot's of css, overall garbage */
-div.component.port[data-port-state="0"][data-component-rotation="0"] {
-    box-shadow: inset 0px -4px rgb(92, 92, 92);
+/* toggle state */
+div.component.port > div.component-inner > span:before {
+    content: '';
+    width: 14px;
+    height: 14px;
+    background-color: var(--disabled-text-color);
+    border-radius: 8px;
+    display: inline-block;
+    vertical-align: middle;
+    margin: 5px;
 }
-div.component.port[data-port-state="0"][data-component-rotation="1"] {
-    box-shadow: inset 4px 0px rgb(92, 92, 92);;
+div.component.port[data-port-state="0"] > div.component-inner > span:before {
+    background-color: var(--wire-colorT-low);
 }
-div.component.port[data-port-state="0"][data-component-rotation="2"] {
-    box-shadow: inset 0px 4px rgb(92, 92, 92);;
-}
-div.component.port[data-port-state="0"][data-component-rotation="3"] {
-    box-shadow: inset -4px 0px rgb(92, 92, 92);;
-}
-div.component.port[data-port-state="1"][data-component-rotation="0"] {
-    box-shadow: inset 0px -4px rgb(255, 246, 124);
-}
-div.component.port[data-port-state="1"][data-component-rotation="1"] {
-    box-shadow: inset 4px 0px rgb(255, 246, 124);
-}
-div.component.port[data-port-state="1"][data-component-rotation="2"] {
-    box-shadow: inset 0px 4px rgb(255, 246, 124);
-}
-div.component.port[data-port-state="1"][data-component-rotation="3"] {
-    box-shadow: inset -4px 0px rgb(255, 246, 124);
+div.component.port[data-port-state="1"] > div.component-inner > span:before {
+    background-color: var(--wire-colorT-high);
+    box-shadow: 1px 1px 3px var(--wire-colorT-high-alpha), -1px -1px 3px var(--wire-colorT-high-alpha);
 }
 
 /*
@@ -611,7 +609,7 @@ div.component.gate[data-component-rotation="3"] > div.component-inner {
     z-index: 10;
     position: absolute;
     box-sizing: border-box;
-    background-color: #6d6d6d;
+    background-color: var(--wire-colorD);
 }
 .wire-h:hover:not(.wire-building), .wire-v:hover:not(.wire-building) {
     outline: 1px solid #fff8;
