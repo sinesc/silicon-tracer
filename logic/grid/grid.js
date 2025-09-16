@@ -188,46 +188,50 @@ class Grid {
 
     // Compact/reduce overlapping wires
     compactWires() {
+        const preMergedWires = this.#getAllWires();
+        const intersections = this.#wireIntersections(preMergedWires);
+
         for (let direction of [ 'h', 'v' ]) {
-            // TODO: works better than expected, would have thought I need to run it multiple times until no more wires go inactive
-            let axis = direction === 'h' ? 'x' : 'y';
-            let wires = this.filterItems((w) => w instanceof Wire && w.direction === direction)
-                            .map((w) => ({ active: true, points: w.points(), wire: w }))
-                            .toArray();
-
-            for (let wp of wires) {
-                if (!wp.active) {
-                    continue;
-                }
-                for (let wq of wires) {
-                    if (!wq.active || wq.wire === wp.wire) {
-                        continue;
-                    }
-                    if (wp.points[0].onLine(wq.points)) {
-                        if (wp.points[1].onLine(wq.points)) {
-                            // entirely contained in the other wire, disable wp
-                            wp.active = false;
-                        } else {
-                            // partially outside, enlarge wq, disable wp
-                            let min = Math.min(wp.points[0][axis], wp.points[1][axis], wq.points[0][axis], wq.points[1][axis]);
-                            let max = Math.max(wp.points[0][axis], wp.points[1][axis], wq.points[0][axis], wq.points[1][axis]);
-                            wq.points[0][axis] = min;
-                            wq.points[1][axis] = max;
-                            wp.active = false;
-                        }
-                    }
-                }
-            }
-
-            for (let w of wires) {
-                if (!w.active) {
-                    w.wire.remove();
-                } else {
-                    let length = w.points[1][axis] - w.points[0][axis];
-                    w.wire.setEndpoints(w.points[0].x, w.points[0].y, length, direction, false);
-                }
-            }
+            this.#mergeWires(preMergedWires, direction);
         }
+
+        let isIntersected = (w, d) => {
+            for (let i of intersections) {
+                if (i.direction === d && !i.done && i.point.onLine(w)) {
+                    i.done = true;
+                    return i.point;
+                }
+            }
+            return null;
+        };
+
+        // repeat intersection point insertion until done (wire might have multiple intersection and this
+        // code only handles one each time). //TODO: at some point that should be refactored
+        let created;
+        let paranoiaLimit = 100;
+        do {
+            created = false;
+            const postMergedWires = this.#getAllWires();
+            for (let direction of [ 'h', 'v' ]) {
+                let axis = direction === 'h' ? 'x' : 'y';
+                for (let w of postMergedWires[direction]) {
+                    let intersection = isIntersected(w.points, w.wire.direction);
+                    if (intersection !== null) {
+                        let length1 = intersection[axis] - w.points[0][axis];
+                        if (length1 !== 0) {
+                            new Wire(this, w.points[0].x, w.points[0].y, length1, direction, w.wire.color);
+                            created = true;
+                        }
+                        let length2 = w.points[1][axis] - intersection[axis];
+                        if (length2 !== 0) {
+                            new Wire(this, intersection.x, intersection.y, length2, direction, w.wire.color);
+                            created = true;
+                        }
+                        w.wire.remove();
+                    }
+                }
+            }
+        } while (created && paranoiaLimit--);
     }
 
     // Returns the next to be used net color.
@@ -402,6 +406,90 @@ class Grid {
     set zoomLevel(level) {
         level = level < 0 ? 0 : (level >= Grid.ZOOM_LEVELS.length ? Grid.ZOOM_LEVELS.length - 1 : level);
         this.zoom = Grid.ZOOM_LEVELS[level];
+    }
+
+    // adds a debug marker at the given location
+    #debugPoint(x, y, i = 0) {
+        let element = document.createElement('div');
+        element.classList.add('wirebuilder-debug-point', 'wirebuilder-debug-point' + i);
+        let vx = (x + this.offsetX) * this.zoom;
+        let vy = (y + this.offsetY) * this.zoom;
+        element.style.display = 'block';
+        element.style.left = (vx - 6) + 'px';
+        element.style.top = (vy - 6) + 'px';
+        this.addVisual(element);
+    }
+
+    // compactWires() support. Find intentional intersection points (one wire ending on another).
+    #wireIntersections(allWires) {
+        let intersections = new Map();
+        for (let direction of [ 'h', 'v' ]) {
+            const otherDirection = direction === 'h' ? 'v' : 'h';
+            for (let wire of allWires[direction]) {
+                for (let otherWire of allWires[otherDirection]) {
+                    for (let i = 0; i < 2; ++i) {
+                        // check if endpoint intersects other wire but is not on that wire's end points (we use these intersections to add back points to merged
+                        // wires but that's not necessary if we are already intersecting an endpoint)
+                        if (wire.points[i].onLine(otherWire.points) /*&& otherWire.points[0].c !== wire.points[i].c && otherWire.points[1].c !== wire.points[i].c*/) {
+                            intersections.set(wire.points[i].c, { point: wire.points[i], direction: direction, done: false });
+                        }
+                    }
+                }
+            }
+        }
+        return intersections.values().toArray();
+    }
+
+    // compactWires() support. Merge overlapping wires.
+    #mergeWires(allWires, direction) {
+
+        let axis = direction === 'h' ? 'x' : 'y';
+        let wires = allWires[direction];
+
+        for (let wp of wires) {
+            if (!wp.active) {
+                continue;
+            }
+            for (let wq of wires) {
+                if (!wq.active || wq.wire === wp.wire) {
+                    continue;
+                }
+                if (wp.points[0].onLine(wq.points)) {
+                    if (wp.points[1].onLine(wq.points)) {
+                        // entirely contained in the other wire, disable wp
+                        wp.active = false;
+                    } else {
+                        // partially outside, enlarge wq, disable wp
+                        let min = Math.min(wp.points[0][axis], wp.points[1][axis], wq.points[0][axis], wq.points[1][axis]);
+                        let max = Math.max(wp.points[0][axis], wp.points[1][axis], wq.points[0][axis], wq.points[1][axis]);
+                        wq.points[0][axis] = min;
+                        wq.points[1][axis] = max;
+                        wp.active = false;
+                    }
+                }
+            }
+        }
+
+        for (let w of wires) {
+            if (!w.active) {
+                w.wire.remove();
+            } else {
+                let length = w.points[1][axis] - w.points[0][axis];
+                w.wire.setEndpoints(w.points[0].x, w.points[0].y, length, direction, false);
+            }
+        }
+    }
+
+    // compactWires() support. Returns all wires grouped by direction
+    #getAllWires() {
+        return {
+            h: this.filterItems((w) => w instanceof Wire && w.direction === 'h')
+                .map((w) => ({ active: true, points: w.points(), wire: w }))
+                .toArray(),
+            v: this.filterItems((w) => w instanceof Wire && w.direction === 'v')
+                .map((w) => ({ active: true, points: w.points(), wire: w }))
+                .toArray(),
+        };
     }
 
     // Detaches all items from the simulation.

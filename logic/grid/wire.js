@@ -86,7 +86,6 @@ class Wire extends GridItem {
             for (let [ , , wire ] of netList.nets[myNetId].wires) {
                 wire.color = color;
             }
-            this.grid.invalidateNets();
             this.grid.render();
         } else if (key === 'd' && what.type === 'hover') {
             this.#element.classList.add('wire-delete-animation');

@@ -56,6 +56,10 @@ class Point {
             return false;
         }
     }
+    // Returns a comparable representation of the object as comparing points directly always results in false due to JS sucking
+    get c() {
+        return this.x + ':' + this.y;
+    }
 }
 
 class WeakUnorderedSet {
