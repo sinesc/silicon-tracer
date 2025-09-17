@@ -31,6 +31,11 @@ Object.defineProperty(String.prototype, "toUpperFirst", {
     }
 });
 
+Math.nearestOdd = function(v) {
+    v |= 0;
+    return v + !(v % 2);
+};
+
 class Point {
     x;
     y;

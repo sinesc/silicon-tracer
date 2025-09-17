@@ -78,7 +78,7 @@ class Application {
                 saveButton.innerHTML = 'Save';
                 saveButton.classList.add('toolbar-menu-button-disabled');
             }
-            if (this.circuits.empty) {
+            if (this.circuits.allEmpty) {
                 addButton.classList.add('toolbar-menu-button-disabled');
             } else {
                 addButton.classList.remove('toolbar-menu-button-disabled');
