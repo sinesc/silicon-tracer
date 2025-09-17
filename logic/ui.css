@@ -22,7 +22,7 @@
     --wire-color8: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 205);
     --wire-color9: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 180);
 
-    --wire-colorT-high: oklch(from var(--wire-colorT) calc(l * var(--wire-high-factor) * 1.2) c h);
+    --wire-colorT-high: oklch(from var(--wire-colorT) calc(l * var(--wire-high-factor) * 1.3) c h);
     --wire-color0-high: oklch(from var(--wire-color0) calc(l * var(--wire-high-factor)) c h);
     --wire-color1-high: oklch(from var(--wire-color1) calc(l * var(--wire-high-factor)) c h);
     --wire-color2-high: oklch(from var(--wire-color2) calc(l * var(--wire-high-factor)) c h);
@@ -579,7 +579,7 @@ div.component.port[data-port-state="0"] > div.component-inner > span:before {
 }
 div.component.port[data-port-state="1"] > div.component-inner > span:before {
     background-color: var(--wire-colorT-high);
-    box-shadow: 1px 1px 3px var(--wire-colorT-high-alpha), -1px -1px 3px var(--wire-colorT-high-alpha);
+    box-shadow: 2px 2px 4px var(--wire-colorT-high-alpha), -2px -2px 4px var(--wire-colorT-high-alpha);
 }
 
 /*
