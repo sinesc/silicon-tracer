@@ -101,6 +101,8 @@ class File {
                 },
             },
         ],
+        startIn: 'documents',
+        id: 'circuits',
     };
 
     static async verifyPermission(fileHandle) {
@@ -122,8 +124,9 @@ class File {
         });
     }
 
-    static async openFile() {
-        return await window.showOpenFilePicker(File.OPTIONS);
+    static async openFile(existingHandle) {
+        let options = existingHandle ? { ...File.OPTIONS, startIn: existingHandle } : File.OPTIONS;
+        return await window.showOpenFilePicker(options);
     }
 
     static makeName(name) {

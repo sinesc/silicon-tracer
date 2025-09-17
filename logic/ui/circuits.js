@@ -19,7 +19,7 @@ class Circuits {
     // Loads circuits from file, returning the filename if circuits was previously empty.
     async loadFile(clear) {
         const haveCircuits = !this.empty;
-        const [ handle ] = await File.openFile();
+        const [ handle ] = await File.openFile(this.#fileHandle);
         const file = await handle.getFile();
         const content = JSON.parse(await file.text());
         if (clear) {
