@@ -39,6 +39,8 @@ class Port extends Interactive {
             _: { c: this.constructor.name, a: [ this.x, this.y, this.#side ]},
             rotation: this.rotation,
             name: this.name,
+            width: this.width,
+            height: this.height,
         };
     }
 
