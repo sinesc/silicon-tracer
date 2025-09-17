@@ -75,6 +75,8 @@ class Grid {
                 instance = new WireBuilder(this, ...cargs);
             } else if (cname === 'Wire') {
                 instance = new Wire(this, ...cargs);
+            } else if (cname === 'CustomComponent') {
+                instance = new CustomComponent(this, ...cargs);
             } else if (cname === 'Grid') {
                 instance = this;
             } else {

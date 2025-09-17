@@ -94,7 +94,9 @@
 						]
 					},
 					"rotation": 3,
-					"name": "Q"
+					"name": "Q",
+					"width": 80,
+					"height": 40
 				},
 				{
 					"_": {
@@ -130,7 +132,9 @@
 						]
 					},
 					"rotation": 1,
-					"name": "S"
+					"name": "S",
+					"width": 80,
+					"height": 40
 				},
 				{
 					"_": {
@@ -142,7 +146,9 @@
 						]
 					},
 					"rotation": 1,
-					"name": "R"
+					"name": "R",
+					"width": 80,
+					"height": 40
 				},
 				{
 					"_": {
@@ -192,7 +198,26 @@
 						]
 					}
 				}
-			]
+			],
+			"uid": "764e2c0e-5695-45a4-acc8-a054cb80f616",
+			"ports": {
+				"left": [
+					"R",
+					null,
+					"S"
+				],
+				"right": [
+					null,
+					"Q",
+					null
+				],
+				"top": [
+					null
+				],
+				"bottom": [
+					null
+				]
+			}
 		},
 		{
 			"label": "D latch",
@@ -493,7 +518,26 @@
 						]
 					}
 				}
-			]
+			],
+			"uid": "10923839-815f-4c46-95c9-3915bb094116",
+			"ports": {
+				"left": [
+					"L",
+					null,
+					"D"
+				],
+				"right": [
+					null,
+					"Q",
+					null
+				],
+				"top": [
+					null
+				],
+				"bottom": [
+					null
+				]
+			}
 		},
 		{
 			"label": "Edge triggered D flip-flop",
@@ -986,7 +1030,26 @@
 						]
 					}
 				}
-			]
+			],
+			"uid": "652e8494-55af-4d3e-a437-c28e57a40858",
+			"ports": {
+				"left": [
+					"D",
+					null,
+					"C"
+				],
+				"right": [
+					null,
+					"Q",
+					null
+				],
+				"top": [
+					null
+				],
+				"bottom": [
+					null
+				]
+			}
 		}
 	]
 }

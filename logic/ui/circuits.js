@@ -12,7 +12,7 @@ class Circuits {
     #fileName = null;
 
     constructor(grid) {
-        this.#circuits.push({ label: this.#generateName(), data: [], ports: [] });
+        this.#circuits.push({ label: this.#generateName(), uid: crypto.randomUUID(), data: [], ports: [] });
         this.#grid = grid;
     }
 
@@ -25,7 +25,7 @@ class Circuits {
         if (clear) {
             this.clear();
         }
-        this.#unserialize(content, file.name);
+        this.#unserialize(content);
         if (clear || !haveCircuits) {
             // no other circuits loaded, make this the new file handle
             this.#fileHandle = handle;
@@ -34,42 +34,6 @@ class Circuits {
         } else {
             return null;
         }
-    }
-
-    generateOutline(grid, circuitIndex) {
-        let ports = this.#circuits[circuitIndex].data.filter((c) => c['_'].c === 'Port');
-        let outline = { 'left': [], 'right': [], 'top': [], 'bottom': [] };
-        for (let item of ports) {
-            // side of the component-port on port-components is opposite of where the port-component is facing
-            let side = Component.SIDES[(item.rotation + 2) % 4];
-            // keep track of position so we can arrange ports on component by position in schematic
-            let sort = side === 'left' || side === 'right' ? item['_'].a[1] : item['_'].a[0]; // we're loading from serialized data format, so it's a bit ugly and will break when component constructor args change
-            outline[side].push([ sort, item.name ]);
-        }
-        let height = Math.nearestOdd(Math.max(1, outline.left.length, outline.right.length));
-        let width = Math.nearestOdd(Math.max(1, outline.top.length, outline.bottom.length));
-        console.log(JSON.stringify(outline, null, 2));
-
-        for (let side of Object.keys(outline)) {
-            // sort by position
-            outline[side].sort(([a,], [b,]) => a - b);
-            outline[side] = outline[side].map(([sort, label]) => label);
-            // insert spacers for nicer layout
-            let length = side === 'left' || side === 'right' ? height : width;
-            let available = length - outline[side].length;
-            let insertEdges = (new Array(Math.floor(available / 2))).fill(null);
-            let insertCenter = available % 2 ? [ null ] : [];
-            outline[side] = [ ...insertEdges, ...outline[side], ...insertEdges ];
-            outline[side].splice(outline[side].length / 2, 0, ...insertCenter);
-        }
-
-        // reverse left/bottom due to the way we enumerate ports for easier rotation
-        outline['left'].reverse();
-        outline['bottom'].reverse();
-
-        console.log(outline);
-
-        new Component(grid, 100, 100, outline, 'TEST');
     }
 
     // Saves circuits to previously opened file. Will fall back to file dialog if necessary.
@@ -110,9 +74,9 @@ class Circuits {
         return this.#fileName;
     }
 
-    // Returns the index of the circuit currently on the grid.
-    get currentIndex() {
-        return this.#currentCircuit;
+    // Returns the UID of the circuit currently on the grid.
+    get currentUID() {
+        return this.#circuits[this.#currentCircuit].uid;
     }
 
     // Returns true while all existing circuits are empty.
@@ -126,8 +90,18 @@ class Circuits {
         return true;
     }
 
+    // Returns circuit by UID.
+    byUID(uid) {
+        for (let circuit of this.#circuits) {
+            if (circuit.uid == uid) {
+                return circuit;
+            }
+        }
+        return null;
+    }
+
     // Returns a list of loaded circuits.
-    list() {
+    list() { // todo: map uid=>label
         // todo: sort alphabetically, add button next to menu entries to pin them to the top of the menu
         return this.#circuits.map((c) => c.label);
     }
@@ -166,19 +140,17 @@ class Circuits {
     }
 
     // Unserializes circuits from file.
-    #unserialize(content, filename) { // TODO: option not to append
+    #unserialize(content) {
         this.#saveGrid();
         this.#pruneEmpty();
         const newCircuitIndex = this.#circuits.length;
-        if (typeof content.version === 'undefined') {
-            // legacy: single circuit in file, name it from the filename, then switch to it
-            this.#circuits.push({ label: this.#generateName(filename).replace(/\.stc$/, ''), data: content });
-            this.#setGrid(newCircuitIndex);
-        } else if (content.circuits.length > 0) {
-            // multiple circuits, switch to first of them
-            this.#circuits.push(...content.circuits);
-            this.#setGrid(newCircuitIndex);
+        this.#circuits.push(...content.circuits);
+        // LEGACY: set UID for legacy circuits
+        for (let circuit of this.#circuits) {
+            circuit.uid ??= crypto.randomUUID();
+            circuit.ports ??= CustomComponent.generateDefaultOutline(circuit.data);
         }
+        this.#setGrid(newCircuitIndex);
         this.#grid.render();
     }
 

@@ -34,7 +34,9 @@
 						]
 					},
 					"rotation": 1,
-					"name": "A"
+					"name": "A",
+					"width": 80,
+					"height": 40
 				},
 				{
 					"_": {
@@ -46,7 +48,9 @@
 						]
 					},
 					"rotation": 1,
-					"name": "B"
+					"name": "B",
+					"width": 80,
+					"height": 40
 				},
 				{
 					"_": {
@@ -58,7 +62,9 @@
 						]
 					},
 					"rotation": 3,
-					"name": "Q"
+					"name": "Q",
+					"width": 80,
+					"height": 40
 				},
 				{
 					"_": {
@@ -82,7 +88,9 @@
 						]
 					},
 					"rotation": 1,
-					"name": "A"
+					"name": "A",
+					"width": 80,
+					"height": 40
 				},
 				{
 					"_": {
@@ -94,7 +102,9 @@
 						]
 					},
 					"rotation": 1,
-					"name": "B"
+					"name": "B",
+					"width": 80,
+					"height": 40
 				},
 				{
 					"_": {
@@ -106,7 +116,9 @@
 						]
 					},
 					"rotation": 3,
-					"name": "Q"
+					"name": "Q",
+					"width": 80,
+					"height": 40
 				},
 				{
 					"_": {
@@ -130,7 +142,9 @@
 						]
 					},
 					"rotation": 1,
-					"name": "A"
+					"name": "A",
+					"width": 80,
+					"height": 40
 				},
 				{
 					"_": {
@@ -142,7 +156,9 @@
 						]
 					},
 					"rotation": 1,
-					"name": "B"
+					"name": "B",
+					"width": 80,
+					"height": 40
 				},
 				{
 					"_": {
@@ -154,7 +170,9 @@
 						]
 					},
 					"rotation": 3,
-					"name": "Q"
+					"name": "Q",
+					"width": 80,
+					"height": 40
 				},
 				{
 					"_": {
@@ -178,7 +196,9 @@
 						]
 					},
 					"rotation": 1,
-					"name": "D"
+					"name": "D",
+					"width": 80,
+					"height": 40
 				},
 				{
 					"_": {
@@ -190,7 +210,9 @@
 						]
 					},
 					"rotation": 3,
-					"name": "Q"
+					"name": "Q",
+					"width": 80,
+					"height": 40
 				},
 				{
 					"_": {
@@ -214,7 +236,9 @@
 						]
 					},
 					"rotation": 1,
-					"name": "A"
+					"name": "A",
+					"width": 80,
+					"height": 40
 				},
 				{
 					"_": {
@@ -226,7 +250,9 @@
 						]
 					},
 					"rotation": 1,
-					"name": "B"
+					"name": "B",
+					"width": 80,
+					"height": 40
 				},
 				{
 					"_": {
@@ -238,7 +264,9 @@
 						]
 					},
 					"rotation": 3,
-					"name": "Q"
+					"name": "Q",
+					"width": 80,
+					"height": 40
 				},
 				{
 					"_": {
@@ -262,7 +290,9 @@
 						]
 					},
 					"rotation": 1,
-					"name": "A"
+					"name": "A",
+					"width": 80,
+					"height": 40
 				},
 				{
 					"_": {
@@ -274,7 +304,9 @@
 						]
 					},
 					"rotation": 1,
-					"name": "B"
+					"name": "B",
+					"width": 80,
+					"height": 40
 				},
 				{
 					"_": {
@@ -286,7 +318,9 @@
 						]
 					},
 					"rotation": 3,
-					"name": "Q"
+					"name": "Q",
+					"width": 80,
+					"height": 40
 				},
 				{
 					"_": {
@@ -310,7 +344,9 @@
 						]
 					},
 					"rotation": 1,
-					"name": "D"
+					"name": "D",
+					"width": 80,
+					"height": 40
 				},
 				{
 					"_": {
@@ -322,7 +358,9 @@
 						]
 					},
 					"rotation": 3,
-					"name": "Q"
+					"name": "Q",
+					"width": 80,
+					"height": 40
 				},
 				{
 					"_": {
@@ -346,7 +384,9 @@
 						]
 					},
 					"rotation": 1,
-					"name": "A"
+					"name": "A",
+					"width": 80,
+					"height": 40
 				},
 				{
 					"_": {
@@ -358,7 +398,9 @@
 						]
 					},
 					"rotation": 1,
-					"name": "B"
+					"name": "B",
+					"width": 80,
+					"height": 40
 				},
 				{
 					"_": {
@@ -370,7 +412,9 @@
 						]
 					},
 					"rotation": 3,
-					"name": "Q"
+					"name": "Q",
+					"width": 80,
+					"height": 40
 				},
 				{
 					"_": {
@@ -636,7 +680,198 @@
 						]
 					}
 				}
-			]
+			],
+			"uid": "ba4d80be-70d7-416c-8626-e5d3342f2159",
+			"ports": {
+				"left": [
+					"B",
+					"B",
+					"A",
+					"A",
+					"B",
+					"B",
+					"A",
+					null,
+					"A",
+					"B",
+					"B",
+					"A",
+					"A",
+					"D",
+					"D"
+				],
+				"right": [
+					null,
+					null,
+					null,
+					"Q",
+					"Q",
+					"Q",
+					"Q",
+					null,
+					"Q",
+					"Q",
+					"Q",
+					"Q",
+					null,
+					null,
+					null
+				],
+				"top": [
+					null
+				],
+				"bottom": [
+					null
+				]
+			}
+		},
+		{
+			"label": "Port locations",
+			"data": [
+				{
+					"_": {
+						"c": "Grid"
+					},
+					"zoom": 1.25,
+					"offsetX": -431,
+					"offsetY": 56
+				},
+				{
+					"_": {
+						"c": "Port",
+						"a": [
+							570,
+							310,
+							"right"
+						]
+					},
+					"rotation": 1,
+					"name": "f",
+					"width": 80,
+					"height": 40
+				},
+				{
+					"_": {
+						"c": "Port",
+						"a": [
+							570,
+							250,
+							"right"
+						]
+					},
+					"rotation": 1,
+					"name": "g",
+					"width": 80,
+					"height": 40
+				},
+				{
+					"_": {
+						"c": "Port",
+						"a": [
+							570,
+							190,
+							"right"
+						]
+					},
+					"rotation": 1,
+					"name": "h",
+					"width": 80,
+					"height": 40
+				},
+				{
+					"_": {
+						"c": "Port",
+						"a": [
+							850,
+							250,
+							"left"
+						]
+					},
+					"rotation": 3,
+					"name": "b",
+					"width": 80,
+					"height": 40
+				},
+				{
+					"_": {
+						"c": "Port",
+						"a": [
+							850,
+							310,
+							"left"
+						]
+					},
+					"rotation": 3,
+					"name": "c",
+					"width": 80,
+					"height": 40
+				},
+				{
+					"_": {
+						"c": "Port",
+						"a": [
+							670,
+							90,
+							"right"
+						]
+					},
+					"rotation": 2,
+					"name": "a",
+					"width": 40,
+					"height": 80
+				},
+				{
+					"_": {
+						"c": "Port",
+						"a": [
+							670,
+							370,
+							"right"
+						]
+					},
+					"rotation": 0,
+					"name": "e",
+					"width": 40,
+					"height": 80
+				},
+				{
+					"_": {
+						"c": "Port",
+						"a": [
+							730,
+							370,
+							"right"
+						]
+					},
+					"rotation": 0,
+					"name": "d",
+					"width": 40,
+					"height": 80
+				}
+			],
+			"uid": "701725a0-8c47-4218-a9fe-df1a77e2f64b",
+			"ports": {
+				"left": [
+					"f",
+					"g",
+					"h"
+				],
+				"right": [
+					"b",
+					null,
+					"c"
+				],
+				"top": [
+					null,
+					"a",
+					null
+				],
+				"bottom": [
+					"d",
+					null,
+					"e"
+				]
+			}
 		}
 	]
 }
