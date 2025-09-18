@@ -52,7 +52,7 @@ class Circuits {
     // Saves circuits as a new file.
     async saveFileAs() {
         const all = this.list();
-        const handle = await File.saveAs(this.#fileName ?? all[0]);
+        const handle = await File.saveAs(this.#fileName ?? all[0][1]);
         const writable = await handle.createWritable();
         await writable.write(JSON.stringify(this.#serialize(), null, Circuits.STRINGIFY_SPACE));
         await writable.close();
@@ -101,9 +101,18 @@ class Circuits {
     }
 
     // Returns a list of loaded circuits.
-    list() { // todo: map uid=>label
-        // todo: sort alphabetically, add button next to menu entries to pin them to the top of the menu
-        return this.#circuits.map((c) => c.label);
+    list() {
+        let circuits = this.#circuits.map((c) => [ c.uid, c.label ]);
+        circuits.sort((a, b) => {
+            if (a[1] < b[1]) {
+                return -1;
+            } else if (a[1] > b[1]) {
+                return 1;
+            } else {
+                return 0;
+            }
+        });
+        return circuits;
     }
 
     // Clear all circuits and create a new empty circuit (always need one for the grid).
@@ -115,10 +124,10 @@ class Circuits {
         this.#grid.render();
     }
 
-    // Selects a circuit by index.
-    select(newCircuitIndex) {
+    // Selects a circuit by UID.
+    select(newCircuitUID) {
         this.#saveGrid();
-        this.#setGrid(newCircuitIndex);
+        this.#setGrid(newCircuitUID);
         this.#grid.render();
     }
 
@@ -150,7 +159,7 @@ class Circuits {
             circuit.uid ??= crypto.randomUUID();
             circuit.ports ??= CustomComponent.generateDefaultOutline(circuit.data);
         }
-        this.#setGrid(newCircuitIndex);
+        this.#setGrid(this.#circuits[newCircuitIndex].uid);
         this.#grid.render();
     }
 
@@ -167,10 +176,16 @@ class Circuits {
     }
 
     // Replaces the current grid contents with the given circuit. Does NOT save current contents.
-    #setGrid(newCircuit) {
-        this.#grid.clear();
-        this.#grid.unserialize(this.#circuits[newCircuit].data);
-        this.#currentCircuit = newCircuit;
+    #setGrid(newCircuitUID) {
+        for (let [ index, circuit ] of this.#circuits.entries()) {
+            if (circuit.uid == newCircuitUID) {
+                this.#grid.clear();
+                this.#grid.unserialize(circuit.data);
+                this.#currentCircuit = index;
+                return;
+            }
+        }
+        throw 'Could not find circuit ' + newCircuitUID;
     }
 
     // Prunes empty circuits (app starts with one empty circuit and loading appends by default, so the empty circuit should be pruned).

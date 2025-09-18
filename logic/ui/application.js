@@ -99,10 +99,10 @@ class Application {
                 updateCircuitMenu();
             });
             circuitMenu.createSeparator();
-            for (let [ index, label ] of this.circuits.list().entries()) {
+            for (let [ uid, label ] of this.circuits.list()) {
                 circuitMenu.createActionButton(label, 'Switch grid to circuit "' + label + '"', () => {
                     circuitMenuState(false);
-                    this.circuits.select(index);
+                    this.circuits.select(uid);
                 });
             }
         }

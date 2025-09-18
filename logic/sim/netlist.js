@@ -88,36 +88,3 @@ class NetPort {
         return this.uniqueName.split(':')[0];
     }
 }
-
-// A circuit is either a basic gate definition or a schematic for a component.
-class Circuit {
-    // External connections of this circuit.
-    ports;
-    // Name of this circuit.
-    name;
-    // Items in this circuit (wires, components)
-    items;
-
-    // Constructs a new circuit with the given name and ports. Name must be unique
-    constructor(name, items, ports) {
-        this.name = name;
-        this.items = items;
-        this.ports = { left: [], right: [], top: [], bottom: [], ...ports };
-    }
-
-    // Drops this circuit as a component onto the grid.
-    createComponent(grid, x, y) {
-        let component = new Component(grid, x, y, this.ports);
-        return component;
-    }
-
-    // Creates the circuit on the given grid. Normally the grid should be cleared first.
-    createSchematic(grid) {
-        // TODO: how to recreate connections from here? nets need connections then
-    }
-
-    // Creates a circuit from the components on the given grid.
-    static fromGrid(grid) {
-
-    }
-}
