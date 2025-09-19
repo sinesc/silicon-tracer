@@ -24,7 +24,7 @@ class Application {
         this.circuits = new Circuits(this.grid);
 
         this.#status = document.createElement('div');
-        this.#status.classList.add('grid-status');
+        this.#status.classList.add('app-status');
         gridParent.appendChild(this.#status);
 
         setInterval(() => { // TODO: bleh
@@ -68,12 +68,12 @@ class Application {
         this.#statusMessage = String.isString(message) ? message : null;
         this.#status.innerHTML = this.#statusMessage ?? '';
         if (this.#statusMessage) {
-            this.#status.classList.remove('grid-status-faded');
+            this.#status.classList.remove('app-status-faded');
         } else if (!this.#statusMessage) {
             // set default help text when no status message has been set for a while
             this.#statusTimer = setTimeout(() => {
                 if (!this.#statusMessage) {
-                    this.#status.classList.remove('grid-status-faded');
+                    this.#status.classList.remove('app-status-faded');
                     this.#status.innerHTML = 'Grid. <i>LMB</i>: Drag component, <i>MMB</i>: Drag grid, <i>MW</i>: Zoom grid';
                 }
             }, 1000);
@@ -89,7 +89,7 @@ class Application {
         if (this.#statusTimer) {
             clearTimeout(this.#statusTimer);
         }
-        this.#status.classList.add('grid-status-faded');
+        this.#status.classList.add('app-status-faded');
         this.#statusTimer = setTimeout(() => this.setStatus(), Grid.STATUS_DELAY);
     }
 
