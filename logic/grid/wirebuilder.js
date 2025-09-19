@@ -73,13 +73,13 @@ class WireBuilder extends GridItem {
         if (status === 'start') {
             what.startX = x;
             what.startY = y;
-            this.grid.setMessage(WireBuilder.DRAWING_CONNECTION_MESSAGE, true);
+            app.setStatus(WireBuilder.DRAWING_CONNECTION_MESSAGE, true);
             this.grid.requestHotkeyTarget(this, true, { ...what, type: 'connect' }); // pass 'what' to onHotkey()
         } else if (status !== 'stop') {
             this.setBounding(what.startX, what.startY, x, y);
             this.render();
         } else {
-            this.grid.clearMessage(true);
+            app.clearStatus(true);
             this.grid.releaseHotkeyTarget(this, true);
             this.grid.invalidateNets();
             this.remove();

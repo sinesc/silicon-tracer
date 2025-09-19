@@ -34,8 +34,8 @@ class Toolbar {
             component.render();
         };
         this.#element.appendChild(button);
-        button.onmouseenter = () => this.#grid.setMessage(hoverMessage);
-        button.onmouseleave = () => this.#grid.clearMessage();
+        button.onmouseenter = () => app.setStatus(hoverMessage);
+        button.onmouseleave = () => app.clearStatus();
         return [ button ];
     }
 
@@ -50,8 +50,8 @@ class Toolbar {
             action();
         };
         this.#element.appendChild(button);
-        button.onmouseenter = () => this.#grid.setMessage(hoverMessage);
-        button.onmouseleave = () => this.#grid.clearMessage();
+        button.onmouseenter = () => app.setStatus(hoverMessage);
+        button.onmouseleave = () => app.clearStatus();
         return [ button ];
     }
 
@@ -125,8 +125,8 @@ class Toolbar {
             stateFn(!state);
             action(state);
         };
-        button.onmouseenter = () => this.#grid.setMessage(hoverMessage);
-        button.onmouseleave = () => this.#grid.clearMessage();
+        button.onmouseenter = () => app.setStatus(hoverMessage);
+        button.onmouseleave = () => app.clearStatus();
         return [ button, stateFn ];
     }
 }

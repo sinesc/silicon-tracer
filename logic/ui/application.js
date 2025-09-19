@@ -12,10 +12,20 @@ class Application {
     simStart = null;
     tickListener = null;
 
+    #status;
+    #statusMessage = null;
+    #statusTimer = null;
+    #statusLocked = false;
+
     constructor(gridParent, toolbarParent) {
+
         this.grid = new Grid(gridParent);
         this.toolbar = new Toolbar(this.grid, toolbarParent);
         this.circuits = new Circuits(this.grid);
+
+        this.#status = document.createElement('div');
+        this.#status.classList.add('grid-status');
+        gridParent.appendChild(this.#status);
 
         setInterval(() => { // TODO: bleh
             if (this.autoCompile || this.sim) {
@@ -44,6 +54,43 @@ class Application {
     stopSimulation() {
         this.sim = null;
         this.grid.setSimulationLabel(null);
+    }
+
+    // Sets a status message. Pass null to unset and revert back to default status.
+    setStatus(message, lock) {
+        if (this.#statusLocked && !lock) {
+            return;
+        }
+        this.#statusLocked = lock ?? false;
+        if (this.#statusTimer) {
+            clearTimeout(this.#statusTimer);
+        }
+        this.#statusMessage = String.isString(message) ? message : null;
+        this.#status.innerHTML = this.#statusMessage ?? '';
+        if (this.#statusMessage) {
+            this.#status.classList.remove('grid-status-faded');
+        } else if (!this.#statusMessage) {
+            // set default help text when no status message has been set for a while
+            this.#statusTimer = setTimeout(() => {
+                if (!this.#statusMessage) {
+                    this.#status.classList.remove('grid-status-faded');
+                    this.#status.innerHTML = 'Grid. <i>LMB</i>: Drag component, <i>MMB</i>: Drag grid, <i>MW</i>: Zoom grid';
+                }
+            }, 1000);
+        }
+    }
+
+    // Clears the current status message.
+    clearStatus(unlock) {
+        if (this.#statusLocked && !unlock) {
+            return;
+        }
+        this.#statusLocked = false;
+        if (this.#statusTimer) {
+            clearTimeout(this.#statusTimer);
+        }
+        this.#status.classList.add('grid-status-faded');
+        this.#statusTimer = setTimeout(() => this.setStatus(), Grid.STATUS_DELAY);
     }
 
     // Initialize main menu entries.
@@ -222,8 +269,8 @@ class Application {
     // Monitor logo for clicks.
     startLogoMonitor(logo) {
         // A blast from when we still owned our stuff.
-        logo.onmouseenter = () => this.grid.setMessage('Cheesy 80s logo. It is ticklish.');
-        logo.onmouseleave = () => this.grid.clearMessage();
+        logo.onmouseenter = () => this.setStatus('Cheesy 80s logo. It is ticklish.');
+        logo.onmouseleave = () => this.clearStatus();
         logo.onclick = () => logo.setAttribute('data-c', ((parseInt(logo.getAttribute('data-c') ?? 0) + 1) % 6));
     }
 }

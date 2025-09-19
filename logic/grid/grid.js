@@ -16,12 +16,6 @@ class Grid {
     #info;
     #infoCircuitLabel = null;
     #infoSimulationLabel = null;
-    #status; // TODO: refactor status stuff into separate class
-    #statusMessage = null;
-    #statusTimer = null;
-    #statusLocked = false;
-    #mouseX = 0;
-    #mouseY = 0;
     #hotkeyTarget = null;
     #items;
     #netCache = null;
@@ -32,20 +26,21 @@ class Grid {
         this.#element.onmousedown = this.#handleDragStart.bind(this);
         this.#element.onwheel = this.#handleZoom.bind(this);
 
-        this.#status = document.createElement('div');
-        this.#status.classList.add('grid-status');
-        this.#element.appendChild(this.#status);
-
         this.#info = document.createElement('div');
         this.#info.classList.add('grid-info');
         this.#element.appendChild(this.#info);
         this.#info.innerHTML = 'Cicuit name!';
 
-        document.addEventListener('mousemove', this.#handleMouse.bind(this));
         parent.appendChild(this.#element);
         this.#items = new Set();
-        this.clearMessage();
         this.render();
+
+        if (Grid.DEBUG_COORDS) {
+            this.debug = document.createElement('div');
+            this.debug.classList.add('debug-info');
+            this.#element.appendChild(this.debug);
+            document.addEventListener('mousemove', this.#debugHandleMouse.bind(this));
+        }
 
         // TODO: may have to go to parent UI
         // TODO: GridElements currently register document.onmouse* temporarily. those should probably follow the same logic: register onmouse* here and then pass on to whichever element wants to have them
@@ -198,7 +193,7 @@ class Grid {
         // render components
         for (let item of this.#items) {
             item.render(reason);
-        };
+        }
     }
 
     // Returns the next to be used net color.
@@ -312,43 +307,6 @@ class Grid {
         return [ sim, tickListener ];
     }
 
-    // Sets a status message. Pass null to unset and revert back to default status.
-    setMessage(message, lock) {
-        if (this.#statusLocked && !lock) {
-            return;
-        }
-        this.#statusLocked = lock ?? false;
-        if (this.#statusTimer) {
-            clearTimeout(this.#statusTimer);
-        }
-        this.#statusMessage = String.isString(message) ? message : null;
-        this.#status.innerHTML = this.#statusMessage ?? '';
-        if (this.#statusMessage) {
-            this.#status.classList.remove('grid-status-faded');
-        } else if (!this.#statusMessage) {
-            // set default help text when no status message has been set for a while
-            this.#statusTimer = setTimeout(() => {
-                if (!this.#statusMessage) {
-                    this.#status.classList.remove('grid-status-faded');
-                    this.#status.innerHTML = 'Grid. <i>LMB</i>: Drag component, <i>MMB</i>: Drag grid, <i>MW</i>: Zoom grid';
-                }
-            }, 1000);
-        }
-    }
-
-    // Clears the current status message.
-    clearMessage(unlock) {
-        if (this.#statusLocked && !unlock) {
-            return;
-        }
-        this.#statusLocked = false;
-        if (this.#statusTimer) {
-            clearTimeout(this.#statusTimer);
-        }
-        this.#status.classList.add('grid-status-faded');
-        this.#statusTimer = setTimeout(() => this.setMessage(), Grid.STATUS_DELAY);
-    }
-
     // Makes given gridelement become the hotkey-target and when locked also prevents hover events from stealing hotkey focus until released.
     requestHotkeyTarget(gridElement, lock, ...args) {
         lock ??= false;
@@ -375,18 +333,6 @@ class Grid {
         this.zoom = Grid.ZOOM_LEVELS[level];
     }
 
-    // adds a debug marker at the given location
-    #debugPoint(x, y, i = 0) {
-        let element = document.createElement('div');
-        element.classList.add('wirebuilder-debug-point', 'wirebuilder-debug-point' + i);
-        let vx = (x + this.offsetX) * this.zoom;
-        let vy = (y + this.offsetY) * this.zoom;
-        element.style.display = 'block';
-        element.style.left = (vx - 6) + 'px';
-        element.style.top = (vy - 6) + 'px';
-        this.addVisual(element);
-    }
-
     // Updates info overlay text.
     #updateInfo() {
         if (this.#infoCircuitLabel === this.#infoSimulationLabel) {
@@ -409,16 +355,6 @@ class Grid {
         if (this.#hotkeyTarget) {
             let { gridElement, args } = this.#hotkeyTarget;
             gridElement.onHotkey(e.key, ...args);
-        }
-    }
-
-    // Called on mouse move, updates mouse coordinates and tooltip.
-    #handleMouse(e) {
-        this.#mouseX = e.clientX;
-        this.#mouseY = e.clientY;
-        if (Grid.DEBUG_COORDS && this.#statusMessage === null && this.screenInBounds(this.#mouseX, this.#mouseY)) {
-            let [ x, y ] = this.screenToGrid(this.#mouseX, this.#mouseY);
-            this.#status.innerHTML = 'x: ' + Math.round(x) + ' y: ' + Math.round(y) + ' zoom: ' + this.zoom + '</b>';
         }
     }
 
@@ -464,5 +400,27 @@ class Grid {
     #handleDragStop(e) {
         document.onmouseup = null;
         document.onmousemove = null;
+    }
+
+    // Called on mouse move, updates mouse coordinates and tooltip.
+    #debugHandleMouse(e) {
+        let mouseX = e.clientX;
+        let mouseY = e.clientY;
+        if (this.screenInBounds(mouseX, mouseY)) {
+            let [ x, y ] = this.screenToGrid(mouseX, mouseY);
+            this.debug.innerHTML = 'x: ' + Math.round(x) + ' y: ' + Math.round(y) + ' zoom: ' + this.zoom;
+        }
+    }
+
+    // adds a debug marker at the given location
+    #debugPoint(x, y, i = 0) {
+        let element = document.createElement('div');
+        element.classList.add('wirebuilder-debug-point', 'wirebuilder-debug-point' + i);
+        let vx = (x + this.offsetX) * this.zoom;
+        let vy = (y + this.offsetY) * this.zoom;
+        element.style.display = 'block';
+        element.style.left = (vx - 6) + 'px';
+        element.style.top = (vy - 6) + 'px';
+        this.addVisual(element);
     }
 }
