@@ -13,6 +13,9 @@ class Grid {
     offsetY = 0;
 
     #element;
+    #info;
+    #infoCircuitLabel = null;
+    #infoSimulationLabel = null;
     #status; // TODO: refactor status stuff into separate class
     #statusMessage = null;
     #statusTimer = null;
@@ -33,6 +36,11 @@ class Grid {
         this.#status.classList.add('grid-status');
         this.#element.appendChild(this.#status);
 
+        this.#info = document.createElement('div');
+        this.#info.classList.add('grid-info');
+        this.#element.appendChild(this.#info);
+        this.#info.innerHTML = 'Cicuit name!';
+
         document.addEventListener('mousemove', this.#handleMouse.bind(this));
         parent.appendChild(this.#element);
         this.#items = new Set();
@@ -52,6 +60,18 @@ class Grid {
             result.push(item.serialize());
         }
         return result;
+    }
+
+    // Sets the circuit label displayed on the grid.
+    setCircuitLabel(label) {
+        this.#infoCircuitLabel = label;
+        this.#updateInfo();
+    }
+
+    // Sets the simulation label displayed on the grid.
+    setSimulationLabel(label) {
+        this.#infoSimulationLabel = label;
+        this.#updateInfo();
     }
 
     // Creates grid items from given serialized object.
@@ -365,6 +385,16 @@ class Grid {
         element.style.left = (vx - 6) + 'px';
         element.style.top = (vy - 6) + 'px';
         this.addVisual(element);
+    }
+
+    // Updates info overlay text.
+    #updateInfo() {
+        if (this.#infoCircuitLabel === this.#infoSimulationLabel) {
+            this.#info.innerHTML = '<span>Circuit/Simulation</span><div class="circuit-label">' + this.#infoCircuitLabel + '</div>';
+        } else {
+            this.#info.innerHTML = '<span>Circuit</span><div class="circuit-label">' + this.#infoCircuitLabel +
+                '</div>' + (this.#infoSimulationLabel ? '<span>Simulation</span><div class="simulation-label">' + this.#infoSimulationLabel + '</div>' : '');
+        }
     }
 
     // Detaches all items from the simulation.

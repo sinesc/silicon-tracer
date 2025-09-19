@@ -5,15 +5,15 @@ class Circuits {
 
     static STRINGIFY_SPACE = "\t";
 
-    #circuits = [];
-    #currentCircuit = 0;
+    #circuits;
+    #currentCircuit;
     #grid;
     #fileHandle = null;
     #fileName = null;
 
     constructor(grid) {
-        this.#circuits.push({ label: this.#generateName(), uid: crypto.randomUUID(), data: [], ports: [] });
         this.#grid = grid;
+        this.#reset();
     }
 
     // Loads circuits from file, returning the filename if circuits was previously empty.
@@ -79,6 +79,11 @@ class Circuits {
         return this.#circuits[this.#currentCircuit].uid;
     }
 
+    // Returns the label of the circuit currently on the grid.
+    get current() {
+        return this.#circuits[this.#currentCircuit].label;
+    }
+
     // Returns true while all existing circuits are empty.
     get allEmpty() {
         this.#saveGrid();
@@ -117,9 +122,7 @@ class Circuits {
 
     // Clear all circuits and create a new empty circuit (always need one for the grid).
     clear() {
-        this.#circuits = [ ];
-        this.#circuits.push({ label: this.#generateName(), data: [] });
-        this.#currentCircuit = 0;
+        this.#reset();
         this.#grid.clear();
         this.#grid.render();
     }
@@ -140,6 +143,15 @@ class Circuits {
         const name = prompt('Circuit name', this.#generateName()); // TBD: maybe not have the prompt here? but need public generateName then
         this.#circuits.push({ label: name, data: [] });
         this.#grid.render();
+    }
+
+    // Reset circuit entries
+    #reset() {
+        this.#circuits = [ ];
+        let label = this.#generateName();
+        this.#circuits.push({ label: label, uid: crypto.randomUUID(), data: [], ports: [] });
+        this.#currentCircuit = 0;
+        this.#grid.setCircuitLabel(label);
     }
 
     // Serializes loaded circuits for saving to file.
@@ -181,6 +193,8 @@ class Circuits {
             if (circuit.uid == newCircuitUID) {
                 this.#grid.clear();
                 this.#grid.unserialize(circuit.data);
+                this.#grid.setCircuitLabel(circuit.label);
+                this.#grid.setSimulationLabel(null);
                 this.#currentCircuit = index;
                 return;
             }

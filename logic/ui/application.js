@@ -7,7 +7,8 @@ class Application {
     toolbar;
     circuits;
 
-    sim = null;
+    autoCompile = true;
+    sim = null; // FIXME: array containing all simulations
     simStart = null;
     tickListener = null;
 
@@ -15,12 +16,23 @@ class Application {
         this.grid = new Grid(gridParent);
         this.toolbar = new Toolbar(this.grid, toolbarParent);
         this.circuits = new Circuits(this.grid);
+
+        setInterval(() => { // TODO: bleh
+            if (this.autoCompile || this.sim) {
+                this.startSimulation();
+                for (let i = 0; i < 10; ++i) {  // TODO: bleh temp code, look into webworkers
+                    this.sim.simulate();
+                }
+                this.grid.render();
+            }
+        }, 18);
     }
 
     // Start or continue simulation.
     startSimulation() {
         if (!this.sim) {
             [ this.sim, this.tickListener ] = this.grid.compileSimulation();
+            this.grid.setSimulationLabel(this.circuits.current);
             this.simStart = performance.now();
         }
         for (let [ portName, component ] of this.tickListener) {
@@ -31,6 +43,7 @@ class Application {
     // Stop current simulation.
     stopSimulation() {
         this.sim = null;
+        this.grid.setSimulationLabel(null);
     }
 
     // Initialize main menu entries.
@@ -106,6 +119,42 @@ class Application {
                 });
             }
         }
+
+        // Simulation menu
+
+        let updateSimulationMenu;
+        let [ , simulationMenuState, simulationMenu ] = this.toolbar.createMenuButton('Simulation', 'Simulation management menu. <i>LMB</i> Open menu.', () => updateSimulationMenu());
+
+        updateSimulationMenu = () => {
+            simulationMenu.clear();
+            let startButton;
+            // Continuous simulation toggle
+            simulationMenu.createToggleButton('Autostart', 'Automatically starts a new simulation when the grid changes.', this.autoCompile, (enabled) => {
+                this.autoCompile = enabled;
+                if (enabled) {
+                    this.startSimulation();
+                    startButton.classList.add('toolbar-menu-button-disabled');
+                } else  {
+                    this.stopSimulation();
+                    startButton.classList.remove('toolbar-menu-button-disabled');
+                }
+                this.grid.render();
+            });
+            // Simulate current grid
+            [ startButton ] = simulationMenu.createActionButton('Start at "' + this.circuits.current + '"', 'Start a new simulation using "' + this.circuits.current + '" as the root component', () => {
+                simulationMenuState(false);
+                this.startSimulation();
+            });
+            if (this.sim) {
+                startButton.classList.add('toolbar-menu-button-disabled'); // FIXME: instead of disabling, change text to "Stop <circuitname>"
+            } else {
+                startButton.classList.remove('toolbar-menu-button-disabled');
+            }
+
+
+            simulationMenu.createSeparator();
+            // TODO list active simulations
+        }
     }
 
     // Initialize tool bar entries.
@@ -135,26 +184,6 @@ class Application {
         this.toolbar.createComponentButton('Clock', '<b>Clock</b>. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => {
             return new Clock(grid, x, y);
         });
-
-        // Continuous simulation toggle
-        let [ , autoCompile ] = this.toolbar.createToggleButton('Simulate', 'Toggle enable or disable continuous simulation', true, (enabled) => {
-            if (enabled) {
-                this.startSimulation();
-            } else  {
-                this.stopSimulation();
-            }
-            this.grid.render();
-        });
-
-        setInterval(() => { // TODO: bleh
-            if (autoCompile()) {
-                this.startSimulation();
-                for (let i = 0; i < 10; ++i) {  // TODO: bleh temp code, look into webworkers
-                    this.sim.simulate();
-                }
-                this.grid.render();
-            }
-        }, 18);
 
         this.toolbar.createActionButton('Dump ASM', 'Outputs simulation code to console', () => {
             if (this.sim) {
