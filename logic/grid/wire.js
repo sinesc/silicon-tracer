@@ -127,7 +127,7 @@ class Wire extends GridItem {
         let t = thickness / 2;
 
         this.#element.setAttribute('data-net-color', this.color ?? '');
-        this.#element.setAttribute('data-net-state', this.netId !== null && app.sim ? app.sim.getNet(this.netId) : '');
+        this.#element.setAttribute('data-net-state', this.netId !== null && app.sim ? app.sim.engine.getNet(this.netId) : '');
 
         if (this.width !== 0) {
             let hx = width < 0 ? x + width : x;

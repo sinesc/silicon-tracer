@@ -418,7 +418,7 @@ class Component extends GridItem {
             item.element.style.lineHeight = visualPortSize + 'px';
             item.element.innerHTML = '<span>' + item.name.slice(0, 1) + '</span>';
             item.element.setAttribute('data-net-color', item.color ?? '');
-            item.element.setAttribute('data-net-state', item.netId !== null && app.sim ? app.sim.getNet(item.netId) : '');
+            item.element.setAttribute('data-net-state', item.netId !== null && app.sim ? app.sim.engine.getNet(item.netId) : '');
             this.renderLabel(item.labelElement, side, x, y, item.name);
         });
     }

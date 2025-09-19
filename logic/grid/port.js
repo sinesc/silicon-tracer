@@ -61,9 +61,9 @@ class Port extends Interactive {
                 this.render();
             }
             if (prevState !== this.#state) {
-                /*if (this.#port.netId !== null && app.sim) {
-                    app.sim.setNet(this.#port.netId, this.#state);
-                }*/
+                if (this.#port.netId !== null && app.sim) {
+                    app.sim.engine.setNet(this.#port.netId, this.#state);
+                }
                 this.render();
             }
         }
@@ -82,7 +82,7 @@ class Port extends Interactive {
         this.renderLabel(this.#labelElement, side, labelCoords.x * this.grid.zoom, labelCoords.y * this.grid.zoom, this.name, false, true);
 
         this.element.setAttribute('data-port-state', this.#state ?? '');
-        this.element.setAttribute('data-net-state', this.#port.netId !== null && app.sim ? app.sim.getNet(this.#port.netId) : '');
+        this.element.setAttribute('data-net-state', this.#port.netId !== null && app.sim ? app.sim.engine.getNet(this.#port.netId) : '');
     }
 
     // Update hover message

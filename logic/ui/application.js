@@ -8,9 +8,8 @@ class Application {
     circuits;
 
     autoCompile = true;
-    sim = null; // FIXME: array containing all simulations
-    simStart = null;
-    tickListener = null;
+    #simulations = {};
+    #currentSimulation;
 
     #status;
     #statusMessage = null;
@@ -31,29 +30,38 @@ class Application {
             if (this.autoCompile || this.sim) {
                 this.startSimulation();
                 for (let i = 0; i < 10; ++i) {  // TODO: bleh temp code, look into webworkers
-                    this.sim.simulate();
+                    this.sim.engine.simulate();
                 }
                 this.grid.render();
             }
         }, 18);
     }
 
-    // Start or continue simulation.
+    // Returns the current simulation.
+    get sim() {
+        return this.#currentSimulation ? this.#simulations[this.#currentSimulation] : null;
+    }
+
+    // Start or continue current simulation.
     startSimulation() {
         if (!this.sim) {
-            [ this.sim, this.tickListener ] = this.grid.compileSimulation();
+            let [ engine, tickListener ] = this.grid.compileSimulation();
             this.grid.setSimulationLabel(this.circuits.current.label);
-            this.simStart = performance.now();
+            let start = performance.now();
+            this.#currentSimulation = this.circuits.current.uid;
+            this.#simulations[this.#currentSimulation] = { engine, start, tickListener };
         }
-        for (let [ portName, component ] of this.tickListener) {
-            component.applyState(portName, this.sim);
+        for (let [ portName, component ] of this.sim.tickListener) {
+            component.applyState(portName, this.sim.engine);
         }
     }
 
     // Stop current simulation.
     stopSimulation() {
-        this.sim = null;
+        this.#simulations[this.#currentSimulation] = null;
+        this.#currentSimulation = null;
         this.grid.setSimulationLabel(null);
+        this.grid.render();
     }
 
     // Sets a status message. Pass null to unset and revert back to default status.
@@ -174,31 +182,26 @@ class Application {
 
         updateSimulationMenu = () => {
             simulationMenu.clear();
-            let startButton;
+            let toggleButton;
+            let toggleButtonText = () => this.sim ? 'Stop simulation' : 'Start at "' + this.circuits.current.label + '"';
             // Continuous simulation toggle
             simulationMenu.createToggleButton('Autostart', 'Automatically starts a new simulation when the grid changes.', this.autoCompile, (enabled) => {
                 this.autoCompile = enabled;
                 if (enabled) {
                     this.startSimulation();
-                    startButton.classList.add('toolbar-menu-button-disabled');
-                } else  {
-                    this.stopSimulation();
-                    startButton.classList.remove('toolbar-menu-button-disabled');
                 }
-                this.grid.render();
+                toggleButton.innerHTML = toggleButtonText();
             });
             // Simulate current grid
-            [ startButton ] = simulationMenu.createActionButton('Start at "' + this.circuits.current.label + '"', 'Start a new simulation using "' + this.circuits.current.label + '" as the root component', () => {
+            [ toggleButton ] = simulationMenu.createActionButton(toggleButtonText(), 'Toggle simulation.', () => {
                 simulationMenuState(false);
-                this.startSimulation();
+                if (this.sim) {
+                    this.autoCompile = false;
+                    this.stopSimulation();
+                } else {
+                    this.startSimulation();
+                }
             });
-            if (this.sim) {
-                startButton.classList.add('toolbar-menu-button-disabled'); // FIXME: instead of disabling, change text to "Stop <circuitname>"
-            } else {
-                startButton.classList.remove('toolbar-menu-button-disabled');
-            }
-
-
             simulationMenu.createSeparator();
             // TODO list active simulations
         }
@@ -235,12 +238,12 @@ class Application {
         this.toolbar.createActionButton('Dump ASM', 'Outputs simulation code to console', () => {
             if (this.sim) {
                 let portInfo = [];
-                for (let { offset, meta } of this.sim.nets) {
+                for (let { offset, meta } of this.sim.engine.nets) {
                     for (let port of meta) {
                         portInfo.push('// port ' + port + ' mem[' + offset + ']');
                     }
                 }
-                console.log(this.sim.code() + portInfo.join("\n"));
+                console.log(this.sim.engine.code() + portInfo.join("\n"));
             } else {
                 console.log('No simulation running');
             }
