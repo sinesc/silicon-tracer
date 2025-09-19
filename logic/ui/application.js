@@ -20,7 +20,7 @@ class Application {
     constructor(gridParent, toolbarParent) {
 
         this.grid = new Grid(gridParent);
-        this.toolbar = new Toolbar(this.grid, toolbarParent);
+        this.toolbar = new Toolbar(this.grid, toolbarParent); // TODO: these should just use app.grid
         this.circuits = new Circuits(this.grid);
 
         this.#status = document.createElement('div');
@@ -42,7 +42,7 @@ class Application {
     startSimulation() {
         if (!this.sim) {
             [ this.sim, this.tickListener ] = this.grid.compileSimulation();
-            this.grid.setSimulationLabel(this.circuits.current);
+            this.grid.setSimulationLabel(this.circuits.current.label);
             this.simStart = performance.now();
         }
         for (let [ portName, component ] of this.tickListener) {
@@ -188,7 +188,7 @@ class Application {
                 this.grid.render();
             });
             // Simulate current grid
-            [ startButton ] = simulationMenu.createActionButton('Start at "' + this.circuits.current + '"', 'Start a new simulation using "' + this.circuits.current + '" as the root component', () => {
+            [ startButton ] = simulationMenu.createActionButton('Start at "' + this.circuits.current.label + '"', 'Start a new simulation using "' + this.circuits.current.label + '" as the root component', () => {
                 simulationMenuState(false);
                 this.startSimulation();
             });

@@ -74,14 +74,9 @@ class Circuits {
         return this.#fileName;
     }
 
-    // Returns the UID of the circuit currently on the grid.
-    get currentUID() {
-        return this.#circuits[this.#currentCircuit].uid;
-    }
-
-    // Returns the label of the circuit currently on the grid.
+    // Returns current circuit.
     get current() {
-        return this.#circuits[this.#currentCircuit].label;
+        return this.#circuits[this.#currentCircuit];
     }
 
     // Returns true while all existing circuits are empty.
