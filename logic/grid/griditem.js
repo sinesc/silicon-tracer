@@ -5,6 +5,9 @@ class GridItem {
 
     grid;
 
+    // Grid ID used to link simulation items with grid items
+    gid;
+
     x;
     y;
 
@@ -47,10 +50,11 @@ class GridItem {
     // Implement to detach the item from the simulation.
     detachSimulation() { }
 
-    // Serializes the object for writing to disk.
+    // Serializes the grid item to a circuit item stored as part of a Circuit in Circuits.
     serialize() {
         return {
             _: { c: this.constructor.name, a: [] },
+            gid: this.gid,
         };
     }
 

@@ -1,5 +1,33 @@
 "use strict";
 
+// Single circuit
+class Circuit {
+    label;
+    uid;
+    data;
+    ports;
+    constructor(label, uid, data = [], ports = []) {
+        this.label = label;
+        this.uid = uid ?? crypto.randomUUID();
+        this.data = data;
+        this.ports = ports;
+    }
+    // Serializes a circuit for saving to file.
+    serialize(ignore) {
+        let data = [];
+        for (let item of this.data) {
+            let serialized = {};
+            for (let [ key, value ] of Object.entries(item)) {
+                if (!ignore.includes(key)) {
+                    serialized[key] = value;
+                }
+            }
+            data.push(serialized);
+        }
+        return { label: this.label, uid: this.uid, data, ports: this.ports };
+    }
+}
+
 // Handles loading/saving/selecting circuits and keeping the grid updated.
 class Circuits {
 
@@ -135,16 +163,16 @@ class Circuits {
         this.#grid.clear();
         this.#currentCircuit = this.#circuits.length;
         // TODO: need proper input component
-        const name = prompt('Circuit name', this.#generateName()); // TBD: maybe not have the prompt here? but need public generateName then
-        this.#circuits.push({ label: name, data: [] });
+        const label = prompt('Circuit label', this.#generateName());
+        this.#circuits.push(new Circuit(label));
         this.#grid.render();
     }
 
     // Reset circuit entries
     #reset() {
         this.#circuits = [ ];
-        let label = this.#generateName();
-        this.#circuits.push({ label: label, uid: crypto.randomUUID(), data: [], ports: [] });
+        const label = this.#generateName();
+        this.#circuits.push(new Circuit(label));
         this.#currentCircuit = 0;
         this.#grid.setCircuitLabel(label);
     }
@@ -152,7 +180,7 @@ class Circuits {
     // Serializes loaded circuits for saving to file.
     #serialize() {
         this.#saveGrid();
-        return { version: 1, circuits: this.#circuits };
+        return { version: 1, circuits: this.#circuits.map((c) => c.serialize([ 'gid' ])) };
     }
 
     // Unserializes circuits from file.
@@ -160,9 +188,12 @@ class Circuits {
         this.#saveGrid();
         this.#pruneEmpty();
         const newCircuitIndex = this.#circuits.length;
-        this.#circuits.push(...content.circuits);
+        this.#circuits.push(...content.circuits.map((c) => new Circuit(c.label, c.uid, c.data, c.ports)));
         // LEGACY: set UID for legacy circuits
         for (let circuit of this.#circuits) {
+            for (let item of circuit.data) {
+                item.gid ??= crypto.randomUUID();
+            }
             circuit.uid ??= crypto.randomUUID();
             circuit.ports ??= CustomComponent.generateDefaultOutline(circuit.data);
         }

@@ -3,6 +3,7 @@
 // Custom circuit represented as a component.
 class CustomComponent extends Component {
 
+    // Circuit UID for the circuit represented by this custom component
     uid;
 
     constructor(grid, x, y, rotation, uid) {

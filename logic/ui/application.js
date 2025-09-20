@@ -79,7 +79,15 @@ class Application {
         delete this.#simulations[this.#currentSimulation];
         this.#currentSimulation = null;
         this.grid.setSimulationLabel(null);
-        this.grid.render();
+    }
+
+    // Restarts a running simulation. Does not start a simulation that isn't already running.
+    restartSimulation() {
+        if (!this.#currentSimulation) {
+            return;
+        }
+        this.stopSimulation();
+        this.startSimulation();
     }
 
     // Sets a status message. Pass null to unset and revert back to default status.
@@ -216,6 +224,7 @@ class Application {
                 if (this.sim) {
                     this.autoCompile = false;
                     this.stopSimulation();
+                    this.grid.render();
                 } else {
                     this.startSimulation();
                 }

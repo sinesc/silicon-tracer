@@ -47,7 +47,7 @@ class Grid {
         document.addEventListener('keydown', this.#handleKeyDown.bind(this));
     }
 
-    // Serializes items on the grid for writing to disk.
+    // Serializes items on the grid to a circuit stored in Circuits.
     serialize() {
         let result = [];
         result.push({ "_": { c: "Grid" }, zoom: this.zoom, offsetX: Math.round(this.offsetX), offsetY: Math.round(this.offsetY) });
@@ -57,27 +57,13 @@ class Grid {
         return result;
     }
 
-    // Sets the circuit label displayed on the grid.
-    setCircuitLabel(label) {
-        this.#infoCircuitLabel = label;
-        this.#updateInfo();
-    }
-
-    // Sets the simulation label displayed on the grid.
-    setSimulationLabel(label) {
-        this.#infoSimulationLabel = label;
-        this.#updateInfo();
-    }
-
     // Creates grid items from given serialized object.
     unserialize(data) {
         for (let item of data) {
             const cname = item._.c;
             const cargs = item._.a;
             let instance;
-            if (cname === 'Component') {
-                instance = new Component(this, ...cargs);
-            } else if (cname === 'Port') {
+            if (cname === 'Port') {
                 instance = new Port(this, ...cargs);
             } else if (cname === 'Gate') {
                 instance = new Gate(this, ...cargs);
@@ -103,6 +89,18 @@ class Grid {
         this.invalidateNets();
     }
 
+    // Sets the circuit label displayed on the grid.
+    setCircuitLabel(label) {
+        this.#infoCircuitLabel = label;
+        this.#updateInfo();
+    }
+
+    // Sets the simulation label displayed on the grid.
+    setSimulationLabel(label) {
+        this.#infoSimulationLabel = label;
+        this.#updateInfo();
+    }
+
     // Removes all items from the grid.
     clear() {
         for (let item of this.#items) {
@@ -116,6 +114,7 @@ class Grid {
     // Adds an item to the grid. Automatically done by GridItem constructor.
     addItem(item) {
         this.#items.add(item);
+        item.gid ??= crypto.randomUUID();
     }
 
     // Removes an item from the grid.
@@ -259,7 +258,6 @@ class Grid {
         if (this.#netCache) {
             this.#netCache = null;
             this.#detachSimulation();
-            app.stopSimulation();
         }
     }
 
