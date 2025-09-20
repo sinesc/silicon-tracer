@@ -37,6 +37,21 @@ class Application {
         }, 18);
     }
 
+    // Returns list of simulations
+    simulations() {
+        let simulations = Object.keys(this.#simulations).map((uid) => [ uid, this.circuits.byUID(uid).label ]);
+        simulations.sort((a, b) => {
+            if (a[1] < b[1]) {
+                return -1;
+            } else if (a[1] > b[1]) {
+                return 1;
+            } else {
+                return 0;
+            }
+        });
+        return simulations;
+    }
+
     // Returns the current simulation.
     get sim() {
         return this.#currentSimulation ? this.#simulations[this.#currentSimulation] : null;
@@ -58,7 +73,10 @@ class Application {
 
     // Stop current simulation.
     stopSimulation() {
-        this.#simulations[this.#currentSimulation] = null;
+        if (!this.#currentSimulation) {
+            return;
+        }
+        delete this.#simulations[this.#currentSimulation];
         this.#currentSimulation = null;
         this.grid.setSimulationLabel(null);
         this.grid.render();
@@ -185,15 +203,15 @@ class Application {
             let toggleButton;
             let toggleButtonText = () => this.sim ? 'Stop simulation' : 'Start at "' + this.circuits.current.label + '"';
             // Continuous simulation toggle
-            simulationMenu.createToggleButton('Autostart', 'Automatically starts a new simulation when the grid changes.', this.autoCompile, (enabled) => {
+            simulationMenu.createToggleButton('Autostart', 'Automatically starts a new simulation when switching circuits.', this.autoCompile, (enabled) => {
                 this.autoCompile = enabled;
                 if (enabled) {
                     this.startSimulation();
                 }
-                toggleButton.innerHTML = toggleButtonText();
+                updateSimulationMenu();
             });
             // Simulate current grid
-            [ toggleButton ] = simulationMenu.createActionButton(toggleButtonText(), 'Toggle simulation.', () => {
+            [ toggleButton ] = simulationMenu.createActionButton(toggleButtonText(), 'Toggle simulation on/off.', () => {
                 simulationMenuState(false);
                 if (this.sim) {
                     this.autoCompile = false;
@@ -203,7 +221,12 @@ class Application {
                 }
             });
             simulationMenu.createSeparator();
-            // TODO list active simulations
+            for (let [ uid, label ] of this.simulations()) {
+                simulationMenu.createActionButton(label, 'Switch to simulation "' + label + '"', () => {
+                    simulationMenuState(false);
+                    // TODO
+                });
+            }
         }
     }
 

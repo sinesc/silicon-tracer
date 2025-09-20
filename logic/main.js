@@ -5,3 +5,8 @@ app.initMenu();
 app.initToolbar();
 app.startFocusMonitor();
 app.startLogoMonitor(document.querySelector('#header h1'));
+
+
+app.toolbar.createActionButton('outline', 'blatest', () => {
+    new CustomComponent(app.grid, 100, 100, 0, app.circuits.current.uid);
+});
