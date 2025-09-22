@@ -60,7 +60,7 @@ class Application {
     // Start or continue current simulation.
     startSimulation() {
         if (!this.sim) {
-            let [ engine, tickListener ] = this.grid.compileSimulation();
+            let [ engine, tickListener ] = this.compileSimulation();
             this.grid.setSimulationLabel(this.circuits.current.label);
             let start = performance.now();
             this.#currentSimulation = this.circuits.current.uid;
@@ -88,6 +88,49 @@ class Application {
         }
         this.stopSimulation();
         this.startSimulation();
+    }
+
+    // Compiles a simulation for the grid contents and returns it.
+    compileSimulation() {
+
+        let [ netList, componentMap ] = this.circuits.current.identifyNets();
+        let sim = new Simulation();
+
+        // declare gates from component map
+        for (let [ prefix, component ] of componentMap.entries()) {
+            if (component instanceof Gate) { // TODO: exclude unconnected gates via netList.unconnected.ports when all gate ports are listed as unconnected
+                sim.gateDecl(component.type, component.inputs.map((i) => prefix + i), prefix + component.output);
+            } else if (component instanceof Builtin) {
+                sim.builtinDecl(component.type, prefix);
+            }
+        }
+
+        // declare nets
+        let tickListener = [];
+        for (let net of netList.nets) {
+            // create new net from connected gate i/o-ports
+            let interactiveComponents = net.ports.filter((p) => p.component instanceof Interactive);
+            let attachedPorts = net.ports.filter((p) => (p.component instanceof Gate) || (p.component instanceof Builtin)).map((p) => p.uniqueName);
+            let netId = sim.netDecl(attachedPorts, interactiveComponents.map((p) => p.uniqueName));
+            // link interactive components on the net to the ui
+            for (let netPort of interactiveComponents) {
+                tickListener.push([ netPort.name, netPort.component ]);
+            }
+            // link ports on components
+            for (let { name, component } of net.ports) {
+                let port = component.portByName(name);// TODO: getting ports by name might be slow, should also store some kind of id in net.ports
+                port.netId = netId;
+            }
+            // link wires
+            for (let [ , , component ] of net.wires) {
+                component.netId = netId;
+            }
+        }
+
+        // compile
+        sim.compile();
+
+        return [ sim, tickListener ];
     }
 
     // Sets a status message. Pass null to unset and revert back to default status.

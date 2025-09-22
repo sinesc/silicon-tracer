@@ -6,12 +6,15 @@ class Circuit {
     uid;
     data;
     ports;
+    #netCache = null;
+
     constructor(label, uid, data = [], ports = []) {
         this.label = label;
         this.uid = uid ?? crypto.randomUUID();
         this.data = data;
         this.ports = ports;
     }
+
     // Serializes a circuit for saving to file.
     serialize(ignore) {
         let data = [];
@@ -25,6 +28,38 @@ class Circuit {
             data.push(serialized);
         }
         return { label: this.label, uid: this.uid, data, ports: this.ports };
+    }
+
+    // Identifies nets on the grid and returns a [ NetList, Map<String, Component> ].
+    identifyNets() {
+        if (this.#netCache) {
+            return this.#netCache;
+        }
+        // get all individual wires
+        let wires = this.data.filter((i) => i._.c === 'Wire').map((w) => {
+            let [ x, y, len, dir ] = w._.a;
+            return [ new Point(x, y), new Point(x + (dir === 'h' ? len : 0), y + (dir === 'v' ? len : 0)), w.gid ];
+        });
+        // get all component ports
+        let components = this.data.filter((i) => i._.c !== 'Wire' && i._.c !== 'Grid').map((c) => GridItem.unserialize(c, null)); // TODO: crap to have to unserialize these partially (with a null grid)
+        let ports = [];
+        let componentMap = new Map();
+        let id = 0;
+        for (let component of components) {
+            let componentPrefix = NetPort.prefix(id++);
+            componentMap.set(componentPrefix, component.gid);
+            for (let port of component.getPorts()) {
+                let { x, y } = port.coords(component.width, component.height, component.rotation);
+                ports.push(new NetPort(new Point(x + component.x, y + component.y), componentPrefix, port.name, component.gid));
+            }
+        }
+        let netList = NetList.fromWires(wires, ports);
+        return this.#netCache = [ netList, componentMap ];
+    }
+
+    // Invalidates grid nets and detaches components.
+    invalidateNets() {
+        this.#netCache = null;
     }
 }
 
@@ -155,6 +190,7 @@ class Circuits {
         this.#saveGrid();
         this.#setGrid(newCircuitUID);
         this.#grid.render();
+        this.current.identifyNets();
     }
 
     // Creates a new circuit.

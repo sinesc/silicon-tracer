@@ -18,7 +18,6 @@ class Grid {
     #infoSimulationLabel = null;
     #hotkeyTarget = null;
     #items;
-    #netCache = null;
 
     constructor(parent) {
         this.#element = document.createElement('div');
@@ -160,10 +159,10 @@ class Grid {
         this.#element.style.backgroundPositionY = (offsetY % spacing) + 'px';
 
         // compact overlapping wires and apply net colors to wires if the nets have changed
-        if (!this.#netCache) {
+        /*if (!this.#netCache) {
             Wire.compact(this);
             this.applyNetColors();
-        }
+        }*/
 
         // render components
         for (let item of this.#items) {
@@ -175,6 +174,9 @@ class Grid {
     get nextNetColor() {
         let [ netList ] = this.identifyNets();
         return netList.nets.length % 10;
+    }
+
+    invalidateNets() {//FIXME remove
     }
 
     // Applies net colors to components on the grid. Returns next to be used color.
@@ -203,82 +205,6 @@ class Grid {
             component.portByName(portName).color = null;
         }
         return color;
-    }
-
-    // Identifies nets on the grid and returns a [ NetList, Map<String, Component> ].
-    identifyNets() {
-        if (this.#netCache) {
-            return this.#netCache;
-        }
-        // get all individual wires
-        let wires = this.filterItems((i) => i instanceof Wire).map((w) => [ ...w.points(), w ]).toArray();
-        // get all component ports
-        let components = this.filterItems((i) => i instanceof Component);
-        let ports = [];
-        let componentMap = new Map();
-        let id = 0;
-        for (let component of components) {
-            let componentPrefix = NetPort.prefix(id++);
-            componentMap.set(componentPrefix, component);
-            for (let port of component.getPorts()) {
-                let { x, y } = port.coords(component.width, component.height, component.rotation);
-                ports.push(new NetPort(new Point(x + component.x, y + component.y), componentPrefix, port.name, component));
-            }
-        }
-        let netList = NetList.fromWires(wires, ports);
-        return this.#netCache = [ netList, componentMap ];
-    }
-
-    // Invalidates grid nets and detaches components.
-    invalidateNets() {
-        if (this.#netCache) {
-            this.#netCache = null;
-            this.#detachSimulation();
-        }
-    }
-
-    // Compiles a simulation for the grid contents and returns it.
-    compileSimulation() {
-
-        this.invalidateNets();
-        let [ netList, componentMap ] = this.identifyNets();
-        let sim = new Simulation();
-
-        // declare gates from component map
-        for (let [ prefix, component ] of componentMap.entries()) {
-            if (component instanceof Gate) { // TODO: exclude unconnected gates via netList.unconnected.ports when all gate ports are listed as unconnected
-                sim.gateDecl(component.type, component.inputs.map((i) => prefix + i), prefix + component.output);
-            } else if (component instanceof Builtin) {
-                sim.builtinDecl(component.type, prefix);
-            }
-        }
-
-        // declare nets
-        let tickListener = [];
-        for (let net of netList.nets) {
-            // create new net from connected gate i/o-ports
-            let interactiveComponents = net.ports.filter((p) => p.component instanceof Interactive);
-            let attachedPorts = net.ports.filter((p) => (p.component instanceof Gate) || (p.component instanceof Builtin)).map((p) => p.uniqueName);
-            let netId = sim.netDecl(attachedPorts, interactiveComponents.map((p) => p.uniqueName));
-            // link interactive components on the net to the ui
-            for (let netPort of interactiveComponents) {
-                tickListener.push([ netPort.name, netPort.component ]);
-            }
-            // link ports on components
-            for (let { name, component } of net.ports) {
-                let port = component.portByName(name);// TODO: getting ports by name might be slow, should also store some kind of id in net.ports
-                port.netId = netId;
-            }
-            // link wires
-            for (let [ , , component ] of net.wires) {
-                component.netId = netId;
-            }
-        }
-
-        // compile
-        sim.compile();
-
-        return [ sim, tickListener ];
     }
 
     // Makes given gridelement become the hotkey-target and when locked also prevents hover events from stealing hotkey focus until released.
