@@ -26,11 +26,13 @@ class Wire extends GridItem {
         this.color = color ?? null;
         this.direction = direction;
 
-        this.#element = document.createElement('div');
-        this.#element.classList.add('wire-' + direction);
-        this.registerDrag(this.#element, { type: 'connect', ordering: direction === 'h' ? 'vh' : 'hv' });
-        this.setHoverMessage(this.#element, Wire.HOVER_MESSAGE, { type: 'hover' });
-        this.grid.addVisual(this.#element);
+        if (this.grid) {
+            this.#element = document.createElement('div');
+            this.#element.classList.add('wire-' + direction);
+            this.registerDrag(this.#element, { type: 'connect', ordering: direction === 'h' ? 'vh' : 'hv' });
+            this.setHoverMessage(this.#element, Wire.HOVER_MESSAGE, { type: 'hover' });
+            this.grid.addVisual(this.#element);
+        }
     }
 
     // Returns the DOM element used by the wire.
@@ -110,7 +112,7 @@ class Wire extends GridItem {
         this.height = direction === 'v' ? length : 0;
     };
 
-    // Returns the 2 or 3 distinct endpoint coordinates of this connection.
+    // Returns the 2 endpoint coordinates of this connection.
     points() {
         let mk = (x, y) => new Point(x, y);
         return [ mk(this.x, this.y), mk(this.x + this.width, this.y + this.height) ];

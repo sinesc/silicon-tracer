@@ -10,7 +10,9 @@ class Clock extends Interactive {
     constructor(grid, x, y) {
         super(grid, x, y, { right: [ '' ] }, 'Clock');
         this.#port = this.portByName('');
-        this.#updateMessage();
+        if (this.grid) {
+            this.#updateMessage();
+        }
     }
 
     // Serializes the object for writing to disk.

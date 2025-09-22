@@ -43,12 +43,15 @@ class Gate extends Component {
 
         const name = type.toUpperFirst();
         super(grid, x, y, { 'left': left, 'right': right }, name);
-
-        this.element.classList.add('gate');
+        
         this.inputs = inputs;
         this.output = output;
         this.type = type;
-        this.setHoverMessage(this.inner, '<b>' + name + '-Gate</b>. <i>LMB</i>: Drag to move. <i>R</i>: Rotate, <i>D</i>: Delete', { type: 'hover' });
+
+        if (this.grid) {
+            this.element.classList.add('gate');
+            this.setHoverMessage(this.inner, '<b>' + name + '-Gate</b>. <i>LMB</i>: Drag to move. <i>R</i>: Rotate, <i>D</i>: Delete', { type: 'hover' });
+        }
     }
 
     // Serializes the object for writing to disk.

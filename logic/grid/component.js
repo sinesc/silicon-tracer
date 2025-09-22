@@ -74,22 +74,6 @@ class Component extends GridItem {
         super(grid);
 
         [ this.x, this.y ] = this.gridAlign(x, y);
-
-        // container
-        this.#element = document.createElement('div');
-        this.#element.classList.add('component');
-        this.#element.setAttribute('data-component-type', type); // setAttribtute: dislike dataset-api name transcription when they could have just used [index] access to avoid the hyphen issue.
-
-        // inner area with name
-        this.#inner = document.createElement('div');
-        this.#inner.innerHTML = '<span>' + type + '</span>';
-        this.#inner.classList.add('component-inner');
-        this.setHoverMessage(this.#inner, 'Component <b>' + type + '</b>. <i>LMB</i>: Drag to move. <i>R</i>: Rotate, <i>D</i>: Delete', { type: 'hover' });
-        this.registerDrag(this.#inner, { type: "component", grabOffsetX: null, grabOffsetY: null });
-        this.#element.appendChild(this.#inner);
-
-        // ensure ports are completely defined
-
         this.#ports = { left: [], right: [], top: [], bottom: [], ...ports };
 
         for (let [ side, other ] of Object.entries({ 'left': 'right', 'right': 'left', 'top': 'bottom', 'bottom': 'top' })) {
@@ -99,26 +83,42 @@ class Component extends GridItem {
         }
 
         this.#ports = this.#ports.map((side, sidePorts) => sidePorts.map((name, index) => new ComponentPort(name, side, index)));
-
-        // ports
         this.updateDimensions();
-        this.getPorts().forEach((item) => {
-            let port = document.createElement('div');
-            port.classList.add('component-port');
-            this.#element.appendChild(port);
-            this.setHoverMessage(port, 'Port <b>' + item.name + '</b> of <b>' + type + '</b>. <i>LMB</i>: Drag to connect.', { type: 'hover-port' });
-            // port hover label
-            let labelElement = document.createElement('div');
-            labelElement.classList.add('component-port-label');
-            this.#element.appendChild(labelElement);
-            // update this.ports with computed port properties
-            item.element = port;
-            item.labelElement = labelElement;
-            // register a drag event for the port, will trigger onDrag with the port name
-            this.registerDrag(port, { type: "port", name: item.name });
-        });
 
-        grid.addVisual(this.#element);
+        // apply visals if we're on a grid
+        if (this.grid) {
+            // visual: container
+            this.#element = document.createElement('div');
+            this.#element.classList.add('component');
+            this.#element.setAttribute('data-component-type', type); // setAttribtute: dislike dataset-api name transcription when they could have just used [index] access to avoid the hyphen issue.
+
+            // visual: inner area with name
+            this.#inner = document.createElement('div');
+            this.#inner.innerHTML = '<span>' + type + '</span>';
+            this.#inner.classList.add('component-inner');
+            this.setHoverMessage(this.#inner, 'Component <b>' + type + '</b>. <i>LMB</i>: Drag to move. <i>R</i>: Rotate, <i>D</i>: Delete', { type: 'hover' });
+            this.registerDrag(this.#inner, { type: "component", grabOffsetX: null, grabOffsetY: null });
+            this.#element.appendChild(this.#inner);
+
+            // visual: ports
+            this.getPorts().forEach((item) => {
+                let port = document.createElement('div');
+                port.classList.add('component-port');
+                this.#element.appendChild(port);
+                this.setHoverMessage(port, 'Port <b>' + item.name + '</b> of <b>' + type + '</b>. <i>LMB</i>: Drag to connect.', { type: 'hover-port' });
+                // port hover label
+                let labelElement = document.createElement('div');
+                labelElement.classList.add('component-port-label');
+                this.#element.appendChild(labelElement);
+                // update this.ports with computed port properties
+                item.element = port;
+                item.labelElement = labelElement;
+                // register a drag event for the port, will trigger onDrag with the port name
+                this.registerDrag(port, { type: "port", name: item.name });
+            });
+
+            grid.addVisual(this.#element);
+        }
     }
 
     // Returns the component root element.

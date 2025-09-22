@@ -16,9 +16,11 @@ class GridItem {
 
     constructor(grid) {
         this.grid = grid;
-        grid.addItem(this);
-        this.#hoverRegistered = new WeakMap();
-        this.#hoverMessages = new WeakMap();
+        if (this.grid) {
+            grid.addItem(this);
+            this.#hoverRegistered = new WeakMap();
+            this.#hoverMessages = new WeakMap();
+        }
     }
 
     // Gets the grid-relative screen x-coordinate for this grid item.
@@ -56,6 +58,36 @@ class GridItem {
             _: { c: this.constructor.name, a: [] },
             gid: this.gid,
         };
+    }
+
+    // Unserializes a circuit item to a grid idem.
+    static unserialize(item, grid) {
+        const cname = item._.c;
+        const cargs = item._.a;
+        let instance;
+        if (cname === 'Port') { // TODO: meh to have cases here
+            instance = new Port(grid, ...cargs);
+        } else if (cname === 'Gate') {
+            instance = new Gate(grid, ...cargs);
+        } else if (cname === 'Clock') {
+            instance = new Clock(grid, ...cargs);
+        } else if (cname === 'Builtin') {
+            instance = new Builtin(grid, ...cargs);
+        } else if (cname === 'Wire') {
+            instance = new Wire(grid, ...cargs);
+        } else if (cname === 'CustomComponent') {
+            instance = new CustomComponent(grid, ...cargs);
+        } else if (cname === 'Grid') {
+            instance = grid;
+        } else {
+            throw 'Invalid component type "' + cname + '"';
+        }
+        for (let [ k, v ] of Object.entries(item)) {
+            if (instance && k !== '_') { // instance may be null passed in via grid
+                instance[k] = v;
+            }
+        }
+        return instance;
     }
 
     // Utility function to align given x/y to grid coordinates and return them.

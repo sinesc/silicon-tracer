@@ -60,31 +60,7 @@ class Grid {
     // Creates grid items from given serialized object.
     unserialize(data) {
         for (let item of data) {
-            const cname = item._.c;
-            const cargs = item._.a;
-            let instance;
-            if (cname === 'Port') {
-                instance = new Port(this, ...cargs);
-            } else if (cname === 'Gate') {
-                instance = new Gate(this, ...cargs);
-            } else if (cname === 'Clock') {
-                instance = new Clock(this, ...cargs);
-            } else if (cname === 'Builtin') {
-                instance = new Builtin(this, ...cargs);
-            } else if (cname === 'Wire') {
-                instance = new Wire(this, ...cargs);
-            } else if (cname === 'CustomComponent') {
-                instance = new CustomComponent(this, ...cargs);
-            } else if (cname === 'Grid') {
-                instance = this;
-            } else {
-                throw 'Invalid component type "' + cname + '"';
-            }
-            for (let [ k, v ] of Object.entries(item)) {
-                if (k !== '_') {
-                    instance[k] = v;
-                }
-            }
+            GridItem.unserialize(item, this);
         }
         this.invalidateNets();
     }

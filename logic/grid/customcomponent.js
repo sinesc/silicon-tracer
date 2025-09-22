@@ -12,8 +12,11 @@ class CustomComponent extends Component {
         super(grid, x, y, circuit.ports, circuit.label);
         this.rotation = rotation;
         this.uid = uid;
-        this.element.classList.add('custom');
-        this.setHoverMessage(this.inner, '<b>' + circuit.label + '</b>. <i>LMB</i>: Drag to move. <i>R</i>: Rotate, <i>D</i>: Delete', { type: 'hover' });
+
+        if (this.grid) {
+            this.element.classList.add('custom');
+            this.setHoverMessage(this.inner, '<b>' + circuit.label + '</b>. <i>LMB</i>: Drag to move. <i>R</i>: Rotate, <i>D</i>: Delete', { type: 'hover' });
+        }
     }
 
     // Serializes the object for writing to disk.

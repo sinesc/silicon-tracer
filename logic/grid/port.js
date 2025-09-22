@@ -11,16 +11,19 @@ class Port extends Interactive {
 
     constructor(grid, x, y, side) {
         super(grid, x, y, { 'top': [ '' ], 'left': [ null, null, null ] }, 'Port');
-        this.element.classList.add('port');
         this.rotation = Component.SIDES.indexOf(side);
         this.updateDimensions();
         this.#side = side;
         this.#port = this.portByName('');
-        this.#updateMessage();
 
-        this.#labelElement = document.createElement('div');
-        this.#labelElement.classList.add('port-name');
-        this.element.appendChild(this.#labelElement);
+        if (this.grid) {
+            this.#updateMessage();
+
+            this.#labelElement = document.createElement('div');
+            this.#labelElement.classList.add('port-name');
+            this.element.classList.add('port');
+            this.element.appendChild(this.#labelElement);
+        }
     }
 
     // Returns UI-enforced state for given port.
