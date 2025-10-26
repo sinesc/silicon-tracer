@@ -17,8 +17,7 @@ class Grid {
     #infoCircuitLabel = null;
     #infoSimulationLabel = null;
     #hotkeyTarget = null;
-    #items;
-    #netCache = null;
+    #circuit;
 
     constructor(parent) {
         this.#element = document.createElement('div');
@@ -32,7 +31,6 @@ class Grid {
         this.#info.innerHTML = 'Cicuit name!';
 
         parent.appendChild(this.#element);
-        this.#items = new Set();
         this.render();
 
         if (Grid.DEBUG_COORDS) {
@@ -47,27 +45,39 @@ class Grid {
         document.addEventListener('keydown', this.#handleKeyDown.bind(this));
     }
 
-    // Serializes items on the grid to a circuit stored in Circuits.
-    serialize() {
-        let result = [];
-        result.push({ "_": { c: "Grid" }, zoom: this.zoom, offsetX: Math.round(this.offsetX), offsetY: Math.round(this.offsetY) });
-        for (let item of this.#items) {
-            result.push(item.serialize());
+    // Unsets current grid circuit, saving changes to circuits.
+    unsetCircuit() {
+        if (!this.#circuit) {
+            return;
         }
-        return result;
+        for (let item of this.#circuit.data) {
+            item.unlink();
+        }
+        this.#circuit.gridConfig = this.#serializeConfig();
+        this.#circuit = null;
+        this.#infoCircuitLabel = '';
+        //this.#updateInfo();
     }
 
-    // Creates grid items from given serialized object.
-    unserialize(data) {
-        for (let item of data) {
-            GridItem.unserialize(item, this);
+    // Updates current circuit from grid state.
+    updateCircuit() {
+        if (!this.#circuit) {
+            return;
         }
-        this.invalidateNets();
+        this.#circuit.gridConfig = this.#serializeConfig();
     }
 
-    // Sets the circuit label displayed on the grid.
-    setCircuitLabel(label) {
-        this.#infoCircuitLabel = label;
+    // Sets current grid circuit.
+    setCircuit(circuit) {
+        this.unsetCircuit();
+        this.zoom = circuit.gridConfig.zoom;
+        this.offsetX = circuit.gridConfig.offsetX;
+        this.offsetY = circuit.gridConfig.offsetY;
+        for (let item of circuit.data) {
+            item.link(this);
+        }
+        this.#circuit = circuit;
+        this.#infoCircuitLabel = circuit.label;
         this.#updateInfo();
     }
 
@@ -77,30 +87,28 @@ class Grid {
         this.#updateInfo();
     }
 
-    // Removes all items from the grid.
-    clear() {
-        for (let item of this.#items) {
-            // call item's removal code
-            item.remove();
-        };
-        this.#items = new Set();
-        this.invalidateNets();
-    }
-
     // Adds an item to the grid. Automatically done by GridItem constructor.
     addItem(item) {
-        this.#items.add(item);
+        this.#circuit.data.push(item);
+        item.link(this);
         item.gid ??= crypto.randomUUID();
+        return item;
     }
 
     // Removes an item from the grid.
     removeItem(item) {
-        this.#items.delete(item);
+        let index = this.#circuit.data.find(item);
+        if (index > -1) {
+            this.#circuit.data.splice(index, 1);
+        } else {
+            throw 'Failed to find item';
+        }
+        return item;
     }
 
     // Returns items that passed the given filter (c) => bool.
     filterItems(filter) {
-        return this.#items.values().filter((c) => c !== null && filter(c));
+        return this.#circuit.data.filter((c) => c !== null && filter(c));
     }
 
     // Adds a visual element for a grid item to the grid.
@@ -160,26 +168,28 @@ class Grid {
         this.#element.style.backgroundPositionY = (offsetY % spacing) + 'px';
 
         // compact overlapping wires and apply net colors to wires if the nets have changed
-        if (!this.#netCache) {
+        /*if (!this.#netCache) {
             Wire.compact(this);
             this.applyNetColors();
-        }
+        }*/
 
         // render components
-        for (let item of this.#items) {
-            item.render(reason);
+        if (this.#circuit) {
+            for (let item of this.#circuit.data) {
+                item.render(reason);
+            }
         }
     }
 
     // Returns the next to be used net color.
     get nextNetColor() {
-        let [ netList ] = this.identifyNets();
+        let netList = this.identifyNets(); // FIXME: get nets from current simulation
         return netList.nets.length % 10;
     }
 
     // Applies net colors to components on the grid. Returns next to be used color.
     applyNetColors() {
-        let [ netList ] = this.identifyNets();
+        let netList = this.identifyNets(); // FIXME: get nets from current simulation
         let color = 0;
         for (let net of netList.nets) {
             let applyColor = null;
@@ -188,7 +198,7 @@ class Grid {
                 wire.color = applyColor;
             }
             for (let port of net.ports) {
-                let component = port.component;
+                let component = port.gid; // FIXME: it's a gid now
                 let portName = port.name;
                 component.portByName(portName).color = applyColor;
             }
@@ -198,87 +208,11 @@ class Grid {
             wire[2].color = null;
         }
         for (let port of netList.unconnected.ports) {
-            let component = port.component;
+            let component = port.gid; // FIXME: it's a gid now
             let portName = port.name;
             component.portByName(portName).color = null;
         }
         return color;
-    }
-
-    // Identifies nets on the grid and returns a [ NetList, Map<String, Component> ].
-    identifyNets() {
-        if (this.#netCache) {
-            return this.#netCache;
-        }
-        // get all individual wires
-        let wires = this.filterItems((i) => i instanceof Wire).map((w) => [ ...w.points(), w ]).toArray();
-        // get all component ports
-        let components = this.filterItems((i) => i instanceof Component);
-        let ports = [];
-        let componentMap = new Map();
-        let id = 0;
-        for (let component of components) {
-            let componentPrefix = NetPort.prefix(id++);
-            componentMap.set(componentPrefix, component);
-            for (let port of component.getPorts()) {
-                let { x, y } = port.coords(component.width, component.height, component.rotation);
-                ports.push(new NetPort(new Point(x + component.x, y + component.y), componentPrefix, port.name, component));
-            }
-        }
-        let netList = NetList.fromWires(wires, ports);
-        return this.#netCache = [ netList, componentMap ];
-    }
-
-    // Invalidates grid nets and detaches components.
-    invalidateNets() {
-        if (this.#netCache) {
-            this.#netCache = null;
-            this.#detachSimulation();
-        }
-    }
-
-    // Compiles a simulation for the grid contents and returns it.
-    compileSimulation() {
-
-        this.invalidateNets();
-        let [ netList, componentMap ] = this.identifyNets();
-        let sim = new Simulation();
-
-        // declare gates from component map
-        for (let [ prefix, component ] of componentMap.entries()) {
-            if (component instanceof Gate) { // TODO: exclude unconnected gates via netList.unconnected.ports when all gate ports are listed as unconnected
-                sim.gateDecl(component.type, component.inputs.map((i) => prefix + i), prefix + component.output);
-            } else if (component instanceof Builtin) {
-                sim.builtinDecl(component.type, prefix);
-            }
-        }
-
-        // declare nets
-        let tickListener = [];
-        for (let net of netList.nets) {
-            // create new net from connected gate i/o-ports
-            let interactiveComponents = net.ports.filter((p) => p.component instanceof Interactive);
-            let attachedPorts = net.ports.filter((p) => (p.component instanceof Gate) || (p.component instanceof Builtin)).map((p) => p.uniqueName);
-            let netId = sim.netDecl(attachedPorts, interactiveComponents.map((p) => p.uniqueName));
-            // link interactive components on the net to the ui
-            for (let netPort of interactiveComponents) {
-                tickListener.push([ netPort.name, netPort.component ]);
-            }
-            // link ports on components
-            for (let { name, component } of net.ports) {
-                let port = component.portByName(name);// TODO: getting ports by name might be slow, should also store some kind of id in net.ports
-                port.netId = netId;
-            }
-            // link wires
-            for (let [ , , component ] of net.wires) {
-                component.netId = netId;
-            }
-        }
-
-        // compile
-        sim.compile();
-
-        return [ sim, tickListener ];
     }
 
     // Makes given gridelement become the hotkey-target and when locked also prevents hover events from stealing hotkey focus until released.
@@ -307,6 +241,11 @@ class Grid {
         this.zoom = Grid.ZOOM_LEVELS[level];
     }
 
+    // Serializes the grid config to the current circuit.
+    #serializeConfig() {
+        return { zoom: this.zoom, offsetX: Math.round(this.offsetX), offsetY: Math.round(this.offsetY) };
+    }
+
     // Updates info overlay text.
     #updateInfo() {
         if (this.#infoCircuitLabel === this.#infoSimulationLabel) {
@@ -319,7 +258,7 @@ class Grid {
 
     // Detaches all items from the simulation.
     #detachSimulation() {
-        for (let item of this.#items) {
+        for (let item of this.#circuit.data) {
             item.detachSimulation();
         };
     }

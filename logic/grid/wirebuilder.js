@@ -16,7 +16,8 @@ class WireBuilder extends GridItem {
 
     constructor(grid, x1, y1, x2, y2, ordering, color, fliptest) {
 
-        super(grid);
+        super();
+        this.grid = grid;
 
         [ x1, y1 ] = this.gridAlign(x1, y1);
         [ x2, y2 ] = this.gridAlign(x2, y2);
@@ -81,8 +82,8 @@ class WireBuilder extends GridItem {
         } else {
             app.clearStatus(true);
             this.grid.releaseHotkeyTarget(this, true);
-            this.grid.invalidateNets();
             this.remove();
+            app.circuits.invalidateNets();
             this.grid.render();
         }
     }

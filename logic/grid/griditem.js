@@ -3,24 +3,76 @@
 // Base class for grid items.
 class GridItem {
 
-    grid;
-
     // Grid ID used to link simulation items with grid items
     gid;
 
+    // Reference to linked grid
+    grid;
+
+    // Position on grid
     x;
     y;
 
     #hoverMessages;
     #hoverRegistered;
 
-    constructor(grid) {
+    // Link item to a grid, enabling it to be rendered.
+    link(grid) {
         this.grid = grid;
-        if (this.grid) {
-            grid.addItem(this);
-            this.#hoverRegistered = new WeakMap();
-            this.#hoverMessages = new WeakMap();
+        this.#hoverRegistered = new WeakMap();
+        this.#hoverMessages = new WeakMap();
+    }
+
+    // Remove item from grid.
+    unlink() {
+        this.#hoverRegistered = null;
+        this.#hoverMessages = null;
+        this.grid = null;
+    }
+
+    // Removes item from circuit (and grid).
+    remove() {
+        this.unlink();
+        // TODO
+    }
+
+    // Implement to detach the item from the simulation.
+    detachSimulation() { }
+
+    // Serializes the grid item to a circuit item stored as part of a Circuit in Circuits.
+    serialize() {
+        return {
+            _: { c: this.constructor.name, a: [] },
+            gid: this.gid,
+        };
+    }
+
+    // Unserializes a circuit item to a grid idem.
+    static unserialize(item) {
+        const cname = item._.c;
+        const cargs = item._.a;
+        let instance;
+        if (cname === 'Port') { // TODO: meh to have cases here
+            instance = new Port(...cargs);
+        } else if (cname === 'Gate') {
+            instance = new Gate(...cargs);
+        } else if (cname === 'Clock') {
+            instance = new Clock(...cargs);
+        } else if (cname === 'Builtin') {
+            instance = new Builtin(...cargs);
+        } else if (cname === 'Wire') {
+            instance = new Wire(...cargs);
+        } else if (cname === 'CustomComponent') {
+            instance = new CustomComponent(...cargs);
+        } else {
+            throw 'Invalid component type "' + cname + '"';
         }
+        for (let [ k, v ] of Object.entries(item)) {
+            if (k !== '_') {
+                instance[k] = v;
+            }
+        }
+        return instance;
     }
 
     // Gets the grid-relative screen x-coordinate for this grid item.
@@ -41,54 +93,6 @@ class GridItem {
 
     // Implement to handle hover hotkey events.
     onHotkey(key, ...args) { }
-
-    // Remove the item from the grid. // TBD: maybe refactor to onRemove() and then have grid.removeItem() call it?
-    remove() {
-        this.hoverMessages = null;
-        this.#hoverRegistered = null;
-        this.grid.removeItem(this);
-    }
-
-    // Implement to detach the item from the simulation.
-    detachSimulation() { }
-
-    // Serializes the grid item to a circuit item stored as part of a Circuit in Circuits.
-    serialize() {
-        return {
-            _: { c: this.constructor.name, a: [] },
-            gid: this.gid,
-        };
-    }
-
-    // Unserializes a circuit item to a grid idem.
-    static unserialize(item, grid) {
-        const cname = item._.c;
-        const cargs = item._.a;
-        let instance;
-        if (cname === 'Port') { // TODO: meh to have cases here
-            instance = new Port(grid, ...cargs);
-        } else if (cname === 'Gate') {
-            instance = new Gate(grid, ...cargs);
-        } else if (cname === 'Clock') {
-            instance = new Clock(grid, ...cargs);
-        } else if (cname === 'Builtin') {
-            instance = new Builtin(grid, ...cargs);
-        } else if (cname === 'Wire') {
-            instance = new Wire(grid, ...cargs);
-        } else if (cname === 'CustomComponent') {
-            instance = new CustomComponent(grid, ...cargs);
-        } else if (cname === 'Grid') {
-            instance = grid;
-        } else {
-            throw 'Invalid component type "' + cname + '"';
-        }
-        for (let [ k, v ] of Object.entries(item)) {
-            if (instance && k !== '_') { // instance may be null passed in via grid
-                instance[k] = v;
-            }
-        }
-        return instance;
-    }
 
     // Utility function to align given x/y to grid coordinates and return them.
     gridAlign(x, y) {

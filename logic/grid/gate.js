@@ -6,10 +6,10 @@ class Gate extends Component {
     static START_LETTER = 97; // 65 for capitalized
 
     type;
-    inputs = [];
+    inputs;
     output;
 
-    constructor(grid, x, y, type, numInputs) {
+    constructor(x, y, type, numInputs) {
 
         // compute blank spots for symmetry
         let blankAfter = -1;
@@ -41,17 +41,18 @@ class Gate extends Component {
             right.push(i === outputAt ? output : null);
         }
 
-        const name = type.toUpperFirst();
-        super(grid, x, y, { 'left': left, 'right': right }, name);
-        
+        super(x, y, { 'left': left, 'right': right }, type.toUpperFirst());
+
         this.inputs = inputs;
         this.output = output;
         this.type = type;
+    }
 
-        if (this.grid) {
-            this.element.classList.add('gate');
-            this.setHoverMessage(this.inner, '<b>' + name + '-Gate</b>. <i>LMB</i>: Drag to move. <i>R</i>: Rotate, <i>D</i>: Delete', { type: 'hover' });
-        }
+    // Link gate to a grid, enabling it to be rendered.
+    link(grid) {
+        super.link(grid);
+        this.element.classList.add('gate');
+        this.setHoverMessage(this.inner, '<b>' + name + '-Gate</b>. <i>LMB</i>: Drag to move. <i>R</i>: Rotate, <i>D</i>: Delete', { type: 'hover' });
     }
 
     // Serializes the object for writing to disk.

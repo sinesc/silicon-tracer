@@ -64,15 +64,15 @@ class Component extends GridItem {
     #inner;
     #dropPreview;
     #ports;
+    #type;
 
     width;
     height;
     rotation = 0;
 
-    constructor(grid, x, y, ports, type) {
+    constructor(x, y, ports, type) {
 
-        super(grid);
-
+        super();
         [ this.x, this.y ] = this.gridAlign(x, y);
         this.#ports = { left: [], right: [], top: [], bottom: [], ...ports };
 
@@ -83,42 +83,75 @@ class Component extends GridItem {
         }
 
         this.#ports = this.#ports.map((side, sidePorts) => sidePorts.map((name, index) => new ComponentPort(name, side, index)));
+        this.#type = type;
         this.updateDimensions();
+    }
 
-        // apply visals if we're on a grid
-        if (this.grid) {
-            // visual: container
-            this.#element = document.createElement('div');
-            this.#element.classList.add('component');
-            this.#element.setAttribute('data-component-type', type); // setAttribtute: dislike dataset-api name transcription when they could have just used [index] access to avoid the hyphen issue.
+    // Link component to a grid, enabling it to be rendered.
+    link(grid) {
+        super.link(grid);
 
-            // visual: inner area with name
-            this.#inner = document.createElement('div');
-            this.#inner.innerHTML = '<span>' + type + '</span>';
-            this.#inner.classList.add('component-inner');
-            this.setHoverMessage(this.#inner, 'Component <b>' + type + '</b>. <i>LMB</i>: Drag to move. <i>R</i>: Rotate, <i>D</i>: Delete', { type: 'hover' });
-            this.registerDrag(this.#inner, { type: "component", grabOffsetX: null, grabOffsetY: null });
-            this.#element.appendChild(this.#inner);
+        // container
+        this.#element = document.createElement('div');
+        this.#element.classList.add('component');
+        this.#element.setAttribute('data-component-type', this.#type);
 
-            // visual: ports
-            this.getPorts().forEach((item) => {
-                let port = document.createElement('div');
-                port.classList.add('component-port');
-                this.#element.appendChild(port);
-                this.setHoverMessage(port, 'Port <b>' + item.name + '</b> of <b>' + type + '</b>. <i>LMB</i>: Drag to connect.', { type: 'hover-port' });
-                // port hover label
-                let labelElement = document.createElement('div');
-                labelElement.classList.add('component-port-label');
-                this.#element.appendChild(labelElement);
-                // update this.ports with computed port properties
-                item.element = port;
-                item.labelElement = labelElement;
-                // register a drag event for the port, will trigger onDrag with the port name
-                this.registerDrag(port, { type: "port", name: item.name });
-            });
+        // inner area with name
+        this.#inner = document.createElement('div');
+        this.#inner.innerHTML = '<span>' + this.#type + '</span>';
+        this.#inner.classList.add('component-inner');
+        this.setHoverMessage(this.#inner, 'Component <b>' + this.#type + '</b>. <i>LMB</i>: Drag to move. <i>R</i>: Rotate, <i>D</i>: Delete', { type: 'hover' });
+        this.registerDrag(this.#inner, { type: "component", grabOffsetX: null, grabOffsetY: null });
+        this.#element.appendChild(this.#inner);
 
-            grid.addVisual(this.#element);
-        }
+        // ports
+        this.getPorts().forEach((item) => {
+            let port = document.createElement('div');
+            port.classList.add('component-port');
+            this.#element.appendChild(port);
+            this.setHoverMessage(port, 'Port <b>' + item.name + '</b> of <b>' + this.#type + '</b>. <i>LMB</i>: Drag to connect.', { type: 'hover-port' });
+            // port hover label
+            let labelElement = document.createElement('div');
+            labelElement.classList.add('component-port-label');
+            this.#element.appendChild(labelElement);
+            // update this.ports with computed port properties
+            item.element = port;
+            item.labelElement = labelElement;
+            // register a drag event for the port, will trigger onDrag with the port name
+            this.registerDrag(port, { type: "port", name: item.name });
+        });
+
+        grid.addVisual(this.#element);
+    }
+
+    // Removes the component from the grid.
+    unlink() {
+        this.getPorts().forEach((item) => {
+            item.remove();
+        });
+        this.#inner?.remove();
+        this.#inner = null;
+        this.grid.removeVisual(this.#element);
+        this.#element = null;
+        this.#dropPreview?.remove();
+        this.#dropPreview = null;
+        super.unlink();
+    }
+
+    // Serializes the object for writing to disk.
+    serialize() {
+        return {
+            ...super.serialize(),
+            _: { c: this.constructor.name, a: [ this.x, this.y, this.#ports.map((p) => p.name), this.#element.getAttribute('data-component-type') ]},
+            rotation: this.rotation,
+        };
+    }
+
+    // Detach component ports from simulation.
+    detachSimulation() {
+        this.getPorts().forEach((item) => {
+            item.netId = null;
+        });
     }
 
     // Returns the component root element.
@@ -143,53 +176,26 @@ class Component extends GridItem {
 
     // Returns the name of the side that is currently rotated to the top of the component.
     get rotatedTop() {
+        assert(this.rotation >= 0);
         return Component.SIDES[(0 + this.rotation) % 4];
     }
 
     // Returns the name of the side that is currently rotated to the right of the component.
     get rotatedRight() {
+        assert(this.rotation >= 0);
         return Component.SIDES[(1 + this.rotation) % 4];
     }
 
     // Returns the name of the side that is currently rotated to the bottom of the component.
     get rotatedBottom() {
+        assert(this.rotation >= 0);
         return Component.SIDES[(2 + this.rotation) % 4];
     }
 
     // Returns the name of the side that is currently rotated to the left of the component.
     get rotatedLeft() {
+        assert(this.rotation >= 0);
         return Component.SIDES[(3 + this.rotation) % 4];
-    }
-
-    // Serializes the object for writing to disk.
-    serialize() {
-        return {
-            ...super.serialize(),
-            _: { c: this.constructor.name, a: [ this.x, this.y, this.#ports.map((p) => p.name), this.#element.getAttribute('data-component-type') ]},
-            rotation: this.rotation,
-        };
-    }
-
-    // Removes the component from the grid.
-    remove() {
-        this.getPorts().forEach((item) => {
-            item.remove();
-        });
-        this.#ports = null;
-        this.#inner?.remove();
-        this.#inner = null;
-        this.grid.removeVisual(this.#element);
-        this.#element = null;
-        this.#dropPreview?.remove();
-        this.#dropPreview = null;
-        super.remove();
-    }
-
-    // Detach component ports from simulation.
-    detachSimulation() {
-        this.getPorts().forEach((item) => {
-            item.netId = null;
-        });
     }
 
     // Hover hotkey actions
@@ -204,7 +210,7 @@ class Component extends GridItem {
             this.#element.classList.add('component-rotate-animation');
             setTimeout(() => {
                 this.#element.classList.remove('component-rotate-animation');
-                this.grid.invalidateNets();
+                app.circuits.invalidateNets();
                 this.grid.render();
             }, 150);
         } else if (key === 'd' && what.type === 'hover') {
@@ -212,7 +218,7 @@ class Component extends GridItem {
             setTimeout(() => {
                 this.#element.classList.remove('component-delete-animation');
                 this.remove();
-                this.grid.invalidateNets();
+                app.circuits.invalidateNets();
                 this.grid.render();
             }, 150);
         }
@@ -246,7 +252,7 @@ class Component extends GridItem {
             this.#dropPreview = null;
             what.grabOffsetX = null;
             what.grabOffsetY = null;
-            this.grid.invalidateNets();
+            app.circuits.invalidateNets();
             this.grid.render();
         }
     }

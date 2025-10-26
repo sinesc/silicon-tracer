@@ -9,30 +9,22 @@ class Port extends Interactive {
     #state = null;
     name = '';
 
-    constructor(grid, x, y, side) {
-        super(grid, x, y, { 'top': [ '' ], 'left': [ null, null, null ] }, 'Port');
+    constructor(x, y, side) {
+        super(x, y, { 'top': [ '' ], 'left': [ null, null, null ] }, 'Port');
         this.rotation = Component.SIDES.indexOf(side);
         this.updateDimensions();
         this.#side = side;
         this.#port = this.portByName('');
-
-        if (this.grid) {
-            this.#updateMessage();
-
-            this.#labelElement = document.createElement('div');
-            this.#labelElement.classList.add('port-name');
-            this.element.classList.add('port');
-            this.element.appendChild(this.#labelElement);
-        }
     }
 
-    // Returns UI-enforced state for given port.
-    applyState(port, sim) {
-        if (this.#port.netId !== null) {
-            if (this.#state !== null) {
-                sim.setNet(this.#port.netId, this.#state);
-            }
-        }
+    // Link port to a grid, enabling it to be rendered.
+    link(grid) {
+        super.link(grid);
+        this.#updateMessage();
+        this.#labelElement = document.createElement('div');
+        this.#labelElement.classList.add('port-name');
+        this.element.classList.add('port');
+        this.element.appendChild(this.#labelElement);
     }
 
     // Serializes the object for writing to disk.
@@ -45,6 +37,15 @@ class Port extends Interactive {
             width: this.width,
             height: this.height,
         };
+    }
+
+    // Returns UI-enforced state for given port.
+    applyState(port, sim) {
+        if (this.#port.netId !== null) {
+            if (this.#state !== null) {
+                sim.setNet(this.#port.netId, this.#state);
+            }
+        }
     }
 
     // Hover hotkey actions

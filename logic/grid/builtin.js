@@ -4,10 +4,10 @@
 class Builtin extends Component {
 
     type;
-    inputs = [];
+    inputs;
     output;
 
-    constructor(grid, x, y, type) {
+    constructor(x, y, type) {
 
         // override inputs if gate requires it
         const inputs = Simulation.BUILTIN_MAP[type].inputs;
@@ -40,16 +40,18 @@ class Builtin extends Component {
             right.push(i === outputAt ? output : null);
         }
 
-        const name = type.toUpperFirst();
-        super(grid, x, y, { 'left': left, 'right': right }, name);
+        super(x, y, { 'left': left, 'right': right }, type.toUpperFirst());
 
-        if (this.grid) {
-            this.element.classList.add('builtin');
-            this.inputs = inputs;
-            this.output = output;
-            this.type = type;
-            this.setHoverMessage(this.inner, '<b>' + name + '</b>. <i>LMB</i>: Drag to move. <i>R</i>: Rotate, <i>D</i>: Delete', { type: 'hover' });
-        }
+        this.inputs = inputs;
+        this.output = output;
+        this.type = type;
+    }
+
+    // Link component to a grid, enabling it to be rendered.
+    link(grid) {
+        super.link(grid);
+        this.element.classList.add('builtin');
+        this.setHoverMessage(this.inner, '<b>' + name + '</b>. <i>LMB</i>: Drag to move. <i>R</i>: Rotate, <i>D</i>: Delete', { type: 'hover' });
     }
 
     // Serializes the object for writing to disk.

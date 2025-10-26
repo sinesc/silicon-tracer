@@ -4,11 +4,13 @@
 class NetList {
     nets;
     unconnected;
+    map;
 
     // Construct a new netlist.
-    constructor(nets, unconnectedWires, unconnectedPorts) {
+    constructor(nets, unconnectedWires, unconnectedPorts, map) {
         this.nets = nets;
         this.unconnected = { wires: unconnectedWires, ports: unconnectedPorts };
+        this.map = map;
     }
 
     // Returns the netId of the given wire.
@@ -22,8 +24,8 @@ class NetList {
         }
     }
 
-    // Creates a netlist from wires and ports. Both wires and ports will be emptied during this process.
-    static fromWires(wires, ports) {
+    // Creates a netlist from NetWires and NetPorts. Both wires and ports will be emptied during this process.
+    static fromWires(wires, ports, map) {
         let nets = [];
         let unconnectedWires = [];
         while (wires.length > 0) {
@@ -35,7 +37,7 @@ class NetList {
                 foundWires = [];
                 for (let p = 0; p < prevFoundWires.length; ++p) {
                     for (let w = wires.length - 1; w >= 0; --w) {
-                        if (NetList.#endsIntersect(prevFoundWires[p], wires[w])) {
+                        if (NetList.#endsIntersect(prevFoundWires[p].points, wires[w].points)) {
                             foundWires.push(wires[w]);
                             wires.swapRemove(w);
                         }
@@ -48,7 +50,7 @@ class NetList {
             let foundPorts = [];
             for (let w = 0; w < netWires.length; ++w) {
                 for (let p = ports.length - 1; p >= 0; --p) {
-                    if (ports[p].point.onLine(netWires[w])) {
+                    if (ports[p].point.onLine(netWires[w].points)) {
                         foundPorts.push(ports[p]);
                         ports.swapRemove(p);
                     }
@@ -60,7 +62,7 @@ class NetList {
                 unconnectedWires.push(...netWires);
             }
         }
-        return new NetList(nets, unconnectedWires, ports);
+        return new NetList(nets, unconnectedWires, ports, map);
     }
 
     static #endsIntersect(a, b) {
@@ -72,11 +74,11 @@ class NetList {
 class NetPort {
     point;
     uniqueName;
-    component;
-    constructor(point, prefix, portName, component) {
+    gid;
+    constructor(point, prefix, portName, gid) {
         this.point = point;
         this.uniqueName = prefix + portName;
-        this.component = component;
+        this.gid = gid;
     }
     static prefix(id) {
         return 'c' + id + ':';
@@ -86,5 +88,15 @@ class NetPort {
     }
     get prefix() {
         return this.uniqueName.split(':')[0];
+    }
+}
+
+// A wire in a net.
+class NetWire {
+    points;
+    gid;
+    constructor(points, gid) {
+        this.points = points;
+        this.gid = gid;
     }
 }

@@ -6,25 +6,68 @@ class Circuit {
     uid;
     data;
     ports;
-    constructor(label, uid, data = [], ports = []) {
+    gridConfig;
+    #netCache = null;
+
+    constructor(label, uid = null, data = [], ports = [], gridConfig = {}) {
         this.label = label;
         this.uid = uid ?? crypto.randomUUID();
         this.data = data;
         this.ports = ports;
+        this.gridConfig = gridConfig;
     }
+
     // Serializes a circuit for saving to file.
     serialize(ignore) {
         let data = [];
         for (let item of this.data) {
             let serialized = {};
-            for (let [ key, value ] of Object.entries(item)) {
+            for (let [ key, value ] of Object.entries(item.serialize())) {
                 if (!ignore.includes(key)) {
                     serialized[key] = value;
                 }
             }
             data.push(serialized);
         }
-        return { label: this.label, uid: this.uid, data, ports: this.ports };
+        return { label: this.label, uid: this.uid, data, ports: this.ports, gridConfig: this.gridConfig };
+    }
+
+    // Unserializes circuit from decoded JSON-object.
+    static unserialize(circuit) {
+        let components = circuit.data.filter((i) => i._.c !== 'Grid').map((i) => GridItem.unserialize(i, null));
+        let gridConfig = circuit.gridConfig ?? circuit.data.find((i) => i._.c === 'Grid'); // legacy
+        return new Circuit(circuit.label, circuit.uid, components, circuit.ports, gridConfig);
+    }
+
+    // Identifies nets on the grid and returns a [ NetList, Map<String, Grid-less-Component> ].
+    identifyNets() {
+        if (this.#netCache) {
+            return this.#netCache;
+        }
+        // get all individual wires
+        let wires = this.data.filter((i) => i instanceof Wire).map((w) => {
+            return new NetWire([ new Point(w.x, w.y), new Point(w.x + w.width, w.y + w.height) ], w.gid);
+        });
+        // get all component ports
+        let components = this.data.filter((i) => !(i instanceof Wire));
+        let ports = [];
+        let componentMap = new Map();
+        let id = 0;
+        for (let component of components) {
+            let componentPrefix = NetPort.prefix(id++);
+            componentMap.set(componentPrefix, component);
+            for (let port of component.getPorts()) {
+                let { x, y } = port.coords(component.width, component.height, component.rotation);
+                ports.push(new NetPort(new Point(x + component.x, y + component.y), componentPrefix, port.name, component.gid));
+            }
+        }
+        let netList = NetList.fromWires(wires, ports, componentMap);
+        return this.#netCache = netList;
+    }
+
+    // Invalidates grid nets and detaches components.
+    invalidateNets() {
+        this.#netCache = null;
     }
 }
 
@@ -41,7 +84,7 @@ class Circuits {
 
     constructor(grid) {
         this.#grid = grid;
-        this.#reset();
+        this.clear();
     }
 
     // Loads circuits from file, returning the filename if circuits was previously empty.
@@ -51,9 +94,12 @@ class Circuits {
         const file = await handle.getFile();
         const content = JSON.parse(await file.text());
         if (clear) {
-            this.clear();
+            this.#circuits = [ ];
+        } else {
+            this.#pruneEmpty();
         }
-        this.#unserialize(content);
+        const newCircuitIndex = this.#unserialize(content);
+        this.#setGrid(this.#circuits[newCircuitIndex].uid);
         if (clear || !haveCircuits) {
             // no other circuits loaded, make this the new file handle
             this.#fileHandle = handle;
@@ -73,6 +119,7 @@ class Circuits {
         } else {
             writable = await this.#fileHandle.createWritable();
         }
+        this.#grid.updateCircuit();
         await writable.write(JSON.stringify(this.#serialize(), null, Circuits.STRINGIFY_SPACE));
         await writable.close();
     }
@@ -82,6 +129,7 @@ class Circuits {
         const all = this.list();
         const handle = await File.saveAs(this.#fileName ?? all[0][1]);
         const writable = await handle.createWritable();
+        this.#grid.updateCircuit();
         await writable.write(JSON.stringify(this.#serialize(), null, Circuits.STRINGIFY_SPACE));
         await writable.close();
         // make this the new file handle
@@ -109,9 +157,9 @@ class Circuits {
 
     // Returns true while all existing circuits are empty.
     get allEmpty() {
-        this.#saveGrid();
+        this.#grid.updateCircuit();
         for (let circuit of this.#circuits) {
-            if (circuit.data.length > 1 || circuit.data.filter((i) => i['_']['c'] !== 'Grid').length > 0) {
+            if (circuit.data.length > 0) {
                 return false;
             }
         }
@@ -120,12 +168,7 @@ class Circuits {
 
     // Returns circuit by UID.
     byUID(uid) {
-        for (let circuit of this.#circuits) {
-            if (circuit.uid == uid) {
-                return circuit;
-            }
-        }
-        return null;
+        return this.#circuits.find((c) => c.uid === uid) ?? null;
     }
 
     // Returns a list of loaded circuits.
@@ -145,60 +188,48 @@ class Circuits {
 
     // Clear all circuits and create a new empty circuit (always need one for the grid).
     clear() {
-        this.#reset();
-        this.#grid.clear();
-        this.#grid.render();
-    }
-
-    // Selects a circuit by UID.
-    select(newCircuitUID) {
-        this.#saveGrid();
-        this.#setGrid(newCircuitUID);
-        this.#grid.render();
-    }
-
-    // Creates a new circuit.
-    create() {
-        this.#saveGrid();
-        this.#grid.clear();
-        this.#currentCircuit = this.#circuits.length;
-        // TODO: need proper input component
-        const label = prompt('Circuit label', this.#generateName());
-        this.#circuits.push(new Circuit(label));
-        this.#grid.render();
-    }
-
-    // Reset circuit entries
-    #reset() {
         this.#circuits = [ ];
         const label = this.#generateName();
         this.#circuits.push(new Circuit(label));
         this.#currentCircuit = 0;
-        this.#grid.setCircuitLabel(label);
+        this.#setGrid(this.current.uid);
+    }
+
+    // Selects a circuit by UID.
+    select(newCircuitUID) {
+        this.#setGrid(newCircuitUID);
+        this.current.identifyNets();
+    }
+
+    // Creates a new circuit.
+    create() {
+        // TODO: need proper input component
+        const label = prompt('Circuit label', this.#generateName());
+        this.#currentCircuit = this.#circuits.length;
+        const circuit = new Circuit(label);
+        this.#circuits.push(circuit);
+        this.#setGrid(circuit.uid);
     }
 
     // Serializes loaded circuits for saving to file.
     #serialize() {
-        this.#saveGrid();
         return { version: 1, circuits: this.#circuits.map((c) => c.serialize([ 'gid' ])) };
     }
 
     // Unserializes circuits from file.
     #unserialize(content) {
-        this.#saveGrid();
-        this.#pruneEmpty();
         const newCircuitIndex = this.#circuits.length;
-        this.#circuits.push(...content.circuits.map((c) => new Circuit(c.label, c.uid, c.data, c.ports)));
-        // LEGACY: set UID for legacy circuits
+        let unserialized = content.circuits.map((c) => Circuit.unserialize(c));
+        this.#circuits.push(...unserialized);
         for (let circuit of this.#circuits) {
             for (let item of circuit.data) {
                 item.gid ??= crypto.randomUUID();
             }
+            // LEGACY: set UID for legacy circuits
             circuit.uid ??= crypto.randomUUID();
             circuit.ports ??= CustomComponent.generateDefaultOutline(circuit.data);
         }
-        this.#setGrid(this.#circuits[newCircuitIndex].uid);
-        this.#grid.render();
+        return newCircuitIndex;
     }
 
     // Returns a generated name if the given name is empty.
@@ -206,24 +237,16 @@ class Circuits {
         return name || 'New circuit #' + (this.#circuits.length + 1);
     }
 
-    // Saves current grid contents to current circuit.
-    #saveGrid() {
-        if (this.#currentCircuit !== -1) {
-            this.#circuits[this.#currentCircuit].data = this.#grid.serialize();
-        }
-    }
-
     // Replaces the current grid contents with the given circuit. Does NOT save current contents.
     #setGrid(newCircuitUID) {
-        for (let [ index, circuit ] of this.#circuits.entries()) {
-            if (circuit.uid == newCircuitUID) {
-                this.#grid.clear();
-                this.#grid.unserialize(circuit.data);
-                this.#grid.setCircuitLabel(circuit.label);
-                this.#grid.setSimulationLabel(null);
-                this.#currentCircuit = index;
-                return;
-            }
+        const index = this.#circuits.findIndex((c) => c.uid === newCircuitUID);
+        if (index > -1) {
+            this.#currentCircuit = index;
+            const circuit = this.#circuits[index];
+            this.#grid.setCircuit(circuit);
+            this.#grid.setSimulationLabel(null);
+            this.#grid.render();
+            return;
         }
         throw 'Could not find circuit ' + newCircuitUID;
     }
@@ -232,7 +255,7 @@ class Circuits {
     #pruneEmpty() {
         for (let i = this.#circuits.length - 1; i >= 0; --i) {
             // TODO: don't prune user created empty circuits
-            if (this.#circuits[i].data.length <= 1 && this.#circuits[i].data.filter((i) => i['_']['c'] !== 'Grid').length === 0) {
+            if (this.#circuits[i].data.length === 0) {
                 this.#circuits.splice(i, 1);
                 if (this.#currentCircuit === i) {
                     this.#currentCircuit = -1;

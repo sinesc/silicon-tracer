@@ -36,6 +36,38 @@ Math.nearestOdd = function(v) {
     return v + !(v % 2);
 };
 
+function assert(condition, message = null) {
+    if (!condition) {
+        throw new Error(message ?? 'Assertion failed');
+    }
+}
+
+assert.string = function(str, message = null) {
+    if (typeof str !== 'string') {
+        throw new Error(message ?? 'Assertion failed: Expected string, got ' + typeof str);
+    }
+}
+
+assert.number = function(num, message = null) {
+    if (typeof num !== 'number') {
+        throw new Error(message ?? 'Assertion failed: Expected number, got ' + typeof num);
+    } else if (!isFinite(num)) {
+        throw new Error(message ?? 'Assertion failed: Expected number, got ' + num);
+    }
+}
+
+assert.array = function(arr, message = null) {
+    if (!Array.isArray(arr)) {
+        throw new Error(message ?? 'Assertion failed: Expected array, got ' + typeof arr);
+    }
+}
+
+assert.object = function(obj, message = null) {
+    if (typeof obj !== 'object') {
+        throw new Error(message ?? 'Assertion failed: Expected object, got ' + typeof obj);
+    }
+}
+
 class Point {
     x;
     y;

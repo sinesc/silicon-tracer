@@ -14,10 +14,8 @@ class Wire extends GridItem {
     height;
     direction;
 
-    constructor(grid, x1, y1, length, direction, color) {
-
-        super(grid);
-
+    constructor(x1, y1, length, direction, color) {
+        super();
         [ x1, y1 ] = this.gridAlign(x1, y1);
         this.x = x1;
         this.y = y1;
@@ -25,19 +23,28 @@ class Wire extends GridItem {
         this.height = direction === 'v' ? length : 0;
         this.color = color ?? null;
         this.direction = direction;
-
-        if (this.grid) {
-            this.#element = document.createElement('div');
-            this.#element.classList.add('wire-' + direction);
-            this.registerDrag(this.#element, { type: 'connect', ordering: direction === 'h' ? 'vh' : 'hv' });
-            this.setHoverMessage(this.#element, Wire.HOVER_MESSAGE, { type: 'hover' });
-            this.grid.addVisual(this.#element);
-        }
     }
 
-    // Returns the DOM element used by the wire.
-    get element() {
-        return this.#element;
+    // Link wire to a grid, enabling it to be rendered.
+    link(grid) {
+        super.link(grid);
+        this.#element = document.createElement('div');
+        this.#element.classList.add('wire-' + this.direction);
+        this.registerDrag(this.#element, { type: 'connect', ordering: this.direction === 'h' ? 'vh' : 'hv' });
+        this.setHoverMessage(this.#element, Wire.HOVER_MESSAGE, { type: 'hover' });
+        this.grid.addVisual(this.#element);
+    }
+
+    // Removes the component from the grid.
+    unlink() {
+        this.grid.removeVisual(this.#element);
+        this.#element = null;
+        super.unlink();
+    }
+
+    // Detach wire from simulation.
+    detachSimulation() {
+        this.netId = null;
     }
 
     // Serializes the object for writing to disk.
@@ -49,16 +56,9 @@ class Wire extends GridItem {
         };
     }
 
-    // Removes the component from the grid.
-    remove() {
-        this.grid.removeVisual(this.#element);
-        this.#element = null;
-        super.remove();
-    }
-
-    // Detach wire from simulation.
-    detachSimulation() {
-        this.netId = null;
+    // Returns the DOM element used by the wire.
+    get element() {
+        return this.#element;
     }
 
     // Create connection from exiting connection.
@@ -82,7 +82,7 @@ class Wire extends GridItem {
     // Hover hotkey actions
     onHotkey(key, what) {
         if (what.type === 'hover' && key >= '0' && key <= '9') {
-            let [ netList ] = this.grid.identifyNets();
+            let netList = this.grid.identifyNets(); // FIXME: get nets from current simulation
             let myNetId = netList.findWire(this);
             let color = parseInt(key);
             for (let [ , , wire ] of netList.nets[myNetId].wires) {
@@ -94,7 +94,7 @@ class Wire extends GridItem {
             setTimeout(() => {
                 this.#element.classList.remove('wire-delete-animation');
                 this.remove();
-                this.grid.invalidateNets();
+                app.circuits.invalidateNets();
                 this.grid.render();
             }, 150);
         }

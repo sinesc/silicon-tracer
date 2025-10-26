@@ -60,10 +60,11 @@ class Application {
     // Start or continue current simulation.
     startSimulation() {
         if (!this.sim) {
-            let [ engine, tickListener ] = this.grid.compileSimulation();
+            let engine = this.compileSimulation();
             this.grid.setSimulationLabel(this.circuits.current.label);
             let start = performance.now();
             this.#currentSimulation = this.circuits.current.uid;
+            let tickListener = this.linkSimulation();
             this.#simulations[this.#currentSimulation] = { engine, start, tickListener };
         }
         for (let [ portName, component ] of this.sim.tickListener) {
@@ -88,6 +89,68 @@ class Application {
         }
         this.stopSimulation();
         this.startSimulation();
+    }
+
+    // Compiles a simulation for the grid contents and returns it.
+    compileSimulation() {
+
+        let netList = this.circuits.current.identifyNets();
+        let sim = new Simulation();
+
+        // declare gates from component map
+        for (let [ prefix, component ] of netList.map.entries()) {
+            if (component instanceof Gate) { // TODO: exclude unconnected gates via netList.unconnected.ports when all gate ports are listed as unconnected
+                sim.gateDecl(component.type, component.inputs.map((i) => prefix + i), prefix + component.output);
+            } else if (component instanceof Builtin) {
+                sim.builtinDecl(component.type, prefix);
+            }
+        }
+
+        // declare nets
+        for (let net of netList.nets) {
+            // create new net from connected gate i/o-ports
+            let interactiveComponents = net.ports.filter((p) => p.component instanceof Interactive);
+            let attachedPorts = net.ports.filter((p) => (p.component instanceof Gate) || (p.component instanceof Builtin)).map((p) => p.uniqueName);
+            let netId = sim.netDecl(attachedPorts, interactiveComponents.map((p) => p.uniqueName));
+        }
+
+        // compile
+        sim.compile();
+        return sim;
+    }
+
+    // Link simulation to current grid
+    linkSimulation() {
+return [];
+        // declare nets
+        let tickListener = [];
+        for (let net of netList.nets) {
+            // create new net from connected gate i/o-ports
+            let interactiveComponents = net.ports.filter((p) => p.component instanceof Interactive);
+            let attachedPorts = net.ports.filter((p) => (p.component instanceof Gate) || (p.component instanceof Builtin)).map((p) => p.uniqueName);
+            let netId = sim.netDecl(attachedPorts, interactiveComponents.map((p) => p.uniqueName));
+
+
+            // link interactive components on the net to the ui
+            for (let netPort of interactiveComponents) {
+                tickListener.push([ netPort.name, netPort.component ]);
+            }
+            // link ports on components
+            for (let { name, component } of net.ports) {
+                let port = component.portByName(name);// TODO: getting ports by name might be slow, should also store some kind of id in net.ports
+                port.netId = netId;
+            }
+            // link wires
+            for (let [ , , component ] of net.wires) {
+                component.netId = netId;
+            }
+        }
+        return tickListener;
+    }
+
+    // Clear all simulations.
+    clearSimulations() {
+        this.#simulations = { };
     }
 
     // Sets a status message. Pass null to unset and revert back to default status.
@@ -137,6 +200,7 @@ class Application {
         fileMenu.createActionButton('Open...', 'Close all circuits and load new circuits from a file.', async () => {
             fileMenuState(false);
             await this.circuits.loadFile(true);
+            this.clearSimulations();
             updateFileMenu();
             updateCircuitMenu();
         });
@@ -160,6 +224,7 @@ class Application {
         fileMenu.createActionButton('Close', 'Close all open circuits', async () => {
             fileMenuState(false);
             this.circuits.closeFile();
+            this.clearSimulations();
             updateFileMenu();
             updateCircuitMenu();
         });
@@ -242,15 +307,15 @@ class Application {
     // Initialize tool bar entries.
     initToolbar() {
         // add conveniently pre-rotated ports
-        this.toolbar.createComponentButton('Port ·', 'Component IO pin. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => new Port(grid, x, y, 'right'));
-        this.toolbar.createComponentButton('· Port', 'Component IO pin. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => new Port(grid, x, y, 'left'));
+        this.toolbar.createComponentButton('Port ·', 'Component IO pin. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => grid.addItem(new Port(x, y, 'right')));
+        this.toolbar.createComponentButton('· Port', 'Component IO pin. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => grid.addItem(new Port(x, y, 'left')));
 
         // add gates
         for (let [ gateType, { joinOp } ] of Object.entries(Simulation.GATE_MAP)) {
             let gateLabel = gateType.toUpperFirst();
             this.toolbar.createComponentButton(gateLabel, '<b>' + gateLabel + '</b> gate. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => {
                 let numInputs = 2; // TODO: configurable somewhere
-                return new Gate(grid, x, y, gateType, joinOp !== null ? numInputs : 1);
+                return grid.addItem(new Gate(x, y, gateType, joinOp !== null ? numInputs : 1));
             });
         }
 
@@ -258,13 +323,13 @@ class Application {
         for (let [ builtinType, ] of Object.entries(Simulation.BUILTIN_MAP)) {
             let builtinLabel = builtinType.toUpperFirst();
             this.toolbar.createComponentButton(builtinLabel, '<b>' + builtinLabel + '</b> builtin. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => {
-                return new Builtin(grid, x, y, builtinType);
+                return grid.addItem(new Builtin(x, y, builtinType));
             });
         }
 
         // add a clock component
         this.toolbar.createComponentButton('Clock', '<b>Clock</b>. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => {
-            return new Clock(grid, x, y);
+            return grid.addItem(new Clock(x, y));
         });
 
         this.toolbar.createActionButton('Dump ASM', 'Outputs simulation code to console', () => {
