@@ -42,35 +42,62 @@ function assert(condition, message = null) {
     }
 }
 
-assert.string = function(str, message = null) {
-    if (typeof str !== 'string') {
-        throw new Error(message ?? 'Assertion failed: Expected string, got ' + typeof str);
+// provide non-stupid typeof
+assert.ty = function(val) {
+    if (val === null) {
+        return 'null';
+    } else if (typeof val === 'number') {
+        if (!isFinite(val)) {
+            return '' + val;
+        } else {
+            return 'number';
+        }
+    } else if (Array.isArray(val)) {
+        return 'array';
+    } else {
+        return typeof val;
     }
 }
 
-assert.bool = function(boolean, message = null) {
-    if (typeof boolean !== 'boolean') {
-        throw new Error(message ?? 'Assertion failed: Expected boolean, got ' + typeof boolean);
+assert.string = function(val, allow_null = false, message = null) {
+    let ty = assert.ty(val);
+    if (ty !== 'string' && !(allow_null && ty === 'null')) {
+        throw new Error(message?.replace('%', ty) ?? 'Assertion failed: Expected string, got ' + ty);
     }
 }
 
-assert.number = function(num, message = null) {
-    if (typeof num !== 'number') {
-        throw new Error(message ?? 'Assertion failed: Expected number, got ' + typeof num);
-    } else if (!isFinite(num)) {
-        throw new Error(message ?? 'Assertion failed: Expected number, got ' + num);
+assert.bool = function(val, allow_null = false, message = null) {
+    let ty = assert.ty(val);
+    if (ty !== 'boolean' && !(allow_null && ty === 'null')) {
+        throw new Error(message?.replace('%', ty) ?? 'Assertion failed: Expected boolean, got ' + ty);
     }
 }
 
-assert.array = function(arr, message = null) {
-    if (!Array.isArray(arr)) {
-        throw new Error(message ?? 'Assertion failed: Expected array, got ' + typeof arr);
+assert.number = function(val, allow_null = false, message = null) {
+    let ty = assert.ty(val);
+    if (ty !== 'number' && !(allow_null && ty === 'null')) {
+        throw new Error(message?.replace('%', ty) ?? 'Assertion failed: Expected number, got ' + ty);
     }
 }
 
-assert.object = function(obj, message = null) {
-    if (typeof obj !== 'object' || obj === null) {
-        throw new Error(message ?? 'Assertion failed: Expected object, got ' + (obj === null ? 'null' : typeof obj));
+assert.array = function(val, allow_null = false, message = null) {
+    let ty = assert.ty(val);
+    if (ty !== 'array' && !(allow_null && ty === 'null')) {
+        throw new Error(message?.replace('%', ty) ?? 'Assertion failed: Expected array, got ' + ty);
+    }
+}
+
+assert.object = function(val, allow_null = false, message = null) {
+    let ty = assert.ty(val);
+    if (ty !== 'object' && !(allow_null && ty === 'null')) {
+        throw new Error(message?.replace('%', ty) ?? 'Assertion failed: Expected object, got ' + ty);
+    }
+}
+
+assert.function = function(val, allow_null = false, message = null) {
+    let ty = assert.ty(val);
+    if (ty !== 'function' && !(allow_null && ty === 'null')) {
+        throw new Error(message?.replace('%', ty) ?? 'Assertion failed: Expected function, got ' + ty);
     }
 }
 

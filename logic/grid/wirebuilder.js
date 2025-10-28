@@ -14,15 +14,15 @@ class WireBuilder extends GridItem {
     height;
     color;
 
-    constructor(grid, x1, y1, x2, y2, ordering, color, fliptest) {
+    constructor(grid, x1, y1, x2, y2, ordering = null, color = null, fliptest = null) {
         assert.object(grid);
         assert.number(x1);
         assert.number(y1);
         assert.number(x2);
         assert.number(y2);
-        //assert.string(ordering);
-        //assert.number(color);
-        //assert.bool(fliptest);
+        assert.string(ordering, true);
+        assert.number(color, true);
+        assert.function(fliptest, true);
 
         super();
         this.grid = grid;

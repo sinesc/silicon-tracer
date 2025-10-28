@@ -18,8 +18,8 @@ class Wire extends GridItem {
         assert.number(x1);
         assert.number(y1);
         assert.number(length);
-        //assert.string(direction);
-        //assert.number(color);
+        assert.string(direction);
+        assert.number(color, true);
         super();
         [ x1, y1 ] = this.gridAlign(x1, y1);
         this.x = x1;
