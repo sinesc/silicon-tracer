@@ -64,8 +64,8 @@ class Application {
             this.grid.setSimulationLabel(this.circuits.current.label);
             let start = performance.now();
             this.#currentSimulation = this.circuits.current.uid;
-            let tickListener = this.linkSimulation();
-            this.#simulations[this.#currentSimulation] = { engine, start, tickListener };
+            this.#simulations[this.#currentSimulation] = { engine, start };
+            this.#simulations[this.#currentSimulation].tickListener = this.linkSimulation();
         }
         for (let [ portName, component ] of this.sim.tickListener) {
             component.applyState(portName, this.sim.engine);
@@ -121,14 +121,18 @@ class Application {
 
     // Link simulation to current grid
     linkSimulation() {
-return [];
+
+        let circuit = this.circuits.current;
+        let netList = circuit.identifyNets();
+        let sim = this.sim.engine;
+
         // declare nets
         let tickListener = [];
         for (let net of netList.nets) {
             // create new net from connected gate i/o-ports
             let interactiveComponents = net.ports.filter((p) => p.component instanceof Interactive);
             let attachedPorts = net.ports.filter((p) => (p.component instanceof Gate) || (p.component instanceof Builtin)).map((p) => p.uniqueName);
-            let netId = sim.netDecl(attachedPorts, interactiveComponents.map((p) => p.uniqueName));
+            let netId = sim.netDecl(attachedPorts, interactiveComponents.map((p) => p.uniqueName)); // FIXME: duplicates compile. probably should be get()?
 
 
             // link interactive components on the net to the ui
@@ -136,12 +140,14 @@ return [];
                 tickListener.push([ netPort.name, netPort.component ]);
             }
             // link ports on components
-            for (let { name, component } of net.ports) {
+            for (let { name, gid } of net.ports) {
+                let component = circuit.itemByGID(gid);
                 let port = component.portByName(name);// TODO: getting ports by name might be slow, should also store some kind of id in net.ports
                 port.netId = netId;
             }
             // link wires
-            for (let [ , , component ] of net.wires) {
+            for (let { gid } of net.wires) {
+                let component = circuit.itemByGID(gid);
                 component.netId = netId;
             }
         }

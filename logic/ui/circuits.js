@@ -69,6 +69,12 @@ class Circuit {
     invalidateNets() {
         this.#netCache = null;
     }
+
+    // Returns item by GID.
+    itemByGID(gid) {
+        return this.data.find((c) => c.gid === gid) ?? null;
+    }
+
 }
 
 // Handles loading/saving/selecting circuits and keeping the grid updated.

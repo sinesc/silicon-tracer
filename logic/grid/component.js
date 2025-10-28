@@ -210,7 +210,7 @@ class Component extends GridItem {
             this.#element.classList.add('component-rotate-animation');
             setTimeout(() => {
                 this.#element.classList.remove('component-rotate-animation');
-                app.circuits.invalidateNets();
+                this.grid.circuit.invalidateNets();
                 this.grid.render();
             }, 150);
         } else if (key === 'd' && what.type === 'hover') {
@@ -218,7 +218,7 @@ class Component extends GridItem {
             setTimeout(() => {
                 this.#element.classList.remove('component-delete-animation');
                 this.remove();
-                app.circuits.invalidateNets();
+                this.grid.circuit.invalidateNets();
                 this.grid.render();
             }, 150);
         }
@@ -252,7 +252,7 @@ class Component extends GridItem {
             this.#dropPreview = null;
             what.grabOffsetX = null;
             what.grabOffsetY = null;
-            app.circuits.invalidateNets();
+            this.grid.circuit.invalidateNets();
             this.grid.render();
         }
     }

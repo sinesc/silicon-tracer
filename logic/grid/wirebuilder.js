@@ -15,6 +15,14 @@ class WireBuilder extends GridItem {
     color;
 
     constructor(grid, x1, y1, x2, y2, ordering, color, fliptest) {
+        assert.object(grid);
+        assert.number(x1);
+        assert.number(y1);
+        assert.number(x2);
+        assert.number(y2);
+        //assert.string(ordering);
+        //assert.number(color);
+        //assert.bool(fliptest);
 
         super();
         this.grid = grid;
@@ -29,9 +37,11 @@ class WireBuilder extends GridItem {
         this.color = color ?? this.grid.nextNetColor;
         this.#fliptest = fliptest ?? ( (x, y) => false );
 
-        this.#wireH = new Wire(this.grid, x1, y1, this.width, 'h', this.color);
+        this.#wireH = new Wire(x1, y1, this.width, 'h', this.color);
+        this.#wireH.link(grid);
         this.#wireH.element.classList.add('wire-building');
-        this.#wireV = new Wire(this.grid, x1, y1, this.height, 'v', this.color);
+        this.#wireV = new Wire(x1, y1, this.height, 'v', this.color);
+        this.#wireV.link(grid);
         this.#wireV.element.classList.add('wire-building');
         this.#updateWires();
 
@@ -82,9 +92,10 @@ class WireBuilder extends GridItem {
         } else {
             app.clearStatus(true);
             this.grid.releaseHotkeyTarget(this, true);
-            this.remove();
-            app.circuits.invalidateNets();
-            this.grid.render();
+            this.grid.circuit.invalidateNets();
+            let grid = this.grid;
+            this.remove();//unsets grid
+            grid.render();
         }
     }
 

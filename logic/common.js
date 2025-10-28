@@ -48,6 +48,12 @@ assert.string = function(str, message = null) {
     }
 }
 
+assert.bool = function(boolean, message = null) {
+    if (typeof boolean !== 'boolean') {
+        throw new Error(message ?? 'Assertion failed: Expected boolean, got ' + typeof boolean);
+    }
+}
+
 assert.number = function(num, message = null) {
     if (typeof num !== 'number') {
         throw new Error(message ?? 'Assertion failed: Expected number, got ' + typeof num);
@@ -63,8 +69,8 @@ assert.array = function(arr, message = null) {
 }
 
 assert.object = function(obj, message = null) {
-    if (typeof obj !== 'object') {
-        throw new Error(message ?? 'Assertion failed: Expected object, got ' + typeof obj);
+    if (typeof obj !== 'object' || obj === null) {
+        throw new Error(message ?? 'Assertion failed: Expected object, got ' + (obj === null ? 'null' : typeof obj));
     }
 }
 

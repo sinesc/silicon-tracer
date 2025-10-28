@@ -15,6 +15,11 @@ class Wire extends GridItem {
     direction;
 
     constructor(x1, y1, length, direction, color) {
+        assert.number(x1);
+        assert.number(y1);
+        assert.number(length);
+        //assert.string(direction);
+        //assert.number(color);
         super();
         [ x1, y1 ] = this.gridAlign(x1, y1);
         this.x = x1;
@@ -82,7 +87,7 @@ class Wire extends GridItem {
     // Hover hotkey actions
     onHotkey(key, what) {
         if (what.type === 'hover' && key >= '0' && key <= '9') {
-            let netList = this.grid.identifyNets(); // FIXME: get nets from current simulation
+            let netList = this.grid.circuit.identifyNets(); // FIXME: get nets from current simulation
             let myNetId = netList.findWire(this);
             let color = parseInt(key);
             for (let [ , , wire ] of netList.nets[myNetId].wires) {
@@ -94,7 +99,7 @@ class Wire extends GridItem {
             setTimeout(() => {
                 this.#element.classList.remove('wire-delete-animation');
                 this.remove();
-                app.circuits.invalidateNets();
+                this.grid.circuit.invalidateNets();
                 this.grid.render();
             }, 150);
         }

@@ -45,6 +45,11 @@ class Grid {
         document.addEventListener('keydown', this.#handleKeyDown.bind(this));
     }
 
+    // Returns the circuit currently on the grid.
+    get circuit() {
+        return this.#circuit;
+    }
+
     // Unsets current grid circuit, saving changes to circuits.
     unsetCircuit() {
         if (!this.#circuit) {
@@ -70,9 +75,9 @@ class Grid {
     // Sets current grid circuit.
     setCircuit(circuit) {
         this.unsetCircuit();
-        this.zoom = circuit.gridConfig.zoom;
-        this.offsetX = circuit.gridConfig.offsetX;
-        this.offsetY = circuit.gridConfig.offsetY;
+        this.zoom = circuit.gridConfig.zoom ?? this.zoom;
+        this.offsetX = circuit.gridConfig.offsetX ?? 0;
+        this.offsetY = circuit.gridConfig.offsetY ?? 0;
         for (let item of circuit.data) {
             item.link(this);
         }
@@ -183,13 +188,13 @@ class Grid {
 
     // Returns the next to be used net color.
     get nextNetColor() {
-        let netList = this.identifyNets(); // FIXME: get nets from current simulation
+        let netList = this.#circuit.identifyNets();
         return netList.nets.length % 10;
     }
 
     // Applies net colors to components on the grid. Returns next to be used color.
     applyNetColors() {
-        let netList = this.identifyNets(); // FIXME: get nets from current simulation
+        let netList = this.#circuit.identifyNets();
         let color = 0;
         for (let net of netList.nets) {
             let applyColor = null;
