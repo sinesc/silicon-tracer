@@ -27,6 +27,7 @@ class Clock extends Interactive {
         };
     }
 
+    // Apply component state to simulation.
     applyState(port, sim) {
         if (this.#port.netId !== null) {
             if (this.#state === 0) {

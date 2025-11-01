@@ -34,13 +34,17 @@ class Simulation {
 
     // Declares a net (which inputs/outputs are connected) and returns the net-index. meta can be any custom data.
     netDecl(attachedIONames, meta) {
+        assert.array(attachedIONames);
         const index = this.#nets.length;
         this.#nets.push({ offset: this.#alloc(), io: attachedIONames, meta });
         return index;
     }
 
     // Declares a named input or output.
-    ioDecl(name, type, delay) {
+    ioDecl(name, type, delay = null) {
+        assert.string(name);
+        assert.string(type);
+        assert.number(delay, true);
         if (!/^[a-z_][a-z0-9_:]*$/.test(name)) {
             throw 'Invalid io name "' + name + '"';
         }
@@ -48,7 +52,10 @@ class Simulation {
     }
 
     // Declares a basic builtin gate-like function.
-    builtinDecl(type, prefix, delay) {
+    builtinDecl(type, prefix, delay = null) {
+        assert.string(type);
+        assert.string(prefix);
+        assert.number(delay, true);
         let rules = Simulation.BUILTIN_MAP[type];
         let template = rules.template.replace(/([a-z])/g, (m) => prefix + m);
         let inputs = rules.inputs.map((i) => prefix + i);
@@ -63,7 +70,11 @@ class Simulation {
     }
 
     // Declares a gate with the given inputs/output.
-    gateDecl(type, inputs, output, delay) {
+    gateDecl(type, inputs, output, delay = null) {
+        assert.string(type);
+        assert.array(inputs);
+        assert.string(output);
+        assert.number(delay, true);
         let rules = Simulation.GATE_MAP[type];
         let inner = inputs.map((v) => (rules.negIn ? '(!' + v + ')' : v)).join(' ' + rules.joinOp + ' '); // TODO: I have '1 &' only on negOut, why?
         let template = rules.negOut ? '!(1 & (' + inner + '))' : inner;
@@ -104,6 +115,8 @@ class Simulation {
 
     // Sets the value of a net in the simulation. null to unset, true/false/1/0 to set value.
     setNet(netIndex, value) {
+        assert.number(netIndex);
+        assert.number(value);
         //console.log('set ' + netIndex + ' to ' + value);
         let offset = this.#nets[netIndex].offset;
         this.#mem[offset] = ((value !== null) << Simulation.MAX_DELAY) | value;
@@ -111,6 +124,7 @@ class Simulation {
 
     // Gets the value of a net in the simulation.
     getNet(netIndex) {
+        assert.number(netIndex);
         let offset = this.#nets[netIndex].offset;
         let value = this.#mem[offset];
         let ret = value & (1 << Simulation.MAX_DELAY) ? value & 1 : null;

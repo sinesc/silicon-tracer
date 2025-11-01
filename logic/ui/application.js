@@ -42,15 +42,7 @@ class Application {
     // Returns list of simulations
     simulations() {
         let simulations = Object.keys(this.#simulations).map((uid) => [ uid, this.circuits.byUID(uid).label ]);
-        simulations.sort((a, b) => {
-            if (a[1] < b[1]) {
-                return -1;
-            } else if (a[1] > b[1]) {
-                return 1;
-            } else {
-                return 0;
-            }
-        });
+        simulations.sort((a, b) => a[1] < b[1] ? -1 : (a[1] > b[1] ? 1 : 0));
         return simulations;
     }
 
@@ -62,12 +54,14 @@ class Application {
     // Start or continue current simulation.
     startSimulation() {
         if (!this.sim) {
-            let engine = this.compileSimulation();
-            this.grid.setSimulationLabel(this.circuits.current.label);
+            let circuit = this.circuits.current;
+            let netList = circuit.identifyNets();
+            let engine = this.compileSimulation(circuit, netList);
+            let tickListener = this.linkSimulation(circuit, netList);
             let start = performance.now();
             this.#currentSimulation = this.circuits.current.uid;
-            this.#simulations[this.#currentSimulation] = { engine, start };
-            this.#simulations[this.#currentSimulation].tickListener = this.linkSimulation();
+            this.#simulations[this.#currentSimulation] = { engine, start, netList, tickListener };
+            this.grid.setSimulationLabel(this.circuits.current.label);
         }
         for (let [ portName, component ] of this.sim.tickListener) {
             component.applyState(portName, this.sim.engine);
@@ -93,12 +87,9 @@ class Application {
         this.startSimulation();
     }
 
-    // Compiles a simulation for the grid contents and returns it.
-    compileSimulation() {
-
-        let netList = this.circuits.current.identifyNets();
+    // Compiles a simulation for the given circuit and returns it.
+    compileSimulation(circuit, netList) {
         let sim = new Simulation();
-
         // declare gates from component map
         for (let [ prefix, component ] of netList.map.entries()) {
             if (component instanceof Gate) { // TODO: exclude unconnected gates via netList.unconnected.ports when all gate ports are listed as unconnected
@@ -107,35 +98,26 @@ class Application {
                 sim.builtinDecl(component.type, prefix);
             }
         }
-
         // declare nets
         for (let net of netList.nets) {
             // create new net from connected gate i/o-ports
-            let interactiveComponents = net.ports.filter((p) => p.component instanceof Interactive);
-            let attachedPorts = net.ports.filter((p) => (p.component instanceof Gate) || (p.component instanceof Builtin)).map((p) => p.uniqueName);
-            let netId = sim.netDecl(attachedPorts, interactiveComponents.map((p) => p.uniqueName));
+            // FIXME: borked, don't have components here, need to get via gid
+            let interactiveComponents = net.ports.filter((p) => circuit.itemByGID(p.gid) instanceof Interactive);
+            let attachedPorts = net.ports.filter((p) => (circuit.itemByGID(p.gid) instanceof Gate) || (circuit.itemByGID(p.gid) instanceof Builtin)).map((p) => p.uniqueName);
+            net.netId = sim.netDecl(attachedPorts, interactiveComponents.map((p) => p.uniqueName));
         }
-
         // compile
         sim.compile();
         return sim;
     }
 
-    // Link simulation to current grid
-    linkSimulation() {
-
-        let circuit = this.circuits.current;
-        let netList = circuit.identifyNets();
-        let sim = this.sim.engine;
-
-        // declare nets
+    // Link simulation to current grid.
+    linkSimulation(circuit, netList) {
         let tickListener = [];
         for (let net of netList.nets) {
             // create new net from connected gate i/o-ports
             let interactiveComponents = net.ports.filter((p) => p.component instanceof Interactive);
-            let attachedPorts = net.ports.filter((p) => (p.component instanceof Gate) || (p.component instanceof Builtin)).map((p) => p.uniqueName);
-            let netId = sim.netDecl(attachedPorts, interactiveComponents.map((p) => p.uniqueName)); // FIXME: duplicates compile. probably should be get()?
-
+            //let attachedPorts = net.ports.filter((p) => (p.component instanceof Gate) || (p.component instanceof Builtin)).map((p) => p.uniqueName);
 
             // link interactive components on the net to the ui
             for (let netPort of interactiveComponents) {
@@ -145,12 +127,12 @@ class Application {
             for (let { name, gid } of net.ports) {
                 let component = circuit.itemByGID(gid);
                 let port = component.portByName(name);// TODO: getting ports by name might be slow, should also store some kind of id in net.ports
-                port.netId = netId;
+                port.netId = net.netId;
             }
             // link wires
             for (let { gid } of net.wires) {
                 let component = circuit.itemByGID(gid);
-                component.netId = netId;
+                component.netId = net.netId;
             }
         }
         return tickListener;

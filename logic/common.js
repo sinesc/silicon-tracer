@@ -101,6 +101,14 @@ assert.function = function(val, allow_null = false, message = null) {
     }
 }
 
+assert.class = function(constructor, val, allow_null = false, message = null) {
+    if (!(val instanceof constructor) && !(allow_null && val === null)) {
+        let ty = assert.ty(val);
+        ty = ty === 'object' ? 'instance of ' + val.constructor.name : ty;
+        throw new Error(message?.replace('%', ty) ?? 'Assertion failed: Expected instance of ' + constructor.name + ', got ' + ty);
+    }
+}
+
 class Point {
     x;
     y;

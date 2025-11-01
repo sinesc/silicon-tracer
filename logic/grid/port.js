@@ -40,7 +40,7 @@ class Port extends Interactive {
         };
     }
 
-    // Returns UI-enforced state for given port.
+    // Apply component state to simulation.
     applyState(port, sim) {
         if (this.#port.netId !== null) {
             if (this.#state !== null) {
