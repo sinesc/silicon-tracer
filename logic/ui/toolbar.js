@@ -8,6 +8,8 @@ class Toolbar {
     #menuStates;
 
     constructor(grid, parent) {
+        assert.object(grid);
+        assert.object(parent);
         this.#grid = grid;
         this.#menuStates = new WeakUnorderedSet();
         this.#element = document.createElement('div');

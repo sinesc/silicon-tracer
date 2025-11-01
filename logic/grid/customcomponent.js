@@ -7,6 +7,8 @@ class CustomComponent extends Component {
     uid;
 
     constructor(x, y, rotation, uid) {
+        assert.number(rotation);
+        assert.string(uid);
         let circuit = app.circuits.byUID(uid);
         super(x, y, circuit.ports, circuit.label);
         this.rotation = rotation;

@@ -9,7 +9,12 @@ class Circuit {
     gridConfig;
     #netCache = null;
 
-    constructor(label, uid = null, data = [], ports = [], gridConfig = {}) {
+    constructor(label, uid = null, data = [], ports = {}, gridConfig = {}) {
+        assert.string(label),
+        assert.string(uid, true);
+        assert.array(data);
+        assert.object(ports);
+        assert.object(gridConfig);
         this.label = label;
         this.uid = uid ?? crypto.randomUUID();
         this.data = data;

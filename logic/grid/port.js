@@ -10,6 +10,7 @@ class Port extends Interactive {
     name = '';
 
     constructor(x, y, side) {
+        assert.string(side);
         super(x, y, { 'top': [ '' ], 'left': [ null, null, null ] }, 'Port');
         this.rotation = Component.SIDES.indexOf(side);
         this.updateDimensions();

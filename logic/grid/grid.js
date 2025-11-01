@@ -20,6 +20,7 @@ class Grid {
     #circuit;
 
     constructor(parent) {
+        assert.object(parent);
         this.#element = document.createElement('div');
         this.#element.classList.add('grid');
         this.#element.onmousedown = this.#handleDragStart.bind(this);

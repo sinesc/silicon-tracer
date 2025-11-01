@@ -10,6 +10,8 @@ class Gate extends Component {
     output;
 
     constructor(x, y, type, numInputs) {
+        assert.string(type);
+        assert.number(numInputs);
 
         // compute blank spots for symmetry
         let blankAfter = -1;

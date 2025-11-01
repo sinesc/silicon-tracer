@@ -10,6 +10,12 @@ class ComponentPort {
     labelElement;
     netId = null;
     constructor(name, originalSide, index, color = null, element = null, labelElement = null) {
+        assert.string(name, true);
+        assert.string(originalSide);
+        assert.number(index);
+        assert.number(color, true);
+        assert.object(element, true);
+        assert.object(labelElement, true);
         this.name = name;
         this.originalSide = originalSide;
         this.index = index;

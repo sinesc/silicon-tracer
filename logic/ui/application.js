@@ -17,6 +17,8 @@ class Application {
     #statusLocked = false;
 
     constructor(gridParent, toolbarParent) {
+        assert.object(gridParent);
+        assert.object(toolbarParent);
 
         this.grid = new Grid(gridParent);
         this.toolbar = new Toolbar(this.grid, toolbarParent); // TODO: these should just use app.grid

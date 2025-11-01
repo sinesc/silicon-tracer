@@ -14,7 +14,7 @@ class Wire extends GridItem {
     height;
     direction;
 
-    constructor(x1, y1, length, direction, color) {
+    constructor(x1, y1, length, direction, color = null) {
         assert.number(x1);
         assert.number(y1);
         assert.number(length);
