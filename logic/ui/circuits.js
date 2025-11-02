@@ -22,6 +22,27 @@ class Circuit {
         this.gridConfig = gridConfig;
     }
 
+    // Adds an item to the circuit.
+    addItem(item) {
+        assert.class(GridItem, item);
+        this.data.push(item);
+        this.#netCache = null;
+        return item;
+    }
+
+    // Removes an item from the circuit.
+    removeItem(item) {
+        assert.class(GridItem, item);
+        let index = this.data.indexOf(item);
+        if (index > -1) {
+            this.data.splice(index, 1);
+            this.#netCache = null;
+        } else {
+            throw new Error('Failed to find item');
+        }
+        return item;
+    }
+
     // Serializes a circuit for saving to file.
     serialize(ignore) {
         let data = [];
@@ -45,8 +66,9 @@ class Circuit {
     }
 
     // Identifies nets on the grid and returns a [ NetList, Map<String, Grid-less-Component> ].
-    identifyNets() {
-        if (this.#netCache) {
+    identifyNets(force = false) {
+        assert.bool(force);
+        if (!force && this.#netCache) {
             return this.#netCache;
         }
         // get all individual wires
@@ -259,7 +281,7 @@ class Circuits {
             this.#grid.render();
             return;
         }
-        throw 'Could not find circuit ' + newCircuitUID;
+        throw new Error('Could not find circuit ' + newCircuitUID);
     }
 
     // Prunes empty circuits (app starts with one empty circuit and loading appends by default, so the empty circuit should be pruned).

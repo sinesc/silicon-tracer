@@ -46,7 +46,7 @@ class Simulation {
         assert.string(type);
         assert.number(delay, true);
         if (!/^[a-z_][a-z0-9_:]*$/.test(name)) {
-            throw 'Invalid io name "' + name + '"';
+            throw new Error('Invalid io name "' + name + '"');
         }
         this.#ioMap.set(name, { offset: this.#alloc(), delay: delay ?? Simulation.DEFAULT_DELAY, in: type.indexOf('i') !== -1, out: type.indexOf('o') !== -1 });
     }
@@ -140,7 +140,7 @@ class Simulation {
     // Compiles a net to input assertion.
     #compileNetToInput(name, netIndex) {
         if (typeof name !== 'string') {
-            throw 'Expected io name as first argument';
+            throw new Error('Expected io name as first argument');
         }
         let io = this.#getIO(name);
         let netValue = this.#compileNetValue(netIndex);
@@ -167,7 +167,7 @@ class Simulation {
     // Compiles an output to net assertion.
     #compileOutputToNet(netIndex, name) {
         if (typeof netIndex !== 'number') {
-            throw 'Expected net index as first argument';
+            throw new Error('Expected net index as first argument');
         }
         let io = this.#getIO(name);
         let netSignalBit = Simulation.MAX_DELAY;           // oldest net signal bit (also the only signal bit for nets)
@@ -251,7 +251,7 @@ class Simulation {
         if ((def = this.#ioMap.get(name)) !== undefined) {
             return def;
         } else {
-            throw 'Undefined IO ' + name;
+            throw new Error('Undefined IO ' + name);
         }
     }
 

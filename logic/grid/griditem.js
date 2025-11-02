@@ -59,7 +59,7 @@ class GridItem {
         } else if (cname === 'CustomComponent') {
             instance = new CustomComponent(...cargs);
         } else {
-            throw 'Invalid component type "' + cname + '"';
+            throw new Error('Invalid component type "' + cname + '"');
         }
         for (let [ k, v ] of Object.entries(item)) {
             if (k !== '_') {

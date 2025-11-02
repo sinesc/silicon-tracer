@@ -38,10 +38,10 @@ class WireBuilder extends GridItem {
         this.#fliptest = fliptest ?? ( (x, y) => false );
 
         this.#wireH = new Wire(x1, y1, this.width, 'h', this.color);
-        this.#wireH.link(grid);
+        grid.addItem(this.#wireH);
         this.#wireH.element.classList.add('wire-building');
         this.#wireV = new Wire(x1, y1, this.height, 'v', this.color);
-        this.#wireV.link(grid);
+        grid.addItem(this.#wireV);
         this.#wireV.element.classList.add('wire-building');
         this.#updateWires();
 
@@ -92,9 +92,9 @@ class WireBuilder extends GridItem {
         } else {
             app.clearStatus(true);
             this.grid.releaseHotkeyTarget(this, true);
-            this.grid.circuit.invalidateNets();
             let grid = this.grid;
             this.#remove();//unsets grid // FIXME: unlink?
+            grid.invalidate();
             grid.render();
         }
     }

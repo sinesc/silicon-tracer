@@ -55,7 +55,7 @@ class Application {
     startSimulation() {
         if (!this.sim) {
             let circuit = this.circuits.current;
-            let netList = circuit.identifyNets();
+            let netList = circuit.identifyNets(true);
             let engine = this.compileSimulation(circuit, netList);
             let tickListener = this.linkSimulation(circuit, netList);
             let start = performance.now();

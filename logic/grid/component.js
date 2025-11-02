@@ -217,16 +217,16 @@ class Component extends GridItem {
             this.#element.classList.add('component-rotate-animation');
             setTimeout(() => {
                 this.#element.classList.remove('component-rotate-animation');
-                this.grid.circuit.invalidateNets();
+                this.grid.invalidate();
                 this.grid.render();
             }, 150);
         } else if (key === 'd' && what.type === 'hover') {
             this.#element.classList.add('component-delete-animation');
             setTimeout(() => {
                 this.#element.classList.remove('component-delete-animation');
-                this.grid.removeItem(this);
-                this.grid.circuit.invalidateNets();
-                this.grid.render();
+                let grid = this.grid;
+                this.grid.removeItem(this); // unsets .grid
+                grid.render();
             }, 150);
         }
     }
@@ -259,7 +259,7 @@ class Component extends GridItem {
             this.#dropPreview = null;
             what.grabOffsetX = null;
             what.grabOffsetY = null;
-            this.grid.circuit.invalidateNets();
+            this.grid.invalidate();
             this.grid.render();
         }
     }

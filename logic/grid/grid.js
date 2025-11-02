@@ -97,22 +97,26 @@ class Grid {
     // Adds an item to the grid. Automatically done by GridItem constructor.
     addItem(item) {
         assert.class(GridItem, item);
-        this.#circuit.data.push(item);
-        item.link(this);
         item.gid ??= crypto.randomUUID();
+        this.#circuit.addItem(item);
+        item.link(this);
+        this.invalidate();
         return item;
     }
 
     // Removes an item from the grid and the current circuit.
     removeItem(item) {
         assert.class(GridItem, item);
-        let index = this.#circuit.data.indexOf(item);
-        if (index > -1) {
-            this.#circuit.data.splice(index, 1);
-        } else {
-            throw 'Failed to find item';
-        }
+        item.unlink();
+        this.#circuit.removeItem(item);
+        this.invalidate();
         return item;
+    }
+
+    // Invalidate nets and restart any running simulation.
+    invalidate() {
+        this.#circuit.invalidateNets();
+        app.restartSimulation();
     }
 
     // Returns items that passed the given filter (c) => bool.
