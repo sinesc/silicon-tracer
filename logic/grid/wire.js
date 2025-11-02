@@ -21,7 +21,7 @@ class Wire extends GridItem {
         assert.string(direction);
         assert.number(color, true);
         super();
-        [ x1, y1 ] = this.gridAlign(x1, y1);
+        [ x1, y1 ] = Grid.align(x1, y1);
         this.x = x1;
         this.y = y1;
         this.width = direction === 'h' ? length : 0;
@@ -72,7 +72,7 @@ class Wire extends GridItem {
         // this requires getting a mouse movement vector because the user might still want to drag along the normal at the end of a wire
         this.dragStop(x, y, what);
         this.grid.releaseHotkeyTarget(this, true);
-        let wireBuilder = new WireBuilder(this.grid, x, y, x, y, what.ordering, this.color);
+        let wireBuilder = new WireBuilder(x, y, x, y, what.ordering, this.color);
         wireBuilder.render();
         wireBuilder.dragStart(x, y, what);
     }
@@ -108,7 +108,7 @@ class Wire extends GridItem {
     // Sets connection endpoints, optionally aligned to the grid.
     setEndpoints(x1, y1, length, direction, aligned) {
         if (aligned) {
-            [ x1, y1 ] = this.gridAlign(x1, y1);
+            [ x1, y1 ] = Grid.align(x1, y1);
             length = Math.ceil(length / Grid.SPACING) * Grid.SPACING;
         }
         this.x = x1;

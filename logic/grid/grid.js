@@ -155,6 +155,14 @@ class Grid {
         return [ mouseGridX, mouseGridY ];
     }
 
+    // Utility function to align given x/y to grid coordinates and return them.
+    static align(x, y) {
+        return [
+            Math.ceil(x / Grid.SPACING) * Grid.SPACING - 0.5 * Grid.SPACING,
+            Math.ceil(y / Grid.SPACING) * Grid.SPACING - 0.5 * Grid.SPACING
+        ];
+    }
+
     // Renders the grid and its components. If the optional reason is 'move' some render steps may be optimized out.
     render(reason) {
 
@@ -275,7 +283,7 @@ class Grid {
     }
 
     // Detaches all items from the simulation.
-    #detachSimulation() {
+    #detachSimulation() { // FIXME TODO
         for (let item of this.#circuit.data) {
             item.detachSimulation();
         };

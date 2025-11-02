@@ -88,14 +88,6 @@ class GridItem {
     // Implement to handle hover hotkey events.
     onHotkey(key, ...args) { }
 
-    // Utility function to align given x/y to grid coordinates and return them.
-    gridAlign(x, y) {
-        return [
-            Math.ceil(x / Grid.SPACING) * Grid.SPACING - 0.5 * Grid.SPACING,
-            Math.ceil(y / Grid.SPACING) * Grid.SPACING - 0.5 * Grid.SPACING
-        ];
-    }
-
     // Converts in-simulation/on-grid to visual coordinates (for rendering).
     gridToVisual(x, y) {
         return [
@@ -107,7 +99,7 @@ class GridItem {
     // Sets the optionally aligned item position.
     setPosition(x, y, aligned) {
         if (aligned) {
-            [ x, y ] = this.gridAlign(x, y);
+            [ x, y ] = Grid.align(x, y);
         }
         this.x = x;
         this.y = y;

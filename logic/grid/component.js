@@ -79,7 +79,7 @@ class Component extends GridItem {
     constructor(x, y, ports, type) {
 
         super();
-        [ this.x, this.y ] = this.gridAlign(x, y);
+        [ this.x, this.y ] = Grid.align(x, y);
         this.#ports = { left: [], right: [], top: [], bottom: [], ...ports };
 
         for (let [ side, other ] of Object.entries({ 'left': 'right', 'right': 'left', 'top': 'bottom', 'bottom': 'top' })) {
@@ -212,7 +212,7 @@ class Component extends GridItem {
             this.rotation = (this.rotation + 1) & 3;
             this.x += (this.width - this.height) / 2;
             this.y -= (this.width - this.height) / 2;
-            [ this.x, this.y ] = this.gridAlign(this.x, this.y);
+            [ this.x, this.y ] = Grid.align(this.x, this.y);
             this.updateDimensions();
             this.#element.classList.add('component-rotate-animation');
             setTimeout(() => {
@@ -247,7 +247,7 @@ class Component extends GridItem {
                 this.#dropPreview.classList.add('component-drop-preview');
                 this.grid.addVisual(this.#dropPreview);
             }
-            let [ alignedX, alignedY ] = this.gridAlign(this.x, this.y);
+            let [ alignedX, alignedY ] = Grid.align(this.x, this.y);
             let [ visualX, visualY ] = this.gridToVisual(alignedX, alignedY);
             this.#dropPreview.style.left = visualX + "px";
             this.#dropPreview.style.top = visualY + "px";
@@ -280,7 +280,7 @@ class Component extends GridItem {
             top: (x, y) => y > py,
             bottom: (x, y) => y < py,
         };
-        let wireBuilder = new WireBuilder(this.grid, px, py, x, y, ordering, port.color, MINIMA[portSide]);
+        let wireBuilder = new WireBuilder(px, py, x, y, ordering, port.color, MINIMA[portSide]);
         wireBuilder.render();
         wireBuilder.dragStart(x, y, what);
     }

@@ -14,8 +14,7 @@ class WireBuilder extends GridItem {
     height;
     color;
 
-    constructor(grid, x1, y1, x2, y2, ordering = null, color = null, fliptest = null) {
-        assert.object(grid);
+    constructor(x1, y1, x2, y2, ordering = null, color = null, fliptest = null) {
         assert.number(x1);
         assert.number(y1);
         assert.number(x2);
@@ -24,11 +23,12 @@ class WireBuilder extends GridItem {
         assert.number(color, true);
         assert.function(fliptest, true);
 
+        // TODO: try to avoid GridItem parent without duplicating drag-support
         super();
-        this.grid = grid;
+        this.grid = app.grid;
 
-        [ x1, y1 ] = this.gridAlign(x1, y1);
-        [ x2, y2 ] = this.gridAlign(x2, y2);
+        [ x1, y1 ] = Grid.align(x1, y1);
+        [ x2, y2 ] = Grid.align(x2, y2);
         this.x = x1;
         this.y = y1;
         this.width = x2 - x1;
@@ -38,10 +38,10 @@ class WireBuilder extends GridItem {
         this.#fliptest = fliptest ?? ( (x, y) => false );
 
         this.#wireH = new Wire(x1, y1, this.width, 'h', this.color);
-        grid.addItem(this.#wireH);
+        this.grid.addItem(this.#wireH);
         this.#wireH.element.classList.add('wire-building');
         this.#wireV = new Wire(x1, y1, this.height, 'v', this.color);
-        grid.addItem(this.#wireV);
+        this.grid.addItem(this.#wireV);
         this.#wireV.element.classList.add('wire-building');
         this.#updateWires();
 
@@ -74,7 +74,7 @@ class WireBuilder extends GridItem {
             let dragConnectionWhat = { ...what, ordering: flippedOrdering ? what.ordering == 'hv' ? 'vh' : 'hv' : what.ordering, x, y, color };
             this.dragStop(x, y, what);
             this.grid.releaseHotkeyTarget(this, true);
-            let wireBuilder = new WireBuilder(this.grid, what.startX, what.startY, x, y, what.ordering, this.color);
+            let wireBuilder = new WireBuilder(what.startX, what.startY, x, y, what.ordering, this.color);
             wireBuilder.dragStart(x, y, dragConnectionWhat);
         }
     }
@@ -92,15 +92,14 @@ class WireBuilder extends GridItem {
         } else {
             app.clearStatus(true);
             this.grid.releaseHotkeyTarget(this, true);
-            let grid = this.grid;
-            this.#remove();//unsets grid // FIXME: unlink?
-            grid.invalidate();
-            grid.render();
+            this.#remove();
+            this.grid.invalidate();
+            this.grid.render();
         }
     }
 
     // Upon removal of the builder also remove any zero length wires produced by it.
-    #remove() { // FIXME: unlink?
+    #remove() {
         this.#wireH.element.classList.remove('wire-building');
         this.#wireV.element.classList.remove('wire-building');
         if (this.width === 0) {
@@ -119,8 +118,8 @@ class WireBuilder extends GridItem {
 
     // Sets wire corner bounding box.
     setBounding(x1, y1, x2, y2) {
-        [ x1, y1 ] = this.gridAlign(x1, y1);
-        [ x2, y2 ] = this.gridAlign(x2, y2);
+        [ x1, y1 ] = Grid.align(x1, y1);
+        [ x2, y2 ] = Grid.align(x2, y2);
         this.x = x1;
         this.y = y1;
         this.width = x2 - x1;
