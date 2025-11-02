@@ -116,7 +116,7 @@ class Simulation {
     // Sets the value of a net in the simulation. null to unset, true/false/1/0 to set value.
     setNet(netIndex, value) {
         assert.number(netIndex);
-        assert.number(value);
+        assert.number(value, true);
         //console.log('set ' + netIndex + ' to ' + value);
         let offset = this.#nets[netIndex].offset;
         this.#mem[offset] = ((value !== null) << Simulation.MAX_DELAY) | value;

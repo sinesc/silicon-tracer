@@ -23,8 +23,8 @@ class ComponentPort {
         this.element = element;
         this.labelElement = labelElement;
     }
-    // Removes port dom elements
-    remove() {
+    // Removes port dom elements from grid.
+    unlink() {
         this.labelElement?.remove();
         this.labelElement = null;
         this.element?.remove();
@@ -112,6 +112,7 @@ class Component extends GridItem {
 
         // ports
         this.getPorts().forEach((item) => {
+            // TODO: add and call link() method on ComponentPort instead?
             let port = document.createElement('div');
             port.classList.add('component-port');
             this.#element.appendChild(port);
@@ -133,7 +134,7 @@ class Component extends GridItem {
     // Removes the component from the grid.
     unlink() {
         this.getPorts().forEach((item) => {
-            item.remove();
+            item.unlink();
         });
         this.#inner?.remove();
         this.#inner = null;
@@ -223,7 +224,7 @@ class Component extends GridItem {
             this.#element.classList.add('component-delete-animation');
             setTimeout(() => {
                 this.#element.classList.remove('component-delete-animation');
-                this.remove();
+                this.grid.removeItem(this);
                 this.grid.circuit.invalidateNets();
                 this.grid.render();
             }, 150);

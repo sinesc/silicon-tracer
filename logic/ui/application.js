@@ -36,7 +36,7 @@ class Application {
                 }
                 this.grid.render();
             }
-        }, 18);
+        }, 180);
     }
 
     // Returns list of simulations
@@ -63,7 +63,8 @@ class Application {
             this.#simulations[this.#currentSimulation] = { engine, start, netList, tickListener };
             this.grid.setSimulationLabel(this.circuits.current.label);
         }
-        for (let [ portName, component ] of this.sim.tickListener) {
+        // apply manual simulation states each tick
+        for (let { portName, component } of this.sim.tickListener) {
             component.applyState(portName, this.sim.engine);
         }
     }
@@ -101,7 +102,6 @@ class Application {
         // declare nets
         for (let net of netList.nets) {
             // create new net from connected gate i/o-ports
-            // FIXME: borked, don't have components here, need to get via gid
             let interactiveComponents = net.ports.filter((p) => circuit.itemByGID(p.gid) instanceof Interactive);
             let attachedPorts = net.ports.filter((p) => (circuit.itemByGID(p.gid) instanceof Gate) || (circuit.itemByGID(p.gid) instanceof Builtin)).map((p) => p.uniqueName);
             net.netId = sim.netDecl(attachedPorts, interactiveComponents.map((p) => p.uniqueName));
@@ -116,17 +116,12 @@ class Application {
         let tickListener = [];
         for (let net of netList.nets) {
             // create new net from connected gate i/o-ports
-            let interactiveComponents = net.ports.filter((p) => p.component instanceof Interactive);
-            //let attachedPorts = net.ports.filter((p) => (p.component instanceof Gate) || (p.component instanceof Builtin)).map((p) => p.uniqueName);
-
-            // link interactive components on the net to the ui
-            for (let netPort of interactiveComponents) {
-                tickListener.push([ netPort.name, netPort.component ]);
-            }
+            let interactiveComponents = net.ports.map((p) => ({ portName: p.name, component: circuit.itemByGID(p.gid) })).filter((p) => p.component instanceof Interactive);
+            tickListener.push(...interactiveComponents);
             // link ports on components
             for (let { name, gid } of net.ports) {
                 let component = circuit.itemByGID(gid);
-                let port = component.portByName(name);// TODO: getting ports by name might be slow, should also store some kind of id in net.ports
+                let port = component.portByName(name);
                 port.netId = net.netId;
             }
             // link wires

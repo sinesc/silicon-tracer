@@ -7,7 +7,7 @@ class GridItem {
     gid;
 
     // Reference to linked grid
-    grid;
+    grid = null;
 
     // Position on grid
     x;
@@ -28,12 +28,6 @@ class GridItem {
         this.#hoverRegistered = null;
         this.#hoverMessages = null;
         this.grid = null;
-    }
-
-    // Removes item from circuit (and grid).
-    remove() {
-        this.unlink();
-        // TODO
     }
 
     // Implement to detach the item from the simulation.

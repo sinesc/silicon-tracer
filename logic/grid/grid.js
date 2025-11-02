@@ -20,7 +20,7 @@ class Grid {
     #circuit;
 
     constructor(parent) {
-        assert.object(parent);
+        assert.class(Node, parent);
         this.#element = document.createElement('div');
         this.#element.classList.add('grid');
         this.#element.onmousedown = this.#handleDragStart.bind(this);
@@ -75,6 +75,7 @@ class Grid {
 
     // Sets current grid circuit.
     setCircuit(circuit) {
+        assert.class(Circuit, circuit);
         this.unsetCircuit();
         this.zoom = circuit.gridConfig.zoom ?? this.zoom;
         this.offsetX = circuit.gridConfig.offsetX ?? 0;
@@ -95,15 +96,17 @@ class Grid {
 
     // Adds an item to the grid. Automatically done by GridItem constructor.
     addItem(item) {
+        assert.class(GridItem, item);
         this.#circuit.data.push(item);
         item.link(this);
         item.gid ??= crypto.randomUUID();
         return item;
     }
 
-    // Removes an item from the grid.
+    // Removes an item from the grid and the current circuit.
     removeItem(item) {
-        let index = this.#circuit.data.find(item);
+        assert.class(GridItem, item);
+        let index = this.#circuit.data.indexOf(item);
         if (index > -1) {
             this.#circuit.data.splice(index, 1);
         } else {
@@ -114,16 +117,19 @@ class Grid {
 
     // Returns items that passed the given filter (c) => bool.
     filterItems(filter) {
+        assert.function(filter);
         return this.#circuit.data.filter((c) => c !== null && filter(c));
     }
 
     // Adds a visual element for a grid item to the grid.
     addVisual(element) {
+        assert.class(Node, element);
         this.#element.appendChild(element);
     }
 
     // Removes a visual element from the grid.
     removeVisual(element) {
+        assert.class(Node, element);
         element.remove();
     }
 
@@ -173,14 +179,14 @@ class Grid {
         this.#element.style.backgroundPositionX = (offsetX % spacing) + 'px';
         this.#element.style.backgroundPositionY = (offsetY % spacing) + 'px';
 
-        // compact overlapping wires and apply net colors to wires if the nets have changed
-        /*if (!this.#netCache) {
-            Wire.compact(this);
-            this.applyNetColors();
-        }*/
-
-        // render components
         if (this.#circuit) {
+            // compact overlapping wires and apply net colors to wires if the nets have changed
+            //if (!this.#netCache) {
+                //Wire.compact(this);
+                this.applyNetColors();
+            //}
+
+            // render components
             for (let item of this.#circuit.data) {
                 item.render(reason);
             }
@@ -199,22 +205,24 @@ class Grid {
         let color = 0;
         for (let net of netList.nets) {
             let applyColor = null;
-            for (let [ , , wire ] of net.wires) {
+            for (let { gid } of net.wires) {
+                let wire = this.#circuit.itemByGID(gid);
                 applyColor ??= wire.color ?? color;
                 wire.color = applyColor;
             }
             for (let port of net.ports) {
-                let component = port.gid; // FIXME: it's a gid now
+                let component = this.#circuit.itemByGID(port.gid);
                 let portName = port.name;
                 component.portByName(portName).color = applyColor;
             }
             color = (color + 1) % 10;
         }
-        for (let wire of netList.unconnected.wires) {
-            wire[2].color = null;
+        for (let netWire of netList.unconnected.wires) {
+            let wire = this.#circuit.itemByGID(netWire.gid);
+            wire.color = null;
         }
         for (let port of netList.unconnected.ports) {
-            let component = port.gid; // FIXME: it's a gid now
+            let component = this.#circuit.itemByGID(port.gid);
             let portName = port.name;
             component.portByName(portName).color = null;
         }

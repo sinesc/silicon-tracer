@@ -98,7 +98,7 @@ class Wire extends GridItem {
             this.#element.classList.add('wire-delete-animation');
             setTimeout(() => {
                 this.#element.classList.remove('wire-delete-animation');
-                this.remove();
+                this.grid.removeItem(this);
                 this.grid.circuit.invalidateNets();
                 this.grid.render();
             }, 150);
@@ -163,7 +163,7 @@ class Wire extends GridItem {
         const intersections = Wire.#wireIntersections(preMergedWires);
 
         for (let direction of [ 'h', 'v' ]) {
-            Wire.#mergeWires(preMergedWires, direction);
+            Wire.#mergeWires(grid, preMergedWires, direction);
         }
 
         let isIntersected = (w, d) => {
@@ -190,15 +190,17 @@ class Wire extends GridItem {
                     if (intersection !== null) {
                         let length1 = intersection[axis] - w.points[0][axis];
                         if (length1 !== 0) {
-                            new Wire(grid, w.points[0].x, w.points[0].y, length1, direction, w.wire.color);
+                            let wire = new Wire(w.points[0].x, w.points[0].y, length1, direction, w.wire.color);
+                            wire.link(grid);
                             created = true;
                         }
                         let length2 = w.points[1][axis] - intersection[axis];
                         if (length2 !== 0) {
-                            new Wire(grid, intersection.x, intersection.y, length2, direction, w.wire.color);
+                            let wire = new Wire(intersection.x, intersection.y, length2, direction, w.wire.color);
+                            wire.link(grid);
                             created = true;
                         }
-                        w.wire.remove();
+                        grid.removeItem(w.wire);
                     }
                 }
             }
@@ -226,7 +228,7 @@ class Wire extends GridItem {
     }
 
     // compact() support. Merge overlapping wires.
-    static #mergeWires(allWires, direction) {
+    static #mergeWires(grid, allWires, direction) {
 
         let axis = direction === 'h' ? 'x' : 'y';
         let wires = allWires[direction];
@@ -257,7 +259,7 @@ class Wire extends GridItem {
 
         for (let w of wires) {
             if (!w.active) {
-                w.wire.remove();
+                grid.removeItem(w.wire);
             } else {
                 let length = w.points[1][axis] - w.points[0][axis];
                 w.wire.setEndpoints(w.points[0].x, w.points[0].y, length, direction, false);
@@ -269,11 +271,9 @@ class Wire extends GridItem {
     static #getAllWires(grid) {
         return {
             h: grid.filterItems((w) => w instanceof Wire && w.direction === 'h')
-                .map((w) => ({ active: true, points: w.points(), wire: w }))
-                .toArray(),
+                .map((w) => ({ active: true, points: w.points(), wire: w })),
             v: grid.filterItems((w) => w instanceof Wire && w.direction === 'v')
-                .map((w) => ({ active: true, points: w.points(), wire: w }))
-                .toArray(),
+                .map((w) => ({ active: true, points: w.points(), wire: w })),
         };
     }
 }

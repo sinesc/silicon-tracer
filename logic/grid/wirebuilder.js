@@ -94,20 +94,20 @@ class WireBuilder extends GridItem {
             this.grid.releaseHotkeyTarget(this, true);
             this.grid.circuit.invalidateNets();
             let grid = this.grid;
-            this.remove();//unsets grid
+            this.#remove();//unsets grid // FIXME: unlink?
             grid.render();
         }
     }
 
     // Upon removal of the builder also remove any zero length wires produced by it.
-    remove() {
+    #remove() { // FIXME: unlink?
         this.#wireH.element.classList.remove('wire-building');
         this.#wireV.element.classList.remove('wire-building');
         if (this.width === 0) {
-            this.#wireH.remove();
+            this.grid.removeItem(this.#wireH);
         }
         if (this.height === 0) {
-            this.#wireV.remove();
+            this.grid.removeItem(this.#wireV);
         }
         if (WireBuilder.DEBUG_BOX) {
             this.grid.removeVisual(this.debug);
@@ -115,7 +115,6 @@ class WireBuilder extends GridItem {
                 this.grid.removeVisual(this['debug' + i]);
             }
         }
-        super.remove();
     }
 
     // Sets wire corner bounding box.
@@ -130,7 +129,7 @@ class WireBuilder extends GridItem {
     };
 
     // Renders the wires onto the grid.
-    render() {
+    render() { // FIXME: who calls this? wirebuilder itself isn't on the grid
         this.#wireH.render();
         this.#wireV.render();
         if (WireBuilder.DEBUG_BOX) {
