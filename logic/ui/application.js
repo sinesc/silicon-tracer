@@ -17,8 +17,8 @@ class Application {
     #statusLocked = false;
 
     constructor(gridParent, toolbarParent) {
-        assert.object(gridParent);
-        assert.object(toolbarParent);
+        assert.class(Node, gridParent);
+        assert.class(Node, toolbarParent);
 
         this.grid = new Grid(gridParent);
         this.toolbar = new Toolbar(this.grid, toolbarParent); // TODO: these should just use app.grid
@@ -53,11 +53,11 @@ class Application {
 
     // Start or continue current simulation.
     startSimulation() {
-        if (!this.sim) {
+        if (!this.sim || this.#currentSimulation !== this.circuits.current.uid) {
             let circuit = this.circuits.current;
             let netList = circuit.identifyNets(true);
-            let engine = this.compileSimulation(circuit, netList);
-            let tickListener = this.linkSimulation(circuit, netList);
+            let engine = circuit.compileSimulation(netList);
+            let tickListener = circuit.attachSimulation(netList);
             let start = performance.now();
             this.#currentSimulation = this.circuits.current.uid;
             this.#simulations[this.#currentSimulation] = { engine, start, netList, tickListener };
@@ -86,51 +86,6 @@ class Application {
         }
         this.stopSimulation();
         this.startSimulation();
-    }
-
-    // Compiles a simulation for the given circuit and returns it.
-    compileSimulation(circuit, netList) {
-        let sim = new Simulation();
-        // declare gates from component map
-        for (let [ prefix, component ] of netList.map.entries()) {
-            if (component instanceof Gate) { // TODO: exclude unconnected gates via netList.unconnected.ports when all gate ports are listed as unconnected
-                sim.gateDecl(component.type, component.inputs.map((i) => prefix + i), prefix + component.output);
-            } else if (component instanceof Builtin) {
-                sim.builtinDecl(component.type, prefix);
-            }
-        }
-        // declare nets
-        for (let net of netList.nets) {
-            // create new net from connected gate i/o-ports
-            let interactiveComponents = net.ports.filter((p) => circuit.itemByGID(p.gid) instanceof Interactive);
-            let attachedPorts = net.ports.filter((p) => (circuit.itemByGID(p.gid) instanceof Gate) || (circuit.itemByGID(p.gid) instanceof Builtin)).map((p) => p.uniqueName);
-            net.netId = sim.netDecl(attachedPorts, interactiveComponents.map((p) => p.uniqueName));
-        }
-        // compile
-        sim.compile();
-        return sim;
-    }
-
-    // Link simulation to current grid.
-    linkSimulation(circuit, netList) {
-        let tickListener = [];
-        for (let net of netList.nets) {
-            // create new net from connected gate i/o-ports
-            let interactiveComponents = net.ports.map((p) => ({ portName: p.name, component: circuit.itemByGID(p.gid) })).filter((p) => p.component instanceof Interactive);
-            tickListener.push(...interactiveComponents);
-            // link ports on components
-            for (let { name, gid } of net.ports) {
-                let component = circuit.itemByGID(gid);
-                let port = component.portByName(name);
-                port.netId = net.netId;
-            }
-            // link wires
-            for (let { gid } of net.wires) {
-                let component = circuit.itemByGID(gid);
-                component.netId = net.netId;
-            }
-        }
-        return tickListener;
     }
 
     // Clear all simulations.
@@ -246,7 +201,9 @@ class Application {
             for (let [ uid, label ] of this.circuits.list()) {
                 circuitMenu.createActionButton(label, 'Switch grid to circuit "' + label + '"', () => {
                     circuitMenuState(false);
+                    this.circuits.current.detachSimulation();
                     this.circuits.select(uid);
+                    this.startSimulation();
                 });
             }
         }

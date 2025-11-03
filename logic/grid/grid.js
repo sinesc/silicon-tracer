@@ -193,7 +193,7 @@ class Grid {
 
         if (this.#circuit) {
             // compact overlapping wires and apply net colors to wires if the nets have changed
-            //if (!this.#netCache) {
+            //if (!this.#netCache) { // FIXME
                 //Wire.compact(this);
                 this.applyNetColors();
             //}
@@ -280,13 +280,6 @@ class Grid {
             this.#info.innerHTML = '<span>Circuit</span><div class="circuit-label">' + this.#infoCircuitLabel +
                 '</div>' + (this.#infoSimulationLabel ? '<span>Simulation</span><div class="simulation-label">' + this.#infoSimulationLabel + '</div>' : '');
         }
-    }
-
-    // Detaches all items from the simulation.
-    #detachSimulation() { // FIXME TODO
-        for (let item of this.#circuit.data) {
-            item.detachSimulation();
-        };
     }
 
     // Called when a key is pressed and then repeatedly while being held.

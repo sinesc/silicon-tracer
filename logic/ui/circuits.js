@@ -22,6 +22,11 @@ class Circuit {
         this.gridConfig = gridConfig;
     }
 
+    // Returns item by GID.
+    itemByGID(gid) {
+        return this.data.find((c) => c.gid === gid) ?? null;
+    }
+
     // Adds an item to the circuit.
     addItem(item) {
         assert.class(GridItem, item);
@@ -97,11 +102,57 @@ class Circuit {
         this.#netCache = null;
     }
 
-    // Returns item by GID.
-    itemByGID(gid) {
-        return this.data.find((c) => c.gid === gid) ?? null;
+    // Compiles a simulation for this circuit and returns it.
+    compileSimulation(netList) {
+        let sim = new Simulation();
+        // declare gates from component map
+        for (let [ prefix, component ] of netList.map.entries()) {
+            if (component instanceof Gate) { // TODO: exclude unconnected gates via netList.unconnected.ports when all gate ports are listed as unconnected
+                sim.gateDecl(component.type, component.inputs.map((i) => prefix + i), prefix + component.output);
+            } else if (component instanceof Builtin) {
+                sim.builtinDecl(component.type, prefix);
+            }
+        }
+        // declare nets
+        for (let net of netList.nets) {
+            // create new net from connected gate i/o-ports
+            let interactiveComponents = net.ports.filter((p) => this.itemByGID(p.gid) instanceof Interactive);
+            let attachedPorts = net.ports.filter((p) => (this.itemByGID(p.gid) instanceof Gate) || (this.itemByGID(p.gid) instanceof Builtin)).map((p) => p.uniqueName);
+            net.netId = sim.netDecl(attachedPorts, interactiveComponents.map((p) => p.uniqueName));
+        }
+        // compile
+        sim.compile();
+        return sim;
     }
 
+    // Link simulation to circuit.
+    attachSimulation(netList) {
+        let tickListener = [];
+        for (let net of netList.nets) {
+            // create new net from connected gate i/o-ports
+            let interactiveComponents = net.ports.map((p) => ({ portName: p.name, component: this.itemByGID(p.gid) })).filter((p) => p.component instanceof Interactive);
+            tickListener.push(...interactiveComponents);
+            // link ports on components
+            for (let { name, gid } of net.ports) {
+                let component = this.itemByGID(gid);
+                let port = component.portByName(name);
+                port.netId = net.netId;
+            }
+            // link wires
+            for (let { gid } of net.wires) {
+                let component = this.itemByGID(gid);
+                component.netId = net.netId;
+            }
+        }
+        return tickListener;
+    }
+
+    // Detaches all items from the simulation by unsetting the item's netId.
+    detachSimulation() {
+        for (let item of this.data) {
+            item.detachSimulation();
+        };
+    }
 }
 
 // Handles loading/saving/selecting circuits and keeping the grid updated.
@@ -132,7 +183,7 @@ class Circuits {
             this.#pruneEmpty();
         }
         const newCircuitIndex = this.#unserialize(content);
-        this.#setGrid(this.#circuits[newCircuitIndex].uid);
+        this.select(this.#circuits[newCircuitIndex].uid);
         if (clear || !haveCircuits) {
             // no other circuits loaded, make this the new file handle
             this.#fileHandle = handle;
@@ -207,15 +258,7 @@ class Circuits {
     // Returns a list of loaded circuits.
     list() {
         let circuits = this.#circuits.map((c) => [ c.uid, c.label ]);
-        circuits.sort((a, b) => {
-            if (a[1] < b[1]) {
-                return -1;
-            } else if (a[1] > b[1]) {
-                return 1;
-            } else {
-                return 0;
-            }
-        });
+        circuits.sort((a, b) => a[1] < b[1] ? -1 : (a[1] > b[1] ? 1 : 0));
         return circuits;
     }
 
@@ -225,13 +268,20 @@ class Circuits {
         const label = this.#generateName();
         this.#circuits.push(new Circuit(label));
         this.#currentCircuit = 0;
-        this.#setGrid(this.current.uid);
+        this.select(this.current.uid);
     }
 
     // Selects a circuit by UID.
     select(newCircuitUID) {
-        this.#setGrid(newCircuitUID);
-        this.current.identifyNets();
+        const index = this.#circuits.findIndex((c) => c.uid === newCircuitUID);
+        if (index > -1) {
+            this.#currentCircuit = index;
+            const circuit = this.#circuits[index];
+            this.#grid.setCircuit(circuit);
+            this.#grid.render();
+            return;
+        }
+        throw new Error('Could not find circuit ' + newCircuitUID);
     }
 
     // Creates a new circuit.
@@ -241,7 +291,7 @@ class Circuits {
         this.#currentCircuit = this.#circuits.length;
         const circuit = new Circuit(label);
         this.#circuits.push(circuit);
-        this.#setGrid(circuit.uid);
+        this.select(circuit.uid);
     }
 
     // Serializes loaded circuits for saving to file.
@@ -268,20 +318,6 @@ class Circuits {
     // Returns a generated name if the given name is empty.
     #generateName(name) {
         return name || 'New circuit #' + (this.#circuits.length + 1);
-    }
-
-    // Replaces the current grid contents with the given circuit. Does NOT save current contents.
-    #setGrid(newCircuitUID) {
-        const index = this.#circuits.findIndex((c) => c.uid === newCircuitUID);
-        if (index > -1) {
-            this.#currentCircuit = index;
-            const circuit = this.#circuits[index];
-            this.#grid.setCircuit(circuit);
-            this.#grid.setSimulationLabel(null);
-            this.#grid.render();
-            return;
-        }
-        throw new Error('Could not find circuit ' + newCircuitUID);
     }
 
     // Prunes empty circuits (app starts with one empty circuit and loading appends by default, so the empty circuit should be pruned).
