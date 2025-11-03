@@ -149,7 +149,7 @@ class Component extends GridItem {
     serialize() {
         return {
             ...super.serialize(),
-            _: { c: this.constructor.name, a: [ this.x, this.y, this.#ports.map((p) => p.name), this.#element.getAttribute('data-component-type') ]},
+            _: { c: this.constructor.name, a: [ this.x, this.y, this.#ports.map((p) => p.name), this.#type ]},
             rotation: this.rotation,
         };
     }
