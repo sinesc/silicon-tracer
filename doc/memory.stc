@@ -7,14 +7,6 @@
 			"data": [
 				{
 					"_": {
-						"c": "Grid"
-					},
-					"zoom": 1.25,
-					"offsetX": 42,
-					"offsetY": 50
-				},
-				{
-					"_": {
 						"c": "Gate",
 						"a": [
 							350,
@@ -217,20 +209,17 @@
 				"bottom": [
 					null
 				]
+			},
+			"gridConfig": {
+				"zoom": 1.25,
+				"offsetX": 42,
+				"offsetY": 50
 			}
 		},
 		{
 			"label": "D latch",
 			"uid": "10923839-815f-4c46-95c9-3915bb094116",
 			"data": [
-				{
-					"_": {
-						"c": "Grid"
-					},
-					"zoom": 1.25,
-					"offsetX": 42,
-					"offsetY": 50
-				},
 				{
 					"_": {
 						"c": "Gate",
@@ -313,7 +302,9 @@
 						]
 					},
 					"rotation": 3,
-					"name": "Q"
+					"name": "Q",
+					"width": 80,
+					"height": 40
 				},
 				{
 					"_": {
@@ -385,7 +376,9 @@
 						]
 					},
 					"rotation": 1,
-					"name": "D"
+					"name": "D",
+					"width": 80,
+					"height": 40
 				},
 				{
 					"_": {
@@ -409,7 +402,9 @@
 						]
 					},
 					"rotation": 1,
-					"name": "L"
+					"name": "L",
+					"width": 80,
+					"height": 40
 				},
 				{
 					"_": {
@@ -537,20 +532,20 @@
 				"bottom": [
 					null
 				]
+			},
+			"gridConfig": {
+				"_": {
+					"c": "Grid"
+				},
+				"zoom": 1.25,
+				"offsetX": 42,
+				"offsetY": 50
 			}
 		},
 		{
 			"label": "Edge triggered D flip-flop",
 			"uid": "652e8494-55af-4d3e-a437-c28e57a40858",
 			"data": [
-				{
-					"_": {
-						"c": "Grid"
-					},
-					"zoom": 1.25,
-					"offsetX": 141,
-					"offsetY": 50
-				},
 				{
 					"_": {
 						"c": "Gate",
@@ -585,7 +580,9 @@
 						]
 					},
 					"rotation": 3,
-					"name": "Q"
+					"name": "Q",
+					"width": 80,
+					"height": 40
 				},
 				{
 					"_": {
@@ -621,7 +618,9 @@
 						]
 					},
 					"rotation": 1,
-					"name": "D"
+					"name": "D",
+					"width": 80,
+					"height": 40
 				},
 				{
 					"_": {
@@ -633,7 +632,9 @@
 						]
 					},
 					"rotation": 1,
-					"name": "C"
+					"name": "C",
+					"width": 80,
+					"height": 40
 				},
 				{
 					"_": {
@@ -703,7 +704,7 @@
 							70,
 							40,
 							"h",
-							2
+							7
 						]
 					}
 				},
@@ -859,7 +860,7 @@
 							70,
 							20,
 							"v",
-							2
+							7
 						]
 					}
 				},
@@ -883,7 +884,7 @@
 							10,
 							60,
 							"v",
-							2
+							7
 						]
 					}
 				},
@@ -1049,6 +1050,11 @@
 				"bottom": [
 					null
 				]
+			},
+			"gridConfig": {
+				"zoom": 1.25,
+				"offsetX": 141,
+				"offsetY": 50
 			}
 		}
 	]
