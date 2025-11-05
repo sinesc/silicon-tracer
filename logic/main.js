@@ -8,5 +8,6 @@ app.startLogoMonitor(document.querySelector('#header h1'));
 
 
 app.toolbar.createActionButton('outline', 'blatest', () => {
-    new CustomComponent(100, 100, 0, app.circuits.current.uid);
+    let tmp = new CustomComponent(100, 100, 0, app.circuits.current.uid, app.circuits.current.label);
+    app.grid.addItem(tmp);
 });

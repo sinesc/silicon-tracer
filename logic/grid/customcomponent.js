@@ -6,20 +6,24 @@ class CustomComponent extends Component {
     // Circuit UID for the circuit represented by this custom component
     uid;
 
-    constructor(x, y, rotation, uid) {
+    // Component label
+    label;
+
+    constructor(x, y, rotation, uid, label) {
         assert.number(rotation);
         assert.string(uid);
         let circuit = app.circuits.byUID(uid);
         super(x, y, circuit.ports, circuit.label);
         this.rotation = rotation;
         this.uid = uid;
+        this.label = label;
     }
 
     // Link custom component to a grid, enabling it to be rendered.
     link(grid) {
         super.link(grid);
         this.element.classList.add('custom');
-        this.setHoverMessage(this.inner, '<b>' + circuit.label + '</b>. <i>LMB</i>: Drag to move. <i>R</i>: Rotate, <i>D</i>: Delete', { type: 'hover' });
+        this.setHoverMessage(this.inner, '<b>' + this.label + '</b>. <i>LMB</i>: Drag to move. <i>R</i>: Rotate, <i>D</i>: Delete', { type: 'hover' });
     }
 
     // Serializes the object for writing to disk.
