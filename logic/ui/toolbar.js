@@ -4,13 +4,10 @@
 class Toolbar {
 
     #element;
-    #grid;
     #menuStates;
 
-    constructor(grid, parent) {
-        assert.object(grid);
+    constructor(parent) {
         assert.object(parent);
-        this.#grid = grid;
         this.#menuStates = new WeakUnorderedSet();
         this.#element = document.createElement('div');
         this.#element.classList.add('toolbar');
@@ -30,8 +27,8 @@ class Toolbar {
         button.onmousedown = (e) => {
             e.preventDefault();
             e.stopPropagation();
-            let [ x, y ] = this.#grid.screenToGrid(e.clientX, e.clientY);
-            let component = create(this.#grid, x, y);
+            let [ x, y ] = app.grid.screenToGrid(e.clientX, e.clientY);
+            let component = create(app.grid, x, y);
             component.dragStart(x, y, { type: "component", grabOffsetX: component.width / 2, grabOffsetY: component.height / 2 });
             component.render();
         };
@@ -95,7 +92,7 @@ class Toolbar {
         button.classList.add('toolbar-menu-button');
         button.appendChild(subToolbarContainer);
         this.#element.appendChild(button);
-        let subToolbar = new Toolbar(this.#grid, subToolbarContainer);
+        let subToolbar = new Toolbar(subToolbarContainer);
         return [ button, stateFn, subToolbar ];
     }
 

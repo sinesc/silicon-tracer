@@ -162,14 +162,8 @@ class Circuits {
 
     #circuits;
     #currentCircuit;
-    #grid;
     #fileHandle = null;
     #fileName = null;
-
-    constructor(grid) {
-        this.#grid = grid;
-        this.clear();
-    }
 
     // Loads circuits from file, returning the filename if circuits was previously empty.
     async loadFile(clear) {
@@ -203,7 +197,7 @@ class Circuits {
         } else {
             writable = await this.#fileHandle.createWritable();
         }
-        this.#grid.updateCircuit();
+        app.grid.updateCircuit();
         await writable.write(JSON.stringify(this.#serialize(), null, Circuits.STRINGIFY_SPACE));
         await writable.close();
     }
@@ -213,7 +207,7 @@ class Circuits {
         const all = this.list();
         const handle = await File.saveAs(this.#fileName ?? all[0][1]);
         const writable = await handle.createWritable();
-        this.#grid.updateCircuit();
+        app.grid.updateCircuit();
         await writable.write(JSON.stringify(this.#serialize(), null, Circuits.STRINGIFY_SPACE));
         await writable.close();
         // make this the new file handle
@@ -241,7 +235,7 @@ class Circuits {
 
     // Returns true while all existing circuits are empty.
     get allEmpty() {
-        this.#grid.updateCircuit();
+        app.grid.updateCircuit();
         for (let circuit of this.#circuits) {
             if (circuit.data.length > 0) {
                 return false;
@@ -277,8 +271,8 @@ class Circuits {
         if (index > -1) {
             this.#currentCircuit = index;
             const circuit = this.#circuits[index];
-            this.#grid.setCircuit(circuit);
-            this.#grid.render();
+            app.grid.setCircuit(circuit);
+            app.grid.render();
             return;
         }
         throw new Error('Could not find circuit ' + newCircuitUID);

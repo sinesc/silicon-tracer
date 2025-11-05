@@ -21,8 +21,8 @@ class Application {
         assert.class(Node, toolbarParent);
 
         this.grid = new Grid(gridParent);
-        this.toolbar = new Toolbar(this.grid, toolbarParent); // TODO: these should just use app.grid
-        this.circuits = new Circuits(this.grid);
+        this.toolbar = new Toolbar(toolbarParent);
+        this.circuits = new Circuits();
 
         this.#status = document.createElement('div');
         this.#status.classList.add('app-status');
@@ -196,6 +196,7 @@ class Application {
 
         // Circuit selection menu
 
+        this.circuits.clear();
         let updateCircuitMenu;
         let [ , circuitMenuState, circuitMenu ] = this.toolbar.createMenuButton('Circuit', 'Circuit management menu. <i>LMB</i> Open menu.', () => updateCircuitMenu());
 
