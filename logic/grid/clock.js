@@ -33,7 +33,7 @@ class Clock extends Interactive {
             if (this.#state === 0) {
                 sim.setNet(this.#port.netId, 0);
             } else if (this.#state === 1) {
-                let delta = performance.now() - app.simStart;
+                let delta = performance.now() - app.sim.start;
                 sim.setNet(this.#port.netId, (delta % this.interval) < (this.interval / 2) ? 1 : 0);
             }
         }
