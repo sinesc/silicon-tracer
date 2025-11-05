@@ -87,11 +87,11 @@ class Wire extends GridItem {
     // Hover hotkey actions
     onHotkey(key, what) {
         if (what.type === 'hover' && key >= '0' && key <= '9') {
-            let netList = this.grid.circuit.identifyNets(); // FIXME: get nets from current simulation
+            let netList = this.grid.circuit.identifyNets();
             let myNetId = netList.findWire(this);
             let color = parseInt(key);
-            for (let [ , , wire ] of netList.nets[myNetId].wires) {
-                wire.color = color;
+            for (let netWire of netList.nets[myNetId].wires) {
+                this.grid.circuit.itemByGID(netWire.gid).color = color;
             }
             this.grid.render();
         } else if (key === 'd' && what.type === 'hover') {

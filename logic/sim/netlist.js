@@ -16,8 +16,8 @@ class NetList {
     // Returns the netId of the given wire.
     findWire(wire) {
         for (let [ index, net ] of this.nets.entries()) {
-            for (let [ , , netWire ] of net.wires) {
-                if (netWire === wire) {
+            for (let netWire of net.wires) {
+                if (netWire.gid === wire.gid) {
                     return index;
                 }
             }
