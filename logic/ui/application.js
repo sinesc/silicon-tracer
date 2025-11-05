@@ -53,19 +53,29 @@ class Application {
 
     // Start or continue current simulation.
     startSimulation() {
-        if (!this.sim || this.#currentSimulation !== this.circuits.current.uid) {
-            let circuit = this.circuits.current;
-            let netList = circuit.identifyNets(true);
-            let engine = circuit.compileSimulation(netList);
-            let tickListener = circuit.attachSimulation(netList);
-            let start = performance.now();
-            this.#currentSimulation = this.circuits.current.uid;
-            this.#simulations[this.#currentSimulation] = { engine, start, netList, tickListener };
-            this.grid.setSimulationLabel(this.circuits.current.label);
+        let circuit = this.circuits.current;
+
+        if (this.#currentSimulation !== circuit.uid) {
+            this.#currentSimulation = circuit.uid;
+            if (this.#simulations[this.#currentSimulation]) {
+                // resume existing
+                let existingSimulation = this.#simulations[this.#currentSimulation];
+                existingSimulation.tickListener = circuit.attachSimulation(existingSimulation.netList);
+                this.grid.setSimulationLabel(circuit.label);
+            } else {
+                // start new
+                let netList = circuit.identifyNets(true);
+                let engine = circuit.compileSimulation(netList);
+                let tickListener = circuit.attachSimulation(netList);
+                let start = performance.now();
+                this.#simulations[this.#currentSimulation] = { engine, start, netList, tickListener };
+                this.grid.setSimulationLabel(circuit.label);
+            }
         }
         // apply manual simulation states each tick
-        for (let { portName, component } of this.sim.tickListener) {
-            component.applyState(portName, this.sim.engine);
+        let currentSimulation = this.#simulations[this.#currentSimulation];
+        for (let { portName, component } of currentSimulation.tickListener) {
+            component.applyState(portName, currentSimulation.engine);
         }
     }
 

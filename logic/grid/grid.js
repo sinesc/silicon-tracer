@@ -116,6 +116,7 @@ class Grid {
     // Invalidate nets and restart any running simulation.
     invalidate() {
         this.#circuit.invalidateNets();
+        this.#circuit.detachSimulation();
         app.restartSimulation();
     }
 
