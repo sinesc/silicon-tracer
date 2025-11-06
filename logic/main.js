@@ -6,8 +6,18 @@ app.initToolbar();
 app.startFocusMonitor();
 app.startLogoMonitor(document.querySelector('#header h1'));
 
+// temporary stuff
 
-app.toolbar.createActionButton('outline', 'blatest', () => {
-    let tmp = new CustomComponent(100, 100, 0, app.circuits.current.uid, app.circuits.current.label);
-    app.grid.addItem(tmp);
+app.toolbar.createActionButton('Dump ASM', 'Outputs simulation code to console', () => {
+    if (app.sim) {
+        let portInfo = [];
+        for (let { offset, meta } of app.sim.engine.nets) {
+            for (let port of meta) {
+                portInfo.push('// port ' + port + ' mem[' + offset + ']');
+            }
+        }
+        console.log(app.sim.engine.code() + portInfo.join("\n"));
+    } else {
+        console.log('No simulation running');
+    }
 });

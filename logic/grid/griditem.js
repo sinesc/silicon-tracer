@@ -132,6 +132,7 @@ class GridItem {
     dragStart(x, y, ...args) {
         document.onmousemove = this.#handleDragMove.bind(this, args);
         document.onmouseup = this.#handleDragStop.bind(this, args);
+        document.body.classList.add('dragging');
         this.onDrag(x, y, 'start', ...args);
     }
 
@@ -139,6 +140,7 @@ class GridItem {
     dragStop(x, y, ...args) {
         document.onmouseup = null;
         document.onmousemove = null;
+        document.body.classList.remove('dragging');
         this.onDrag(x, y, 'stop', ...args);
     }
 
@@ -152,6 +154,7 @@ class GridItem {
         let [ dragStartX, dragStartY ] = this.grid.screenToGrid(e.clientX, e.clientY);
         document.onmousemove = this.#handleDragMove.bind(this, args);
         document.onmouseup = this.#handleDragStop.bind(this, args);
+        document.body.classList.add('dragging');
         this.onDrag(dragStartX, dragStartY, 'start', ...args);
     }
 
@@ -167,6 +170,7 @@ class GridItem {
     #handleDragStop(args, e) {
         document.onmouseup = null;
         document.onmousemove = null;
+        document.body.classList.remove('dragging');
         let [ dragCurrentX, dragCurrentY ] = this.grid.screenToGrid(e.clientX, e.clientY);
         this.onDrag(dragCurrentX, dragCurrentY, 'stop', ...args);
     }

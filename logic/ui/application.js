@@ -210,12 +210,19 @@ class Application {
             });
             circuitMenu.createSeparator();
             for (let [ uid, label ] of this.circuits.list()) {
-                circuitMenu.createActionButton(label, 'Switch grid to circuit "' + label + '"', () => {
+                // place circuit as component
+                if (uid !== this.circuits.current.uid) {
+                    let [ componentButton ] = circuitMenu.createComponentButton('&#9094;', label + '. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => grid.addItem(new CustomComponent(x, y, 0, uid, label)));
+                    componentButton.classList.add('toolbar-circuit-place');
+                }
+                // circuit select
+                let [ switchButton ] = circuitMenu.createActionButton(label, 'Switch grid to circuit "' + label + '"', () => {
                     circuitMenuState(false);
                     this.circuits.current.detachSimulation();
                     this.circuits.select(uid);
                     this.startSimulation();
                 });
+                switchButton.classList.add(uid !== this.circuits.current.uid ? 'toolbar-circuit-select' : 'toolbar-circuit-select-fullrow');
             }
         }
 
@@ -283,20 +290,6 @@ class Application {
         // add a clock component
         this.toolbar.createComponentButton('Clock', '<b>Clock</b>. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => {
             return grid.addItem(new Clock(x, y));
-        });
-
-        this.toolbar.createActionButton('Dump ASM', 'Outputs simulation code to console', () => {
-            if (this.sim) {
-                let portInfo = [];
-                for (let { offset, meta } of this.sim.engine.nets) {
-                    for (let port of meta) {
-                        portInfo.push('// port ' + port + ' mem[' + offset + ']');
-                    }
-                }
-                console.log(this.sim.engine.code() + portInfo.join("\n"));
-            } else {
-                console.log('No simulation running');
-            }
         });
     }
 

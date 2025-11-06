@@ -7,11 +7,21 @@ class Toolbar {
     #menuStates;
 
     constructor(parent) {
-        assert.object(parent);
+        assert.class(Node, parent);
         this.#menuStates = new WeakUnorderedSet();
         this.#element = document.createElement('div');
         this.#element.classList.add('toolbar');
         parent.appendChild(this.#element);
+    }
+
+    // Returns the DOM Node.
+    get node() {
+        return this.#element;
+    }
+
+    // Returns the parent DOM Node.
+    get parentNode() {
+        return this.#element.parentNode;
     }
 
     // Removes all buttons from the toolbar.
