@@ -47,6 +47,7 @@ class Clock extends Interactive {
     onHotkey(key, what) {
         super.onHotkey(key, what);
         if (what.type === 'hover') {
+            let prevState = this.#state;
             if (key === 'e') {
                 let freq = parseInt(prompt('Set new frequency in Hz', Math.round(1000 / this.interval)));
                 this.interval = isNaN(freq) ? 1000 : 1000 / freq;
@@ -57,6 +58,12 @@ class Clock extends Interactive {
                 this.#state = 0;
             } else if (key === '3') {
                 this.#state = null;
+            }
+            if (prevState !== this.#state) {
+                if (this.#port.netId !== null && app.sim) {
+                    app.sim.engine.setNet(this.#port.netId, this.#state);
+                }
+                this.render();
             }
         }
     }
