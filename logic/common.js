@@ -36,6 +36,16 @@ Math.nearestOdd = function(v) {
     return v + !(v % 2);
 };
 
+// generate a grid id
+function generateGID() {
+    return 'g' + crypto.randomUUID().replaceAll('-', '');
+}
+
+// generate a circuit id
+function generateUID() {
+    return 'u' + crypto.randomUUID().replaceAll('-', '');
+}
+
 function assert(condition, message = null) {
     if (!condition) {
         throw new Error(message ?? 'Assertion failed');

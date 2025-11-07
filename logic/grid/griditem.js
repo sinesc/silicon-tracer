@@ -61,6 +61,7 @@ class GridItem {
         } else {
             throw new Error('Invalid component type "' + cname + '"');
         }
+        instance.gid = generateGID();
         for (let [ k, v ] of Object.entries(item)) {
             if (k !== '_') {
                 instance[k] = v;

@@ -45,21 +45,21 @@ class Simulation {
         assert.string(name);
         assert.string(type);
         assert.number(delay, true);
-        if (!/^[a-z_][a-z0-9_:]*$/.test(name)) {
+        if (!/^[a-z_][a-z0-9_@]*$/.test(name)) {
             throw new Error('Invalid io name "' + name + '"');
         }
         this.#ioMap.set(name, { offset: this.#alloc(), delay: delay ?? Simulation.DEFAULT_DELAY, in: type.indexOf('i') !== -1, out: type.indexOf('o') !== -1 });
     }
 
     // Declares a basic builtin gate-like function.
-    builtinDecl(type, prefix, delay = null) {
+    builtinDecl(type, suffix, delay = null) {
         assert.string(type);
-        assert.string(prefix);
+        assert.string(suffix);
         assert.number(delay, true);
         let rules = Simulation.BUILTIN_MAP[type];
-        let template = rules.template.replace(/([a-z])/g, (m) => prefix + m);
-        let inputs = rules.inputs.map((i) => prefix + i);
-        let output = prefix + rules.output;
+        let template = rules.template.replace(/([a-z])/g, (m) => m + suffix);
+        let inputs = rules.inputs.map((i) => i + suffix);
+        let output = rules.output + suffix;
         this.#gates.push({ inputs, output: output, template });
 
         for (let input of inputs) {
@@ -154,7 +154,7 @@ class Simulation {
     #compileGate(gateIndex, ioReplacements) {
         let gate = this.#gates[gateIndex];
         let io = this.#getIO(gate.output);
-        let op = gate.template.replace(/[a-z_][a-z0-9_:]*/g, (match) => ioReplacements[match]);
+        let op = gate.template.replace(/[a-z_][a-z0-9_@]*/g, (match) => ioReplacements[match] ?? 'error');
         let ioValue = this.#compileIOValue(gate.output);
         let delayMask = this.#compileDelayMask(io.delay);
         let signalBit = this.#compileConst(1 << Simulation.MAX_DELAY);

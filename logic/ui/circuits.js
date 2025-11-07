@@ -16,7 +16,7 @@ class Circuit {
         assert.object(ports);
         assert.object(gridConfig);
         this.label = label;
-        this.uid = uid ?? crypto.randomUUID();
+        this.uid = uid ?? generateUID();
         this.data = data;
         this.ports = ports;
         this.gridConfig = gridConfig;
@@ -65,9 +65,9 @@ class Circuit {
 
     // Unserializes circuit from decoded JSON-object.
     static unserialize(circuit) {
-        let components = circuit.data.filter((i) => i._.c !== 'Grid').map((i) => GridItem.unserialize(i, null));
-        let gridConfig = circuit.gridConfig ?? circuit.data.find((i) => i._.c === 'Grid'); // legacy
-        return new Circuit(circuit.label, circuit.uid, components, circuit.ports, gridConfig);
+        let components = circuit.data.map((i) => GridItem.unserialize(i, null));
+        let uid = circuit.uid.includes('-') ? 'u' + circuit.uid.replaceAll('-', '') : circuit.uid; // LEGACY: convert legacy uid
+        return new Circuit(circuit.label, uid, components, circuit.ports, circuit.gridConfig);
     }
 
     // Identifies nets on the grid and returns a [ NetList, Map<String, Grid-less-Component> ].
@@ -83,17 +83,15 @@ class Circuit {
         // get all component ports
         let components = this.data.filter((i) => !(i instanceof Wire));
         let ports = [];
-        let componentMap = new Map();
         let id = 0;
         for (let component of components) {
-            let componentPrefix = NetPort.prefix(id++);
-            componentMap.set(componentPrefix, component);
             for (let port of component.getPorts()) {
                 let { x, y } = port.coords(component.width, component.height, component.rotation);
-                ports.push(new NetPort(new Point(x + component.x, y + component.y), componentPrefix, port.name, component.gid));
+                ports.push(new NetPort(new Point(x + component.x, y + component.y), port.name, component.gid));
+                // TODO: inject subcomponent nets here?
             }
         }
-        let netList = NetList.fromWires(wires, ports, componentMap);
+        let netList = NetList.fromWires(wires, ports);
         return this.#netCache = netList;
     }
 
@@ -106,11 +104,12 @@ class Circuit {
     compileSimulation(netList) {
         let sim = new Simulation();
         // declare gates from component map
-        for (let [ prefix, component ] of netList.map.entries()) {
+        for (let component of this.data.filter((i) => !(i instanceof Wire))) {
+            let suffix = '@' + component.gid;
             if (component instanceof Gate) { // TODO: exclude unconnected gates via netList.unconnected.ports when all gate ports are listed as unconnected
-                sim.gateDecl(component.type, component.inputs.map((i) => prefix + i), prefix + component.output);
+                sim.gateDecl(component.type, component.inputs.map((i) => i + suffix), component.output + suffix); // TODO: move suffix into gateDecl
             } else if (component instanceof Builtin) {
-                sim.builtinDecl(component.type, prefix);
+                sim.builtinDecl(component.type, suffix);
             }
         }
         // declare nets
@@ -299,11 +298,6 @@ class Circuits {
         let unserialized = content.circuits.map((c) => Circuit.unserialize(c));
         this.#circuits.push(...unserialized);
         for (let circuit of this.#circuits) {
-            for (let item of circuit.data) {
-                item.gid ??= crypto.randomUUID();
-            }
-            // LEGACY: set UID for legacy circuits
-            circuit.uid ??= crypto.randomUUID();
             circuit.ports ??= CustomComponent.generateDefaultOutline(circuit.data);
         }
         return newCircuitIndex;

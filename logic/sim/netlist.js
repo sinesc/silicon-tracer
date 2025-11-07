@@ -4,13 +4,11 @@
 class NetList {
     nets;
     unconnected;
-    map;
 
     // Construct a new netlist.
-    constructor(nets, unconnectedWires, unconnectedPorts, map) {
+    constructor(nets, unconnectedWires, unconnectedPorts) {
         this.nets = nets;
         this.unconnected = { wires: unconnectedWires, ports: unconnectedPorts };
-        this.map = map;
     }
 
     // Returns the netId of the given wire.
@@ -73,21 +71,18 @@ class NetList {
 // A port connected to a net.
 class NetPort {
     point;
-    uniqueName;
+    name;
     gid;
-    constructor(point, prefix, portName, gid) {
+    constructor(point, name, gid) {
+        assert.class(Point, point);
+        assert.string(name);
+        assert.string(gid);
         this.point = point;
-        this.uniqueName = prefix + portName;
+        this.name = name;
         this.gid = gid;
     }
-    static prefix(id) {
-        return 'c' + id + ':';
-    }
-    get name() {
-        return this.uniqueName.split(':')[1];
-    }
-    get prefix() {
-        return this.uniqueName.split(':')[0];
+    get uniqueName() {
+        return this.name + '@' + this.gid;
     }
 }
 
@@ -96,6 +91,8 @@ class NetWire {
     points;
     gid;
     constructor(points, gid) {
+        assert.array(points);
+        assert.string(gid);
         this.points = points;
         this.gid = gid;
     }

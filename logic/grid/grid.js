@@ -29,7 +29,7 @@ class Grid {
         this.#info = document.createElement('div');
         this.#info.classList.add('grid-info');
         this.#element.appendChild(this.#info);
-        this.#info.innerHTML = 'Cicuit name!';
+        this.#info.innerHTML = '';
 
         parent.appendChild(this.#element);
         this.render();
@@ -97,7 +97,7 @@ class Grid {
     // Adds an item to the grid. Automatically done by GridItem constructor.
     addItem(item) {
         assert.class(GridItem, item);
-        item.gid ??= crypto.randomUUID();
+        item.gid ??= generateGID();
         this.#circuit.addItem(item);
         item.link(this);
         this.invalidate();
