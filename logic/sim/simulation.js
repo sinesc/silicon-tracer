@@ -34,7 +34,7 @@ class Simulation {
 
     // Declares a net (which inputs/outputs are connected) and returns the net-index. meta can be any custom data.
     netDecl(attachedIONames, meta) {
-        assert.array(attachedIONames);
+        assert.array(attachedIONames, false, (i) => assert.string(i));
         const index = this.#nets.length;
         this.#nets.push({ offset: this.#alloc(), io: attachedIONames, meta });
         return index;
@@ -72,7 +72,7 @@ class Simulation {
     // Declares a gate with the given inputs/output.
     gateDecl(type, inputs, output, delay = null) {
         assert.string(type);
-        assert.array(inputs);
+        assert.array(inputs, false, (i) => assert.string(i));
         assert.string(output);
         assert.number(delay, true);
         let rules = Simulation.GATE_MAP[type];
@@ -139,9 +139,6 @@ class Simulation {
 
     // Compiles a net to input assertion.
     #compileNetToInput(name, netIndex) {
-        if (typeof name !== 'string') {
-            throw new Error('Expected io name as first argument');
-        }
         let io = this.#getIO(name);
         let netValue = this.#compileNetValue(netIndex);
         let ioValue = this.#compileIOValue(name);
@@ -166,9 +163,6 @@ class Simulation {
 
     // Compiles an output to net assertion.
     #compileOutputToNet(netIndex, name) {
-        if (typeof netIndex !== 'number') {
-            throw new Error('Expected net index as first argument');
-        }
         let io = this.#getIO(name);
         let netSignalBit = Simulation.MAX_DELAY;           // oldest net signal bit (also the only signal bit for nets)
         let ioSignalBit = Simulation.MAX_DELAY + io.delay  // newest io signal bit

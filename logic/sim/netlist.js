@@ -91,7 +91,7 @@ class NetWire {
     points;
     gid;
     constructor(points, gid) {
-        assert.array(points);
+        assert.array(points, false, (i) => assert.class(Point, i));
         assert.string(gid);
         this.points = points;
         this.gid = gid;

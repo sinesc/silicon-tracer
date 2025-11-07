@@ -90,10 +90,15 @@ assert.number = function(val, allow_null = false, message = null) {
     }
 }
 
-assert.array = function(val, allow_null = false, message = null) {
+assert.array = function(val, allow_null = false, itemTester = null, message = null) {
     let ty = assert.ty(val);
     if (ty !== 'array' && !(allow_null && ty === 'null')) {
         throw new Error(message?.replace('%', ty) ?? 'Assertion failed: Expected array, got ' + ty);
+    }
+    if (typeof itemTester === 'function') {
+        for (const item of val) {
+            itemTester(item);
+        }
     }
 }
 
