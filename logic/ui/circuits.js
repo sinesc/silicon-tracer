@@ -83,12 +83,12 @@ class Circuit {
         // get all component ports
         let components = this.data.filter((i) => !(i instanceof Wire));
         let ports = [];
-        let id = 0;
         for (let component of components) {
             for (let port of component.getPorts()) {
                 let { x, y } = port.coords(component.width, component.height, component.rotation);
                 ports.push(new NetPort(new Point(x + component.x, y + component.y), port.name, component.gid));
                 // TODO: inject subcomponent nets here?
+                // FIXME: gid isn't sufficient, need instanced id
             }
         }
         let netList = NetList.fromWires(wires, ports);
@@ -107,9 +107,11 @@ class Circuit {
         for (let component of this.data.filter((i) => !(i instanceof Wire))) {
             let suffix = '@' + component.gid;
             if (component instanceof Gate) { // TODO: exclude unconnected gates via netList.unconnected.ports when all gate ports are listed as unconnected
-                sim.gateDecl(component.type, component.inputs.map((i) => i + suffix), component.output + suffix); // TODO: move suffix into gateDecl
+                sim.gateDecl(component.type, suffix, component.inputs, component.output);
             } else if (component instanceof Builtin) {
                 sim.builtinDecl(component.type, suffix);
+            } else if (component instanceof CustomComponent) {
+
             }
         }
         // declare nets

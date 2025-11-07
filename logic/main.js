@@ -8,7 +8,7 @@ app.startLogoMonitor(document.querySelector('#header h1'));
 
 // temporary stuff
 
-app.toolbar.createActionButton('Dump ASM', 'Outputs simulation code to console', () => {
+app.toolbar.createActionButton('Dump ASM', 'Outputs simulation code to console.', () => {
     if (app.sim) {
         let portInfo = [];
         for (let { offset, meta } of app.sim.engine.nets) {

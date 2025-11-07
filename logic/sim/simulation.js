@@ -56,13 +56,13 @@ class Simulation {
         assert.string(type);
         assert.string(suffix);
         assert.number(delay, true);
-        let rules = Simulation.BUILTIN_MAP[type];
-        let template = rules.template.replace(/([a-z])/g, (m) => m + suffix);
-        let inputs = rules.inputs.map((i) => i + suffix);
-        let output = rules.output + suffix;
+        const rules = Simulation.BUILTIN_MAP[type];
+        const template = rules.template.replace(/([a-z])/g, (m) => m + suffix);
+        const inputs = rules.inputs.map((i) => i + suffix);
+        const output = rules.output + suffix;
         this.#gates.push({ inputs, output: output, template });
 
-        for (let input of inputs) {
+        for (const input of inputs) {
             this.ioDecl(input, 'i', delay ?? Simulation.DEFAULT_DELAY);
         }
 
@@ -70,21 +70,24 @@ class Simulation {
     }
 
     // Declares a gate with the given inputs/output.
-    gateDecl(type, inputs, output, delay = null) {
+    gateDecl(type, suffix, inputs, output, delay = null) {
         assert.string(type);
+        assert.string(suffix);
         assert.array(inputs, false, (i) => assert.string(i));
         assert.string(output);
         assert.number(delay, true);
-        let rules = Simulation.GATE_MAP[type];
-        let inner = inputs.map((v) => (rules.negIn ? '(!' + v + ')' : v)).join(' ' + rules.joinOp + ' '); // TODO: I have '1 &' only on negOut, why?
-        let template = rules.negOut ? '!(1 & (' + inner + '))' : inner;
-        this.#gates.push({ inputs, output, template });
+        const rules = Simulation.GATE_MAP[type];
+        const inputsQual = inputs.map((i) => i + suffix);
+        const outputQual = output + suffix;
+        const inner = inputsQual.map((v) => (rules.negIn ? '(!' + v + ')' : v)).join(' ' + rules.joinOp + ' '); // TODO: I have '1 &' only on negOut, why?
+        const template = rules.negOut ? '!(1 & (' + inner + '))' : inner;
+        this.#gates.push({ inputs: inputsQual, output: outputQual, template });
 
-        for (let input of inputs) {
+        for (const input of inputsQual) {
             this.ioDecl(input, 'i', delay ?? Simulation.DEFAULT_DELAY);
         }
 
-        this.ioDecl(output, 'o', delay ?? Simulation.DEFAULT_DELAY);
+        this.ioDecl(outputQual, 'o', delay ?? Simulation.DEFAULT_DELAY);
     }
 
     // Compiles the circuit to a function.
@@ -118,16 +121,16 @@ class Simulation {
         assert.number(netIndex);
         assert.number(value, true);
         //console.log('set ' + netIndex + ' to ' + value);
-        let offset = this.#nets[netIndex].offset;
+        const offset = this.#nets[netIndex].offset;
         this.#mem[offset] = ((value !== null) << Simulation.MAX_DELAY) | value;
     }
 
     // Gets the value of a net in the simulation.
     getNet(netIndex) {
         assert.number(netIndex);
-        let offset = this.#nets[netIndex].offset;
-        let value = this.#mem[offset];
-        let ret = value & (1 << Simulation.MAX_DELAY) ? value & 1 : null;
+        const offset = this.#nets[netIndex].offset;
+        const value = this.#mem[offset];
+        const ret = value & (1 << Simulation.MAX_DELAY) ? value & 1 : null;
         //console.log('get ' + netIndex + ' = ' + ret);
         return ret;
     }
@@ -139,22 +142,22 @@ class Simulation {
 
     // Compiles a net to input assertion.
     #compileNetToInput(name, netIndex) {
-        let io = this.#getIO(name);
-        let netValue = this.#compileNetValue(netIndex);
-        let ioValue = this.#compileIOValue(name);
-        let delayMask = this.#compileDelayMask(io.delay);
+        const io = this.#getIO(name);
+        const netValue = this.#compileNetValue(netIndex);
+        const ioValue = this.#compileIOValue(name);
+        const delayMask = this.#compileDelayMask(io.delay);
         // TODO: perf test: write back to temporary, then after computation back to input
         return `${ioValue} = (${ioValue} & ${delayMask}) | (${netValue} << ${io.delay})`;   // shift net value up to newest io-data/signal bits and apply
     }
 
     // Compiles a gate reading from one or more inputs and writing to an output.
     #compileGate(gateIndex, ioReplacements) {
-        let gate = this.#gates[gateIndex];
-        let io = this.#getIO(gate.output);
-        let op = gate.template.replace(/[a-z_][a-z0-9_@]*/g, (match) => ioReplacements[match] ?? 'error');
-        let ioValue = this.#compileIOValue(gate.output);
-        let delayMask = this.#compileDelayMask(io.delay);
-        let signalBit = this.#compileConst(1 << Simulation.MAX_DELAY);
+        const gate = this.#gates[gateIndex];
+        const io = this.#getIO(gate.output);
+        const op = gate.template.replace(/[a-z_][a-z0-9_@]*/g, (match) => ioReplacements[match] ?? 'error');
+        const ioValue = this.#compileIOValue(gate.output);
+        const delayMask = this.#compileDelayMask(io.delay);
+        const signalBit = this.#compileConst(1 << Simulation.MAX_DELAY);
         let code = `result = ${signalBit} | (${op}); `;                                     // set signal bit on computed result
         // TODO: perf test: first write back io state (see todo in compileNetToInput)
         code += `${ioValue} = (${ioValue} & ${delayMask}) | (result << ${io.delay})`;       // shift result up to newest io-data/signal bits and apply
@@ -163,11 +166,11 @@ class Simulation {
 
     // Compiles an output to net assertion.
     #compileOutputToNet(netIndex, name) {
-        let io = this.#getIO(name);
-        let netSignalBit = Simulation.MAX_DELAY;           // oldest net signal bit (also the only signal bit for nets)
-        let ioSignalBit = Simulation.MAX_DELAY + io.delay  // newest io signal bit
-        let netValue = this.#compileNetValue(netIndex);
-        let ioValue = this.#compileIOValue(name);
+        const io = this.#getIO(name);
+        const netSignalBit = Simulation.MAX_DELAY;           // oldest net signal bit (also the only signal bit for nets)
+        const ioSignalBit = Simulation.MAX_DELAY + io.delay  // newest io signal bit
+        const netValue = this.#compileNetValue(netIndex);
+        const ioValue = this.#compileIOValue(name);
         let code = `signal = (${ioValue} & (1 << ${ioSignalBit})) >> ${ioSignalBit}; `;     // do we have a signal on the output?
         code += `mask = ~(signal | (signal << ${netSignalBit})); `;                        // build mask for oldest (and only) net-data/signal from io-signal (all bits enabled if no signal)
         code += `${netValue} = (${netValue} & mask) | (${ioValue} & ~mask)`;                // apply io-data/signal to net if signal is set
@@ -220,8 +223,8 @@ class Simulation {
 
     // Returns code for a bitmask with the signal and data bits for the given delay being unset.
     #compileDelayMask(delay) {
-        let clearDataMask = ((1 << Simulation.ARRAY_BITS) - 1) & ~(1 << delay);
-        let clearSignalMask = ((1 << Simulation.ARRAY_BITS) - 1) & ~(1 << (Simulation.MAX_DELAY + delay));
+        const clearDataMask = ((1 << Simulation.ARRAY_BITS) - 1) & ~(1 << delay);
+        const clearSignalMask = ((1 << Simulation.ARRAY_BITS) - 1) & ~(1 << (Simulation.MAX_DELAY + delay));
         return this.#compileConst(clearSignalMask & clearDataMask);
     }
 

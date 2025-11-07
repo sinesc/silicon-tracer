@@ -171,7 +171,7 @@ class Application {
             updateFileMenu();
         });
         fileMenu.createSeparator();
-        fileMenu.createActionButton('Close', 'Close all open circuits', async () => {
+        fileMenu.createActionButton('Close', 'Close all open circuits.', async () => {
             fileMenuState(false);
             this.circuits.closeFile();
             this.clearSimulations();
@@ -216,7 +216,7 @@ class Application {
                     componentButton.classList.add('toolbar-circuit-place');
                 }
                 // circuit select
-                let [ switchButton ] = circuitMenu.createActionButton(label, 'Switch grid to circuit "' + label + '"', () => {
+                let [ switchButton ] = circuitMenu.createActionButton(label, 'Switch grid to circuit "' + label + '".', () => {
                     circuitMenuState(false);
                     this.circuits.current.detachSimulation();
                     this.circuits.select(uid);
@@ -256,7 +256,7 @@ class Application {
             });
             simulationMenu.createSeparator();
             for (let [ uid, label ] of this.simulations()) {
-                simulationMenu.createActionButton(label, 'Switch to simulation "' + label + '"', () => {
+                simulationMenu.createActionButton(label, 'Switch to simulation "' + label + '".', () => {
                     simulationMenuState(false);
                     // TODO
                 });
