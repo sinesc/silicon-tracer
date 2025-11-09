@@ -4,6 +4,7 @@
 class NetList {
     nets;
     unconnected;
+    circuits;
 
     // Construct a new netlist.
     constructor(nets, unconnectedWires, unconnectedPorts) {
@@ -13,6 +14,7 @@ class NetList {
 
     // Returns the netId of the given wire.
     findWire(wire) {
+        assert.class(Wire, wire);
         for (let [ index, net ] of this.nets.entries()) {
             for (let netWire of net.wires) {
                 if (netWire.gid === wire.gid) {
@@ -22,8 +24,24 @@ class NetList {
         }
     }
 
+    // Returns the netId of the given port.
+    findPort(port) {
+        assert.class(Port, port);
+        for (let [ index, net ] of this.nets.entries()) {
+            if (net !== null) { // some nets get set to null during identifyNets recursion // TODO: maybe refactor that, but might just be too inconvenient
+                for (let netPort of net.ports) {
+                    if (netPort.gid === port.gid) {
+                        return index;
+                    }
+                }
+            }
+        }
+    }
+
     // Creates a netlist from NetWires and NetPorts. Both wires and ports will be emptied during this process.
-    static fromWires(wires, ports, map) {
+    static fromWires(wires, ports) {
+        assert.array(wires, false, (i) => assert.class(NetWire, i));
+        assert.array(ports, false, (i) => assert.class(NetPort, i));
         let nets = [];
         let unconnectedWires = [];
         while (wires.length > 0) {
@@ -55,12 +73,19 @@ class NetList {
                 }
             }
             if (foundPorts.length > 0) {
+                for (const foundPort of foundPorts) {
+                    if (foundPort.subnet) {
+                        // merge subnets
+                        netWires.push(...foundPort.subnet.wires);
+                        foundPorts.push(...foundPort.subnet.ports);
+                    }
+                }
                 nets.push({ wires: netWires, ports: foundPorts });
             } else {
                 unconnectedWires.push(...netWires);
             }
         }
-        return new NetList(nets, unconnectedWires, ports, map);
+        return new NetList(nets, unconnectedWires, ports);
     }
 
     static #endsIntersect(a, b) {
@@ -73,16 +98,22 @@ class NetPort {
     point;
     name;
     gid;
-    constructor(point, name, gid) {
+    instance;
+    subnet;
+    constructor(point, name, gid, instance, subnet) {
         assert.class(Point, point);
         assert.string(name);
         assert.string(gid);
+        assert.number(instance);
+        assert.object(subnet, true);
         this.point = point;
         this.name = name;
         this.gid = gid;
+        this.instance = instance;
+        this.subnet = subnet;
     }
     get uniqueName() {
-        return this.name + '@' + this.gid;
+        return this.name + '@' + this.gid; // TODO: include instance
     }
 }
 

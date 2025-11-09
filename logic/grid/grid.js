@@ -18,6 +18,7 @@ class Grid {
     #infoSimulationLabel = null;
     #hotkeyTarget = null;
     #circuit;
+    #netCache = null;
 
     constructor(parent) {
         assert.class(Node, parent);
@@ -115,7 +116,7 @@ class Grid {
 
     // Invalidate nets and restart any running simulation.
     invalidate() {
-        this.#circuit.invalidateNets();
+        //this.#circuit.invalidateNets();
         this.#circuit.detachSimulation();
         app.restartSimulation();
     }
@@ -208,13 +209,13 @@ class Grid {
 
     // Returns the next to be used net color.
     get nextNetColor() {
-        let netList = this.#circuit.identifyNets();
+        let netList = this.#circuit.identifyNets(false);
         return netList.nets.length % 10;
     }
 
     // Applies net colors to components on the grid. Returns next to be used color.
     applyNetColors() {
-        let netList = this.#circuit.identifyNets();
+        let netList = this.#circuit.identifyNets(false);
         let color = 0;
         for (let net of netList.nets) {
             let applyColor = null;

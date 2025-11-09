@@ -7,7 +7,6 @@ class Circuit {
     data;
     ports;
     gridConfig;
-    #netCache = null;
 
     constructor(label, uid = null, data = [], ports = {}, gridConfig = {}) {
         assert.string(label),
@@ -31,7 +30,6 @@ class Circuit {
     addItem(item) {
         assert.class(GridItem, item);
         this.data.push(item);
-        this.#netCache = null;
         return item;
     }
 
@@ -41,7 +39,6 @@ class Circuit {
         let index = this.data.indexOf(item);
         if (index > -1) {
             this.data.splice(index, 1);
-            this.#netCache = null;
         } else {
             throw new Error('Failed to find item');
         }
@@ -71,54 +68,70 @@ class Circuit {
     }
 
     // Identifies nets on the grid and returns a [ NetList, Map<String, Grid-less-Component> ].
-    identifyNets(force = false) {
-        assert.bool(force);
-        if (!force && this.#netCache) {
-            return this.#netCache;
-        }
+    identifyNets(recurse, circuits = []) {
+        assert.bool(recurse);
+        assert.array(circuits, false);
+        const instance = circuits.length;
+        circuits.push(this);
+
         // get all individual wires
-        let wires = this.data.filter((i) => i instanceof Wire).map((w) => {
+        const wires = this.data.filter((i) => i instanceof Wire).map((w) => {
             return new NetWire([ new Point(w.x, w.y), new Point(w.x + w.width, w.y + w.height) ], w.gid);
         });
         // get all component ports
-        let components = this.data.filter((i) => !(i instanceof Wire));
-        let ports = [];
-        for (let component of components) {
-            for (let port of component.getPorts()) {
+        const components = this.data.filter((i) => !(i instanceof Wire));
+        const ports = [];
+        const mergeNets = { }; // nets that connect to external ports and need to be merged with parent component nets
+        const appendNets = []; // nets that are internal to custom components and just need to be added to the overall list of nets
+        for (const component of components) {
+            // get custom component inner nets and identify which need to be merged with the parent component nets
+            if (recurse && component instanceof CustomComponent) {
+                const componentCircuit = app.circuits.byUID(component.uid);
+                const componentExternalPorts = componentCircuit.data.filter((i) => i instanceof Port);
+                const componentNetlist = componentCircuit.identifyNets(recurse, circuits);
+                for (const componentExternalPort of componentExternalPorts) {
+                    const netId = componentNetlist.findPort(componentExternalPort);
+                    mergeNets[componentExternalPort.name] = componentNetlist.nets[netId];
+                    componentNetlist.nets[netId] = null; // TODO see if this can be avoided, maybe check if net is already in mergeNets when appending to appendNets
+                }
+                for (const componentNet of componentNetlist.nets) {
+                    if (componentNet !== null) {
+                        appendNets.push(componentNet);
+                    }
+                }
+            }
+            for (const port of component.getPorts()) {
                 let { x, y } = port.coords(component.width, component.height, component.rotation);
-                ports.push(new NetPort(new Point(x + component.x, y + component.y), port.name, component.gid));
-                // TODO: inject subcomponent nets here?
-                // FIXME: gid isn't sufficient, need instanced id
+                ports.push(new NetPort(new Point(x + component.x, y + component.y), port.name, component.gid, instance, mergeNets[port.name] ?? null));
             }
         }
         let netList = NetList.fromWires(wires, ports);
-        return this.#netCache = netList;
-    }
-
-    // Invalidates grid nets and detaches components.
-    invalidateNets() {
-        this.#netCache = null;
+        netList.nets.push(...appendNets);
+        netList.circuits = circuits;
+        return netList;
     }
 
     // Compiles a simulation for this circuit and returns it.
     compileSimulation(netList) {
         let sim = new Simulation();
         // declare gates from component map
-        for (let component of this.data.filter((i) => !(i instanceof Wire))) {
-            let suffix = '@' + component.gid;
-            if (component instanceof Gate) { // TODO: exclude unconnected gates via netList.unconnected.ports when all gate ports are listed as unconnected
-                sim.gateDecl(component.type, suffix, component.inputs, component.output);
-            } else if (component instanceof Builtin) {
-                sim.builtinDecl(component.type, suffix);
-            } else if (component instanceof CustomComponent) {
+        for (const circuit of netList.circuits) {
+            for (let component of circuit.data.filter((i) => !(i instanceof Wire))) {
+                let suffix = '@' + component.gid; // TODO include instance
+                if (component instanceof Gate) { // TODO: exclude unconnected gates via netList.unconnected.ports when all gate ports are listed as unconnected
+                    sim.gateDecl(component.type, suffix, component.inputs, component.output);
+                } else if (component instanceof Builtin) {
+                    sim.builtinDecl(component.type, suffix);
+                } else if (component instanceof CustomComponent) {
 
+                }
             }
         }
         // declare nets
         for (let net of netList.nets) {
             // create new net from connected gate i/o-ports
-            let interactiveComponents = net.ports.filter((p) => this.itemByGID(p.gid) instanceof Interactive);
-            let attachedPorts = net.ports.filter((p) => (this.itemByGID(p.gid) instanceof Gate) || (this.itemByGID(p.gid) instanceof Builtin)).map((p) => p.uniqueName);
+            let interactiveComponents = net.ports.filter((p) => netList.circuits[p.instance].itemByGID(p.gid) instanceof Interactive);
+            let attachedPorts = net.ports.filter((p) => (netList.circuits[p.instance].itemByGID(p.gid) instanceof Gate) || (netList.circuits[p.instance].itemByGID(p.gid) instanceof Builtin)).map((p) => p.uniqueName);
             net.netId = sim.netDecl(attachedPorts, interactiveComponents.map((p) => p.uniqueName));
         }
         // compile
@@ -128,21 +141,25 @@ class Circuit {
 
     // Link simulation to circuit.
     attachSimulation(netList) {
-        let tickListener = [];
-        for (let net of netList.nets) {
+        const tickListener = [];
+        for (const net of netList.nets) {
             // create new net from connected gate i/o-ports
             let interactiveComponents = net.ports.map((p) => ({ portName: p.name, component: this.itemByGID(p.gid) })).filter((p) => p.component instanceof Interactive);
             tickListener.push(...interactiveComponents);
             // link ports on components
-            for (let { name, gid } of net.ports) {
-                let component = this.itemByGID(gid);
-                let port = component.portByName(name);
-                port.netId = net.netId;
+            for (const { name, gid } of net.ports) {
+                const component = this.itemByGID(gid);
+                if (component) {
+                    const port = component.portByName(name);
+                    port.netId = net.netId;
+                }
             }
             // link wires
-            for (let { gid } of net.wires) {
-                let component = this.itemByGID(gid);
-                component.netId = net.netId;
+            for (const { gid } of net.wires) {
+                const component = this.itemByGID(gid);
+                if (component) {
+                    component.netId = net.netId;
+                }
             }
         }
         return tickListener;
