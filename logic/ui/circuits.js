@@ -115,9 +115,9 @@ class Circuit {
     compileSimulation(netList) {
         let sim = new Simulation();
         // declare gates from component map
-        for (const circuit of netList.circuits) {
+        for (const [instance, circuit] of netList.circuits.entries()) {
             for (let component of circuit.data.filter((i) => !(i instanceof Wire))) {
-                let suffix = '@' + component.gid; // TODO include instance
+                let suffix = '@' + component.gid + '@' + instance;
                 if (component instanceof Gate) { // TODO: exclude unconnected gates via netList.unconnected.ports when all gate ports are listed as unconnected
                     sim.gateDecl(component.type, suffix, component.inputs, component.output);
                 } else if (component instanceof Builtin) {

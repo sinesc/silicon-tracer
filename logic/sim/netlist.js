@@ -113,7 +113,7 @@ class NetPort {
         this.subnet = subnet;
     }
     get uniqueName() {
-        return this.name + '@' + this.gid; // TODO: include instance
+        return this.name + '@' + this.gid + '@' + this.instance;
     }
 }
 
