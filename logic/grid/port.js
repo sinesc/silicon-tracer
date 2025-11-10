@@ -11,7 +11,7 @@ class Port extends Interactive {
 
     constructor(x, y, side) {
         assert.string(side);
-        super(x, y, { 'top': [ '' ], 'left': [ null, null, null ] }, 'Port');
+        super(x, y, { 'top': [ '' ], 'left': [ null, null, null ] }, 'port');
         this.rotation = Component.SIDES.indexOf(side);
         this.updateDimensions();
         this.#side = side;
@@ -21,7 +21,7 @@ class Port extends Interactive {
     // Link port to a grid, enabling it to be rendered.
     link(grid) {
         super.link(grid);
-        this.#updateMessage();
+        this.setHoverMessage(this.inner, () => 'Port <b>' + this.name + '</b>. <i>LMB</i>: Drag to move. <i>R</i>: Rotate, <i>E</i>: Edit name, <i>1</i>: Set high, <i>2</i>: Set low, <i>3</i>: Unset', { type: 'hover' });
         this.#labelElement = document.createElement('div');
         this.#labelElement.classList.add('port-name');
         this.element.classList.add('port');
@@ -33,7 +33,6 @@ class Port extends Interactive {
         return {
             ...super.serialize(),
             _: { c: this.constructor.name, a: [ this.x, this.y, this.#side ]},
-            rotation: this.rotation,
             name: this.name,
         };
     }
@@ -60,7 +59,6 @@ class Port extends Interactive {
                 this.#state = null;
             } else if (key === 'e') {
                 this.name = prompt('Set port name', this.name);
-                this.#updateMessage();
                 this.render();
             }
             if (prevState !== this.#state) {
@@ -86,10 +84,5 @@ class Port extends Interactive {
 
         this.element.setAttribute('data-port-state', this.#state ?? '');
         this.element.setAttribute('data-net-state', this.#port.netId !== null && app.sim ? app.sim.engine.getNet(this.#port.netId) : '');
-    }
-
-    // Update hover message
-    #updateMessage() {
-        this.setHoverMessage(this.inner, 'Port <b>' + this.name + '</b>. <i>LMB</i>: Drag to move. <i>R</i>: Rotate, <i>E</i>: Edit name, <i>1</i>: Set high, <i>2</i>: Set low, <i>3</i>: Unset', { type: 'hover' });
     }
 }

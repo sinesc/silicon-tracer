@@ -23,7 +23,7 @@ class GridItem {
             gid: this.gid,
         };
     }
-    
+
     // Unserializes a circuit item to a grid idem.
     static unserialize(item) {
         const cname = item._.c;
@@ -119,7 +119,6 @@ class GridItem {
     // Sets a status message to be displayed while mouse-hovering the visual element. Additional arguments will be passed to the
     // onHotkey() handler that may be triggered while an element with a hover-message is being hovered.
     setHoverMessage(element, message, ...args) {
-        // TODO: support setting a callback instead of a string so compoennts like Clock don't need #updateMessage
         this.registerHoverWatch(element, ...args);
         this.#hoverMessages.set(element, message);
     }

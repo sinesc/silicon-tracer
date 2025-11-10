@@ -3,7 +3,6 @@
 // Basic gate-like builtin component.
 class Builtin extends Component {
 
-    type;
     inputs;
     output;
 
@@ -40,11 +39,10 @@ class Builtin extends Component {
             right.push(i === outputAt ? output : null);
         }
 
-        super(x, y, { 'left': left, 'right': right }, type.toUpperFirst());
+        super(x, y, { 'left': left, 'right': right }, type);
 
         this.inputs = inputs;
         this.output = output;
-        this.type = type;
     }
 
     // Serializes the object for writing to disk.
@@ -59,6 +57,6 @@ class Builtin extends Component {
     link(grid) {
         super.link(grid);
         this.element.classList.add('builtin');
-        this.setHoverMessage(this.inner, '<b>' + name + '</b>. <i>LMB</i>: Drag to move. <i>R</i>: Rotate, <i>D</i>: Delete', { type: 'hover' });
+        this.setHoverMessage(this.inner, '<b>' + this.label + '</b>. <i>LMB</i>: Drag to move. <i>R</i>: Rotate, <i>D</i>: Delete', { type: 'hover' });
     }
 }

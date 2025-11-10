@@ -8,7 +8,7 @@ class Clock extends Interactive {
     #port;
 
     constructor(x, y) {
-        super(x, y, { right: [ '' ] }, 'Clock');
+        super(x, y, { right: [ '' ] }, 'clock');
         this.#port = this.portByName('');
     }
 
@@ -24,7 +24,7 @@ class Clock extends Interactive {
     // Link clock to a grid, enabling it to be rendered.
     link(grid) {
         super.link(grid);
-        this.#updateMessage();
+        this.setHoverMessage(this.inner, () => '<b>' + (1000 / this.interval) + 'Hz Clock</b>. <i>LMB</i>: Drag to move, <i>R</i>: Rotate, <i>E</i>: Edit frequency, <i>1</i>: Enable, <i>2</i>: Disable, <i>3</i>: Detach', { type: 'hover' });
     }
 
     // Apply component state to simulation.
@@ -39,10 +39,6 @@ class Clock extends Interactive {
         }
     }
 
-    #updateMessage() {
-        this.setHoverMessage(this.inner, '<b>' + (1000 / this.interval) + 'Hz Clock</b>. <i>LMB</i>: Drag to move, <i>R</i>: Rotate, <i>E</i>: Edit frequency, <i>1</i>: Enable, <i>2</i>: Disable, <i>3</i>: Detach', { type: 'hover' });
-    }
-
     // Hover hotkey actions
     onHotkey(key, what) {
         super.onHotkey(key, what);
@@ -51,7 +47,6 @@ class Clock extends Interactive {
             if (key === 'e') {
                 let freq = parseInt(prompt('Set new frequency in Hz', Math.round(1000 / this.interval)));
                 this.interval = isNaN(freq) ? 1000 : 1000 / freq;
-                this.#updateMessage();
             } if (key === '1') {
                 this.#state = 1;
             } else if (key === '2') {

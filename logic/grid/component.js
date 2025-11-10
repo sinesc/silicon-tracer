@@ -77,6 +77,7 @@ class Component extends GridItem {
     rotation = 0;
 
     constructor(x, y, ports, type) {
+        assert.string(type);
         super();
         [ this.x, this.y ] = Grid.align(x, y);
         this.setPortsFromNames(ports);
@@ -118,9 +119,8 @@ class Component extends GridItem {
 
         // inner area with name
         this.#inner = document.createElement('div');
-        this.#inner.innerHTML = '<span>' + this.#type + '</span>';
+        this.#inner.innerHTML = '<span>' + this.label + '</span>';
         this.#inner.classList.add('component-inner');
-        this.setHoverMessage(this.#inner, 'Component <b>' + this.#type + '</b>. <i>LMB</i>: Drag to move. <i>R</i>: Rotate, <i>D</i>: Delete', { type: 'hover' });
         this.registerDrag(this.#inner, { type: "component", grabOffsetX: null, grabOffsetY: null });
         this.#element.appendChild(this.#inner);
 
@@ -130,7 +130,7 @@ class Component extends GridItem {
             let port = document.createElement('div');
             port.classList.add('component-port');
             this.#element.appendChild(port);
-            this.setHoverMessage(port, 'Port <b>' + item.name + '</b> of <b>' + this.#type + '</b>. <i>LMB</i>: Drag to connect.', { type: 'hover-port' });
+            this.setHoverMessage(port, () => 'Port <b>' + item.name + '</b> of <b>' + this.#type + '</b>. <i>LMB</i>: Drag to connect.', { type: 'hover-port' });
             // port hover label
             let labelElement = document.createElement('div');
             labelElement.classList.add('component-port-label');
@@ -164,6 +164,27 @@ class Component extends GridItem {
         this.getPorts().forEach((item) => {
             item.netId = null;
         });
+    }
+
+    // Get component type string.
+    get type() {
+        return this.#type;
+    }
+
+    // Set component type string.
+    set type(val) {
+        this.#type = val;
+        if (this.#element) {
+            this.#element.setAttribute('data-component-type', this.#type);
+        }
+        if (this.#inner) {
+            this.#inner.innerHTML = '<span>' + this.label + '</span>';
+        }
+    }
+
+    // Returns the component label string.
+    get label() {
+        return this.#type.toUpperFirst()
     }
 
     // Returns the component root element.

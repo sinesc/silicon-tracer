@@ -112,7 +112,7 @@ class Application {
         if (this.#statusTimer) {
             clearTimeout(this.#statusTimer);
         }
-        this.#statusMessage = String.isString(message) ? message : null;
+        this.#statusMessage = String.isString(message) ? message : (Function.isFunction(message) ? message() : null);
         this.#status.innerHTML = this.#statusMessage ?? '';
         if (this.#statusMessage) {
             this.#status.classList.remove('app-status-faded');
