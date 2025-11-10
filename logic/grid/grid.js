@@ -61,6 +61,7 @@ class Grid {
             item.unlink();
         }
         this.#circuit.gridConfig = this.#serializeConfig();
+        this.#circuit.ports = CustomComponent.generateDefaultOutline(this.#circuit);
         this.#circuit = null;
         this.#infoCircuitLabel = '';
         //this.#updateInfo();

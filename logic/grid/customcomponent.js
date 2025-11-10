@@ -35,15 +35,15 @@ class CustomComponent extends Component {
     }
 
     // Generates default port outline for the given circuits component representation.
-    static generateDefaultOutline(circuitData) {
+    static generateDefaultOutline(circuit) {
         // get ports from serialized circuit
-        let ports = circuitData.filter((c) => c['_'].c === 'Port');
+        let ports = circuit.data.filter((i) => i instanceof Port);
         let outline = { 'left': [], 'right': [], 'top': [], 'bottom': [] };
         for (let item of ports) {
             // side of the component-port on port-components is opposite of where the port-component is facing
             let side = Component.SIDES[(item.rotation + 2) % 4];
             // keep track of position so we can arrange ports on component by position in schematic
-            let sort = side === 'left' || side === 'right' ? item['_'].a[1] : item['_'].a[0]; // we're loading from serialized data format, so it's a bit ugly and will break when component constructor args change // FIXME: no longer loading from serialized
+            let sort = side === 'left' || side === 'right' ? item.y : item.x;
             outline[side].push([ sort, item.name ]);
         }
         let height = Math.nearestOdd(Math.max(1, outline.left.length, outline.right.length));
