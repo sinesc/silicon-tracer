@@ -3,7 +3,7 @@
 	"circuits": [
 		{
 			"label": "Gates",
-			"uid": "ba4d80be-70d7-416c-8626-e5d3342f2159",
+			"uid": "uba4d80be70d7416c8626e5d3342f2159",
 			"data": [
 				{
 					"_": {
@@ -724,7 +724,7 @@
 		},
 		{
 			"label": "Port locations",
-			"uid": "701725a0-8c47-4218-a9fe-df1a77e2f64b",
+			"uid": "u701725a08c474218a9fedf1a77e2f64b",
 			"data": [
 				{
 					"_": {
@@ -869,7 +869,7 @@
 		},
 		{
 			"label": "Some Toys",
-			"uid": "83545572-e1a0-4d07-b279-891d3bbc8f79",
+			"uid": "u83545572e1a04d07b279891d3bbc8f79",
 			"data": [
 				{
 					"_": {
