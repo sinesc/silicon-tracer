@@ -62,8 +62,8 @@ class Circuit {
 
     // Unserializes circuit from decoded JSON-object.
     static unserialize(circuit) {
-        let components = circuit.data.map((i) => GridItem.unserialize(i, null));
-        let uid = circuit.uid.includes('-') ? 'u' + circuit.uid.replaceAll('-', '') : circuit.uid; // LEGACY: convert legacy uid
+        const components = circuit.data.map((i) => GridItem.unserialize(i));
+        const uid = circuit.uid.includes('-') ? 'u' + circuit.uid.replaceAll('-', '') : circuit.uid; // LEGACY: convert legacy uid
         return new Circuit(circuit.label, uid, components, circuit.ports, circuit.gridConfig);
     }
 

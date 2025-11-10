@@ -1,6 +1,5 @@
 "use strict";
 
-// This annoys you, doesn't it?
 Object.defineProperty(Object.prototype, "map", {
     value: function(c) {
         let result = Object.create(this);
@@ -23,6 +22,10 @@ Object.defineProperty(Array.prototype, "swapRemove", {
 
 String.isString = function(s) {
     return typeof s === 'string';
+}
+
+Function.isFunction = function(f) {
+    return typeof f === 'function';
 }
 
 Object.defineProperty(String.prototype, "toUpperFirst", {
@@ -57,7 +60,7 @@ assert.ty = function(val) {
     if (val === null) {
         return 'null';
     } else if (typeof val === 'number') {
-        if (!isFinite(val)) {
+        if (!Number.isFinite(val)) {
             return '' + val;
         } else {
             return 'number';

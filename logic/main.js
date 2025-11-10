@@ -13,7 +13,11 @@ app.toolbar.createActionButton('Dump ASM', 'Outputs simulation code to console.'
         let portInfo = [];
         for (let { offset, meta } of app.sim.engine.nets) {
             for (let port of meta) {
-                portInfo.push('// port ' + port + ' mem[' + offset + ']');
+                let gid = port.match(/@(g[a-f0-9]+)@/)[1] ?? null;
+                let item = app.circuits.current.itemByGID(gid);
+                if (item) {
+                    portInfo.push('// port ' + item.name + ' @ mem[' + offset + ']');
+                }
             }
         }
         console.log(app.sim.engine.code() + portInfo.join("\n"));

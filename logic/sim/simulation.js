@@ -239,7 +239,7 @@ class Simulation {
 
     // Returns a semicolon followed by an optional comment if DEBUG is set and a newline.
     #endl(comment) {
-        return '; ' + (Simulation.DEBUG && comment ? '// ' + comment : '') + "\n";
+        return '; ' + (Simulation.DEBUG && comment ? '// ' + comment.replace(/@(g[a-f0-9]+)@/g, (m, h) => ':' + h.substr(1, 6) + ':') : '') + "\n";
     }
 
     // Returns an input/output declaration.
