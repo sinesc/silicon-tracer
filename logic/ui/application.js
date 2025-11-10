@@ -183,8 +183,10 @@ class Application {
             if (this.circuits.fileName) {
                 saveButton.innerHTML = 'Save <i>' + this.circuits.fileName + '</i>';
                 saveButton.classList.remove('toolbar-menu-button-disabled');
+                document.title = this.circuits.fileName + ' - Silicon Tracer';
             } else {
                 saveButton.innerHTML = 'Save';
+                document.title = 'Silicon Tracer';
                 saveButton.classList.add('toolbar-menu-button-disabled');
             }
             if (this.circuits.allEmpty) {
