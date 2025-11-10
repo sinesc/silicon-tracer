@@ -77,19 +77,22 @@ class Component extends GridItem {
     rotation = 0;
 
     constructor(x, y, ports, type) {
-
         super();
         [ this.x, this.y ] = Grid.align(x, y);
-        this.#ports = { left: [], right: [], top: [], bottom: [], ...ports };
+        this.setPortsFromNames(ports);
+        this.#type = type;
+    }
 
+    // Sets port names/locations
+    setPortsFromNames(ports) {
+        assert.object(ports, false);
+        this.#ports = { left: [], right: [], top: [], bottom: [], ...ports };
         for (let [ side, other ] of Object.entries({ 'left': 'right', 'right': 'left', 'top': 'bottom', 'bottom': 'top' })) {
             while (this.#ports[side].length < this.#ports[other].length) {
                 this.#ports[side].push(null);
             }
         }
-
         this.#ports = this.#ports.map((side, sidePorts) => sidePorts.map((name, index) => new ComponentPort(name, side, index)));
-        this.#type = type;
         this.updateDimensions();
     }
 
