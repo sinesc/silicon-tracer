@@ -83,6 +83,17 @@ class Component extends GridItem {
         this.#type = type;
     }
 
+    // Serializes the object for writing to disk.
+    serialize() {
+        return {
+            ...super.serialize(),
+            _: { c: this.constructor.name, a: [ this.x, this.y, this.#ports.map((p) => p.name), this.#type ]},
+            rotation: this.rotation,
+            width: this.width,
+            height: this.height,
+        };
+    }
+
     // Sets port names/locations
     setPortsFromNames(ports) {
         assert.object(ports, false);
@@ -146,15 +157,6 @@ class Component extends GridItem {
         this.#dropPreview?.remove();
         this.#dropPreview = null;
         super.unlink();
-    }
-
-    // Serializes the object for writing to disk.
-    serialize() {
-        return {
-            ...super.serialize(),
-            _: { c: this.constructor.name, a: [ this.x, this.y, this.#ports.map((p) => p.name), this.#type ]},
-            rotation: this.rotation,
-        };
     }
 
     // Detach component ports from simulation.

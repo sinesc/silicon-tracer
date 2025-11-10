@@ -50,18 +50,18 @@ class Gate extends Component {
         this.type = type;
     }
 
-    // Link gate to a grid, enabling it to be rendered.
-    link(grid) {
-        super.link(grid);
-        this.element.classList.add('gate');
-        this.setHoverMessage(this.inner, '<b>' + name + '-Gate</b>. <i>LMB</i>: Drag to move. <i>R</i>: Rotate, <i>D</i>: Delete', { type: 'hover' });
-    }
-
     // Serializes the object for writing to disk.
     serialize() {
         return {
             ...super.serialize(),
             _: { c: this.constructor.name, a: [ this.x, this.y, this.type, this.inputs.length ]},
         };
+    }
+
+    // Link gate to a grid, enabling it to be rendered.
+    link(grid) {
+        super.link(grid);
+        this.element.classList.add('gate');
+        this.setHoverMessage(this.inner, '<b>' + name + '-Gate</b>. <i>LMB</i>: Drag to move. <i>R</i>: Rotate, <i>D</i>: Delete', { type: 'hover' });
     }
 }

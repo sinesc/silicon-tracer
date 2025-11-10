@@ -16,23 +16,6 @@ class GridItem {
     #hoverMessages;
     #hoverRegistered;
 
-    // Link item to a grid, enabling it to be rendered.
-    link(grid) {
-        this.grid = grid;
-        this.#hoverRegistered = new WeakMap();
-        this.#hoverMessages = new WeakMap();
-    }
-
-    // Remove item from grid.
-    unlink() {
-        this.#hoverRegistered = null;
-        this.#hoverMessages = null;
-        this.grid = null;
-    }
-
-    // Implement to detach the item from the simulation.
-    detachSimulation() { }
-
     // Serializes the grid item to a circuit item stored as part of a Circuit in Circuits.
     serialize() {
         return {
@@ -40,7 +23,7 @@ class GridItem {
             gid: this.gid,
         };
     }
-
+    
     // Unserializes a circuit item to a grid idem.
     static unserialize(item) {
         const cname = item._.c;
@@ -69,6 +52,23 @@ class GridItem {
         }
         return instance;
     }
+
+    // Link item to a grid, enabling it to be rendered.
+    link(grid) {
+        this.grid = grid;
+        this.#hoverRegistered = new WeakMap();
+        this.#hoverMessages = new WeakMap();
+    }
+
+    // Remove item from grid.
+    unlink() {
+        this.#hoverRegistered = null;
+        this.#hoverMessages = null;
+        this.grid = null;
+    }
+
+    // Implement to detach the item from the simulation.
+    detachSimulation() { }
 
     // Gets the grid-relative screen x-coordinate for this grid item.
     get visualX() {

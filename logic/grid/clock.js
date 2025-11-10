@@ -12,12 +12,6 @@ class Clock extends Interactive {
         this.#port = this.portByName('');
     }
 
-    // Link clock to a grid, enabling it to be rendered.
-    link(grid) {
-        super.link(grid);
-        this.#updateMessage();
-    }
-
     // Serializes the object for writing to disk.
     serialize() {
         return {
@@ -25,6 +19,12 @@ class Clock extends Interactive {
             _: { c: this.constructor.name, a: [ this.x, this.y ]},
             interval: this.interval,
         };
+    }
+
+    // Link clock to a grid, enabling it to be rendered.
+    link(grid) {
+        super.link(grid);
+        this.#updateMessage();
     }
 
     // Apply component state to simulation.

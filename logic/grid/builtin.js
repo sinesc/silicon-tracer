@@ -47,18 +47,18 @@ class Builtin extends Component {
         this.type = type;
     }
 
-    // Link component to a grid, enabling it to be rendered.
-    link(grid) {
-        super.link(grid);
-        this.element.classList.add('builtin');
-        this.setHoverMessage(this.inner, '<b>' + name + '</b>. <i>LMB</i>: Drag to move. <i>R</i>: Rotate, <i>D</i>: Delete', { type: 'hover' });
-    }
-
     // Serializes the object for writing to disk.
     serialize() {
         return {
             ...super.serialize(),
             _: { c: this.constructor.name, a: [ this.x, this.y, this.type ]},
         };
+    }
+
+    // Link component to a grid, enabling it to be rendered.
+    link(grid) {
+        super.link(grid);
+        this.element.classList.add('builtin');
+        this.setHoverMessage(this.inner, '<b>' + name + '</b>. <i>LMB</i>: Drag to move. <i>R</i>: Rotate, <i>D</i>: Delete', { type: 'hover' });
     }
 }

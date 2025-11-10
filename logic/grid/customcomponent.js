@@ -19,6 +19,14 @@ class CustomComponent extends Component {
         this.label = label;
     }
 
+    // Serializes the object for writing to disk.
+    serialize() {
+        return {
+            ...super.serialize(),
+            _: { c: this.constructor.name, a: [ this.x, this.y, this.rotation, this.uid ]},
+        };
+    }
+
     // Link custom component to a grid, enabling it to be rendered.
     link(grid) {
         let circuit = app.circuits.byUID(this.uid) ?? {};
@@ -27,14 +35,6 @@ class CustomComponent extends Component {
         super.link(grid);
         this.element.classList.add('custom');
         this.setHoverMessage(this.inner, '<b>' + this.label + '</b>. <i>LMB</i>: Drag to move. <i>R</i>: Rotate, <i>D</i>: Delete', { type: 'hover' });
-    }
-
-    // Serializes the object for writing to disk.
-    serialize() {
-        return {
-            ...super.serialize(),
-            _: { c: this.constructor.name, a: [ this.x, this.y, this.rotation, this.uid ]},
-        };
     }
 
     // Generates default port outline for the given circuits component representation.

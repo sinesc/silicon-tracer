@@ -30,6 +30,15 @@ class Wire extends GridItem {
         this.direction = direction;
     }
 
+    // Serializes the object for writing to disk.
+    serialize() {
+        let direction = this.width > 0 ? 'h' : 'v';
+        return {
+            ...super.serialize(),
+            _: { c: this.constructor.name, a: [ this.x, this.y, direction === 'h' ? this.width : this.height, direction, this.color ]},
+        };
+    }v
+
     // Link wire to a grid, enabling it to be rendered.
     link(grid) {
         super.link(grid);
@@ -50,15 +59,6 @@ class Wire extends GridItem {
     // Detach wire from simulation.
     detachSimulation() {
         this.netId = null;
-    }
-
-    // Serializes the object for writing to disk.
-    serialize() {
-        let direction = this.width > 0 ? 'h' : 'v';
-        return {
-            ...super.serialize(),
-            _: { c: this.constructor.name, a: [ this.x, this.y, direction === 'h' ? this.width : this.height, direction, this.color ]},
-        };
     }
 
     // Returns the DOM element used by the wire.
