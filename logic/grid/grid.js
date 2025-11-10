@@ -43,7 +43,7 @@ class Grid {
         }
 
         // TODO: may have to go to parent UI
-        // TODO: GridElements currently register document.onmouse* temporarily. those should probably follow the same logic: register onmouse* here and then pass on to whichever element wants to have them
+        // TODO: GridItems currently register document.onmouse* temporarily. those should probably follow the same logic: register onmouse* here and then pass on to whichever element wants to have them
         document.addEventListener('keydown', this.#handleKeyDown.bind(this));
     }
 
@@ -142,6 +142,8 @@ class Grid {
 
     // Returns whether the given screen coordinates are within the bounds of the grid.
     screenInBounds(x, y) {
+        assert.number(x);
+        assert.number(y);
         let ex1 = this.#element.offsetLeft;
         let ey1 = this.#element.offsetTop;
         return x >= ex1 && y >= ey1 && x <= ex1 + this.#element.offsetWidth && y <= ey1 + this.#element.offsetHeight;
@@ -149,6 +151,8 @@ class Grid {
 
     // Converts screen coordinates to in-simulation/on-grid coordinates.
     screenToGrid(x, y) {
+        assert.number(x);
+        assert.number(y);
         // mouse pixel coordinates within grid view element
         let mouseX = x - this.#element.offsetLeft;
         let mouseY = y - this.#element.offsetTop;
@@ -160,6 +164,8 @@ class Grid {
 
     // Utility function to align given x/y to grid coordinates and return them.
     static align(x, y) {
+        assert.number(x);
+        assert.number(y);
         return [
             Math.ceil(x / Grid.SPACING) * Grid.SPACING - 0.5 * Grid.SPACING,
             Math.ceil(y / Grid.SPACING) * Grid.SPACING - 0.5 * Grid.SPACING
@@ -244,17 +250,22 @@ class Grid {
         return color;
     }
 
-    // Makes given gridelement become the hotkey-target and when locked also prevents hover events from stealing hotkey focus until released.
-    requestHotkeyTarget(gridElement, lock, ...args) {
+    // Makes given grid item become the hotkey-target and when locked also prevents hover events from stealing hotkey focus until released.
+    requestHotkeyTarget(gridItem, lock, ...args) {
         lock ??= false;
+        assert.class(GridItem, gridItem);
+        assert.bool(lock);
         if (!this.#hotkeyTarget || !this.#hotkeyTarget.locked) {
-            this.#hotkeyTarget = { gridElement, args, locked: lock };
+            this.#hotkeyTarget = { gridItem, args, locked: lock };
         }
     }
 
     // Releases hotkey focus and lock if given element matches current lock holder.
-    releaseHotkeyTarget(gridElement, unlock) {
-        if (this.#hotkeyTarget && this.#hotkeyTarget.gridElement === gridElement && (!this.#hotkeyTarget.locked || unlock)) {
+    releaseHotkeyTarget(gridItem, unlock) {
+        unlock ??= false;
+        assert.class(GridItem, gridItem);
+        assert.bool(unlock);
+        if (this.#hotkeyTarget && this.#hotkeyTarget.gridItem === gridItem && (!this.#hotkeyTarget.locked || unlock)) {
             this.#hotkeyTarget = null;
         }
     }
@@ -266,6 +277,7 @@ class Grid {
 
     // Sets a new zoom level index.
     set zoomLevel(level) {
+        assert.number(level);
         level = level < 0 ? 0 : (level >= Grid.ZOOM_LEVELS.length ? Grid.ZOOM_LEVELS.length - 1 : level);
         this.zoom = Grid.ZOOM_LEVELS[level];
     }
@@ -288,8 +300,8 @@ class Grid {
     // Called when a key is pressed and then repeatedly while being held.
     #handleKeyDown(e) {
         if (this.#hotkeyTarget) {
-            let { gridElement, args } = this.#hotkeyTarget;
-            gridElement.onHotkey(e.key, ...args);
+            let { gridItem, args } = this.#hotkeyTarget;
+            gridItem.onHotkey(e.key, ...args);
         }
     }
 
