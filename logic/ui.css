@@ -89,6 +89,8 @@
     --button-bg-hover-color: oklch(from var(--button-bg-color) calc(l * var(--button-hover-factor)) c h);
     --button-border-hover-color: oklch(from var(--button-border-color) calc(l * var(--button-hover-factor)) c h);
     --disabled-text-color: #777;
+    --selection-hue: 200deg;
+    --selection-brightness: 0.8;
 }
 
 /*
@@ -417,6 +419,17 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
     font-size: 28px;
     font-weight: bold;
 }
+.grid-selection {
+    position: absolute;
+    z-index: 19;
+    border: 1px dotted white;
+    background-color: transparent;
+    display: block;
+    pointer-events: none;
+}
+.grid-selection.hidden {
+    display: none;
+}
 
 /*
  * Base component
@@ -428,6 +441,12 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
     cursor: default;
     box-sizing: border-box;
     opacity: 1;
+}
+.component.selected {
+    outline: 1px dotted white;
+    outline-offset: -3px;
+    border-radius: 6px;
+    filter: grayscale(100%) sepia(100%) hue-rotate(var(--selection-hue)) brightness(var(--selection-brightness));
 }
 .component-drop-preview {
     z-index: 9;
@@ -662,6 +681,10 @@ div.component.gate[data-component-rotation="3"] > div.component-inner {
 }
 .wire-h:hover:not(.wire-building), .wire-v:hover:not(.wire-building) {
     filter: brightness(1.75) saturate(0.5);
+}
+.wire-h.selected, .wire-v.selected {
+    outline: 1px dotted white;
+    filter: grayscale(100%) sepia(100%) hue-rotate(var(--selection-hue)) brightness(var(--selection-brightness));
 }
 /* extends clickable area around wires */
 .wire-h::after, .wire-v::after {

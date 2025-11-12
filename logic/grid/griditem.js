@@ -70,6 +70,18 @@ class GridItem {
     // Implement to detach the item from the simulation.
     detachSimulation() { }
 
+    // Implement to render the item to the grid.
+    render() { }
+
+    // Implement to apply/remove component selection effect or return status.
+    select(status) { }
+
+    // Implement to handle drag events.
+    onDrag(x, y, status, ...args) { }
+
+    // Implement to handle hover hotkey events.
+    onHotkey(key, ...args) { }
+
     // Gets the grid-relative screen x-coordinate for this grid item.
     get visualX() {
         return (this.x + this.grid.offsetX) * this.grid.zoom;
@@ -79,15 +91,6 @@ class GridItem {
     get visualY() {
         return (this.y + this.grid.offsetY) * this.grid.zoom;
     }
-
-    // Implement to render the item to the grid.
-    render() { }
-
-    // Implement to handle drag events.
-    onDrag(x, y, status, ...args) { }
-
-    // Implement to handle hover hotkey events.
-    onHotkey(key, ...args) { }
 
     // Converts in-simulation/on-grid to visual coordinates (for rendering).
     gridToVisual(x, y) {

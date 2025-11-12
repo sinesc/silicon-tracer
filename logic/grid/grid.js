@@ -13,12 +13,13 @@ class Grid {
     offsetY = 0;
 
     #element;
-    #info;
+    #infoElement;
     #infoCircuitLabel = null;
     #infoSimulationLabel = null;
+    #selectionElement;
+    #selection = [];
     #hotkeyTarget = null;
     #circuit;
-    #netCache = null;
 
     constructor(parent) {
         assert.class(Node, parent);
@@ -27,10 +28,14 @@ class Grid {
         this.#element.onmousedown = this.#handleDragStart.bind(this);
         this.#element.onwheel = this.#handleZoom.bind(this);
 
-        this.#info = document.createElement('div');
-        this.#info.classList.add('grid-info');
-        this.#element.appendChild(this.#info);
-        this.#info.innerHTML = '';
+        this.#infoElement = document.createElement('div');
+        this.#infoElement.classList.add('grid-info');
+        this.#element.appendChild(this.#infoElement);
+        this.#infoElement.innerHTML = '';
+
+        this.#selectionElement = document.createElement('div');
+        this.#selectionElement.classList.add('grid-selection', 'hidden');
+        this.#element.appendChild(this.#selectionElement);
 
         parent.appendChild(this.#element);
         this.render();
@@ -290,9 +295,9 @@ class Grid {
     // Updates info overlay text.
     #updateInfo() {
         if (this.#infoCircuitLabel === this.#infoSimulationLabel) {
-            this.#info.innerHTML = '<span>Circuit/Simulation</span><div class="circuit-label">' + this.#infoCircuitLabel + '</div>';
+            this.#infoElement.innerHTML = '<span>Circuit/Simulation</span><div class="circuit-label">' + this.#infoCircuitLabel + '</div>';
         } else {
-            this.#info.innerHTML = '<span>Circuit</span><div class="circuit-label">' + this.#infoCircuitLabel +
+            this.#infoElement.innerHTML = '<span>Circuit</span><div class="circuit-label">' + this.#infoCircuitLabel +
                 '</div>' + (this.#infoSimulationLabel ? '<span>Simulation</span><div class="simulation-label">' + this.#infoSimulationLabel + '</div>' : '');
         }
     }
@@ -321,30 +326,83 @@ class Grid {
         this.render();
     }
 
+    // Renders a selection box in grid-div-relative coordinates.
+    #renderSelection(x, y, width, height, join) {
+        if (width < 0) {
+            x += width;
+            width *= -1;
+        }
+        if (height < 0) {
+            y += height;
+            height *= -1;
+        }
+        this.#selectionElement.style.left = x + "px";
+        this.#selectionElement.style.top = y + "px";
+        this.#selectionElement.style.width = width + "px";
+        this.#selectionElement.style.height = height + "px";
+
+        // compute grid internal coordinates
+        const sX = x / this.zoom - this.offsetX;
+        const sY = y / this.zoom - this.offsetY;
+        const sWidth = width / this.zoom;
+        const sHeight = height / this.zoom;
+        const m = 5; // component margin, subtracted during selection to more accurately select the component
+
+        for (const c of this.#circuit.data) {
+            const currentlySelected = this.#selection.indexOf(c) > -1;
+            if (c.x + m >= sX && c.y + m >= sY && c.x + c.width - m <= sX + sWidth && c.y + c.height - m <= sY + sHeight) {
+                c.select(!currentlySelected || join);
+            } else {
+                c.select(currentlySelected);
+            }
+        }
+    }
+
     // Called when mouse drag starts.
     #handleDragStart(e) {
         e.preventDefault();
         e.stopPropagation();
-        if (e.which !== 2) {
+        const dragStartX = e.clientX - this.#element.offsetLeft;
+        const dragStartY = e.clientY - this.#element.offsetTop;
+        const shiftDown = false; // TODO check for shift modifier to add to selection
+        if (e.which === 1) {
+            // start selection
+            this.#selectionElement.classList.remove('hidden');
+            if (!shiftDown) {
+                this.#selection = [];
+            }
+            this.#renderSelection(dragStartX, dragStartY, 0, 0, shiftDown);
+        } else if (e.which > 2) {
             return;
         }
-        document.onmousemove = this.#handleDragMove.bind(this, e.clientX, e.clientY, this.offsetX, this.offsetY);
+        document.onmousemove = this.#handleDragMove.bind(this, dragStartX, dragStartY, this.offsetX, this.offsetY, shiftDown);
         document.onmouseup = this.#handleDragStop.bind(this);
     }
 
-    // Called on mouse drag, moves the grid.
-    #handleDragMove(dragStartX, dragStartY, originalX, originalY, e) {
+    // Called on mouse drag, moves the grid or selects area.
+    #handleDragMove(dragStartX, dragStartY, gridOffsetX, gridOffsetY, shiftDown, e) {
         e.preventDefault();
         e.stopPropagation();
-        let deltaX = e.clientX - dragStartX;
-        let deltaY = e.clientY - dragStartY;
-        this.offsetX = originalX + deltaX / this.zoom;
-        this.offsetY = originalY + deltaY / this.zoom;
-        this.render('move');
+        const deltaX = (e.clientX - this.#element.offsetLeft) - dragStartX;
+        const deltaY = (e.clientY - this.#element.offsetTop) - dragStartY;
+        if (e.which === 1) {
+            // select area
+            this.#renderSelection(dragStartX, dragStartY, deltaX, deltaY, shiftDown);
+        } else if (e.which === 2) {
+            // drag grid
+            this.offsetX = gridOffsetX + deltaX / this.zoom;
+            this.offsetY = gridOffsetY + deltaY / this.zoom;
+            this.render('move');
+        }
     }
 
     // Called when mouse drag ends.
     #handleDragStop(e) {
+        if (e.which === 1) {
+            // remove selection box, set selected items
+            this.#selectionElement.classList.add('hidden');
+            this.#selection = this.filterItems((c) => c.select(null));
+        }
         document.onmouseup = null;
         document.onmousemove = null;
     }

@@ -61,6 +61,18 @@ class Wire extends GridItem {
         this.netId = null;
     }
 
+    // Enable/disable selection effect. Used by grid during box selection.
+    select(status) {
+        assert.bool(status, true);
+        if (status === null) {
+            return this.#element.classList.contains('selected');
+        } else if (status) {
+            this.#element.classList.add('selected');
+        } else {
+            this.#element.classList.remove('selected');
+        }
+    }
+
     // Returns the DOM element used by the wire.
     get element() {
         return this.#element;

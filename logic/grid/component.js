@@ -166,6 +166,18 @@ class Component extends GridItem {
         });
     }
 
+    // Enable/disable selection effect. Used by grid during box selection.
+    select(status) {
+        assert.bool(status, true);
+        if (status === null) {
+            return this.#element.classList.contains('selected');
+        } else if (status) {
+            this.#element.classList.add('selected');
+        } else {
+            this.#element.classList.remove('selected');
+        }
+    }
+
     // Get component type string.
     get type() {
         return this.#type;
