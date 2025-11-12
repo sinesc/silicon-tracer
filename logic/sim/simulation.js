@@ -9,6 +9,7 @@ class Simulation {
     static ARRAY_CONSTRUCTOR = Uint8Array;
     static ARRAY_BITS = 8;
     static MAX_DELAY = Simulation.ARRAY_BITS / 2;
+    static DATA_BIT_MASK = (Simulation.ARRAY_BITS << 1) - 1;
 
     static GATE_MAP = {
         'buffer': { negIn: false, negOut: false, joinOp: null },
@@ -22,7 +23,9 @@ class Simulation {
     };
 
     static BUILTIN_MAP = {
-        'latch' : { template: '(l & d) | (~l & q)', inputs: [ 'l', 'd' ], output: 'q' },
+        'latch' : { resultTpl: '(l & d) | (~l & q)', inputs: [ 'l', 'd' ], output: 'q' },
+        'buffer3' : { resultTpl: 'd', signalTpl: 'e', inputs: [ 'e', 'd' ], output: 'q' },
+        'not3' : { resultTpl: '~d', signalTpl: 'e', inputs: [ 'e', 'd' ], output: 'q' },
     }
 
     #allocBase = 0;
@@ -57,10 +60,11 @@ class Simulation {
         assert.string(suffix);
         assert.number(delay, true);
         const rules = Simulation.BUILTIN_MAP[type];
-        const template = rules.template.replace(/([a-z])/g, (m) => m + suffix);
+        const resultTpl = rules.resultTpl.replace(/([a-z])/g, (m) => m + suffix);
+        const signalTpl = (rules.signalTpl ?? '').replace(/([a-z])/g, (m) => m + suffix);
         const inputs = rules.inputs.map((i) => i + suffix);
         const output = rules.output + suffix;
-        this.#gates.push({ inputs, output: output, template });
+        this.#gates.push({ inputs, output: output, resultTpl, signalTpl });
 
         for (const input of inputs) {
             this.ioDecl(input, 'i', delay ?? Simulation.DEFAULT_DELAY);
@@ -80,8 +84,9 @@ class Simulation {
         const inputsQual = inputs.map((i) => i + suffix);
         const outputQual = output + suffix;
         const inner = inputsQual.map((v) => (rules.negIn ? '(!' + v + ')' : v)).join(' ' + rules.joinOp + ' '); // TODO: I have '1 &' only on negOut, why?
-        const template = rules.negOut ? '!(1 & (' + inner + '))' : inner;
-        this.#gates.push({ inputs: inputsQual, output: outputQual, template });
+        const resultTpl = rules.negOut ? '!(1 & (' + inner + '))' : inner;
+        const signalTpl = '';
+        this.#gates.push({ inputs: inputsQual, output: outputQual, resultTpl, signalTpl });
 
         for (const input of inputsQual) {
             this.ioDecl(input, 'i', delay ?? Simulation.DEFAULT_DELAY);
@@ -117,21 +122,19 @@ class Simulation {
     }
 
     // Sets the value of a net in the simulation. null to unset, true/false/1/0 to set value.
-    setNet(netIndex, value) {
-        assert.number(netIndex);
+    setNet(index, value) { // TODO rename e.g. setNetValue
+        assert.number(index);
         assert.number(value, true);
-        //console.log('set ' + netIndex + ' to ' + value);
-        const offset = this.#nets[netIndex].offset;
+        const offset = this.#getNet(index).offset;
         this.#mem[offset] = ((value !== null) << Simulation.MAX_DELAY) | value;
     }
 
     // Gets the value of a net in the simulation.
-    getNet(netIndex) {
-        assert.number(netIndex);
-        const offset = this.#nets[netIndex].offset;
+    getNet(index) { // TODO rename e.g. getNetValue
+        assert.number(index);
+        const offset = this.#getNet(index).offset;
         const value = this.#mem[offset];
         const ret = value & (1 << Simulation.MAX_DELAY) ? value & 1 : null;
-        //console.log('get ' + netIndex + ' = ' + ret);
         return ret;
     }
 
@@ -141,10 +144,10 @@ class Simulation {
     }
 
     // Compiles a net to input assertion.
-    #compileNetToInput(name, netIndex) {
-        const io = this.#getIO(name);
+    #compileNetToInput(ioName, netIndex) {
+        const io = this.#getIO(ioName);
         const netValue = this.#compileNetValue(netIndex);
-        const ioValue = this.#compileIOValue(name);
+        const ioValue = this.#compileIOValue(ioName);
         const delayMask = this.#compileDelayMask(io.delay);
         // TODO: perf test: write back to temporary, then after computation back to input
         return `${ioValue} = (${ioValue} & ${delayMask}) | (${netValue} << ${io.delay})`;   // shift net value up to newest io-data/signal bits and apply
@@ -154,25 +157,29 @@ class Simulation {
     #compileGate(gateIndex, ioReplacements) {
         const gate = this.#gates[gateIndex];
         const io = this.#getIO(gate.output);
-        const op = gate.template.replace(/[a-z_][a-z0-9_@]*/g, (match) => ioReplacements[match] ?? 'error');
+        const resultOp = gate.resultTpl.replace(/[a-z_][a-z0-9_@]*/g, (match) => ioReplacements[match] ?? 'error');
+        const signalOp = gate.signalTpl.replace(/[a-z_][a-z0-9_@]*/g, (match) => ioReplacements[match] ?? 'error');
         const ioValue = this.#compileIOValue(gate.output);
         const delayMask = this.#compileDelayMask(io.delay);
         const signalBit = this.#compileConst(1 << Simulation.MAX_DELAY);
-        let code = `result = ${signalBit} | (${op}); `;                                     // set signal bit on computed result
+        const signalSelect = signalOp === '' ? signalBit : `((${signalOp}) << ${Simulation.MAX_DELAY}) & ${signalBit}`; // FIXME: delay seems to be wrong/too short for signal part
+        const resultSelect = signalOp === '' ? resultOp : `(${resultOp}) & ${Simulation.DATA_BIT_MASK}`;
+        let code = `result = (${signalSelect}) | (${resultSelect}); `;                                     // set signal bit on computed result
         // TODO: perf test: first write back io state (see todo in compileNetToInput)
         code += `${ioValue} = (${ioValue} & ${delayMask}) | (result << ${io.delay})`;       // shift result up to newest io-data/signal bits and apply
         return code;
     }
 
     // Compiles an output to net assertion.
-    #compileOutputToNet(netIndex, name) {
-        const io = this.#getIO(name);
+    #compileOutputToNet(netIndex, ioName) {
+        const io = this.#getIO(ioName);
         const netSignalBit = Simulation.MAX_DELAY;           // oldest net signal bit (also the only signal bit for nets)
         const ioSignalBit = Simulation.MAX_DELAY + io.delay  // newest io signal bit
         const netValue = this.#compileNetValue(netIndex);
-        const ioValue = this.#compileIOValue(name);
-        let code = `signal = (${ioValue} & (1 << ${ioSignalBit})) >> ${ioSignalBit}; `;     // do we have a signal on the output?
-        code += `mask = ~(signal | (signal << ${netSignalBit})); `;                        // build mask for oldest (and only) net-data/signal from io-signal (all bits enabled if no signal)
+        const ioValue = this.#compileIOValue(ioName);
+        const signalMask = this.#compileConst(1 << ioSignalBit);
+        let code = `signal = (${ioValue} & ${signalMask}) >> ${ioSignalBit}; `;             // do we have a signal on the output?
+        code += `mask = ~(signal | (signal << ${netSignalBit})); `;                         // build mask for oldest (and only) net-data/signal from io-signal (all bits enabled if no signal)
         code += `${netValue} = (${netValue} & mask) | (${ioValue} & ~mask)`;                // apply io-data/signal to net if signal is set
         return code;
     }
@@ -182,7 +189,7 @@ class Simulation {
         let result = ''
         // advance time for all ports
         for (const [ name ] of this.#ioMap) {
-            result += this.#compileIOValue(name) + ' >>= 1' + this.#endl('tick ' + name);
+            result += this.#compileIOValue(name) + ' >>= 1' + this.#endl('tick ' + name); // TODO combine this with port setting, e.g. "mem[0] >>= 1" and "mem[0] = (mem[0] & 0b11011101) | (mem[4] << 1);" to "mem[0] = ((mem[0] >> 1) & 0b11011101) | (mem[4] << 1);"
         }
         // copy net-state to connected ports
         for (const [ netIndex, net ] of this.#nets.entries()) {
@@ -198,12 +205,18 @@ class Simulation {
             ioReplacements[name] = this.#compileIOValue(name);
         }
         for (const [ gateIndex, gate ] of this.#gates.entries()) {
-            result += this.#compileGate(gateIndex, ioReplacements) + this.#endl('compute ' + gate.template);
+            result += this.#compileGate(gateIndex, ioReplacements) + this.#endl('compute ' + gate.resultTpl);
         }
         // copy port-state to attached net
         for (const [ netIndex, net ] of this.#nets.entries()) {
+            let isReset = false;
             for (const name of net.io ) {
                 if (this.#getIO(name).out) {
+                    // set net back to undefined if there is any output to it
+                    if (!isReset) {
+                        result += this.#compileNetValue(netIndex) + ' = 0' + this.#endl('reset net ' + netIndex); // TODO see if this can be combined with first net setting, e.g. by not reading current state from net there
+                        isReset = true;
+                    }
                     result += this.#compileOutputToNet(netIndex, name) + this.#endl('set net ' + netIndex + ' from port ' + name);
                 }
             }
@@ -218,7 +231,7 @@ class Simulation {
 
     // Returns code to refer to the state of a net.
     #compileNetValue(index) {
-        return 'mem[' + this.#nets[index].offset + ']';
+        return 'mem[' + this.#getNet(index).offset + ']';
     }
 
     // Returns code for a bitmask with the signal and data bits for the given delay being unset.
@@ -230,11 +243,15 @@ class Simulation {
 
     // Returns code for a constant (written in binary notation for better readability of compiled code).
     #compileConst(value) {
-        let result = '0b';
-        for (let i = Simulation.ARRAY_BITS - 1; i >= 0; --i) {
-            result += ((value & (1 << i)) > 0 ? '1' : '0');
+        if (Simulation.DEBUG) {
+            let result = '0b';
+            for (let i = Simulation.ARRAY_BITS - 1; i >= 0; --i) {
+                result += ((value & (1 << i)) > 0 ? '1' : '0');
+            }
+            return result;
+        } else {
+            return '' + value;
         }
-        return result;
     }
 
     // Returns a semicolon followed by an optional comment if DEBUG is set and a newline.
@@ -244,11 +261,21 @@ class Simulation {
 
     // Returns an input/output declaration.
     #getIO(name) {
-        let def;
-        if ((def = this.#ioMap.get(name)) !== undefined) {
-            return def;
+        let io;
+        if ((io = this.#ioMap.get(name)) !== undefined) {
+            return io;
         } else {
             throw new Error('Undefined IO ' + name);
+        }
+    }
+
+    // Returns a net declaration.
+    #getNet(index) {
+        let net;
+        if ((net = this.#nets[index]) !== undefined) {
+            return net;
+        } else {
+            throw new Error('Undefined net ' + index);
         }
     }
 
