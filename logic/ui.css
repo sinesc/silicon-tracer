@@ -456,7 +456,7 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
     border: 1px solid var(--component-border-color);
     transition: border-color var(--component-rotate-duration);
     border-radius: 3px;
-    color: #ffffff;
+    color: #ddd;
     text-align: center;
     box-sizing: border-box;
     margin: 5px; /* fixme: needs to match component, should just be set there */
@@ -472,6 +472,7 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
 .component-inner:hover {
     background-color: var(--component-body-hover-color);
     border-color: var(--component-border-hover-color);
+    color: #fff;
 }
 .component-port {
     z-index: 14;
@@ -494,7 +495,7 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
 .component-port:hover {
     background-color: #aaa;
     transition: background-color var(--component-color-transition-duration), color var(--component-color-transition-duration);
-    color: #000;
+    color: #fff;
 }
 .component-port-label {
     pointer-events: none;
@@ -660,7 +661,7 @@ div.component.gate[data-component-rotation="3"] > div.component-inner {
     background-color: var(--wire-colorD);
 }
 .wire-h:hover:not(.wire-building), .wire-v:hover:not(.wire-building) {
-    outline: 1px solid #fff8;
+    filter: brightness(1.75) saturate(0.5);
 }
 /* extends clickable area around wires */
 .wire-h::after, .wire-v::after {
