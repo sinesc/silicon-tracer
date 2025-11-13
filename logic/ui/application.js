@@ -121,7 +121,7 @@ class Application {
             this.#statusTimer = setTimeout(() => {
                 if (!this.#statusMessage) {
                     this.#status.classList.remove('app-status-faded');
-                    this.#status.innerHTML = 'Grid. <i>LMB</i>: Drag component, <i>MMB</i>: Drag grid, <i>MW</i>: Zoom grid';
+                    this.#status.innerHTML = 'Grid. <i>LMB</i>: Select area, <i>SHIFT+LMB</i>: Add to selection, <i>MMB</i>: Drag grid, <i>MW</i>: Zoom grid';
                 }
             }, 1000);
         }

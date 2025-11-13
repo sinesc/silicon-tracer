@@ -364,7 +364,7 @@ class Grid {
         e.stopPropagation();
         const dragStartX = e.clientX - this.#element.offsetLeft;
         const dragStartY = e.clientY - this.#element.offsetTop;
-        const shiftDown = false; // TODO check for shift modifier to add to selection
+        const shiftDown = e.shiftKey;
         if (e.which === 1) {
             // start selection
             this.#selectionElement.classList.remove('hidden');
