@@ -166,12 +166,15 @@ class Component extends GridItem {
         });
     }
 
-    // Enable/disable selection effect. Used by grid during box selection.
-    select(status) {
+    // Implement to return whether the element is selected.
+    get selected() {
+        return this.#element.classList.contains('selected');
+    }
+
+    // Implement to apply/remove component selection effect.
+    set selected(status) {
         assert.bool(status, true);
-        if (status === null) {
-            return this.#element.classList.contains('selected');
-        } else if (status) {
+        if (status) {
             this.#element.classList.add('selected');
         } else {
             this.#element.classList.remove('selected');

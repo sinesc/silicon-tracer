@@ -73,8 +73,11 @@ class GridItem {
     // Implement to render the item to the grid.
     render() { }
 
-    // Implement to apply/remove component selection effect or return status.
-    select(status) { }
+    // Implement to return whether the element is selected.
+    get selected() { return false; }
+
+    // Implement to apply/remove component selection effect.
+    set selected(status) { }
 
     // Implement to handle drag events.
     onDrag(x, y, status, ...args) { }

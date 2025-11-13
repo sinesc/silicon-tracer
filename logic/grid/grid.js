@@ -351,9 +351,9 @@ class Grid {
         for (const c of this.#circuit.data) {
             const currentlySelected = this.#selection.indexOf(c) > -1;
             if (c.x + m >= sX && c.y + m >= sY && c.x + c.width - m <= sX + sWidth && c.y + c.height - m <= sY + sHeight) {
-                c.select(!currentlySelected || join);
+                c.selected = !currentlySelected || join;
             } else {
-                c.select(currentlySelected);
+                c.selected = currentlySelected;
             }
         }
     }
@@ -401,7 +401,7 @@ class Grid {
         if (e.which === 1) {
             // remove selection box, set selected items
             this.#selectionElement.classList.add('hidden');
-            this.#selection = this.filterItems((c) => c.select(null));
+            this.#selection = this.filterItems((c) => c.selected);
         }
         document.onmouseup = null;
         document.onmousemove = null;
