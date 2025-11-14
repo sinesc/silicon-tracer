@@ -221,13 +221,13 @@ class Grid {
 
     // Returns the next to be used net color.
     get nextNetColor() {
-        let netList = this.#circuit.identifyNets(false);
+        let netList = NetList.identify(this.#circuit, false);
         return netList.nets.length % 10;
     }
 
     // Applies net colors to components on the grid. Returns next to be used color.
     applyNetColors() {
-        let netList = this.#circuit.identifyNets(false);
+        let netList = NetList.identify(this.#circuit, false);
         let color = 0;
         for (let net of netList.nets) {
             let applyColor = null;

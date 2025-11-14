@@ -64,8 +64,8 @@ class Application {
                 this.grid.setSimulationLabel(circuit.label);
             } else {
                 // start new
-                let netList = circuit.identifyNets(true);
-                let engine = circuit.compileSimulation(netList);
+                let netList = NetList.identify(circuit, true);
+                let engine = netList.compileSimulation();
                 let tickListener = circuit.attachSimulation(netList);
                 let start = performance.now();
                 this.#simulations[this.#currentSimulation] = { engine, start, netList, tickListener };

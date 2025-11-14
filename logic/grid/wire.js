@@ -102,7 +102,7 @@ class Wire extends GridItem {
     // Hover hotkey actions
     onHotkey(key, what) {
         if (what.type === 'hover' && key >= '0' && key <= '9') {
-            let netList = this.grid.circuit.identifyNets(false);
+            let netList = NetList.identify(this.grid.circuit, false)
             let myNetId = netList.findWire(this);
             let color = parseInt(key);
             for (let netWire of netList.nets[myNetId].wires) {
