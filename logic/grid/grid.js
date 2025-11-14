@@ -307,6 +307,8 @@ class Grid {
         if (this.#hotkeyTarget) {
             let { gridItem, args } = this.#hotkeyTarget;
             gridItem.onHotkey(e.key, ...args);
+        } else if (e.key === 'e') {
+            app.circuits.rename(this.#circuit.uid);
         }
     }
 
@@ -328,6 +330,7 @@ class Grid {
 
     // Renders a selection box in grid-div-relative coordinates.
     #renderSelection(x, y, width, height, join) {
+        // render box
         if (width < 0) {
             x += width;
             width *= -1;
@@ -340,14 +343,13 @@ class Grid {
         this.#selectionElement.style.top = y + "px";
         this.#selectionElement.style.width = width + "px";
         this.#selectionElement.style.height = height + "px";
-
         // compute grid internal coordinates
         const sX = x / this.zoom - this.offsetX;
         const sY = y / this.zoom - this.offsetY;
         const sWidth = width / this.zoom;
         const sHeight = height / this.zoom;
         const m = 5; // component margin, subtracted during selection to more accurately select the component
-
+        // update selection status on components
         for (const c of this.#circuit.data) {
             const currentlySelected = this.#selection.indexOf(c) > -1;
             if (c.x + m >= sX && c.y + m >= sY && c.x + c.width - m <= sX + sWidth && c.y + c.height - m <= sY + sHeight) {

@@ -284,8 +284,8 @@ class Circuits {
     }
 
     // Selects a circuit by UID.
-    select(newCircuitUID) {
-        const index = this.#circuits.findIndex((c) => c.uid === newCircuitUID);
+    select(uid) {
+        const index = this.#circuits.findIndex((c) => c.uid === uid);
         if (index > -1) {
             this.#currentCircuit = index;
             const circuit = this.#circuits[index];
@@ -293,7 +293,7 @@ class Circuits {
             app.grid.render();
             return;
         }
-        throw new Error('Could not find circuit ' + newCircuitUID);
+        throw new Error('Could not find circuit ' + uid);
     }
 
     // Creates a new circuit.
@@ -304,6 +304,14 @@ class Circuits {
         const circuit = new Circuit(label);
         this.#circuits.push(circuit);
         this.select(circuit.uid);
+    }
+
+    // Rename
+    rename(uid) {
+        const circuit = this.byUID(uid);
+        circuit.label = prompt('Circuit label', circuit.label);
+        app.grid.setCircuit(circuit);
+        app.grid.render();
     }
 
     // Serializes loaded circuits for saving to file.
