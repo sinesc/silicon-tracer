@@ -81,9 +81,9 @@ class Circuit {
         // get all component ports
         const components = this.data.filter((i) => !(i instanceof Wire));
         const ports = [];
-        const mergeNets = { }; // nets that connect to external ports and need to be merged with parent component nets
         const appendNets = []; // nets that are internal to custom components and just need to be added to the overall list of nets
         for (const component of components) {
+            const mergeNets = { }; // nets that connect to external ports and need to be merged with parent component nets
             // get custom component inner nets and identify which need to be merged with the parent component nets
             if (recurse && component instanceof CustomComponent) {
                 const componentCircuit = app.circuits.byUID(component.uid);
