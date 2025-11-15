@@ -6,22 +6,43 @@ app.initToolbar();
 app.startFocusMonitor();
 app.startLogoMonitor(document.querySelector('#header h1'));
 
-// temporary stuff
+// dev/debug stuff
 
-app.toolbar.createActionButton('Dump ASM', 'Outputs simulation code to console.', () => {
-    if (app.sim) {
-        let portInfo = [];
-        for (let { offset, meta } of app.sim.engine.nets) {
-            for (let port of meta) {
-                let gid = port.match(/@(g[a-f0-9]+)@/)[1] ?? null;
-                let item = app.circuits.current.itemByGID(gid);
-                if (item) {
-                    portInfo.push('// port ' + item.name + ' @ mem[' + offset + ']');
+if (false) {
+
+    app.toolbar.createActionButton('Dump ASM', 'Outputs simulation code to console.', () => {
+        if (app.sim) {
+            let portInfo = [];
+            for (let { offset, meta } of app.sim.engine.nets) {
+                for (let port of meta) {
+                    let gid = port.match(/@(g[a-f0-9]+)@/)[1] ?? null;
+                    let item = app.circuits.current.itemByGID(gid);
+                    if (item) {
+                        portInfo.push('// port ' + item.name + ' @ mem[' + offset + ']');
+                    }
                 }
             }
+            console.log(app.sim.engine.code() + portInfo.join("\n"));
+        } else {
+            console.log('No simulation running');
         }
-        console.log(app.sim.engine.code() + portInfo.join("\n"));
-    } else {
-        console.log('No simulation running');
-    }
-});
+    });
+
+    window.bin = function(value) {
+        let result = '';
+        for (let i of [ 5, 4, 1, 0 ]) {
+            result += ((value & (1 << i)) > 0 ? '1' : '.');
+            if (i === Simulation.ARRAY_BITS / 2) {
+                result += ' ';
+            }
+        }
+        return result;
+    };
+
+    window.binAll = function(val) {
+        for (let i = 0; i < val.length; ++i) {
+            console.log('' + i + ': ' + window.bin(val[i]));
+        }
+    };
+
+}
