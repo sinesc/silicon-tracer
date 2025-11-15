@@ -88,6 +88,11 @@ class NetList {
             // get custom component inner nets and identify which need to be merged with the parent component nets
             if (recurse && component instanceof CustomComponent) {
                 const subCircuit = app.circuits.byUID(component.uid);
+                if (component.getPorts().length === 0) {
+                    // TODO: ports are currenly only available after a grid link because we can't immediately set during unserialize (subcircuit might not have been unserialized yet)
+                    //  instead of this, run second pass after unserialize to set all customcomponent ports
+                    component.setPortsFromNames(subCircuit.ports);
+                }
                 const subPorts = subCircuit.data.filter((i) => i instanceof Port);
                 const subNetlist = NetList.#identifyNets(subCircuit, recurse, circuits);
                 for (const componentExternalPort of subPorts) {
