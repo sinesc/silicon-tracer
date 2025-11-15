@@ -16,6 +16,10 @@ class GridItem {
     #hoverMessages;
     #hoverRegistered;
 
+    constructor() {
+        this.gid = generateGID();
+    }
+
     // Serializes the grid item to a circuit item stored as part of a Circuit in Circuits.
     serialize() {
         return {
@@ -44,7 +48,6 @@ class GridItem {
         } else {
             throw new Error('Invalid component type "' + cname + '"');
         }
-        instance.gid = generateGID();
         for (let [ k, v ] of Object.entries(item)) {
             if (k !== '_') {
                 instance[k] = v;
