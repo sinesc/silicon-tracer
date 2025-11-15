@@ -45,6 +45,12 @@ class Circuit {
         return item;
     }
 
+    // Returns items that passed the given filter (c) => bool.
+    filterItems(filter) {
+        assert.function(filter);
+        return this.data.filter((c) => c !== null && filter(c));
+    }
+
     // Serializes a circuit for saving to file.
     serialize(ignore) {
         let data = [];
@@ -254,6 +260,7 @@ class Circuits {
         this.#circuits.push(...unserialized);
         for (let circuit of this.#circuits) {
             circuit.ports ??= CustomComponent.generateDefaultOutline(circuit.data);
+            Wire.compact(circuit);
         }
         return newCircuitIndex;
     }

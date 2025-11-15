@@ -172,58 +172,25 @@ class Wire extends GridItem {
         }
     }
 
-    // Compact/reduce overlapping wires.
-    static compact(grid) {
-        const preMergedWires = Wire.#getAllWires(grid);
-        const intersections = Wire.#wireIntersections(preMergedWires);
+    // Compact/reduce overlapping wires on the given grid or circuit.
+    static compact(container) {
+        assert(container instanceof Grid || container instanceof Circuit, 'container must be a Grid or Circuit');
+
+        const preMergedWires = Wire.#getAllWires(container);
+        const intersections = Wire.#findIntersections(preMergedWires);
+        let merged = false;
 
         for (let direction of [ 'h', 'v' ]) {
-            Wire.#mergeWires(grid, preMergedWires, direction);
+            merged ||=  Wire.#mergeWires(container, preMergedWires, direction);
         }
 
-        let isIntersected = (w, d) => {
-            for (let i of intersections) {
-                if (i.direction === d && !i.done && i.point.onLine(w)) {
-                    i.done = true;
-                    return i.point;
-                }
-            }
-            return null;
-        };
-
-        // repeat intersection point insertion until done (wire might have multiple intersection and this
-        // code only handles one each time). //TODO: at some point that should be refactored
-        let created;
-        let paranoiaLimit = 100;
-        do {
-            created = false;
-            const postMergedWires = Wire.#getAllWires(grid);
-            for (let direction of [ 'h', 'v' ]) {
-                let axis = direction === 'h' ? 'x' : 'y';
-                for (let w of postMergedWires[direction]) {
-                    let intersection = isIntersected(w.points, w.wire.direction);
-                    if (intersection !== null) {
-                        let length1 = intersection[axis] - w.points[0][axis];
-                        if (length1 !== 0) {
-                            let wire = new Wire(w.points[0].x, w.points[0].y, length1, direction, w.wire.color);
-                            wire.link(grid);
-                            created = true;
-                        }
-                        let length2 = w.points[1][axis] - intersection[axis];
-                        if (length2 !== 0) {
-                            let wire = new Wire(intersection.x, intersection.y, length2, direction, w.wire.color);
-                            wire.link(grid);
-                            created = true;
-                        }
-                        grid.removeItem(w.wire);
-                    }
-                }
-            }
-        } while (created && paranoiaLimit--);
+        if (merged) {
+            Wire.#restoreIntersections(container, intersections);
+        }
     }
 
     // compact() support. Find intentional intersection points (one wire ending on another).
-    static #wireIntersections(allWires) {
+    static #findIntersections(allWires) {
         let intersections = new Map();
         for (let direction of [ 'h', 'v' ]) {
             const otherDirection = direction === 'h' ? 'v' : 'h';
@@ -242,8 +209,51 @@ class Wire extends GridItem {
         return intersections.values().toArray();
     }
 
+    // compact() support. Restore intentional intersection points after merging unintentional endpoints.
+    static #restoreIntersections(container, intersections) {
+
+        let isIntersected = (w, d) => {
+            for (let i of intersections) {
+                if (i.direction === d && !i.done && i.point.onLine(w)) {
+                    i.done = true;
+                    return i.point;
+                }
+            }
+            return null;
+        };
+
+        // repeat intersection point insertion until done (wire might have multiple intersection and this
+        // code only handles one each time). //TODO: at some point that should be refactored
+        let created;
+        let paranoiaLimit = 100;
+
+        do {
+            created = false;
+            const postMergedWires = Wire.#getAllWires(container);
+            for (let direction of [ 'h', 'v' ]) {
+                let axis = direction === 'h' ? 'x' : 'y';
+                for (let w of postMergedWires[direction]) {
+                    let intersection = isIntersected(w.points, w.wire.direction);
+                    if (intersection !== null) {
+                        let length1 = intersection[axis] - w.points[0][axis];
+                        if (length1 !== 0) {
+                            container.addItem(new Wire(w.points[0].x, w.points[0].y, length1, direction, w.wire.color));
+                            created = true;
+                        }
+                        let length2 = w.points[1][axis] - intersection[axis];
+                        if (length2 !== 0) {
+                            container.addItem(new Wire(intersection.x, intersection.y, length2, direction, w.wire.color));
+                            created = true;
+                        }
+                        container.removeItem(w.wire);
+                    }
+                }
+            }
+        } while (created && paranoiaLimit--);
+    }
+
     // compact() support. Merge overlapping wires.
-    static #mergeWires(grid, allWires, direction) {
+    static #mergeWires(container, allWires, direction) {
 
         let axis = direction === 'h' ? 'x' : 'y';
         let wires = allWires[direction];
@@ -272,22 +282,27 @@ class Wire extends GridItem {
             }
         }
 
+        let merged = false;
+
         for (let w of wires) {
             if (!w.active) {
-                grid.removeItem(w.wire);
+                container.removeItem(w.wire);
+                merged = true;
             } else {
                 let length = w.points[1][axis] - w.points[0][axis];
                 w.wire.setEndpoints(w.points[0].x, w.points[0].y, length, direction, false);
             }
         }
+
+        return merged;
     }
 
     // compact() support. Returns all wires grouped by direction
-    static #getAllWires(grid) {
+    static #getAllWires(container) {
         return {
-            h: grid.filterItems((w) => w instanceof Wire && w.direction === 'h')
+            h: container.filterItems((w) => w instanceof Wire && w.direction === 'h')
                 .map((w) => ({ active: true, points: w.points(), wire: w })),
-            v: grid.filterItems((w) => w instanceof Wire && w.direction === 'v')
+            v: container.filterItems((w) => w instanceof Wire && w.direction === 'v')
                 .map((w) => ({ active: true, points: w.points(), wire: w })),
         };
     }

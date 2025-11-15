@@ -100,6 +100,7 @@ class Application {
 
     // Clear all simulations.
     clearSimulations() {
+        this.#currentSimulation = null;
         this.#simulations = { };
     }
 

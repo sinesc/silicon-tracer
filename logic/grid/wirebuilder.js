@@ -114,6 +114,7 @@ class WireBuilder extends GridItem {
                 this.grid.removeVisual(this['debug' + i]);
             }
         }
+        Wire.compact(this.grid);
     }
 
     // Sets wire corner bounding box.

@@ -129,8 +129,7 @@ class Grid {
 
     // Returns items that passed the given filter (c) => bool.
     filterItems(filter) {
-        assert.function(filter);
-        return this.#circuit.data.filter((c) => c !== null && filter(c));
+        return this.#circuit.filterItems(filter);
     }
 
     // Adds a visual element for a grid item to the grid.
@@ -208,7 +207,6 @@ class Grid {
         if (this.#circuit) {
             // compact overlapping wires and apply net colors to wires if the nets have changed
             //if (!this.#netCache) { // FIXME
-                //Wire.compact(this);
                 this.applyNetColors();
             //}
 
