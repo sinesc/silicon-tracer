@@ -11,16 +11,16 @@
 
     --wire-colorD: oklch(var(--wire-color-lightness) 0 0); /* disconnected */
     --wire-colorT: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 105); /* manual toggle */
-    --wire-color0: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 145);
-    --wire-color1: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 115);
-    --wire-color2: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 90);
-    --wire-color3: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 50);
-    --wire-color4: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 350);
-    --wire-color5: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 320);
-    --wire-color6: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 290);
-    --wire-color7: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 260);
-    --wire-color8: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 205);
-    --wire-color9: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 180);
+    --wire-color0: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 180);
+    --wire-color1: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 145);
+    --wire-color2: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 115);
+    --wire-color3: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 90 );
+    --wire-color4: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 50 );
+    --wire-color5: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 350);
+    --wire-color6: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 320);
+    --wire-color7: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 290);
+    --wire-color8: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 260);
+    --wire-color9: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 205);
 
     --wire-colorT-high: oklch(from var(--wire-colorT) calc(l * var(--wire-high-factor) * 1.3) c h);
     --wire-color0-high: oklch(from var(--wire-color0) calc(l * var(--wire-high-factor)) c h);
