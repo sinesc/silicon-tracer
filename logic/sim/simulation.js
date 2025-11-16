@@ -149,8 +149,7 @@ class Simulation {
         const netValue = this.#compileNetValue(netIndex);
         const ioValue = this.#compileIOValue(ioName);
         const delayMask = this.#compileDelayMask(io.delay);
-        // TODO: perf test: write back to temporary, then after computation back to input
-        return `${ioValue} = (${ioValue} & ${delayMask}) | (${netValue} << ${io.delay})`;   // shift net value up to newest io-data/signal bits and apply
+        return `${ioValue} = ((${ioValue} >> 1) & ${delayMask}) | (${netValue} << ${io.delay})`;   // shift net value up to newest io-data/signal bits and apply
     }
 
     // Compiles a gate reading from one or more inputs and writing to an output.
@@ -165,13 +164,12 @@ class Simulation {
         const signalSelect = signalOp === '' ? signalBit : `((${signalOp}) << ${Simulation.MAX_DELAY}) & ${signalBit}`; // FIXME: delay seems to be wrong/too short for signal part
         const resultSelect = signalOp === '' ? resultOp : `(${resultOp}) & ${Simulation.DATA_BIT_MASK}`;
         let code = `result = (${signalSelect}) | (${resultSelect}); `;                                     // set signal bit on computed result
-        // TODO: perf test: first write back io state (see todo in compileNetToInput)
         code += `${ioValue} = (${ioValue} & ${delayMask}) | (result << ${io.delay})`;       // shift result up to newest io-data/signal bits and apply
         return code;
     }
 
     // Compiles an output to net assertion.
-    #compileOutputToNet(netIndex, ioName) {
+    #compileOutputToNet(netIndex, ioName, reset) {
         const io = this.#getIO(ioName);
         const netSignalBit = Simulation.MAX_DELAY;           // oldest net signal bit (also the only signal bit for nets)
         const ioSignalBit = Simulation.MAX_DELAY + io.delay  // newest io signal bit
@@ -179,8 +177,13 @@ class Simulation {
         const ioValue = this.#compileIOValue(ioName);
         const signalMask = this.#compileConst(1 << ioSignalBit);
         let code = `signal = (${ioValue} & ${signalMask}) >> ${ioSignalBit}; `;             // do we have a signal on the output?
-        code += `mask = ~(signal | (signal << ${netSignalBit})); `;                         // build mask for oldest (and only) net-data/signal from io-signal (all bits enabled if no signal)
-        code += `${netValue} = (${netValue} & mask) | (${ioValue} & ~mask)`;                // apply io-data/signal to net if signal is set
+        code += `mask = signal | (signal << ${netSignalBit}); `;                            // build mask for oldest (and only) net-data/signal from io-signal (all bits disabled if no signal)
+        if (reset) {
+            // TODO: don't need separate mask variable here, inline. also remove invert operaiton from mask to avoid double inversion here
+            code += `${netValue} = (${ioValue} & mask)`;                                    // reset net to io-data/signal on first assert to net
+        } else {
+            code += `${netValue} = (${netValue} & ~mask) | (${ioValue} & mask)`;            // apply io-data/signal to net if signal is set
+        }
         return code;
     }
 
@@ -188,14 +191,16 @@ class Simulation {
     #compileTick() {
         let result = ''
         // advance time for all ports
-        for (const [ name ] of this.#ioMap) {
-            result += this.#compileIOValue(name) + ' >>= 1' + this.#endl('tick ' + name); // TODO combine this with port setting, e.g. "mem[0] >>= 1" and "mem[0] = (mem[0] & 0b11011101) | (mem[4] << 1);" to "mem[0] = ((mem[0] >> 1) & 0b11011101) | (mem[4] << 1);"
+        for (const [ name, io ] of this.#ioMap) {
+            if (!io.in) { // skip inputs, now shifted in compileNetToInput
+                result += this.#compileIOValue(name) + ' >>= 1' + this.#endl('tick ' + name);
+            }
         }
         // copy net-state to connected ports
         for (const [ netIndex, net ] of this.#nets.entries()) {
             for (const name of net.io) {
                 if (this.#getIO(name).in) {
-                    result += this.#compileNetToInput(name, netIndex) + this.#endl('set port ' + name + ' from net ' + netIndex);
+                    result += this.#compileNetToInput(name, netIndex) + this.#endl('shift input, set port ' + name + ' from net ' + netIndex);
                 }
             }
         }
@@ -209,15 +214,12 @@ class Simulation {
         }
         // copy port-state to attached net
         for (const [ netIndex, net ] of this.#nets.entries()) {
-            let isReset = false;
+            // first write to net resets it
+            let resetNet = true;
             for (const name of net.io ) {
                 if (this.#getIO(name).out) {
-                    // set net back to undefined if there is any output to it
-                    if (!isReset) {
-                        result += this.#compileNetValue(netIndex) + ' = 0' + this.#endl('reset net ' + netIndex); // TODO see if this can be combined with first net setting, e.g. by not reading current state from net there
-                        isReset = true;
-                    }
-                    result += this.#compileOutputToNet(netIndex, name) + this.#endl('set net ' + netIndex + ' from port ' + name);
+                    result += this.#compileOutputToNet(netIndex, name, resetNet) + this.#endl((resetNet ? 're' : '') + 'set net ' + netIndex + ' from port ' + name);
+                    resetNet = false;
                 }
             }
         }
