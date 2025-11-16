@@ -103,7 +103,7 @@ class Wire extends GridItem {
             for (let netWire of netList.nets[myNetId].wires) {
                 this.grid.circuit.itemByGID(netWire.gid).color = color;
             }
-            this.grid.render();
+            this.grid.markDirty();
         } else if (key === 'd' && what.type === 'hover') {
             this.#element.classList.add('wire-delete-animation');
             setTimeout(() => {

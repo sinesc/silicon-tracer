@@ -58,7 +58,7 @@ class Grid {
         document.addEventListener('keydown', this.#handleKeyDown.bind(this));
 
         // start renderloop
-        requestAnimationFrame(() => this.render());
+        requestAnimationFrame(() => this.#render());
         setInterval(() => { this.#infoFPSCount.last = this.#infoFPSCount.current; this.#infoFPSCount.current = 0; }, 1000);
     }
 
@@ -193,7 +193,7 @@ class Grid {
     }
 
     // Renders the grid and its components.
-    render() {
+    #render() {
 
         if (this.#dirty & Grid.DIRTY_OVERLAY) {
             this.#infoElement.innerHTML = '<div class="info-section">Circuit</div><div class="info-title">' +
@@ -258,7 +258,7 @@ class Grid {
 
         this.#infoFPSCount.current += 1;
         this.#dirty = Grid.DIRTY_NONE;
-        requestAnimationFrame(() => this.render());
+        requestAnimationFrame(() => this.#render());
     }
 
     // Returns the next to be used net color.
@@ -318,7 +318,7 @@ class Grid {
     }
 
     // Mark grid as dirty (require redraw). Set inner to also redraw component inner elements.
-    markDirty(inner) {
+    markDirty(inner = false) {
         assert.bool(inner);
         this.#dirty |= inner ? Grid.DIRTY_INNER : Grid.DIRTY_OUTER;
     }

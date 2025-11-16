@@ -261,7 +261,7 @@ class Application {
                 if (this.sim) {
                     this.autoCompile = false;
                     this.stopSimulation();
-                    this.grid.render();
+                    this.grid.markDirty();
                 } else {
                     this.startSimulation();
                 }
