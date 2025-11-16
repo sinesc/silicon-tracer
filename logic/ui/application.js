@@ -28,15 +28,24 @@ class Application {
         this.#status.classList.add('app-status');
         gridParent.appendChild(this.#status);
 
+        let ticksPerSecond = 0;
+        const ticksPerInterval = 100000;
+
         setInterval(() => { // TODO: bleh
             if (this.autoCompile || this.sim) {
                 this.startSimulation();
-                for (let i = 0; i < 10; ++i) {  // TODO: bleh temp code, look into webworkers
+                for (let i = 0; i < ticksPerInterval; ++i) {  // TODO: bleh temp code, look into webworkers
                     this.sim.engine.simulate();
                 }
-                this.grid.render();
+                ticksPerSecond += ticksPerInterval;
             }
-        }, 180);
+        }, 0);
+
+        setInterval(() => {
+            const metric = Intl.NumberFormat("en", { notation: "compact", maximumSignificantDigits: 3 }).format(ticksPerSecond);
+            this.grid.setSimulationDetails('Single core<br>' + metric + ' ticks/second');
+            ticksPerSecond = 0;
+        }, 1000);
     }
 
     // Returns list of simulations

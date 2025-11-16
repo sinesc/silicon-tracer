@@ -7,19 +7,21 @@ class Grid {
     static ZOOM_LEVELS = [ 0.5, 0.65, 0.85, 1.0, 1.25, 1.50, 1.75, 2.0, 2.5, 3.0 ];
     static SPACING = 20;
     static STATUS_DELAY = 500;
-    static DIRTY_NONE  = 0b0000;
-    static DIRTY_OUTER = 0b0001;
-    static DIRTY_INNER = 0b0010;
+    static DIRTY_NONE       = 0b0000;
+    static DIRTY_OUTER      = 0b0001;
+    static DIRTY_INNER      = 0b0010;
+    static DIRTY_OVERLAY    = 0b0100;
 
     #zoom = 1.25;
     #offsetX = 0;
     #offsetY = 0;
-    #dirty = Grid.DIRTY_INNER | Grid.DIRTY_OUTER;
+    #dirty = Grid.DIRTY_INNER | Grid.DIRTY_OUTER | Grid.DIRTY_OVERLAY;
 
     #element;
     #infoElement;
     #infoCircuitLabel = null;
     #infoSimulationLabel = null;
+    #infoSimulationDetails = null;
     #selectionElement;
     #selection = [];
     #hotkeyTarget = null;
@@ -53,6 +55,9 @@ class Grid {
         // TODO: may have to go to parent UI
         // TODO: GridItems currently register document.onmouse* temporarily. those should probably follow the same logic: register onmouse* here and then pass on to whichever element wants to have them
         document.addEventListener('keydown', this.#handleKeyDown.bind(this));
+
+        // start renderloop
+        requestAnimationFrame(() => this.render());
     }
 
     // Returns the circuit currently on the grid.
@@ -72,7 +77,7 @@ class Grid {
         this.#circuit.ports = CustomComponent.generateDefaultOutline(this.#circuit);
         this.#circuit = null;
         this.#infoCircuitLabel = '';
-        //this.#updateInfo();
+        this.#dirty |= Grid.DIRTY_OVERLAY;
     }
 
     // Updates current circuit from grid state.
@@ -95,13 +100,19 @@ class Grid {
         }
         this.#circuit = circuit;
         this.#infoCircuitLabel = circuit.label;
-        this.#updateInfo();
+        this.#dirty |= Grid.DIRTY_OVERLAY;
     }
 
     // Sets the simulation label displayed on the grid.
     setSimulationLabel(label) {
+        this.#dirty |= this.#infoSimulationLabel !== label ? Grid.DIRTY_OVERLAY : 0;
         this.#infoSimulationLabel = label;
-        this.#updateInfo();
+    }
+
+    // Sets the simulation details displayed on the grid.
+    setSimulationDetails(details) {
+        this.#dirty |= this.#infoSimulationDetails !== details ? Grid.DIRTY_OVERLAY : 0;
+        this.#infoSimulationDetails = details;
     }
 
     // Adds an item to the grid. Automatically done by GridItem constructor.
@@ -182,7 +193,17 @@ class Grid {
     // Renders the grid and its components.
     render() {
 
-        if (this.#dirty) {
+        if (this.#dirty & Grid.DIRTY_OVERLAY) {
+            this.#infoElement.innerHTML = '<div class="info-section">Circuit</div><div class="info-title">' +
+                this.#infoCircuitLabel +
+                '</div>' +
+                (!this.#infoSimulationLabel ? '' : '<div class="info-section">Simulation</div><div class="info-title">' + this.#infoSimulationLabel +
+                    (!this.#infoSimulationDetails ? '' : '</div><div class="info-details">' + (this.#infoSimulationDetails ?? '') + '</div>')
+                );
+        }
+
+        if (this.#dirty & (Grid.DIRTY_OUTER | Grid.DIRTY_INNER)) {
+
             // add below/above/current zoom level classes to grid to enable zoom based styling
             if (!this.#element.classList.contains('grid-zoom-' + (this.zoom * 100))) {
                 for (let zoom of Grid.ZOOM_LEVELS) {
@@ -211,14 +232,16 @@ class Grid {
 
         if (this.#circuit) {
 
+            const dirtyGrid = this.#dirty & (Grid.DIRTY_OUTER | Grid.DIRTY_INNER);
+
             // apply wire net colors to attached ports
-            if (this.#dirty || this.#circuit.data.findIndex((item) => item.dirty) !== -1) {
+            if (dirtyGrid || this.#circuit.data.findIndex((item) => item.dirty) !== -1) {
                 this.applyNetColors();
             }
 
             // render components
             for (let item of this.#circuit.data) {
-                if (this.#dirty || item.dirty) {
+                if (dirtyGrid || item.dirty) {
                     // optionally require full redraw from the item
                     if (this.#dirty & Grid.DIRTY_INNER) {
                         item.dirty = true;
@@ -231,6 +254,7 @@ class Grid {
         }
 
         this.#dirty = Grid.DIRTY_NONE;
+        requestAnimationFrame(() => this.render());
     }
 
     // Returns the next to be used net color.
@@ -346,16 +370,6 @@ class Grid {
     // Serializes the grid config to the current circuit.
     #serializeConfig() {
         return { zoom: this.zoom, offsetX: Math.round(this.offsetX), offsetY: Math.round(this.offsetY) };
-    }
-
-    // Updates info overlay text.
-    #updateInfo() {
-        if (this.#infoCircuitLabel === this.#infoSimulationLabel) {
-            this.#infoElement.innerHTML = '<span>Circuit/Simulation</span><div class="circuit-label">' + this.#infoCircuitLabel + '</div>';
-        } else {
-            this.#infoElement.innerHTML = '<span>Circuit</span><div class="circuit-label">' + this.#infoCircuitLabel +
-                '</div>' + (this.#infoSimulationLabel ? '<span>Simulation</span><div class="simulation-label">' + this.#infoSimulationLabel + '</div>' : '');
-        }
     }
 
     // Called when a key is pressed and then repeatedly while being held.

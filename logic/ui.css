@@ -409,14 +409,22 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
     pointer-events: none;
     text-align: right;
 }
-.grid-info span {
+.grid-info .info-section {
     opacity: 0.6;
     font-size: 14px;
     font-weight: bold;
 }
-.grid-info div {
+.grid-info .info-title + .info-section {
+    margin-top: 5px;
+}
+.grid-info .info-title {
     opacity: 0.3;
     font-size: 28px;
+    font-weight: bold;
+}
+.grid-info .info-details {
+    opacity: 0.3;
+    font-size: 14px;
     font-weight: bold;
 }
 .grid-selection {
