@@ -31,10 +31,10 @@ class Application {
         let ticksPerSecond = 0;
         const ticksPerInterval = 100000;
 
-        setInterval(() => { // TODO: bleh
+        setInterval(() => { // TODO: look into webworkers
             if (this.autoCompile || this.sim) {
                 this.startSimulation();
-                for (let i = 0; i < ticksPerInterval; ++i) {  // TODO: bleh temp code, look into webworkers
+                for (let i = 0; i < ticksPerInterval; ++i) {
                     this.sim.engine.simulate();
                 }
                 ticksPerSecond += ticksPerInterval;
@@ -42,7 +42,7 @@ class Application {
         }, 0);
 
         setInterval(() => {
-            const metric = Intl.NumberFormat("en", { notation: "compact", maximumSignificantDigits: 3 }).format(ticksPerSecond);
+            const metric = Number.formatSI(ticksPerSecond);
             this.grid.setSimulationDetails('Single core<br>' + metric + ' ticks/s');
             ticksPerSecond = 0;
         }, 1000);
