@@ -116,8 +116,6 @@ class Circuits {
         const content = JSON.parse(await file.text());
         if (clear) {
             this.#circuits = [ ];
-        } else {
-            this.#pruneEmpty();
         }
         const newCircuitIndex = this.#unserialize(content);
         this.select(this.#circuits[newCircuitIndex].uid);
@@ -257,18 +255,5 @@ class Circuits {
     // Returns a generated name if the given name is empty.
     #generateName(name) {
         return name || 'New circuit #' + (this.#circuits.length + 1);
-    }
-
-    // Prunes empty circuits (app starts with one empty circuit and loading appends by default, so the empty circuit should be pruned).
-    #pruneEmpty() {
-        for (let i = this.#circuits.length - 1; i >= 0; --i) {
-            // TODO: don't prune user created empty circuits
-            if (this.#circuits[i].data.length === 0) {
-                this.#circuits.splice(i, 1);
-                if (this.#currentCircuit === i) {
-                    this.#currentCircuit = -1;
-                }
-            }
-        }
     }
 }
