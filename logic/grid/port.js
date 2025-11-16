@@ -71,18 +71,30 @@ class Port extends Interactive {
     }
 
     // Renders the port onto the grid.
-    render(reason) {
+    render() {
         if (this.element.classList.contains('component-rotate-animation')) {
             return;
         }
 
-        super.render(reason);
+        super.render();
 
+        // render permanently visible label
         let side = ComponentPort.portSide(this.rotation, 'bottom');
         let labelCoords = ComponentPort.portCoords(this.width, this.height, side, 0, true);
         this.renderLabel(this.#labelElement, side, labelCoords.x * this.grid.zoom, labelCoords.y * this.grid.zoom, this.name, false, true);
 
+        // render user-set state (lightbulb/circle thing)
         this.element.setAttribute('data-port-state', this.#state ?? '');
-        this.element.setAttribute('data-net-state', this.#port.netId !== null && app.sim ? app.sim.engine.getNet(this.#port.netId) : '');
+    }
+
+    // Renders/updates the current net state of the wire to the grid.
+    renderNetState() {
+        super.renderNetState();
+
+        // render extra big state indicator around entire component
+        let state = this.#port.netId !== null && app.sim ? '' + app.sim.engine.getNet(this.#port.netId) : '';
+        if (this.element.getAttribute('data-net-state') !== state) {
+            this.element.setAttribute('data-net-state', state);
+        }
     }
 }

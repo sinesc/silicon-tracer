@@ -3,28 +3,30 @@
 // Base class for grid items.
 class GridItem {
 
-    // Grid ID used to link simulation items with grid items
-    gid;
-
-    // Reference to linked grid
+    // Reference to linked grid.
     grid = null;
 
+    // Whether the grid item needs to be rendered.
+    dirty = true;
+
+    // Grid ID used to link simulation items with grid items
+    #gid;
+
     // Position on grid
-    x;
-    y;
+    #position;
 
+    // Registered hover messages, Map(element => message).
     #hoverMessages;
-    #hoverRegistered;
 
-    constructor() {
-        this.gid = generateGID();
+    constructor(x, y) {
+        this.#gid = generateGID();
+        this.#position = new Point(...Grid.align(x, y));
     }
 
-    // Serializes the grid item to a circuit item stored as part of a Circuit in Circuits.
+    // Serializes the object for writing to disk.
     serialize() {
         return {
             _: { c: this.constructor.name, a: [] },
-            gid: this.gid,
         };
     }
 
@@ -59,13 +61,12 @@ class GridItem {
     // Link item to a grid, enabling it to be rendered.
     link(grid) {
         this.grid = grid;
-        this.#hoverRegistered = new WeakMap();
         this.#hoverMessages = new WeakMap();
+        this.dirty = true;
     }
 
     // Remove item from grid.
     unlink() {
-        this.#hoverRegistered = null;
         this.#hoverMessages = null;
         this.grid = null;
     }
@@ -76,10 +77,13 @@ class GridItem {
     // Implement to render the item to the grid.
     render() { }
 
-    // Implement to return whether the element is selected.
+    // Implement to render the net-state of the item to the grid.
+    renderNetState() { }
+
+    // Implement to return whether the grid item is selected.
     get selected() { return false; }
 
-    // Implement to apply/remove component selection effect.
+    // Implement to apply/remove grid item selection effect.
     set selected(status) { }
 
     // Implement to handle drag events.
@@ -87,6 +91,35 @@ class GridItem {
 
     // Implement to handle hover hotkey events.
     onHotkey(key, ...args) { }
+
+    // Return grid item x position.
+    get x() {
+        return this.#position.x;
+    }
+
+    // Set grid item x position.
+    set x(value) {
+        assert.number(value);
+        this.dirty ||= this.#position.x !== value;
+        this.#position.x = value;
+    }
+
+    // Return grid item y position.
+    get y() {
+        return this.#position.y;
+    }
+
+    // Set grid item y position.
+    set y(value) {
+        assert.number(value);
+        this.dirty ||= this.#position.y !== value;
+        this.#position.y = value;
+    }
+
+    // Return grid item gid.
+    get gid() {
+        return this.#gid;
+    }
 
     // Gets the grid-relative screen x-coordinate for this grid item.
     get visualX() {
@@ -119,10 +152,8 @@ class GridItem {
     // Note: setHoverMessage() automatically registers the element.
     // TODO: some sort of error/result if already registered because this causes new args to be ignored
     registerHoverWatch(element, ...args) {
-        if (!this.#hoverRegistered.has(element)) {
-            element.addEventListener('mouseenter', this.#handleHover.bind(this, element, 'start', args));
-            element.addEventListener('mouseleave', this.#handleHover.bind(this, element, 'stop', args));
-        }
+        element.addEventListener('mouseenter', this.#handleHover.bind(this, element, 'start', args));
+        element.addEventListener('mouseleave', this.#handleHover.bind(this, element, 'stop', args));
     }
 
     // Sets a status message to be displayed while mouse-hovering the visual element. Additional arguments will be passed to the

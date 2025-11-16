@@ -7,10 +7,14 @@ class Grid {
     static ZOOM_LEVELS = [ 0.5, 0.65, 0.85, 1.0, 1.25, 1.50, 1.75, 2.0, 2.5, 3.0 ];
     static SPACING = 20;
     static STATUS_DELAY = 500;
+    static DIRTY_NONE  = 0b0000;
+    static DIRTY_OUTER = 0b0001;
+    static DIRTY_INNER = 0b0010;
 
-    zoom = 1.25;
-    offsetX = 0;
-    offsetY = 0;
+    #zoom = 1.25;
+    #offsetX = 0;
+    #offsetY = 0;
+    #dirty = Grid.DIRTY_INNER | Grid.DIRTY_OUTER;
 
     #element;
     #infoElement;
@@ -38,7 +42,6 @@ class Grid {
         this.#element.appendChild(this.#selectionElement);
 
         parent.appendChild(this.#element);
-        this.render();
 
         if (Grid.DEBUG_COORDS) {
             this.debug = document.createElement('div');
@@ -176,45 +179,58 @@ class Grid {
         ];
     }
 
-    // Renders the grid and its components. If the optional reason is 'move' some render steps may be optimized out.
-    render(reason) {
+    // Renders the grid and its components.
+    render() {
 
-        if (!this.#element.classList.contains('grid-zoom-' + (this.zoom * 100))) {
+        if (this.#dirty) {
             // add below/above/current zoom level classes to grid to enable zoom based styling
-            for (let zoom of Grid.ZOOM_LEVELS) {
-                let name = zoom * 100;
-                this.#element.classList.remove('grid-zoom-above-' + name);
-                this.#element.classList.remove('grid-zoom-' + name);
-                this.#element.classList.remove('grid-zoom-below-' + name);
-                if (this.zoom > zoom) {
-                    this.#element.classList.add('grid-zoom-above-' + name);
-                } else if (this.zoom < zoom) {
-                    this.#element.classList.add('grid-zoom-below-' + name);
-                } else {
-                    this.#element.classList.add('grid-zoom-' + name);
+            if (!this.#element.classList.contains('grid-zoom-' + (this.zoom * 100))) {
+                for (let zoom of Grid.ZOOM_LEVELS) {
+                    let name = zoom * 100;
+                    this.#element.classList.remove('grid-zoom-above-' + name);
+                    this.#element.classList.remove('grid-zoom-' + name);
+                    this.#element.classList.remove('grid-zoom-below-' + name);
+                    if (this.zoom > zoom) {
+                        this.#element.classList.add('grid-zoom-above-' + name);
+                    } else if (this.zoom < zoom) {
+                        this.#element.classList.add('grid-zoom-below-' + name);
+                    } else {
+                        this.#element.classList.add('grid-zoom-' + name);
+                    }
                 }
             }
+
+            // create background grid pattern
+            let spacing = Grid.SPACING * this.zoom;
+            let offsetX = this.offsetX * this.zoom;
+            let offsetY = this.offsetY * this.zoom;
+            this.#element.style.backgroundSize = spacing + 'px ' + spacing + 'px';
+            this.#element.style.backgroundPositionX = (offsetX % spacing) + 'px';
+            this.#element.style.backgroundPositionY = (offsetY % spacing) + 'px';
         }
 
-        // create background grid pattern
-        let spacing = Grid.SPACING * this.zoom;
-        let offsetX = this.offsetX * this.zoom;
-        let offsetY = this.offsetY * this.zoom;
-        this.#element.style.backgroundSize = spacing + 'px ' + spacing + 'px';
-        this.#element.style.backgroundPositionX = (offsetX % spacing) + 'px';
-        this.#element.style.backgroundPositionY = (offsetY % spacing) + 'px';
-
         if (this.#circuit) {
-            // compact overlapping wires and apply net colors to wires if the nets have changed
-            //if (!this.#netCache) { // FIXME
+
+            // apply wire net colors to attached ports
+            if (this.#dirty || this.#circuit.data.findIndex((item) => item.dirty) !== -1) {
                 this.applyNetColors();
-            //}
+            }
 
             // render components
             for (let item of this.#circuit.data) {
-                item.render(reason);
+                if (this.#dirty || item.dirty) {
+                    // optionally require full redraw from the item
+                    if (this.#dirty & Grid.DIRTY_INNER) {
+                        item.dirty = true;
+                    }
+                    item.render();
+                    item.dirty = false;
+                }
+                item.renderNetState();
             }
         }
+
+        this.#dirty = Grid.DIRTY_NONE;
     }
 
     // Returns the next to be used net color.
@@ -271,6 +287,48 @@ class Grid {
         if (this.#hotkeyTarget && this.#hotkeyTarget.gridItem === gridItem && (!this.#hotkeyTarget.locked || unlock)) {
             this.#hotkeyTarget = null;
         }
+    }
+
+    // Mark grid as dirty (require redraw). Set inner to also redraw component inner elements.
+    markDirty(inner) {
+        assert.bool(inner);
+        this.#dirty |= inner ? Grid.DIRTY_INNER : Grid.DIRTY_OUTER;
+    }
+
+    // Sets the zoom factor.
+    get zoom() {
+        return this.#zoom;
+    }
+
+    // Gets the zoom factor.
+    set zoom(value) {
+        assert.number(value);
+        this.#dirty |= this.#zoom !== value ? Grid.DIRTY_INNER : 0;
+        this.#zoom = value;
+    }
+
+    // Sets grid x-offset.
+    get offsetX() {
+        return this.#offsetX;
+    }
+
+    // Gets grid x-offset.
+    set offsetX(value) {
+        assert.number(value);
+        this.#dirty |= this.#offsetX !== value ? Grid.DIRTY_OUTER : 0;
+        this.#offsetX = value;
+    }
+
+    // Sets grid y-offset.
+    get offsetY() {
+        return this.#offsetY;
+    }
+
+    // Gets grid y-offset.
+    set offsetY(value) {
+        assert.number(value);
+        this.#dirty |= this.#offsetY !== value ? Grid.DIRTY_OUTER : 0;
+        this.#offsetY = value;
     }
 
     // Gets the current zoom level index.

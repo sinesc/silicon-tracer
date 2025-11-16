@@ -1,7 +1,7 @@
 "use strict";
 
 // Used to build wire corners.
-class WireBuilder extends GridItem {
+class WireBuilder extends GridItem { // TODO: Not actually a grid item, but uses a lot of grid item functionality.
 
     static DEBUG_BOX = false;
     static DRAWING_CONNECTION_MESSAGE = 'Drawing connection. <i>R</i>: Add point, continue drawing from here.';
@@ -24,7 +24,7 @@ class WireBuilder extends GridItem {
         assert.function(fliptest, true);
 
         // TODO: try to avoid GridItem parent without duplicating drag-support
-        super();
+        super(0, 0);
         this.grid = app.grid;
 
         [ x1, y1 ] = Grid.align(x1, y1);
@@ -94,11 +94,10 @@ class WireBuilder extends GridItem {
             this.grid.releaseHotkeyTarget(this, true);
             this.#remove();
             this.grid.invalidate();
-            this.grid.render();
         }
     }
 
-    // Upon removal of the builder also remove any zero length wires produced by it.
+    // Upon removal of the builder also remove any zero length wires produced by it and compact wires.
     #remove() {
         this.#wireH.element.classList.remove('wire-building');
         this.#wireV.element.classList.remove('wire-building');
@@ -115,6 +114,7 @@ class WireBuilder extends GridItem {
             }
         }
         Wire.compact(this.grid);
+        this.grid.markDirty(true);
     }
 
     // Sets wire corner bounding box.

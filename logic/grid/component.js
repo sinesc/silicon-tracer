@@ -71,15 +71,13 @@ class Component extends GridItem {
     #dropPreview;
     #ports;
     #type;
-
-    width;
-    height;
-    rotation = 0;
+    #width;
+    #height;
+    #rotation = 0;
 
     constructor(x, y, ports, type) {
         assert.string(type);
-        super();
-        [ this.x, this.y ] = Grid.align(x, y);
+        super(x, y);
         this.setPortsFromNames(ports);
         this.#type = type;
     }
@@ -89,9 +87,9 @@ class Component extends GridItem {
         return {
             ...super.serialize(),
             _: { c: this.constructor.name, a: [ this.x, this.y, this.#ports.map((p) => p.name), this.#type ]},
-            rotation: this.rotation,
-            width: this.width,
-            height: this.height,
+            rotation: this.#rotation,
+            width: this.#width,
+            height: this.#height,
         };
     }
 
@@ -181,6 +179,42 @@ class Component extends GridItem {
         }
     }
 
+    // Return grid item width.
+    get width() {
+        return this.#width;
+    }
+
+    // Set grid item width.
+    set width(value) {
+        assert.number(value);
+        this.dirty ||= this.#width !== value;
+        this.#width = value;
+    }
+
+    // Return grid item height.
+    get height() {
+        return this.#height;
+    }
+
+    // Set grid item height.
+    set height(value) {
+        assert.number(value);
+        this.dirty ||= this.#height !== value;
+        this.#height = value;
+    }
+
+    // Return grid item rotation.
+    get rotation() {
+        return this.#rotation;
+    }
+
+    // Set grid item rotation.
+    set rotation(value) {
+        assert.number(value);
+        this.dirty ||= this.#rotation !== value;
+        this.#rotation = value;
+    }
+
     // Get component type string.
     get type() {
         return this.#type;
@@ -259,15 +293,14 @@ class Component extends GridItem {
             setTimeout(() => {
                 this.#element.classList.remove('component-rotate-animation');
                 this.grid.invalidate();
-                this.grid.render();
+                this.dirty = true;
+                this.render();
             }, 150);
         } else if (key === 'd' && what.type === 'hover') {
             this.#element.classList.add('component-delete-animation');
             setTimeout(() => {
                 this.#element.classList.remove('component-delete-animation');
-                let grid = this.grid;
-                this.grid.removeItem(this); // unsets .grid
-                grid.render();
+                this.grid.removeItem(this);
             }, 150);
         }
     }
@@ -301,7 +334,6 @@ class Component extends GridItem {
             what.grabOffsetX = null;
             what.grabOffsetY = null;
             this.grid.invalidate();
-            this.grid.render();
         }
     }
 
@@ -335,33 +367,6 @@ class Component extends GridItem {
         }
     }
 
-    // Renders the component onto the grid.
-    render(reason) {
-
-        if (this.#element.classList.contains('component-rotate-animation')) {
-            return;
-        }
-
-        // don't need to update ports when only moving
-        if (reason !== 'move') {
-            this.#renderPorts();
-        }
-
-        this.#element.style.left = this.visualX + "px";
-        this.#element.style.top = this.visualY + "px";
-        this.#element.style.width = this.visualWidth + "px";
-        this.#element.style.height = this.visualHeight + "px";
-        this.element.setAttribute('data-component-rotation', this.rotation);
-
-        if ((this.width < this.height || (this.width === this.height && this.#ports[this.rotatedTop].length === 0 && this.#ports[this.rotatedBottom].length === 0)) && this.visualWidth < 200) {
-            this.#inner.style.lineHeight = (this.visualWidth - (Component.INNER_MARGIN * 2)) + "px";
-            this.#inner.style.writingMode = 'vertical-rl';
-        } else {
-            this.#inner.style.lineHeight = (this.visualHeight - (Component.INNER_MARGIN * 2)) + "px";
-            this.#inner.style.writingMode = 'horizontal-tb';
-        }
-    }
-
     // Returns flat list of ports.
     getPorts() {
         let ports = [  ];
@@ -391,6 +396,33 @@ class Component extends GridItem {
     updateDimensions() {
         this.width = Math.max(Grid.SPACING * 2, (this.#ports[this.rotatedTop].length + 1) * Grid.SPACING, (this.#ports[this.rotatedBottom].length + 1) * Grid.SPACING);
         this.height = Math.max(Grid.SPACING * 2, (this.#ports[this.rotatedLeft].length + 1) * Grid.SPACING, (this.#ports[this.rotatedRight].length + 1) * Grid.SPACING);
+    }
+
+    // Renders the component onto the grid.
+    render() {
+
+        if (this.#element.classList.contains('component-rotate-animation')) {
+            return;
+        }
+
+        // don't need to update ports when only moving
+        if (this.dirty) {
+            this.#renderPorts();
+        }
+
+        this.#element.style.left = this.visualX + "px";
+        this.#element.style.top = this.visualY + "px";
+        this.#element.style.width = this.visualWidth + "px";
+        this.#element.style.height = this.visualHeight + "px";
+        this.element.setAttribute('data-component-rotation', this.rotation);
+
+        if ((this.width < this.height || (this.width === this.height && this.#ports[this.rotatedTop].length === 0 && this.#ports[this.rotatedBottom].length === 0)) && this.visualWidth < 200) {
+            this.#inner.style.lineHeight = (this.visualWidth - (Component.INNER_MARGIN * 2)) + "px";
+            this.#inner.style.writingMode = 'vertical-rl';
+        } else {
+            this.#inner.style.lineHeight = (this.visualHeight - (Component.INNER_MARGIN * 2)) + "px";
+            this.#inner.style.writingMode = 'horizontal-tb';
+        }
     }
 
     // Renders a label next to a port.
@@ -472,8 +504,17 @@ class Component extends GridItem {
             item.element.style.lineHeight = visualPortSize + 'px';
             item.element.innerHTML = '<span>' + item.name.slice(0, 1) + '</span>';
             item.element.setAttribute('data-net-color', item.color ?? '');
-            item.element.setAttribute('data-net-state', item.netId !== null && app.sim ? app.sim.engine.getNet(item.netId) : '');
             this.renderLabel(item.labelElement, side, x, y, item.name);
+        });
+    }
+
+    // Renders/updates the current net state of the component ports to the grid.
+    renderNetState() {
+        this.getPorts().forEach((item) => {
+            let state = item.netId !== null && app.sim ? '' + app.sim.engine.getNet(item.netId) : '';
+            if (item.element.getAttribute('data-net-state') !== state) {
+                item.element.setAttribute('data-net-state', state);
+            }
         });
     }
 }

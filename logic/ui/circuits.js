@@ -52,17 +52,8 @@ class Circuit {
     }
 
     // Serializes a circuit for saving to file.
-    serialize(ignore) {
-        let data = [];
-        for (let item of this.data) {
-            let serialized = {};
-            for (let [ key, value ] of Object.entries(item.serialize())) {
-                if (!ignore.includes(key)) {
-                    serialized[key] = value;
-                }
-            }
-            data.push(serialized);
-        }
+    serialize() {
+        let data = this.data.map((item) => item.serialize());
         return { label: this.label, uid: this.uid, data, ports: this.ports, gridConfig: this.gridConfig };
     }
 
@@ -85,7 +76,7 @@ class Circuit {
                 const component = this.itemByGID(gid);
                 if (component) {
                     const port = component.portByName(name);
-                    port.netId = net.netId;
+                    port.netId = net.netId; // FIXME: port is sometimes undefined, figure out when/why. possibly after rename in subcomponent
                 }
             }
             // link wires
@@ -224,7 +215,6 @@ class Circuits {
             this.#currentCircuit = index;
             const circuit = this.#circuits[index];
             app.grid.setCircuit(circuit);
-            app.grid.render();
             return;
         }
         throw new Error('Could not find circuit ' + uid);
@@ -245,12 +235,11 @@ class Circuits {
         const circuit = this.byUID(uid);
         circuit.label = prompt('Circuit label', circuit.label);
         app.grid.setCircuit(circuit);
-        app.grid.render();
     }
 
     // Serializes loaded circuits for saving to file.
     #serialize() {
-        return { version: 1, circuits: this.#circuits.map((c) => c.serialize([ 'gid' ])) };
+        return { version: 1, circuits: this.#circuits.map((c) => c.serialize()) };
     }
 
     // Unserializes circuits from file.

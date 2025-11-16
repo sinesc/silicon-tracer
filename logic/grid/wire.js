@@ -14,16 +14,11 @@ class Wire extends GridItem {
     height;
     direction;
 
-    constructor(x1, y1, length, direction, color = null) {
-        assert.number(x1);
-        assert.number(y1);
+    constructor(x, y, length, direction, color = null) {
         assert.number(length);
         assert.string(direction);
         assert.number(color, true);
-        super();
-        [ x1, y1 ] = Grid.align(x1, y1);
-        this.x = x1;
-        this.y = y1;
+        super(x, y);
         this.width = direction === 'h' ? length : 0;
         this.height = direction === 'v' ? length : 0;
         this.color = color ?? null;
@@ -113,9 +108,7 @@ class Wire extends GridItem {
             this.#element.classList.add('wire-delete-animation');
             setTimeout(() => {
                 this.#element.classList.remove('wire-delete-animation');
-                let grid = this.grid;
-                this.grid.removeItem(this); // unsets .grid
-                grid.render();
+                this.grid.removeItem(this);
             }, 150);
         }
     }
@@ -149,7 +142,6 @@ class Wire extends GridItem {
         let t = thickness / 2;
 
         this.#element.setAttribute('data-net-color', this.color ?? '');
-        this.#element.setAttribute('data-net-state', this.netId !== null && app.sim ? app.sim.engine.getNet(this.netId) : '');
 
         if (this.width !== 0) {
             let hx = width < 0 ? x + width : x;
@@ -169,6 +161,14 @@ class Wire extends GridItem {
             this.#element.style.display = '';
         } else {
             this.#element.style.display = 'none';
+        }
+    }
+
+    // Renders/updates the current net state of the wire to the grid.
+    renderNetState() {
+        let state = this.netId !== null && app.sim ? '' + app.sim.engine.getNet(this.netId) : '';
+        if (this.#element.getAttribute('data-net-state') !== state) {
+            this.#element.setAttribute('data-net-state', state);
         }
     }
 
