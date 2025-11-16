@@ -200,7 +200,7 @@ class Simulation {
         for (const [ netIndex, net ] of this.#nets.entries()) {
             for (const name of net.io) {
                 if (this.#getIO(name).in) {
-                    result += this.#compileNetToInput(name, netIndex) + this.#endl('shift input, set port ' + name + ' from net ' + netIndex);
+                    result += this.#compileNetToInput(name, netIndex) + this.#endl('tick and set ' + name + ' from net ' + netIndex);
                 }
             }
         }
@@ -218,7 +218,7 @@ class Simulation {
             let resetNet = true;
             for (const name of net.io ) {
                 if (this.#getIO(name).out) {
-                    result += this.#compileOutputToNet(netIndex, name, resetNet) + this.#endl((resetNet ? 're' : '') + 'set net ' + netIndex + ' from port ' + name);
+                    result += this.#compileOutputToNet(netIndex, name, resetNet) + this.#endl((resetNet ? 're' : '') + 'set net ' + netIndex + ' from ' + name);
                     resetNet = false;
                 }
             }
