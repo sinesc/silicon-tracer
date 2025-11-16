@@ -468,7 +468,6 @@ class Grid {
             // drag grid
             this.offsetX = gridOffsetX + deltaX / this.zoom;
             this.offsetY = gridOffsetY + deltaY / this.zoom;
-            this.render('move');
         }
     }
 
