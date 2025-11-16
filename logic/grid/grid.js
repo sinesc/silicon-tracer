@@ -22,6 +22,7 @@ class Grid {
     #infoCircuitLabel = null;
     #infoSimulationLabel = null;
     #infoSimulationDetails = null;
+    #infoFPSCount = { current: 0, last: 0 };
     #selectionElement;
     #selection = [];
     #hotkeyTarget = null;
@@ -58,6 +59,7 @@ class Grid {
 
         // start renderloop
         requestAnimationFrame(() => this.render());
+        setInterval(() => { this.#infoFPSCount.last = this.#infoFPSCount.current; this.#infoFPSCount.current = 0; }, 1000);
     }
 
     // Returns the circuit currently on the grid.
@@ -199,7 +201,8 @@ class Grid {
                 '</div>' +
                 (!this.#infoSimulationLabel ? '' : '<div class="info-section">Simulation</div><div class="info-title">' + this.#infoSimulationLabel +
                     (!this.#infoSimulationDetails ? '' : '</div><div class="info-details">' + (this.#infoSimulationDetails ?? '') + '</div>')
-                );
+                ) +
+                '<div class="info-details">' + this.#infoFPSCount.last + ' frames/s</div>';
         }
 
         if (this.#dirty & (Grid.DIRTY_OUTER | Grid.DIRTY_INNER)) {
@@ -253,6 +256,7 @@ class Grid {
             }
         }
 
+        this.#infoFPSCount.current += 1;
         this.#dirty = Grid.DIRTY_NONE;
         requestAnimationFrame(() => this.render());
     }

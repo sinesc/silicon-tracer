@@ -43,7 +43,7 @@ class Application {
 
         setInterval(() => {
             const metric = Intl.NumberFormat("en", { notation: "compact", maximumSignificantDigits: 3 }).format(ticksPerSecond);
-            this.grid.setSimulationDetails('Single core<br>' + metric + ' ticks/second');
+            this.grid.setSimulationDetails('Single core<br>' + metric + ' ticks/s');
             ticksPerSecond = 0;
         }, 1000);
     }
