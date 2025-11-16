@@ -129,7 +129,7 @@ class WireBuilder extends GridItem { // TODO: Not actually a grid item, but uses
     };
 
     // Renders the wires onto the grid.
-    render() { // FIXME: who calls this? wirebuilder itself isn't on the grid
+    render() {
         this.#wireH.render();
         this.#wireV.render();
         if (WireBuilder.DEBUG_BOX) {

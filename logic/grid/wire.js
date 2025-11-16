@@ -78,11 +78,25 @@ class Wire extends GridItem {
 
     // Create connection from exiting connection.
     onConnect(x, y, status, what) {
-        // TODO: when dragging forward (i.e. not perpendicular) from the end of a wire, ordering should be reversed.
-        // this requires getting a mouse movement vector because the user might still want to drag along the normal at the end of a wire
         this.dragStop(x, y, what);
         this.grid.releaseHotkeyTarget(this, true);
-        let wireBuilder = new WireBuilder(x, y, x, y, what.ordering, this.color);
+
+        // check if we're dragging from either end of the wire and change ordering to extend from there first, then go perpendicular
+        let [ mx, my ] = Grid.align(x, y);
+        let fliptest;
+        if ((mx === this.x && my === this.y) || (mx === this.x + this.width && my === this.y + this.height)) {
+            if (this.direction === 'h') {
+                let xLeft = Math.min(this.x, this.x + this.width);
+                fliptest = mx === xLeft ? (x, y) => x < mx : (x, y) => x > mx;
+            } else {
+                let yTop = Math.min(this.y, this.y + this.height);
+                fliptest = my === yTop ? (x, y) => y < my : (x, y) => y > my;
+            }
+        } else {
+            fliptest = () => false;
+        }
+
+        let wireBuilder = new WireBuilder(x, y, x, y, what.ordering, this.color, fliptest);
         wireBuilder.render();
         wireBuilder.dragStart(x, y, what);
     }
@@ -127,8 +141,7 @@ class Wire extends GridItem {
 
     // Returns the 2 endpoint coordinates of this connection.
     points() {
-        let mk = (x, y) => new Point(x, y);
-        return [ mk(this.x, this.y), mk(this.x + this.width, this.y + this.height) ];
+        return [ new Point(this.x, this.y), new Point(this.x + this.width, this.y + this.height) ];
     }
 
     // Renders the connection onto the grid.
