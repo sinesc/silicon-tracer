@@ -382,6 +382,7 @@ class Grid {
             gridItem.onHotkey(e.key, ...args);
         } else if (e.key === 'e') {
             app.circuits.rename(this.#circuit.uid);
+            this.#dirty |= Grid.DIRTY_OVERLAY;
         }
     }
 
