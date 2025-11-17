@@ -111,6 +111,18 @@ class Simulation {
         return "// alloc mem[" + this.#allocBase + "]\n" + compiled;
     }
 
+    // Returns current memory contents.
+    mem() {
+        const result = { net: {}, io: {} };
+        for (const [ name, io ] of this.#ioMap) {
+            result.io[name] = this.#mem[io.offset];
+        }
+        for (const [ netIndex, net ] of this.#nets.entries()) {
+            result.net[netIndex] = this.#mem[net.offset];
+        }
+        return result;
+    }
+
     // Returns whether the simulation is ready to run (has been compiled).
     get ready() {
         return typeof this.#compiled === 'function';
@@ -122,7 +134,7 @@ class Simulation {
     }
 
     // Sets the value of a net in the simulation. null to unset, true/false/1/0 to set value.
-    setNet(index, value) { // TODO rename e.g. setNetValue
+    setNetValue(index, value) {
         assert.number(index);
         assert.number(value, true);
         const offset = this.#getNet(index).offset;
@@ -130,12 +142,11 @@ class Simulation {
     }
 
     // Gets the value of a net in the simulation.
-    getNet(index) { // TODO rename e.g. getNetValue
+    getNetValue(index) {
         assert.number(index);
         const offset = this.#getNet(index).offset;
         const value = this.#mem[offset];
-        const ret = value & (1 << Simulation.MAX_DELAY) ? value & 1 : null;
-        return ret;
+        return value & (1 << Simulation.MAX_DELAY) ? value & 1 : null;
     }
 
     // Returns a list of defined nets.
@@ -146,8 +157,8 @@ class Simulation {
     // Compiles a net to input assertion.
     #compileNetToInput(ioName, netIndex) {
         const io = this.#getIO(ioName);
-        const netValue = this.#compileNetValue(netIndex);
-        const ioValue = this.#compileIOValue(ioName);
+        const netValue = this.#compileNetAccess(netIndex);
+        const ioValue = this.#compileIOAccess(ioName);
         const delayMask = this.#compileDelayMask(io.delay);
         return `${ioValue} = ((${ioValue} >> 1) & ${delayMask}) | (${netValue} << ${io.delay})`;   // shift net value up to newest io-data/signal bits and apply
     }
@@ -156,28 +167,36 @@ class Simulation {
     #compileGate(gateIndex, ioReplacements) {
         const gate = this.#gates[gateIndex];
         const io = this.#getIO(gate.output);
-        const resultOp = gate.resultTpl.replace(/[a-z_][a-z0-9_@]*/g, (match) => ioReplacements[match] ?? 'error');
+        const dataOp = gate.resultTpl.replace(/[a-z_][a-z0-9_@]*/g, (match) => ioReplacements[match] ?? 'error');
         const signalOp = gate.signalTpl.replace(/[a-z_][a-z0-9_@]*/g, (match) => ioReplacements[match] ?? 'error');
-        const ioValue = this.#compileIOValue(gate.output);
+        const ioValue = this.#compileIOAccess(gate.output);
+
+        // perform signal computation, if required, otherwise just set the newest signal bit slot
+        const signalShift = Simulation.MAX_DELAY + io.delay;
+        const signalBit = this.#compileConst(1 << signalShift);
+        let computeSignal;
+        if (signalOp !== '') {
+            // perform signal computation, then shift result into newest signal bit slot
+            computeSignal = `((${signalOp}) << ${signalShift}) & ${signalBit}`;
+        } else {
+            computeSignal = `${signalBit}`;
+        }
+        // perform data computation, then shift result into newest data bit slot and join both result parts
+        const dataShift = io.delay;
+        const dataBit = this.#compileConst(1 << dataShift);
+        const computeData = `((${dataOp}) << ${dataShift}) & ${dataBit}`;
+        // unset previously newest signal and data bits and replace with newly computed ones, write back
         const delayMask = this.#compileDelayMask(io.delay);
-        const signalBit = this.#compileConst(1 << Simulation.MAX_DELAY);
-        const signalSelect = signalOp === '' ? signalBit : `((${signalOp}) << ${Simulation.MAX_DELAY}) & ${signalBit}`; // FIXME: delay seems to be wrong/too short for signal part
-        const resultSelect = signalOp === '' ? resultOp : `(${resultOp}) & ${Simulation.DATA_BIT_MASK}`;
-        let code = `result = (${signalSelect}) | (${resultSelect}); `;                                     // set signal bit on computed result
-        code += `${ioValue} = (${ioValue} & ${delayMask}) | (result << ${io.delay})`;       // shift result up to newest io-data/signal bits and apply
-        return code;
+        return `${ioValue} = ((${ioValue} >> 1) & ${delayMask}) | ((${computeSignal}) | (${computeData}))`;
     }
 
     // Compiles an output to net assertion.
     #compileOutputToNet(netIndex, ioName, reset) {
-        const io = this.#getIO(ioName);
-        const netSignalBit = Simulation.MAX_DELAY;           // oldest net signal bit (also the only signal bit for nets)
-        const ioSignalBit = Simulation.MAX_DELAY + io.delay  // newest io signal bit
-        const netValue = this.#compileNetValue(netIndex);
-        const ioValue = this.#compileIOValue(ioName);
-        const signalMask = this.#compileConst(1 << ioSignalBit);
-        let code = `signal = (${ioValue} & ${signalMask}) >> ${ioSignalBit}; `;             // do we have a signal on the output?
-        code += `mask = signal | (signal << ${netSignalBit}); `;                            // build mask for oldest (and only) net-data/signal from io-signal (all bits disabled if no signal)
+        const netValue = this.#compileNetAccess(netIndex);
+        const ioValue = this.#compileIOAccess(ioName);
+        const signalMask = this.#compileConst(1 << Simulation.MAX_DELAY);
+        let code = `signal = ${ioValue} & ${signalMask}; `;                                 // select only the signal bit
+        code += `mask = signal | (signal >> ${Simulation.MAX_DELAY}); `;                    // and duplicate it into the data bit position to create a mask
         if (reset) {
             // TODO: don't need separate mask variable here, inline. also remove invert operaiton from mask to avoid double inversion here
             code += `${netValue} = (${ioValue} & mask)`;                                    // reset net to io-data/signal on first assert to net
@@ -190,12 +209,6 @@ class Simulation {
     // Compiles code to tick gates once.
     #compileTick() {
         let result = ''
-        // advance time for all ports
-        for (const [ name, io ] of this.#ioMap) {
-            if (!io.in) { // skip inputs, now shifted in compileNetToInput
-                result += this.#compileIOValue(name) + ' >>= 1' + this.#endl('tick ' + name);
-            }
-        }
         // copy net-state to connected ports
         for (const [ netIndex, net ] of this.#nets.entries()) {
             for (const name of net.io) {
@@ -205,9 +218,9 @@ class Simulation {
             }
         }
         // process inputs using defined gates
-        let ioReplacements = { };
+        const ioReplacements = { };
         for (const [ name ] of this.#ioMap) {
-            ioReplacements[name] = this.#compileIOValue(name);
+            ioReplacements[name] = this.#compileIOAccess(name);
         }
         for (const [ gateIndex, gate ] of this.#gates.entries()) {
             result += this.#compileGate(gateIndex, ioReplacements) + this.#endl('compute ' + gate.resultTpl);
@@ -227,12 +240,12 @@ class Simulation {
     }
 
     // Retuns code to refer to an IO state.
-    #compileIOValue(name) {
+    #compileIOAccess(name) {
         return 'mem[' + this.#getIO(name).offset + ']';
     }
 
     // Returns code to refer to the state of a net.
-    #compileNetValue(index) {
+    #compileNetAccess(index) {
         return 'mem[' + this.#getNet(index).offset + ']';
     }
 

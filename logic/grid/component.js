@@ -510,7 +510,7 @@ class Component extends GridItem {
     // Renders/updates the current net state of the component ports to the grid.
     renderNetState() {
         this.getPorts().forEach((item) => {
-            let state = item.netId !== null && app.sim ? '' + app.sim.engine.getNet(item.netId) : '';
+            let state = item.netId !== null && app.sim ? '' + app.sim.engine.getNetValue(item.netId) : '';
             if (item.element.getAttribute('data-net-state') !== state) {
                 item.element.setAttribute('data-net-state', state);
             }

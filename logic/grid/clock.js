@@ -31,10 +31,10 @@ class Clock extends Interactive {
     applyState(port, sim) {
         if (this.#port.netId !== null) {
             if (this.#state === 0) {
-                sim.setNet(this.#port.netId, 0);
+                sim.setNetValue(this.#port.netId, 0);
             } else if (this.#state === 1) {
                 let delta = performance.now() - app.sim.start;
-                sim.setNet(this.#port.netId, (delta % this.interval) < (this.interval / 2) ? 1 : 0);
+                sim.setNetValue(this.#port.netId, (delta % this.interval) < (this.interval / 2) ? 1 : 0);
             }
         }
     }
@@ -56,7 +56,7 @@ class Clock extends Interactive {
             }
             if (prevState !== this.#state) {
                 if (this.#port.netId !== null && app.sim) {
-                    app.sim.engine.setNet(this.#port.netId, this.#state);
+                    app.sim.engine.setNetValue(this.#port.netId, this.#state);
                 }
                 this.render();
             }

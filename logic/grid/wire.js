@@ -180,7 +180,7 @@ class Wire extends GridItem {
 
     // Renders/updates the current net state of the wire to the grid.
     renderNetState() {
-        let state = this.netId !== null && app.sim ? '' + app.sim.engine.getNet(this.netId) : '';
+        let state = this.netId !== null && app.sim ? '' + app.sim.engine.getNetValue(this.netId) : '';
         if (this.#element.getAttribute('data-net-state') !== state) {
             this.#element.setAttribute('data-net-state', state);
         }
