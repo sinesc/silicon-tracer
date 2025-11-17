@@ -9,6 +9,7 @@ class Application {
 
     autoCompile = true;
     singleStep = false;
+    adaptiveTPS = true;
     #simulations = {};
     #currentSimulation;
 
@@ -29,8 +30,10 @@ class Application {
         this.#status.classList.add('app-status');
         gridParent.appendChild(this.#status);
 
-        let ticksPerSecond = 0;
-        const ticksPerInterval = 100000;
+        // run simulation
+
+        let ticksPerPeriod = 0;
+        let ticksPerInterval = 100000;
 
         setInterval(() => { // TODO: look into webworkers
             if (!this.singleStep && (this.autoCompile || this.sim)) {
@@ -38,15 +41,36 @@ class Application {
                 for (let i = 0; i < ticksPerInterval; ++i) {
                     this.sim.engine.simulate();
                 }
-                ticksPerSecond += ticksPerInterval;
+                ticksPerPeriod += ticksPerInterval;
             }
         }, 0);
 
+        // auto adapt ticks per interval
+
+        const AUTO_ADAPT_PERIOD = 100;
+        const MAX_INTERVALS_PER_PERIOD = 25; // browser limited to 250/s
+        let overlayRefresh = 0;
+
         setInterval(() => {
-            const metric = Number.formatSI(ticksPerSecond);
-            this.grid.setSimulationDetails('Single core<br>' + metric + ' ticks/s');
-            ticksPerSecond = 0;
-        }, 1000);
+            if (!this.singleStep && (this.autoCompile || this.sim)) {
+                if (overlayRefresh >= 1000) {
+                    const tps = Number.formatSI(ticksPerPeriod * 1000 / AUTO_ADAPT_PERIOD);
+                    const tpi = Number.formatSI(Math.round(ticksPerInterval));
+                    this.grid.setSimulationDetails(`Single core<br>${tps} ticks/s<br>${tpi} ticks/interval`);
+                    overlayRefresh = 0;
+                }
+                overlayRefresh += AUTO_ADAPT_PERIOD;
+                if (this.adaptiveTPS) {
+                    if (ticksPerPeriod >= (0.95 * ticksPerInterval * MAX_INTERVALS_PER_PERIOD)) {
+                        ticksPerInterval *= 1.1;
+                    } else {
+                        ticksPerInterval /= 1.1;
+                    }
+                    ticksPerInterval = Math.max(10, Math.round(ticksPerInterval));
+                }
+                ticksPerPeriod = 0;
+            }
+        }, AUTO_ADAPT_PERIOD);
     }
 
     // Returns list of simulations
