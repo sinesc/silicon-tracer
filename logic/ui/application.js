@@ -8,6 +8,7 @@ class Application {
     circuits;
 
     autoCompile = true;
+    singleStep = false;
     #simulations = {};
     #currentSimulation;
 
@@ -32,7 +33,7 @@ class Application {
         const ticksPerInterval = 100000;
 
         setInterval(() => { // TODO: look into webworkers
-            if (this.autoCompile || this.sim) {
+            if (!this.singleStep && (this.autoCompile || this.sim)) {
                 this.startSimulation();
                 for (let i = 0; i < ticksPerInterval; ++i) {
                     this.sim.engine.simulate();
@@ -251,6 +252,7 @@ class Application {
             simulationMenu.createToggleButton('Autostart', 'Automatically starts a new simulation when switching circuits.', this.autoCompile, (enabled) => {
                 this.autoCompile = enabled;
                 if (enabled) {
+                    this.singleStep = false;
                     this.startSimulation();
                 }
                 updateSimulationMenu();
@@ -263,6 +265,7 @@ class Application {
                     this.stopSimulation();
                     this.grid.markDirty();
                 } else {
+                    this.singleStep = false;
                     this.startSimulation();
                 }
             });

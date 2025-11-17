@@ -28,6 +28,22 @@ if (false) {
         }
     });
 
+    let tick = 0;
+    app.toolbar.createActionButton('Tick', 'Ticks the simulation once', () => {
+        app.singleStep = true;
+        app.startSimulation();
+        app.sim.engine.simulate();
+        console.clear();
+        console.log('tick ' + (tick++));
+        let mem = app.sim.engine.mem();
+        for (let [ k, v ] of Object.entries(mem.io)) {
+            console.log(k + ': ' + bin(v));
+        }
+        for (let [ k, v ] of Object.entries(mem.net)) {
+            console.log(k + ': ' + bin(v));
+        }
+    });
+
     window.bin = function(value) {
         let result = '';
         for (let i of [ 5, 4, 1, 0 ]) {
