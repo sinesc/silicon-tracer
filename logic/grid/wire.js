@@ -122,6 +122,7 @@ class Wire extends GridItem {
             this.#element.classList.add('wire-delete-animation');
             setTimeout(() => {
                 this.#element.classList.remove('wire-delete-animation');
+                this.grid.markDirty(true);
                 this.grid.removeItem(this);
             }, 150);
         }

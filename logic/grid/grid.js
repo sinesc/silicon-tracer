@@ -138,7 +138,6 @@ class Grid {
 
     // Invalidate nets and restart any running simulation.
     invalidate() {
-        //this.#circuit.invalidateNets();
         this.#circuit.detachSimulation();
         app.restartSimulation();
     }
@@ -399,7 +398,6 @@ class Grid {
         // move grid to compensate so that the point we zoomed into is still at the cursor
         this.offsetX -= mouseGridX - mouseGridXAfter;
         this.offsetY -= mouseGridY - mouseGridYAfter;
-        this.render();
     }
 
     // Renders a selection box in grid-div-relative coordinates.

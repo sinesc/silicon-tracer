@@ -327,7 +327,6 @@ class Component extends GridItem {
             this.#dropPreview.style.top = visualY + "px";
             this.#dropPreview.style.width = this.visualWidth + "px";
             this.#dropPreview.style.height = this.visualHeight + "px";
-            this.render('move');
         } else {
             this.grid.removeVisual(this.#dropPreview);
             this.#dropPreview = null;
