@@ -64,11 +64,7 @@ class Wire extends GridItem {
     // Implement to apply/remove component selection effect.
     set selected(status) {
         assert.bool(status, true);
-        if (status) {
-            this.#element.classList.add('selected');
-        } else {
-            this.#element.classList.remove('selected');
-        }
+        this.#element.classList.toggle('selected', status);
     }
 
     // Returns the DOM element used by the wire.
