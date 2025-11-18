@@ -121,9 +121,11 @@ class Wire extends GridItem {
         } else if (key === 'd' && what.type === 'hover') {
             this.#element.classList.add('wire-delete-animation');
             setTimeout(() => {
-                this.#element.classList.remove('wire-delete-animation');
-                this.grid.markDirty(true);
-                this.grid.removeItem(this);
+                if (this.#element) { // deletion might already be in progress
+                    this.#element.classList.remove('wire-delete-animation');
+                    this.grid.markDirty(true);
+                    this.grid.removeItem(this);
+                }
             }, 150);
         }
     }

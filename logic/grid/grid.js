@@ -132,6 +132,7 @@ class Grid {
         assert.class(GridItem, item);
         item.unlink();
         this.#circuit.removeItem(item);
+        this.releaseHotkeyTarget(item);
         this.invalidate();
         return item;
     }

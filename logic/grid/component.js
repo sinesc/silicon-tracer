@@ -299,8 +299,10 @@ class Component extends GridItem {
         } else if (key === 'd' && what.type === 'hover') {
             this.#element.classList.add('component-delete-animation');
             setTimeout(() => {
-                this.#element.classList.remove('component-delete-animation');
-                this.grid.removeItem(this);
+                if (this.#element) { // deletion might already be in progress
+                    this.#element.classList.remove('component-delete-animation');
+                    this.grid.removeItem(this);
+                }
             }, 150);
         }
     }
