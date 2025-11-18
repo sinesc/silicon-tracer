@@ -23,6 +23,7 @@ class Circuit {
 
     // Returns item by GID.
     itemByGID(gid) {
+        assert.string(gid);
         return this.data.find((c) => c.gid === gid) ?? null;
     }
 
@@ -59,33 +60,45 @@ class Circuit {
 
     // Unserializes circuit from decoded JSON-object.
     static unserialize(circuit) {
+        assert.object(circuit);
         const components = circuit.data.map((i) => GridItem.unserialize(i));
         const uid = circuit.uid.includes('-') ? 'u' + circuit.uid.replaceAll('-', '') : circuit.uid; // LEGACY: convert legacy uid
         return new Circuit(circuit.label, uid, components, circuit.ports, circuit.gridConfig);
     }
 
     // Link simulation to circuit.
-    attachSimulation(netList) {
+    attachSimulation(netList, subCircuitInstance) {
+        assert.class(NetList, netList);
+        assert.number(subCircuitInstance);
         const tickListener = [];
         for (const net of netList.nets) {
-            // create new net from connected gate i/o-ports
-            let interactiveComponents = net.ports.map((p) => ({ portName: p.name, component: this.itemByGID(p.gid) })).filter((p) => p.component instanceof Interactive);
+            // collect list of interactive components in circuit
+            let interactiveComponents = net.ports.map((p) => ({ portName: p.name, component: this.itemByGID(p.gid) })).filter((p) => p.component instanceof Interactive); // TODO: filter instance?
             tickListener.push(...interactiveComponents);
             // link ports on components
-            for (const { name, gid } of net.ports) {
-                const component = this.itemByGID(gid);
-                if (component) {
-                    const port = component.portByName(name);
-                    port.netId = net.netId; // FIXME: port is sometimes undefined, figure out when/why. possibly after rename in subcomponent
+            for (const { name, gid, instance } of net.ports) {
+                if (subCircuitInstance === instance) {
+                    const component = this.itemByGID(gid);
+                    if (component) {
+                        const port = component.portByName(name);
+                        port.netId = net.netId; // FIXME: port is sometimes undefined, figure out when/why. possibly after rename in subcomponent
+                    }
                 }
             }
             // link wires
-            for (const { gid } of net.wires) {
-                const component = this.itemByGID(gid);
-                if (component) {
-                    component.netId = net.netId;
+            for (const { gid, instance } of net.wires) {
+                if (subCircuitInstance === instance) {
+                    const component = this.itemByGID(gid);
+                    if (component) {
+                        component.netId = net.netId;
+                    }
                 }
             }
+        }
+        // link circuits inside custom components to their corresponding simulation instance
+        for (const [ gid, instance ] of Object.entries(netList.instances[subCircuitInstance].subInstances)) {
+            const component = this.itemByGID(gid);
+            component.instance = instance;
         }
         return tickListener;
     }

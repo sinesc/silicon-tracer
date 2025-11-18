@@ -3,6 +3,8 @@
 // Main application class, handles UI interaction.
 class Application {
 
+    static MAX_TPS = 5000;
+
     grid;
     toolbar;
     circuits;
@@ -36,11 +38,8 @@ class Application {
         let ticksPerInterval = 100000;
 
         setInterval(() => { // TODO: look into webworkers
-            if (!this.singleStep && (this.autoCompile || this.sim)) {
-                this.startSimulation();
-                for (let i = 0; i < ticksPerInterval; ++i) {
-                    this.sim.engine.simulate();
-                }
+            if (!this.singleStep && this.sim) {
+                this.runSimulation(ticksPerInterval);
                 ticksPerPeriod += ticksPerInterval;
             }
         }, 0);
@@ -48,11 +47,11 @@ class Application {
         // auto adapt ticks per interval
 
         const AUTO_ADAPT_PERIOD = 100;
-        const MAX_INTERVALS_PER_PERIOD = 25; // browser limited to 250/s
+        const MAX_INTERVALS_PER_PERIOD = 250 / 1000 * AUTO_ADAPT_PERIOD; // browser limited to 250/s
         let overlayRefresh = 0;
 
-        setInterval(() => {
-            if (!this.singleStep && (this.autoCompile || this.sim)) {
+        setInterval(() => { // TODO: crap, instead measure time taken for n ticks, then compute number of ticks that fit into one animationframe
+            if (!this.singleStep && this.sim) {
                 if (overlayRefresh >= 1000) {
                     const tps = Number.formatSI(ticksPerPeriod * 1000 / AUTO_ADAPT_PERIOD);
                     const tpi = Number.formatSI(Math.round(ticksPerInterval));
@@ -66,7 +65,7 @@ class Application {
                     } else {
                         ticksPerInterval /= 1.1;
                     }
-                    ticksPerInterval = Math.max(10, Math.round(ticksPerInterval));
+                    ticksPerInterval = Math.min(Application.MAX_TPS / MAX_INTERVALS_PER_PERIOD * AUTO_ADAPT_PERIOD / 1000, Math.max(10, ticksPerInterval));
                 }
                 ticksPerPeriod = 0;
             }
@@ -85,31 +84,38 @@ class Application {
         return this.#currentSimulation ? this.#simulations[this.#currentSimulation] : null;
     }
 
-    // Start or continue current simulation.
+    // Start or continue simulation for current circuit.
     startSimulation() {
         let circuit = this.circuits.current;
-
         if (this.#currentSimulation !== circuit.uid) {
             this.#currentSimulation = circuit.uid;
             if (this.#simulations[this.#currentSimulation]) {
                 // resume existing
                 let existingSimulation = this.#simulations[this.#currentSimulation];
-                existingSimulation.tickListener = circuit.attachSimulation(existingSimulation.netList);
+                existingSimulation.tickListener = circuit.attachSimulation(existingSimulation.netList, 0);
                 this.grid.setSimulationLabel(circuit.label);
             } else {
                 // start new
                 let netList = NetList.identify(circuit, true);
                 let engine = netList.compileSimulation();
-                let tickListener = circuit.attachSimulation(netList);
+                let tickListener = circuit.attachSimulation(netList, 0);
                 let start = performance.now();
-                this.#simulations[this.#currentSimulation] = { engine, start, netList, tickListener };
+                this.#simulations[this.#currentSimulation] = { engine, start, netList, tickListener, instance: 0 };
                 this.grid.setSimulationLabel(circuit.label);
             }
         }
+    }
+
+    // Runs the current simulation for the given amount of ticks.
+    runSimulation(ticks) {
+        assert.number(ticks);
         // apply manual simulation states each tick
         let currentSimulation = this.#simulations[this.#currentSimulation];
         for (let { portName, component } of currentSimulation.tickListener) {
-            component.applyState(portName, currentSimulation.engine);
+            component.applyState(portName, currentSimulation.engine); // FIXME: net state needs to be applied each actual tick
+        }
+        for (let i = 0; i < ticks; ++i) {
+            this.sim.engine.simulate();
         }
     }
 
@@ -120,7 +126,9 @@ class Application {
         }
         delete this.#simulations[this.#currentSimulation];
         this.#currentSimulation = null;
+        this.circuits.current.detachSimulation();
         this.grid.setSimulationLabel(null);
+        this.grid.markDirty();
     }
 
     // Restarts a running simulation. Does not start a simulation that isn't already running.
@@ -156,9 +164,10 @@ class Application {
             this.#statusTimer = setTimeout(() => {
                 if (!this.#statusMessage) {
                     this.#status.classList.remove('app-status-faded');
-                    this.#status.innerHTML = 'Grid. <i>LMB</i>: Select area, <i>SHIFT+LMB</i>: Add to selection, <i>MMB</i>: Drag grid, <i>MW</i>: Zoom grid, <i>E</i>: Rename circuit';
+                    let hasParent = app.sim && app.sim.instance > 0;
+                    this.#status.innerHTML = 'Grid. <i>LMB</i>: Select area, <i>SHIFT+LMB</i>: Add to selection, <i>MMB</i>: Drag grid, <i>MW</i>: Zoom grid, <i>E</i>: Rename circuit, ' + (hasParent ? '' : '<u>') + '<i>W</i>: Switch to parent simulation' + (hasParent ? '' : '</u>');
                 }
-            }, 1000);
+            }, 500);
         }
     }
 
@@ -186,12 +195,18 @@ class Application {
             fileMenuState(false);
             await this.circuits.loadFile(true);
             this.clearSimulations();
+            if (this.autoCompile) {
+                this.startSimulation();
+            }
             updateFileMenu();
             updateCircuitMenu();
         });
         let [ addButton ] = fileMenu.createActionButton('Open additional...', 'Load additional circuits from a file, keeping open circuits.', async () => {
             fileMenuState(false);
             await this.circuits.loadFile(false);
+            if (this.autoCompile) {
+                this.startSimulation();
+            }
             updateFileMenu();
             updateCircuitMenu();
         });
@@ -257,7 +272,9 @@ class Application {
                     circuitMenuState(false);
                     this.circuits.current.detachSimulation();
                     this.circuits.select(uid);
-                    this.startSimulation();
+                    if (this.autoCompile) {
+                        this.startSimulation();
+                    }
                 });
                 switchButton.classList.add(uid !== this.circuits.current.uid ? 'toolbar-circuit-select' : 'toolbar-circuit-select-fullrow');
             }
@@ -287,7 +304,6 @@ class Application {
                 if (this.sim) {
                     this.autoCompile = false;
                     this.stopSimulation();
-                    this.grid.markDirty();
                 } else {
                     this.singleStep = false;
                     this.startSimulation();

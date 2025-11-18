@@ -31,8 +31,7 @@ if (false) {
     let tick = 0;
     app.toolbar.createActionButton('Tick', 'Ticks the simulation once', () => {
         app.singleStep = true;
-        app.startSimulation();
-        app.sim.engine.simulate();
+        app.runSimulation(1);
         console.clear();
         console.log('tick ' + (tick++));
         let mem = app.sim.engine.mem();

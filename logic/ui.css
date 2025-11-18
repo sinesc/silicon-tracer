@@ -221,6 +221,11 @@ html {
     font-weight: normal;
     vertical-align: text-bottom;
 }
+.app-status u {
+    text-decoration: none;
+    color: #bbb;
+    opacity: 0.5;
+}
 
 /*
  * Toolbar UI element
@@ -542,6 +547,13 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
 }
 .component:hover .component-port-label {
     opacity: 1;
+}
+
+/*
+ * Custom component
+ */
+.component.custom.simulated {
+    cursor: zoom-in;
 }
 
 /*

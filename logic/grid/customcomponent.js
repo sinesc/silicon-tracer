@@ -3,8 +3,11 @@
 // Custom circuit represented as a component.
 class CustomComponent extends Component {
 
-    // Circuit UID for the circuit represented by this custom component
+    // Circuit UID for the circuit represented by this custom component.
     uid;
+
+    // Simulation instance of the represented sub-circuit.
+    #instance = null;
 
     constructor(x, y, rotation, uid) {
         assert.number(rotation);
@@ -30,7 +33,43 @@ class CustomComponent extends Component {
         this.type = circuit.label;
         super.link(grid);
         this.element.classList.add('custom');
-        this.setHoverMessage(this.inner, '<b>' + this.label + '</b>. <i>LMB</i>: Drag to move. <i>R</i>: Rotate, <i>D</i>: Delete', { type: 'hover' });
+        this.setHoverMessage(this.inner, () => '<b>' + this.label + '</b>. <i>LMB</i>: Drag to move. <i>R</i>: Rotate, <i>D</i>: Delete, ' + (app.sim ? '' : '<u>') + '<i>Q</i>:Switch to sub-circuit simulation' + (app.sim ? '' : '</u>'), { type: 'hover' });
+    }
+
+    // Set the simulation instance of the represented sub-circuit.
+    set instance(value) {
+        assert.number(value, true);
+        if (this.element) {
+            this.element.classList.toggle('simulated', value !== null);
+        }
+        this.#instance = value;
+    }
+
+    // Get the simulation instance of the represented sub-circuit.
+    get instance() {
+        return this.#instance;
+    }
+
+    // Detach custom component from simulation.
+    detachSimulation() {
+        super.detachSimulation();
+        this.instance = null;
+    }
+
+    // Hover hotkey actions
+    onHotkey(key, what) {
+        super.onHotkey(key, what);
+        if (key === 'q' && what.type === 'hover') {
+            // switch to subcomponent simulation instance
+            let circuit = app.circuits.byUID(this.uid);
+            if (app.sim && circuit) {
+                let simulation = app.sim;
+                simulation.instance = this.instance;
+                app.circuits.current.detachSimulation();
+                this.grid.setCircuit(circuit);
+                simulation.tickListener = circuit.attachSimulation(simulation.netList, simulation.instance);
+            }
+        }
     }
 
     // Generates default port outline for the given circuits component representation.

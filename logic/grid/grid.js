@@ -59,7 +59,11 @@ class Grid {
 
         // start renderloop
         requestAnimationFrame(() => this.#render());
-        setInterval(() => { this.#infoFPSCount.last = this.#infoFPSCount.current; this.#infoFPSCount.current = 0; }, 1000);
+        setInterval(() => {
+            this.#infoFPSCount.last = this.#infoFPSCount.current;
+            this.#infoFPSCount.current = 0;
+            this.#dirty |= Grid.DIRTY_OVERLAY;
+        }, 1000);
     }
 
     // Returns the circuit currently on the grid.
@@ -80,9 +84,11 @@ class Grid {
         this.#circuit = null;
         this.#infoCircuitLabel = '';
         this.#dirty |= Grid.DIRTY_OVERLAY;
+        this.#hotkeyTarget = null;
+        app.clearStatus(true);
     }
 
-    // Updates current circuit from grid state.
+    // Updates current circuit from grid state. // TODO try to get rid of this
     updateCircuit() {
         if (!this.#circuit) {
             return;
@@ -384,6 +390,17 @@ class Grid {
         } else if (e.key === 'e') {
             app.circuits.rename(this.#circuit.uid);
             this.#dirty |= Grid.DIRTY_OVERLAY;
+        } else if (e.key === 'w' && app.sim) {
+            // switch to parent simulation instance
+            let simulation = app.sim;
+            let parentInstance = simulation.netList.instances[simulation.instance].parentInstance;
+            if (parentInstance !== null) {
+                let circuit = simulation.netList.instances[parentInstance].circuit;
+                simulation.instance = parentInstance;
+                app.circuits.current.detachSimulation();
+                this.setCircuit(circuit);
+                simulation.tickListener = circuit.attachSimulation(simulation.netList, parentInstance);
+            }
         }
     }
 
