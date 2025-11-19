@@ -27,9 +27,9 @@ class NetList {
             for (let component of circuit.data.filter((i) => !(i instanceof Wire))) {
                 let suffix = '@' + component.gid + '@' + instance;
                 if (component instanceof Gate) { // TODO: exclude unconnected gates via netList.unconnected.ports when all gate ports are listed as unconnected
-                    sim.gateDecl(component.type, suffix, component.inputs, component.output);
+                    sim.declareGate(component.type, suffix, component.inputs, component.output);
                 } else if (component instanceof Builtin) {
-                    sim.builtinDecl(component.type, suffix);
+                    sim.declareBuiltin(component.type, suffix);
                 } else if (component instanceof CustomComponent) {
 
                 }
@@ -40,7 +40,7 @@ class NetList {
             // create new net from connected gate i/o-ports
             let interactiveComponents = net.ports.filter((p) => this.instances[p.instance].circuit.itemByGID(p.gid) instanceof Interactive);
             let attachedPorts = net.ports.filter((p) => (this.instances[p.instance].circuit.itemByGID(p.gid) instanceof Gate) || (this.instances[p.instance].circuit.itemByGID(p.gid) instanceof Builtin)).map((p) => p.uniqueName);
-            net.netId = sim.netDecl(attachedPorts, interactiveComponents.map((p) => p.uniqueName));
+            net.netId = sim.declareNet(attachedPorts, interactiveComponents.map((p) => p.uniqueName));
         }
         // compile
         sim.compile();

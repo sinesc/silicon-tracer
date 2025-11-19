@@ -114,9 +114,7 @@ class Application {
         for (let { portName, component } of currentSimulation.tickListener) {
             component.applyState(portName, currentSimulation.engine); // FIXME: net state needs to be applied each actual tick
         }
-        for (let i = 0; i < ticks; ++i) {
-            this.sim.engine.simulate();
-        }
+        this.sim.engine.simulate(ticks);
     }
 
     // Stop current simulation.
