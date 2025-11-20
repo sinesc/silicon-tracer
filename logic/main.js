@@ -36,10 +36,14 @@ if (false) {
         console.log('tick ' + (tick++));
         let mem = app.sim.engine.mem();
         for (let [ k, v ] of Object.entries(mem.io)) {
-            console.log(k + ': ' + bin(v));
+            let abbrev = k.replace(/@(g[a-f0-9]+)@/g, (m, h) => ':' + h.substr(1, 6) + ':');
+            console.log(abbrev + ': ' + bin(v));
         }
         for (let [ k, v ] of Object.entries(mem.net)) {
             console.log(k + ': ' + bin(v));
+        }
+        for (let [ k, v ] of Object.entries(mem.clock)) {
+            console.log(k + ': ' + v);
         }
     });
 
