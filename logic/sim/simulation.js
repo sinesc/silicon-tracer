@@ -6,10 +6,8 @@ class Simulation {
     static DEBUG = true;
 
     static DEFAULT_DELAY = 1;
-    static ARRAY_CONSTRUCTOR = Uint8Array;
     static ARRAY_BITS = 8;
     static MAX_DELAY = Simulation.ARRAY_BITS / 2;
-    static DATA_BIT_MASK = (Simulation.ARRAY_BITS << 1) - 1;
 
     static GATE_MAP = {
         'buffer': { negIn: false, negOut: false, joinOp: null },
@@ -28,21 +26,24 @@ class Simulation {
         'not3' : { dataTpl: '~d', signalTpl: 'e', inputs: [ 'e', 'd' ], output: 'q' },
     }
 
-    #allocBase = 0;
     #ioMap = new Map();
     #nets = [];
     #gates = [];
+    #clocks = [];
     #compiled;
-    #mem;
+    #alloc8Base = 0;
+    #alloc16Base = 0;
+    #mem8;
+    #mem16;
 
     // Declares a net (which inputs/outputs are connected) and returns the net-index. Attached IO-names must include their suffixes. Meta can be any custom data.
     declareNet(attachedIONames, meta) {
         assert.array(attachedIONames, false, (i) => assert.string(i));
-        this.#nets.push({ offset: this.#alloc(), io: attachedIONames, meta });
+        this.#nets.push({ offset: this.#alloc8(), io: attachedIONames, meta });
         return this.#nets.length - 1;
     }
 
-    // Declares a basic builtin gate-like function and returns the gate-index. For convenience, suffix is appended to all IO-names.
+    // Declares a basic builtin gate-like function and returns the gate-index. Suffix is appended to the builtin's pre-defined IO-names.
     declareBuiltin(type, suffix, delay = null) {
         assert.string(type);
         assert.string(suffix);
@@ -60,8 +61,21 @@ class Simulation {
         return this.#gates.length - 1;
     }
 
+    // Declares a clock that will be on/off for the given number of ticks. Suffix is appended to the builtin's pre-defined IO-names.
+    declareClock(ticks, tristate, suffix, delay = null) {
+        assert.number(ticks);
+        assert.bool(tristate);
+        assert.string(suffix);
+        const input = 'e' + suffix;
+        const output = 'c' + suffix
+        this.#clocks.push({ ticks, tristate, input, output, offset: this.#alloc16() });
+        this.#declareIO(input, 'i', delay ?? Simulation.DEFAULT_DELAY);
+        this.#declareIO(output, 'o', delay ?? Simulation.DEFAULT_DELAY);
+        return this.#clocks.length - 1;
+    }
+
     // Declares a gate with the given inputs/output and returns the gate-index. For convenience, suffix is appended to all IO-names.
-    declareGate(type, suffix, inputNames, outputName, delay = null) {
+    declareGate(type, inputNames, outputName, suffix, delay = null) {
         assert.string(type);
         assert.string(suffix);
         assert.array(inputNames, false, (i) => assert.string(i));
@@ -83,18 +97,22 @@ class Simulation {
 
     // Compiles the circuit, making it ready for simulate().
     compile() {
-        let result = "'use strict';(mem) => {\n";
-        result += 'let mask, signal' + this.#endl();
+        let result = "'use strict';(mem, mem16) => {\n";
+        result += 'let mask, signal, cmask' + this.#endl();
         result += this.#compileTick();
         result += '}';
         this.#compiled = eval(result);
-        this.#mem = new Simulation.ARRAY_CONSTRUCTOR(this.#allocBase);
+        this.#mem8 = new Uint8Array(this.#alloc8Base);
+        this.#mem16 = new Int16Array(this.#alloc16Base);
+        for (const clock of this.#clocks) {
+            this.#mem16[clock.offset] = clock.ticks + 2; // clean up first clock cycle
+        }
     }
 
     // Runs the simulation for the given number of ticks.
     simulate(ticks = 1) {
         for (let i = 0; i < ticks; ++i) {
-            this.#compiled(this.#mem);
+            this.#compiled(this.#mem8, this.#mem16);
         }
     }
 
@@ -118,38 +136,46 @@ class Simulation {
         assert.number(index);
         assert.number(value, true);
         const offset = this.#getNet(index).offset;
-        this.#mem[offset] = ((value !== null) << Simulation.MAX_DELAY) | value;
+        this.#mem8[offset] = ((value !== null) << Simulation.MAX_DELAY) | value;
     }
 
     // Gets the value of a net in the simulation.
     getNetValue(index) {
         assert.number(index);
         const offset = this.#getNet(index).offset;
-        const value = this.#mem[offset];
+        const value = this.#mem8[offset];
         return value & (1 << Simulation.MAX_DELAY) ? value & 1 : null;
     }
 
     // Returns code of the simulation for debugging purposes.
     code() {
         const compiled = this.#compileTick();
-        return "// alloc mem[" + this.#allocBase + "]\n" + compiled;
+        return "// alloc mem[" + this.#alloc8Base + "]\n" + compiled;
     }
 
     // Returns current memory contents for debugging purposes.
     mem() {
-        const result = { net: {}, io: {} };
+        const result = { net: {}, io: {}, clock: {} };
         for (const [ name, io ] of this.#ioMap) {
-            result.io[name] = this.#mem[io.offset];
+            result.io[name] = this.#mem8[io.offset];
         }
         for (const [ netIndex, net ] of this.#nets.entries()) {
-            result.net[netIndex] = this.#mem[net.offset];
+            result.net[netIndex] = this.#mem8[net.offset];
+        }
+        for (const [ clockIndex, clock ] of this.#clocks.entries()) {
+            result.clock[clockIndex] = this.#mem16[clock.offset];
         }
         return result;
     }
 
     // Allocates memory for a single port or net.
-    #alloc() {
-        return this.#allocBase++;
+    #alloc8() {
+        return this.#alloc8Base++;
+    }
+
+    // Allocates memory for a clock.
+    #alloc16() {
+        return this.#alloc16Base++;
     }
 
     // Declares a named input or output.
@@ -160,27 +186,27 @@ class Simulation {
         if (!/^[a-z_][a-z0-9_@]*$/.test(name)) {
             throw new Error('Invalid io name "' + name + '"');
         }
-        this.#ioMap.set(name, { offset: this.#alloc(), delay: delay ?? Simulation.DEFAULT_DELAY, in: type.indexOf('i') !== -1, out: type.indexOf('o') !== -1 });
+        this.#ioMap.set(name, { offset: this.#alloc8(), delay: delay ?? Simulation.DEFAULT_DELAY, in: type.indexOf('i') !== -1, out: type.indexOf('o') !== -1 });
     }
 
     // Compiles a net to input assertion.
     #compileNetToInput(ioName, netIndex) {
-        const io = this.#getIO(ioName);
+        const inputDelay = this.#getIO(ioName).delay;
         const netMem = this.#compileNetAccess(netIndex);
         const inputMem = this.#compileIOAccess(ioName);
-        const clearMask = this.#compileDelayMask(io.delay);
-        return `${inputMem} = ((${inputMem} >> 1) & ${clearMask}) | (${netMem} << ${io.delay})`;   // shift net value up to newest io-data/signal bits and apply
+        const clearMask = this.#compileDelayMask(inputDelay);
+        return `${inputMem} = ((${inputMem} >> 1) & ${clearMask}) | (${netMem} << ${inputDelay})`;   // shift net value up to newest io-data/signal bits and apply
     }
 
     // Compiles a gate reading from one or more inputs and writing to an output.
     #compileGate(gateIndex, ioReplacements) {
         const gate = this.#gates[gateIndex];
-        const io = this.#getIO(gate.output);
+        const outputDelay = this.#getIO(gate.output).delay;
         const dataOp = gate.dataTpl.replace(/[a-z_][a-z0-9_@]*/g, (match) => ioReplacements[match] ?? 'error');
         const signalOp = gate.signalTpl.replace(/[a-z_][a-z0-9_@]*/g, (match) => ioReplacements[match] ?? 'error');
         const outputMem = this.#compileIOAccess(gate.output);
         // perform signal computation, if required, otherwise just set the newest signal bit slot
-        const signalShift = Simulation.MAX_DELAY + io.delay;
+        const signalShift = Simulation.MAX_DELAY + outputDelay;
         const signalBit = this.#compileConst(1 << signalShift);
         let computeSignal;
         if (signalOp !== '') {
@@ -190,12 +216,28 @@ class Simulation {
             computeSignal = `${signalBit}`;
         }
         // perform data computation, then shift result into newest data bit slot and join both result parts
-        const dataShift = io.delay;
+        const dataShift = outputDelay;
         const dataBit = this.#compileConst(1 << dataShift);
         const computeData = `((${dataOp}) << ${dataShift}) & ${dataBit}`;
         // unset previously newest signal and data bits and replace with newly computed ones, write back
-        const clearMask = this.#compileDelayMask(io.delay);
+        const clearMask = this.#compileDelayMask(outputDelay);
         return `${outputMem} = ((${outputMem} >> 1) & ${clearMask}) | ((${computeSignal}) | (${computeData}))`;
+    }
+
+    // Compiles a clock reading from one input and writing to an output.
+    #compileClock(clockIndex, ioReplacements) { // TODO: enable, tristate
+        const clock = this.#clocks[clockIndex];
+        const output = this.#getIO(clock.output);
+        const inputMem = ioReplacements[clock.input];
+        const outputMem = this.#compileIOAccess(clock.output);
+        const clockMem = this.#compileClockAccess(clock.offset);
+        const signalBit = this.#compileConst(1 << Simulation.MAX_DELAY);
+
+        let code = `${clockMem} -= 1; `                                                 // decrement clock
+        code += `cmask = ${clockMem} >> 15; `                                           // copy sign bit into entire mask
+        code += `${clockMem} = ((${clockMem} & ~cmask) | (${clock.ticks} & cmask)); `;  // either retain current clock value or reset it to ticks
+        code += `${outputMem} = ${signalBit} | (${outputMem} ^ !${clockMem})`;                         // flip output mem each time the clock reaches zero
+        return code;
     }
 
     // Compiles an output to net assertion.
@@ -229,6 +271,9 @@ class Simulation {
         for (const [ name ] of this.#ioMap) {
             ioReplacements[name] = this.#compileIOAccess(name);
         }
+        for (const [ clockIndex, clock ] of this.#clocks.entries()) {
+            result += this.#compileClock(clockIndex, ioReplacements) + this.#endl('clock ' + clock.output);
+        }
         for (const [ gateIndex, gate ] of this.#gates.entries()) {
             result += this.#compileGate(gateIndex, ioReplacements) + this.#endl('compute ' + gate.dataTpl);
         }
@@ -254,6 +299,11 @@ class Simulation {
     // Returns code to refer to the state of a net.
     #compileNetAccess(index) {
         return 'mem[' + this.#getNet(index).offset + ']';
+    }
+
+    // Returns code to refer to the state of a clock.
+    #compileClockAccess(index) {
+        return 'mem16[' + this.#getClock(index).offset + ']';
     }
 
     // Returns code for a bitmask with the signal and data bits for the given delay being unset.
@@ -298,6 +348,15 @@ class Simulation {
             return net;
         } else {
             throw new Error('Undefined net ' + index);
+        }
+    }
+    // Returns a clock declaration.
+    #getClock(index) {
+        let clock;
+        if ((clock = this.#clocks[index]) !== undefined) {
+            return clock;
+        } else {
+            throw new Error('Undefined clock ' + index);
         }
     }
 }

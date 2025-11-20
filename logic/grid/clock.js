@@ -5,11 +5,11 @@ class Clock extends Interactive {
 
     interval = 1000;
     #state = null;
-    #port;
+    #enable;
 
     constructor(x, y) {
-        super(x, y, { right: [ '' ] }, 'clock');
-        this.#port = this.portByName('');
+        super(x, y, { left: [ 'e' ], right: [ 'c' ] }, 'clock');
+        this.#enable = this.portByName('e');
     }
 
     // Serializes the object for writing to disk.
@@ -29,14 +29,14 @@ class Clock extends Interactive {
 
     // Apply component state to simulation.
     applyState(port, sim) {
-        if (this.#port.netId !== null) {
+        /*if (this.#port.netId !== null) {
             if (this.#state === 0) {
                 sim.setNetValue(this.#port.netId, 0);
             } else if (this.#state === 1) {
                 let delta = performance.now() - app.sim.start;
                 sim.setNetValue(this.#port.netId, (delta % this.interval) < (this.interval / 2) ? 1 : 0);
             }
-        }
+        }*/
     }
 
     // Hover hotkey actions
@@ -55,8 +55,8 @@ class Clock extends Interactive {
                 this.#state = null;
             }
             if (prevState !== this.#state) {
-                if (this.#port.netId !== null && app.sim) {
-                    app.sim.engine.setNetValue(this.#port.netId, this.#state);
+                if (this.#enable.netId !== null && app.sim) {
+                    app.sim.engine.setNetValue(this.#enable.netId, this.#state);
                 }
                 this.render();
             }
