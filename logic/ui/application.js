@@ -3,24 +3,29 @@
 // Main application class, handles UI interaction.
 class Application {
 
-    static MAX_TPS = 5000;
-
     grid;
     toolbar;
     circuits;
+    config = {
+        targetTPS: 100000,
+        autoCompile: true,
+        singleStep: false,
+    };
 
-    autoCompile = true;
-    singleStep = false;
-    adaptiveTPS = true;
     #simulations = {};
     #currentSimulation;
-
     #status;
     #statusMessage = null;
     #statusTimer = null;
     #statusLocked = false;
+    #logo;
 
-    constructor(gridParent, toolbarParent) {
+    #renderLast;
+    #nextTick = 0;
+    #ticksCounted = 0;
+    #load = 0;
+
+    constructor(gridParent, toolbarParent, logo = null) {
         assert.class(Node, gridParent);
         assert.class(Node, toolbarParent);
 
@@ -31,45 +36,47 @@ class Application {
         this.#status = document.createElement('div');
         this.#status.classList.add('app-status');
         gridParent.appendChild(this.#status);
+        this.#logo = logo;
+    }
 
-        // run simulation
+    start() {
+        // finish init
+        this.#initMenu();
+        this.#initToolbar();
+        this.#startFocusMonitor();
+        this.#startLogoMonitor();
+        this.circuits.clear();
+        // start simulation/render loop
+        this.#renderLast = performance.now();
+        requestAnimationFrame(() => this.#render());
+        setInterval(() => this.#renderStats(), 1000);
+    }
 
-        let ticksPerPeriod = 0;
-        let ticksPerInterval = 100000;
+    #renderStats() {
+        this.grid.setSimulationDetails(`${Number.formatSI(this.config.targetTPS)} ticks/s target<br>${Number.formatSI(Math.round(this.#ticksCounted))} ticks/s actual<br>${Math.round(this.#load)}% core load`);
+        this.#ticksCounted = 0;
+    }
 
-        setInterval(() => { // TODO: look into webworkers
-            if (!this.singleStep && this.sim) {
-                this.runSimulation(ticksPerInterval);
-                ticksPerPeriod += ticksPerInterval;
+    #render() {
+        let interval = this.#renderLast;
+        this.#renderLast = performance.now();
+        interval = this.#renderLast - interval;
+        requestAnimationFrame(() => this.#render());
+        this.grid.render();
+        // handle both TPS smaller or larger than FPS
+        const ticksPerFrame = this.config.targetTPS / (1000 / interval);
+        this.#nextTick += ticksPerFrame;
+        if (this.#nextTick >= 1) {
+            this.#nextTick -= 1;
+            if (!this.config.singleStep && this.sim) {
+                const ticks = Math.max(1, ticksPerFrame);
+                this.#ticksCounted += ticks;
+                this.runSimulation(ticks);
             }
-        }, 0);
-
-        // auto adapt ticks per interval
-
-        const AUTO_ADAPT_PERIOD = 100;
-        const MAX_INTERVALS_PER_PERIOD = 250 / 1000 * AUTO_ADAPT_PERIOD; // browser limited to 250/s
-        let overlayRefresh = 0;
-
-        setInterval(() => { // TODO: crap, instead measure time taken for n ticks, then compute number of ticks that fit into one animationframe
-            if (!this.singleStep && this.sim) {
-                if (overlayRefresh >= 1000) {
-                    const tps = Number.formatSI(ticksPerPeriod * 1000 / AUTO_ADAPT_PERIOD);
-                    const tpi = Number.formatSI(Math.round(ticksPerInterval));
-                    this.grid.setSimulationDetails(`Single core<br>${tps} ticks/s<br>${tpi} ticks/interval`);
-                    overlayRefresh = 0;
-                }
-                overlayRefresh += AUTO_ADAPT_PERIOD;
-                if (this.adaptiveTPS) {
-                    if (ticksPerPeriod >= (0.95 * ticksPerInterval * MAX_INTERVALS_PER_PERIOD)) {
-                        ticksPerInterval *= 1.1;
-                    } else {
-                        ticksPerInterval /= 1.1;
-                    }
-                    ticksPerInterval = Math.min(Application.MAX_TPS / MAX_INTERVALS_PER_PERIOD * AUTO_ADAPT_PERIOD / 1000, Math.max(10, ticksPerInterval));
-                }
-                ticksPerPeriod = 0;
-            }
-        }, AUTO_ADAPT_PERIOD);
+        }
+        // compute load (time spent computing/time available)
+        const elapsedTime = performance.now() - this.#renderLast;
+        this.#load = elapsedTime / interval * 100;
     }
 
     // Returns list of simulations
@@ -183,7 +190,7 @@ class Application {
     }
 
     // Initialize main menu entries.
-    initMenu() {
+    #initMenu() {
 
         // Add file operations to toolbar
         let updateFileMenu;
@@ -193,7 +200,7 @@ class Application {
             fileMenuState(false);
             await this.circuits.loadFile(true);
             this.clearSimulations();
-            if (this.autoCompile) {
+            if (this.config.autoCompile) {
                 this.startSimulation();
             }
             updateFileMenu();
@@ -202,7 +209,7 @@ class Application {
         let [ addButton ] = fileMenu.createActionButton('Open additional...', 'Load additional circuits from a file, keeping open circuits.', async () => {
             fileMenuState(false);
             await this.circuits.loadFile(false);
-            if (this.autoCompile) {
+            if (this.config.autoCompile) {
                 this.startSimulation();
             }
             updateFileMenu();
@@ -242,7 +249,6 @@ class Application {
 
         // Circuit selection menu
 
-        this.circuits.clear();
         let updateCircuitMenu;
         let [ , circuitMenuState, circuitMenu ] = this.toolbar.createMenuButton('Circuit', 'Circuit management menu. <i>LMB</i> Open menu.', () => updateCircuitMenu());
 
@@ -267,7 +273,7 @@ class Application {
                 let [ switchButton ] = circuitMenu.createActionButton(label, isCurrentCircuit ? 'This is the current circuit' : 'Switch grid to circuit "' + label + '".', () => {
                     circuitMenuState(false);
                     this.circuits.select(uid);
-                    if (this.autoCompile) {
+                    if (this.config.autoCompile) {
                         this.startSimulation();
                     }
                 });
@@ -286,10 +292,10 @@ class Application {
             let toggleAction = () => this.circuits.current.uid === this.#currentSimulation ? 'stop' : (this.#simulations[this.circuits.current.uid] ? 'resume' : 'start');
             let toggleButtonText = (action) => (action === 'stop' ? 'Stop' : (action === 'resume' ? 'Resume' : 'Start at')) + ' "' + this.circuits.current.label + '"';
             // Continuous simulation toggle
-            simulationMenu.createToggleButton('Autostart', 'Automatically starts a new simulation when switching circuits.', this.autoCompile, (enabled) => {
-                this.autoCompile = enabled;
+            simulationMenu.createToggleButton('Autostart', 'Automatically starts a new simulation when switching circuits.', this.config.autoCompile, (enabled) => {
+                this.config.autoCompile = enabled;
                 if (enabled) {
-                    this.singleStep = false;
+                    this.config.singleStep = false;
                     this.startSimulation();
                 }
                 updateSimulationMenu();
@@ -299,13 +305,13 @@ class Application {
                 simulationMenuState(false);
                 let action = toggleAction();
                 if (action === 'stop') {
-                    this.autoCompile = false;
+                    this.config.autoCompile = false;
                     this.stopSimulation();
                     // switch to whatever circuit was being viewed when the simulation ended
                     app.circuits.select(app.grid.circuit.uid);
                 } else if (action === 'resume' || action === 'stop') {
                     // startSimulation resumes if a simulation for the current circuit already exists
-                    this.singleStep = false;
+                    this.config.singleStep = false;
                     this.startSimulation();
                 }
             });
@@ -315,7 +321,7 @@ class Application {
                 let [ button ] = simulationMenu.createActionButton(label, isCurrent ? 'This is the current simulation' : 'Switch to/resume simulation "' + label + '".', () => {
                     simulationMenuState(false);
                     app.circuits.select(uid);
-                    this.singleStep = false;
+                    this.config.singleStep = false;
                     this.startSimulation();
                 });
                 button.classList.toggle('toolbar-menu-button-disabled', isCurrent);
@@ -324,7 +330,7 @@ class Application {
     }
 
     // Initialize tool bar entries.
-    initToolbar() {
+    #initToolbar() {
         // add conveniently pre-rotated ports
         this.toolbar.createComponentButton('Port ·', 'Component IO pin. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => grid.addItem(new Port(x, y, 'right')));
         this.toolbar.createComponentButton('· Port', 'Component IO pin. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => grid.addItem(new Port(x, y, 'left')));
@@ -353,7 +359,7 @@ class Application {
     }
 
     // Show warning when not focussed to avoid confusion. In this state mouse wheel events still register but hotkeys don't.
-    startFocusMonitor() {
+    #startFocusMonitor() {
         let hadFocus = null;
         let focusTimer = null;
         setInterval(() => {
@@ -372,10 +378,12 @@ class Application {
     }
 
     // Monitor logo for clicks.
-    startLogoMonitor(logo) {
-        // A blast from when we still owned our stuff.
-        logo.onmouseenter = () => this.setStatus('Cheesy 80s logo. It is ticklish.');
-        logo.onmouseleave = () => this.clearStatus();
-        logo.onclick = () => logo.setAttribute('data-c', ((parseInt(logo.getAttribute('data-c') ?? 0) + 1) % 6));
+    #startLogoMonitor() {
+        if (this.#logo) {
+            // A blast from when we still owned our stuff.
+            this.#logo.onmouseenter = () => this.setStatus('Cheesy 80s logo. It is ticklish.');
+            this.#logo.onmouseleave = () => this.clearStatus();
+            this.#logo.onclick = () => this.#logo.setAttribute('data-c', ((parseInt(this.#logo.getAttribute('data-c') ?? 0) + 1) % 6));
+        }
     }
 }

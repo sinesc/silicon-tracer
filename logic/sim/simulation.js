@@ -111,6 +111,7 @@ class Simulation {
 
     // Runs the simulation for the given number of ticks.
     simulate(ticks = 1) {
+        ticks |= 0;
         for (let i = 0; i < ticks; ++i) {
             this.#compiled(this.#mem8, this.#mem16);
         }

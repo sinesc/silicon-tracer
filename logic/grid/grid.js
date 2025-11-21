@@ -54,8 +54,7 @@ class Grid {
         // TODO: GridItems currently register document.onmouse* temporarily. those should probably follow the same logic: register onmouse* here and then pass on to whichever element wants to have them
         document.addEventListener('keydown', this.#handleKeyDown.bind(this));
 
-        // start renderloop
-        requestAnimationFrame(() => this.#render());
+        // measure FPS // TODO move to application tick measurement timer
         setInterval(() => {
             this.#infoFPSCount.last = this.#infoFPSCount.current;
             this.#infoFPSCount.current = 0;
@@ -68,7 +67,7 @@ class Grid {
         return this.#circuit;
     }
 
-    // Unsets current grid circuit, saving changes to circuits.
+    // Unsets current grid circuit.
     unsetCircuit() {
         if (!this.#circuit) {
             return;
@@ -178,7 +177,7 @@ class Grid {
     }
 
     // Renders the grid and its components.
-    #render() {
+    render() {
 
         if (this.#dirty & Grid.DIRTY_OVERLAY) {
             this.#infoElement.innerHTML = '<div class="info-section">Circuit</div><div class="info-title">' +
@@ -243,7 +242,6 @@ class Grid {
 
         this.#infoFPSCount.current += 1;
         this.#dirty = Grid.DIRTY_NONE;
-        requestAnimationFrame(() => this.#render());
     }
 
     // Returns the next to be used net color.
