@@ -124,7 +124,7 @@ class Application {
         }
         delete this.#simulations[this.#currentSimulation];
         this.#currentSimulation = null;
-        this.circuits.current.detachSimulation();
+        this.grid.circuit.detachSimulation();
         this.grid.setSimulationLabel(null);
         this.grid.markDirty();
     }
@@ -283,7 +283,6 @@ class Application {
 
         updateSimulationMenu = () => {
             simulationMenu.clear();
-            let toggleButton;
             let toggleAction = () => this.circuits.current.uid === this.#currentSimulation ? 'stop' : (this.#simulations[this.circuits.current.uid] ? 'resume' : 'start');
             let toggleButtonText = (action) => (action === 'stop' ? 'Stop' : (action === 'resume' ? 'Resume' : 'Start at')) + ' "' + this.circuits.current.label + '"';
             // Continuous simulation toggle
@@ -296,7 +295,7 @@ class Application {
                 updateSimulationMenu();
             });
             // Simulate current grid
-            [ toggleButton ] = simulationMenu.createActionButton(toggleButtonText(toggleAction()), 'Toggle simulation on/off.', () => {
+            simulationMenu.createActionButton(toggleButtonText(toggleAction()), 'Toggle simulation on/off.', () => {
                 simulationMenuState(false);
                 let action = toggleAction();
                 if (action === 'stop') {

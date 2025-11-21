@@ -93,7 +93,7 @@ class WireBuilder extends GridItem { // TODO: Not actually a grid item, but uses
             app.clearStatus(true);
             this.grid.releaseHotkeyTarget(this, true);
             this.#remove();
-            this.grid.invalidate();
+            app.restartSimulation();
         }
     }
 

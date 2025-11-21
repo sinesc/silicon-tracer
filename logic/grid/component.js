@@ -288,7 +288,7 @@ class Component extends GridItem {
             this.#element.classList.add('component-rotate-animation');
             setTimeout(() => {
                 this.#element.classList.remove('component-rotate-animation');
-                this.grid.invalidate();
+                app.restartSimulation();
                 this.dirty = true;
                 this.render();
             }, 150);
@@ -330,7 +330,7 @@ class Component extends GridItem {
             this.#dropPreview = null;
             what.grabOffsetX = null;
             what.grabOffsetY = null;
-            this.grid.invalidate();
+            app.restartSimulation();
         }
     }
 

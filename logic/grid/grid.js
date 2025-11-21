@@ -114,7 +114,7 @@ class Grid {
         item.gid ??= generateGID();
         this.#circuit.addItem(item);
         item.link(this);
-        this.invalidate();
+        app.restartSimulation();
         return item;
     }
 
@@ -124,13 +124,8 @@ class Grid {
         item.unlink();
         this.#circuit.removeItem(item);
         this.releaseHotkeyTarget(item);
-        this.invalidate();
-        return item;
-    }
-
-    // Invalidate nets and restart any running simulation.
-    invalidate() {
         app.restartSimulation();
+        return item;
     }
 
     // Returns items that passed the given filter (c) => bool.
