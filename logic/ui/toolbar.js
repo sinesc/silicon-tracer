@@ -37,10 +37,12 @@ class Toolbar {
         button.onmousedown = (e) => {
             e.preventDefault();
             e.stopPropagation();
-            let [ x, y ] = app.grid.screenToGrid(e.clientX, e.clientY);
-            let component = create(app.grid, x, y);
-            component.dragStart(x, y, { type: "component", grabOffsetX: component.width / 2, grabOffsetY: component.height / 2 });
-            component.render();
+            if (!button.classList.contains('toolbar-menu-button-disabled')) {
+                let [ x, y ] = app.grid.screenToGrid(e.clientX, e.clientY);
+                let component = create(app.grid, x, y);
+                component.dragStart(x, y, { type: "component", grabOffsetX: component.width / 2, grabOffsetY: component.height / 2 });
+                component.render();
+            }
         };
         this.#element.appendChild(button);
         button.onmouseenter = () => app.setStatus(hoverMessage);
@@ -56,7 +58,9 @@ class Toolbar {
         button.onclick= (e) => {
             e.preventDefault();
             e.stopPropagation();
-            action();
+            if (!button.classList.contains('toolbar-menu-button-disabled')) {
+                action();
+            }
         };
         this.#element.appendChild(button);
         button.onmouseenter = () => app.setStatus(hoverMessage);
@@ -131,8 +135,10 @@ class Toolbar {
         button.onclick= (e) => {
             e.preventDefault();
             e.stopPropagation();
-            stateFn(!state);
-            action(state);
+            if (!button.classList.contains('toolbar-menu-button-disabled')) {
+                stateFn(!state);
+                action(state);
+            }
         };
         button.onmouseenter = () => app.setStatus(hoverMessage);
         button.onmouseleave = () => app.clearStatus();

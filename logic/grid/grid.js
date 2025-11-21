@@ -76,9 +76,8 @@ class Grid {
         if (!this.#circuit) {
             return;
         }
-        for (let item of this.#circuit.data) {
-            item.unlink();
-        }
+        this.#circuit.unlink();
+        this.#circuit.detachSimulation();
         this.#circuit.gridConfig = this.#serializeConfig();
         this.#circuit.ports = CustomComponent.generateDefaultOutline(this.#circuit);
         this.#circuit = null;
@@ -103,10 +102,8 @@ class Grid {
         this.zoom = circuit.gridConfig.zoom ?? this.zoom;
         this.offsetX = circuit.gridConfig.offsetX ?? 0;
         this.offsetY = circuit.gridConfig.offsetY ?? 0;
-        for (let item of circuit.data) {
-            item.link(this);
-        }
         this.#circuit = circuit;
+        this.#circuit.link(this);
         this.#infoCircuitLabel = circuit.label;
         this.#dirty |= Grid.DIRTY_OVERLAY;
     }
@@ -397,7 +394,6 @@ class Grid {
             if (parentInstance !== null) {
                 let circuit = simulation.netList.instances[parentInstance].circuit;
                 simulation.instance = parentInstance;
-                app.circuits.current.detachSimulation();
                 this.setCircuit(circuit);
                 simulation.tickListener = circuit.attachSimulation(simulation.netList, parentInstance);
             }

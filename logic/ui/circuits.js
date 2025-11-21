@@ -66,7 +66,22 @@ class Circuit {
         return new Circuit(circuit.label, uid, components, circuit.ports, circuit.gridConfig);
     }
 
-    // Link simulation to circuit.
+    // Link circuit to the grid, creating DOM elements for the circuit's components.
+    link(grid) {
+        assert.class(Grid, grid);
+        for (let item of this.data) {
+            item.link(grid);
+        }
+    }
+
+    // Unlink circuit from the grid, deleting DOM elements of the circuit's components.
+    unlink() {
+        for (let item of this.data) {
+            item.unlink();
+        }
+    }
+
+    // Attach a simulation to the circuit.
     attachSimulation(netList, subCircuitInstance) {
         assert.class(NetList, netList);
         assert.number(subCircuitInstance);

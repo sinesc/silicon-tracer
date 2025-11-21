@@ -65,7 +65,6 @@ class CustomComponent extends Component {
             if (app.sim && circuit) {
                 let simulation = app.sim;
                 simulation.instance = this.instance;
-                app.circuits.current.detachSimulation();
                 this.grid.setCircuit(circuit);
                 simulation.tickListener = circuit.attachSimulation(simulation.netList, simulation.instance);
             }

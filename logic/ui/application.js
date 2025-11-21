@@ -237,11 +237,7 @@ class Application {
                 document.title = 'Silicon Tracer';
                 saveButton.classList.add('toolbar-menu-button-disabled');
             }
-            if (this.circuits.allEmpty) {
-                addButton.classList.add('toolbar-menu-button-disabled');
-            } else {
-                addButton.classList.remove('toolbar-menu-button-disabled');
-            }
+            addButton.classList.toggle('toolbar-menu-button-disabled', this.circuits.allEmpty);
         }
 
         // Circuit selection menu
@@ -260,21 +256,23 @@ class Application {
             });
             circuitMenu.createSeparator();
             for (let [ uid, label ] of this.circuits.list()) {
+                let isCurrentGrid = uid === this.grid.circuit.uid; // grid circuit may be different from current circuit when navigating through simulation subcomponents
+                let isCurrentCircuit = uid === this.circuits.current.uid;
                 // place circuit as component
-                if (uid !== this.circuits.current.uid) {
+                if (!isCurrentGrid) {
                     let [ componentButton ] = circuitMenu.createComponentButton('&#9094;', label + '. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => grid.addItem(new CustomComponent(x, y, 0, uid, label)));
                     componentButton.classList.add('toolbar-circuit-place');
                 }
                 // circuit select
-                let [ switchButton ] = circuitMenu.createActionButton(label, 'Switch grid to circuit "' + label + '".', () => {
+                let [ switchButton ] = circuitMenu.createActionButton(label, isCurrentCircuit ? 'This is the current circuit' : 'Switch grid to circuit "' + label + '".', () => {
                     circuitMenuState(false);
-                    this.circuits.current.detachSimulation();
                     this.circuits.select(uid);
                     if (this.autoCompile) {
                         this.startSimulation();
                     }
                 });
-                switchButton.classList.add(uid !== this.circuits.current.uid ? 'toolbar-circuit-select' : 'toolbar-circuit-select-fullrow');
+                switchButton.classList.add(!isCurrentGrid ? 'toolbar-circuit-select' : 'toolbar-circuit-select-fullrow');
+                switchButton.classList.toggle('toolbar-menu-button-disabled', isCurrentCircuit);
             }
         }
 
@@ -286,7 +284,8 @@ class Application {
         updateSimulationMenu = () => {
             simulationMenu.clear();
             let toggleButton;
-            let toggleButtonText = () => this.sim ? 'Stop simulation' : 'Start at "' + this.circuits.current.label + '"';
+            let toggleAction = () => this.circuits.current.uid === this.#currentSimulation ? 'stop' : (this.#simulations[this.circuits.current.uid] ? 'resume' : 'start');
+            let toggleButtonText = (action) => (action === 'stop' ? 'Stop' : (action === 'resume' ? 'Resume' : 'Start at')) + ' "' + this.circuits.current.label + '"';
             // Continuous simulation toggle
             simulationMenu.createToggleButton('Autostart', 'Automatically starts a new simulation when switching circuits.', this.autoCompile, (enabled) => {
                 this.autoCompile = enabled;
@@ -297,22 +296,30 @@ class Application {
                 updateSimulationMenu();
             });
             // Simulate current grid
-            [ toggleButton ] = simulationMenu.createActionButton(toggleButtonText(), 'Toggle simulation on/off.', () => {
+            [ toggleButton ] = simulationMenu.createActionButton(toggleButtonText(toggleAction()), 'Toggle simulation on/off.', () => {
                 simulationMenuState(false);
-                if (this.sim) {
+                let action = toggleAction();
+                if (action === 'stop') {
                     this.autoCompile = false;
                     this.stopSimulation();
-                } else {
+                    // switch to whatever circuit was being viewed when the simulation ended
+                    app.circuits.select(app.grid.circuit.uid);
+                } else if (action === 'resume' || action === 'stop') {
+                    // startSimulation resumes if a simulation for the current circuit already exists
                     this.singleStep = false;
                     this.startSimulation();
                 }
             });
             simulationMenu.createSeparator();
             for (let [ uid, label ] of this.simulations()) {
-                simulationMenu.createActionButton(label, 'Switch to simulation "' + label + '".', () => {
+                let isCurrent = uid === this.#currentSimulation;
+                let [ button ] = simulationMenu.createActionButton(label, isCurrent ? 'This is the current simulation' : 'Switch to/resume simulation "' + label + '".', () => {
                     simulationMenuState(false);
-                    // TODO
+                    app.circuits.select(uid);
+                    this.singleStep = false;
+                    this.startSimulation();
                 });
+                button.classList.toggle('toolbar-menu-button-disabled', isCurrent);
             }
         }
     }
