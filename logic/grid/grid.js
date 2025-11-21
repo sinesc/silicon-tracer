@@ -5,7 +5,7 @@ class Grid {
 
     static DEBUG_COORDS = false;
     static ZOOM_LEVELS = [ 0.5, 0.65, 0.85, 1.0, 1.25, 1.50, 1.75, 2.0, 2.5, 3.0 ];
-    static DEFAULT_ZOOM_LEVEL = 5;
+    static DEFAULT_ZOOM_LEVEL = 4;
     static SPACING = 20;
     static STATUS_DELAY = 500;
     static DIRTY_NONE       = 0b0000;
@@ -53,13 +53,6 @@ class Grid {
         // TODO: may have to go to parent UI
         // TODO: GridItems currently register document.onmouse* temporarily. those should probably follow the same logic: register onmouse* here and then pass on to whichever element wants to have them
         document.addEventListener('keydown', this.#handleKeyDown.bind(this));
-
-        // measure FPS // TODO move to application tick measurement timer
-        setInterval(() => {
-            this.#infoFPSCount.last = this.#infoFPSCount.current;
-            this.#infoFPSCount.current = 0;
-            this.#dirty |= Grid.DIRTY_OVERLAY;
-        }, 1000);
     }
 
     // Returns the circuit currently on the grid.
@@ -92,7 +85,7 @@ class Grid {
         this.#circuit = circuit;
         this.#circuit.link(this);
         this.#infoCircuitLabel = circuit.label;
-        this.#dirty |= Grid.DIRTY_OVERLAY;
+        this.#dirty |= Grid.DIRTY_INNER | Grid.DIRTY_OUTER | Grid.DIRTY_OVERLAY;
     }
 
     // Sets the simulation label displayed on the grid.
@@ -180,13 +173,9 @@ class Grid {
     render() {
 
         if (this.#dirty & Grid.DIRTY_OVERLAY) {
-            this.#infoElement.innerHTML = '<div class="info-section">Circuit</div><div class="info-title">' +
-                this.#infoCircuitLabel +
-                '</div>' +
-                (!this.#infoSimulationLabel ? '' : '<div class="info-section">Simulation</div><div class="info-title">' + this.#infoSimulationLabel +
-                    (!this.#infoSimulationDetails ? '' : '</div><div class="info-details">' + (this.#infoSimulationDetails ?? '') + '</div>')
-                ) +
-                '<div class="info-details">' + this.#infoFPSCount.last + ' frames/s</div>';
+            this.#infoElement.innerHTML = '<div class="info-section">Circuit</div><div class="info-title">' + this.#infoCircuitLabel + '</div>' +
+                (!this.#infoSimulationLabel ? '' : '<div class="info-section">Simulation</div><div class="info-title">' + this.#infoSimulationLabel + '</div>') +
+                (!this.#infoSimulationDetails ? '' : '<div class="info-details">' + this.#infoSimulationDetails + '</div>');
         }
 
         if (this.#dirty & (Grid.DIRTY_OUTER | Grid.DIRTY_INNER)) {

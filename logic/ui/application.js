@@ -23,6 +23,7 @@ class Application {
     #renderLast;
     #nextTick = 0;
     #ticksCounted = 0;
+    #framesCounted = 0;
     #load = 0;
 
     constructor(gridParent, toolbarParent, logo = null) {
@@ -53,8 +54,9 @@ class Application {
     }
 
     #renderStats() {
-        this.grid.setSimulationDetails(`${Number.formatSI(this.config.targetTPS)} ticks/s target<br>${Number.formatSI(Math.round(this.#ticksCounted))} ticks/s actual<br>${Math.round(this.#load)}% core load`);
+        this.grid.setSimulationDetails(`${Number.formatSI(this.config.targetTPS)} ticks/s target<br>${Number.formatSI(Math.round(this.#ticksCounted))} ticks/s actual<br>${Math.round(this.#load)}% core load<br>${this.#framesCounted} frames/s`);
         this.#ticksCounted = 0;
+        this.#framesCounted = 0;
     }
 
     #render() {
@@ -63,6 +65,7 @@ class Application {
         interval = this.#renderLast - interval;
         requestAnimationFrame(() => this.#render());
         this.grid.render();
+        this.#framesCounted += 1;
         // handle both TPS smaller or larger than FPS
         const ticksPerFrame = this.config.targetTPS / (1000 / interval);
         this.#nextTick += ticksPerFrame;
@@ -309,7 +312,7 @@ class Application {
                     this.stopSimulation();
                     // switch to whatever circuit was being viewed when the simulation ended
                     app.circuits.select(app.grid.circuit.uid);
-                } else if (action === 'resume' || action === 'stop') {
+                } else if (action === 'resume' || action === 'start') {
                     // startSimulation resumes if a simulation for the current circuit already exists
                     this.config.singleStep = false;
                     this.startSimulation();
