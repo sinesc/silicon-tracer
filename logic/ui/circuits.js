@@ -166,7 +166,6 @@ class Circuits {
         } else {
             writable = await this.#fileHandle.createWritable();
         }
-        app.grid.updateCircuit();
         await writable.write(JSON.stringify(this.#serialize(), null, Circuits.STRINGIFY_SPACE));
         await writable.close();
     }
@@ -176,7 +175,6 @@ class Circuits {
         const all = this.list();
         const handle = await File.saveAs(this.#fileName ?? all[0][1]);
         const writable = await handle.createWritable();
-        app.grid.updateCircuit();
         await writable.write(JSON.stringify(this.#serialize(), null, Circuits.STRINGIFY_SPACE));
         await writable.close();
         // make this the new file handle
@@ -204,7 +202,6 @@ class Circuits {
 
     // Returns true while all existing circuits are empty.
     get allEmpty() {
-        app.grid.updateCircuit();
         for (let circuit of this.#circuits) {
             if (circuit.data.length > 0) {
                 return false;

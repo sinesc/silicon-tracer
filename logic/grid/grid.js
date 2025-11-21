@@ -5,6 +5,7 @@ class Grid {
 
     static DEBUG_COORDS = false;
     static ZOOM_LEVELS = [ 0.5, 0.65, 0.85, 1.0, 1.25, 1.50, 1.75, 2.0, 2.5, 3.0 ];
+    static DEFAULT_ZOOM_LEVEL = 5;
     static SPACING = 20;
     static STATUS_DELAY = 500;
     static DIRTY_NONE       = 0b0000;
@@ -12,11 +13,7 @@ class Grid {
     static DIRTY_INNER      = 0b0010;
     static DIRTY_OVERLAY    = 0b0100;
 
-    #zoom = 1.25;
-    #offsetX = 0;
-    #offsetY = 0;
     #dirty = Grid.DIRTY_INNER | Grid.DIRTY_OUTER | Grid.DIRTY_OVERLAY;
-
     #element;
     #infoElement;
     #infoCircuitLabel = null;
@@ -78,7 +75,6 @@ class Grid {
         }
         this.#circuit.unlink();
         this.#circuit.detachSimulation();
-        this.#circuit.gridConfig = this.#serializeConfig();
         this.#circuit.ports = CustomComponent.generateDefaultOutline(this.#circuit);
         this.#circuit = null;
         this.#infoCircuitLabel = '';
@@ -87,21 +83,13 @@ class Grid {
         app.clearStatus(true);
     }
 
-    // Updates current circuit from grid state. // TODO try to get rid of this
-    updateCircuit() {
-        if (!this.#circuit) {
-            return;
-        }
-        this.#circuit.gridConfig = this.#serializeConfig();
-    }
-
     // Sets current grid circuit.
     setCircuit(circuit) {
         assert.class(Circuit, circuit);
         this.unsetCircuit();
-        this.zoom = circuit.gridConfig.zoom ?? this.zoom;
-        this.offsetX = circuit.gridConfig.offsetX ?? 0;
-        this.offsetY = circuit.gridConfig.offsetY ?? 0;
+        circuit.gridConfig.zoom ??= Grid.ZOOM_LEVELS[Grid.DEFAULT_ZOOM_LEVEL];
+        circuit.gridConfig.offsetX ??= 0;
+        circuit.gridConfig.offsetY ??= 0;
         this.#circuit = circuit;
         this.#circuit.link(this);
         this.#infoCircuitLabel = circuit.label;
@@ -142,7 +130,6 @@ class Grid {
 
     // Invalidate nets and restart any running simulation.
     invalidate() {
-        this.#circuit.detachSimulation();
         app.restartSimulation();
     }
 
@@ -328,38 +315,38 @@ class Grid {
 
     // Sets the zoom factor.
     get zoom() {
-        return this.#zoom;
+        return this.#circuit.gridConfig.zoom;
     }
 
     // Gets the zoom factor.
     set zoom(value) {
         assert.number(value);
-        this.#dirty |= this.#zoom !== value ? Grid.DIRTY_INNER : 0;
-        this.#zoom = value;
+        this.#dirty |= this.#circuit.gridConfig.zoom !== value ? Grid.DIRTY_INNER : 0;
+        this.#circuit.gridConfig.zoom = value;
     }
 
     // Sets grid x-offset.
     get offsetX() {
-        return this.#offsetX;
+        return this.#circuit.gridConfig.offsetX;
     }
 
     // Gets grid x-offset.
     set offsetX(value) {
         assert.number(value);
-        this.#dirty |= this.#offsetX !== value ? Grid.DIRTY_OUTER : 0;
-        this.#offsetX = value;
+        this.#dirty |= this.#circuit.gridConfig.offsetX !== value ? Grid.DIRTY_OUTER : 0;
+        this.#circuit.gridConfig.offsetX = value;
     }
 
     // Sets grid y-offset.
     get offsetY() {
-        return this.#offsetY;
+        return this.#circuit.gridConfig.offsetY;
     }
 
     // Gets grid y-offset.
     set offsetY(value) {
         assert.number(value);
-        this.#dirty |= this.#offsetY !== value ? Grid.DIRTY_OUTER : 0;
-        this.#offsetY = value;
+        this.#dirty |= this.#circuit.gridConfig.offsetY !== value ? Grid.DIRTY_OUTER : 0;
+        this.#circuit.gridConfig.offsetY = value;
     }
 
     // Gets the current zoom level index.
@@ -372,11 +359,6 @@ class Grid {
         assert.number(level);
         level = level < 0 ? 0 : (level >= Grid.ZOOM_LEVELS.length ? Grid.ZOOM_LEVELS.length - 1 : level);
         this.zoom = Grid.ZOOM_LEVELS[level];
-    }
-
-    // Serializes the grid config to the current circuit.
-    #serializeConfig() {
-        return { zoom: this.zoom, offsetX: Math.round(this.offsetX), offsetY: Math.round(this.offsetY) };
     }
 
     // Called when a key is pressed and then repeatedly while being held.
