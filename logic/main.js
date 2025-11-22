@@ -27,7 +27,7 @@ if (false) {
 
     let tick = 0;
     app.toolbar.createActionButton('Tick', 'Ticks the simulation once', () => {
-        app.singleStep = true;
+        app.config.singleStep = true;
         app.runSimulation(1);
         console.clear();
         console.log('tick ' + (tick++));

@@ -413,6 +413,7 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
     background-color: #00000038;
     pointer-events: none;
     text-align: right;
+    min-width: 140px;
 }
 .grid-info .info-section {
     opacity: 0.6;
