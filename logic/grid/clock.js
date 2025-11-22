@@ -1,15 +1,12 @@
 "use strict";
 
 // Basic clock provider.
-class Clock extends Interactive {
+class Clock extends Component {
 
-    interval = 1000;
-    #state = null;
-    #enable;
+    frequency = 2;
 
     constructor(x, y) {
         super(x, y, { left: [ 'e' ], right: [ 'c' ] }, 'clock');
-        this.#enable = this.portByName('e');
     }
 
     // Serializes the object for writing to disk.
@@ -17,48 +14,28 @@ class Clock extends Interactive {
         return {
             ...super.serialize(),
             _: { c: this.constructor.name, a: [ this.x, this.y ]},
-            interval: this.interval,
+            frequency: this.frequency,
         };
     }
 
     // Link clock to a grid, enabling it to be rendered.
     link(grid) {
         super.link(grid);
-        this.setHoverMessage(this.inner, () => '<b>' + (1000 / this.interval) + 'Hz Clock</b>. <i>LMB</i>: Drag to move, <i>R</i>: Rotate, <i>E</i>: Edit frequency, <i>1</i>: Enable, <i>2</i>: Disable, <i>3</i>: Detach', { type: 'hover' });
+        this.setHoverMessage(this.inner, () => `<b>${this.frequency} Hz Clock</b>. <i>LMB</i>: Drag to move, <i>R</i>: Rotate, <i>D</i>: Delete, <i>E</i>: Edit frequency`, { type: 'hover' });
     }
 
-    // Apply component state to simulation.
-    applyState(port, sim) {
-        /*if (this.#port.netId !== null) {
-            if (this.#state === 0) {
-                sim.setNetValue(this.#port.netId, 0);
-            } else if (this.#state === 1) {
-                let delta = performance.now() - app.sim.start;
-                sim.setNetValue(this.#port.netId, (delta % this.interval) < (this.interval / 2) ? 1 : 0);
-            }
-        }*/
+    // Number of ticks in half a cycle.
+    get ticksPerHalfCycle() {
+        return app.config.targetTPS / this.frequency / 2;
     }
 
-    // Hover hotkey actions
+    // Hover hotkey actions.
     onHotkey(key, what) {
         super.onHotkey(key, what);
         if (what.type === 'hover') {
-            let prevState = this.#state;
             if (key === 'e') {
-                let freq = parseInt(prompt('Set new frequency in Hz', Math.round(1000 / this.interval)));
-                this.interval = isNaN(freq) ? 1000 : 1000 / freq;
-            } if (key === '1') {
-                this.#state = 1;
-            } else if (key === '2') {
-                this.#state = 0;
-            } else if (key === '3') {
-                this.#state = null;
-            }
-            if (prevState !== this.#state) {
-                if (this.#enable.netId !== null && app.sim) {
-                    app.sim.engine.setNetValue(this.#enable.netId, this.#state);
-                }
-                this.render();
+                let freq = parseInt(prompt('Set new frequency in Hz', this.frequency));
+                this.frequency = isNaN(freq) || freq <= 0 ? 1 : freq;
             }
         }
     }

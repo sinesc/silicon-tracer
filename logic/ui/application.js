@@ -14,17 +14,22 @@ class Application {
 
     #simulations = {};
     #currentSimulation;
+    // move all into single object, e.g. #status = { ..
     #status;
     #statusMessage = null;
     #statusTimer = null;
     #statusLocked = false;
     #logo;
 
-    #renderLast;
-    #nextTick = 0;
-    #ticksCounted = 0;
-    #framesCounted = 0;
-    #load = 0;
+    #renderLoop = {
+        renderLast: 0,
+        nextTick: 0,
+        intervalComputed: 0.016,
+        ticksPerFrameComputed: 0,
+        load: 0,
+        ticksCounted: 0,
+        framesCounted: 0,
+    };
 
     constructor(gridParent, toolbarParent, logo = null) {
         assert.class(Node, gridParent);
@@ -48,38 +53,40 @@ class Application {
         this.#startLogoMonitor();
         this.circuits.clear();
         // start simulation/render loop
-        this.#renderLast = performance.now();
+        this.#renderLoop.renderLast = performance.now();
         requestAnimationFrame(() => this.#render());
+        // update stats overlay once a second
         setInterval(() => this.#renderStats(), 1000);
     }
 
     #renderStats() {
-        this.grid.setSimulationDetails(`${Number.formatSI(this.config.targetTPS)} ticks/s target<br>${Number.formatSI(Math.round(this.#ticksCounted))} ticks/s actual<br>${Math.round(this.#load)}% core load<br>${this.#framesCounted} frames/s`);
-        this.#ticksCounted = 0;
-        this.#framesCounted = 0;
+        this.grid.setSimulationDetails(`${Number.formatSI(this.config.targetTPS)} ticks/s target<br>${Number.formatSI(Math.round(this.#renderLoop.ticksCounted))} ticks/s actual<br>${Math.round(this.#renderLoop.load)}% core load<br>${this.#renderLoop.framesCounted} frames/s`);
+        this.#renderLoop.ticksCounted = 0;
+        this.#renderLoop.framesCounted = 0;
     }
 
     #render() {
-        let interval = this.#renderLast;
-        this.#renderLast = performance.now();
-        interval = this.#renderLast - interval;
+        let lastFrame = this.#renderLoop.renderLast;
+        this.#renderLoop.renderLast = performance.now();
+        this.#renderLoop.intervalComputed = this.#renderLoop.renderLast - lastFrame;
         requestAnimationFrame(() => this.#render());
         this.grid.render();
-        this.#framesCounted += 1;
+        this.#renderLoop.framesCounted += 1;
         // handle both TPS smaller or larger than FPS
-        const ticksPerFrame = this.config.targetTPS / (1000 / interval);
-        this.#nextTick += ticksPerFrame;
-        if (this.#nextTick >= 1) {
-            this.#nextTick -= 1;
+        this.#renderLoop.ticksPerFrameComputed = this.config.targetTPS / (1000 / this.#renderLoop.intervalComputed);
+        this.#renderLoop.nextTick += this.#renderLoop.ticksPerFrameComputed;
+        if (this.#renderLoop.nextTick >= 1) {
+            this.#renderLoop.nextTick -= 1;
             if (!this.config.singleStep && this.sim) {
-                const ticks = Math.max(1, ticksPerFrame);
-                this.#ticksCounted += ticks;
+                const ticksCapped = this.config.targetTPS / (1000 / 60); // cap is used to work around large intervals when browser window not focused
+                const ticks = Math.min(Math.max(1, this.#renderLoop.ticksPerFrameComputed), ticksCapped);
+                this.#renderLoop.ticksCounted += ticks;
                 this.runSimulation(ticks);
             }
         }
         // compute load (time spent computing/time available)
-        const elapsedTime = performance.now() - this.#renderLast;
-        this.#load = elapsedTime / interval * 100;
+        const elapsedTime = performance.now() - this.#renderLoop.renderLast;
+        this.#renderLoop.load = elapsedTime / this.#renderLoop.intervalComputed * 100;
     }
 
     // Returns list of simulations

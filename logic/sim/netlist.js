@@ -31,7 +31,7 @@ class NetList {
                 } else if (component instanceof Builtin) {
                     sim.declareBuiltin(component.type, suffix);
                 } else if (component instanceof Clock) {
-                    sim.declareClock(10, true, suffix);
+                    sim.declareClock(component.ticksPerHalfCycle, true, suffix);
                 }
             }
         }
