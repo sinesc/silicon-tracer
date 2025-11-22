@@ -79,7 +79,7 @@ class Application {
             this.#renderLoop.nextTick -= 1;
             if (!this.config.singleStep && this.sim) {
                 const ticksCapped = this.config.targetTPS / (1000 / 60); // cap is used to work around large intervals when browser window not focused
-                const ticks = Math.min(Math.max(1, this.#renderLoop.ticksPerFrameComputed), ticksCapped);
+                const ticks = Math.max(1, Math.min(this.#renderLoop.ticksPerFrameComputed, ticksCapped));
                 this.#renderLoop.ticksCounted += ticks;
                 this.runSimulation(ticks);
             }
