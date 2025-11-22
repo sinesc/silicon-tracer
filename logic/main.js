@@ -5,7 +5,7 @@ app.start();
 
 // dev/debug stuff
 
-if (false) {
+if (true) {
 
     app.toolbar.createActionButton('Dump ASM', 'Outputs simulation code to console.', () => {
         if (app.sim) {

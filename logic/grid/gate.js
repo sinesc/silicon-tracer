@@ -4,12 +4,22 @@
 class Gate extends Component {
 
     static START_LETTER = 97; // 65 for capitalized
+    static UNARY = [ 'not', 'buffer' ];
+    static MAX_INPUTS = 8;
 
     inputs;
     output;
 
     constructor(x, y, type, numInputs) {
         assert.number(numInputs);
+        const { left, right, inputs, output } = Gate.#generatePorts(numInputs);
+        super(x, y, { 'left': left, 'right': right }, type);
+        this.inputs = inputs;
+        this.output = output;
+    }
+
+    // Generates gate port layout based on number of inputs.
+    static #generatePorts(numInputs) {
 
         // compute blank spots for symmetry
         let blankAfter = -1;
@@ -41,10 +51,7 @@ class Gate extends Component {
             right.push(i === outputAt ? output : null);
         }
 
-        super(x, y, { 'left': left, 'right': right }, type);
-
-        this.inputs = inputs;
-        this.output = output;
+        return { left, right, inputs, output };
     }
 
     // Serializes the object for writing to disk.
@@ -59,6 +66,27 @@ class Gate extends Component {
     link(grid) {
         super.link(grid);
         this.element.classList.add('gate');
-        this.setHoverMessage(this.inner, '<b>' + this.label + '-Gate</b>. <i>LMB</i>: Drag to move. <i>R</i>: Rotate, <i>D</i>: Delete', { type: 'hover' });
+        const editable = !Gate.UNARY.includes(this.type);
+        this.setHoverMessage(this.inner, `<b>${this.label}-Gate</b>. <i>LMB</i>: Drag to move. <i>R</i>: Rotate, <i>D</i>: Delete` + (editable ? ', <i>E</i>: Edit inputs' : ''), { type: 'hover' });
+    }
+
+    // Hover hotkey actions.
+    onHotkey(key, what) {
+        super.onHotkey(key, what);
+        if (what.type === 'hover') {
+            if (key === 'e' && !Gate.UNARY.includes(this.type)) {
+                let numInputs = parseInt(prompt('Number of inputs', this.inputs.length));
+                if (!isNaN(numInputs)) {
+                    numInputs = Math.min(8, Math.max(2, numInputs));
+                    const { left, right, inputs, output } = Gate.#generatePorts(numInputs);
+                    let grid = this.grid;
+                    this.unlink();
+                    this.setPortsFromNames({ 'left': left, 'right': right });
+                    this.inputs = inputs;
+                    this.output = output;
+                    this.link(grid);
+                }
+            }
+        }
     }
 }
