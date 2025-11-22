@@ -3,7 +3,7 @@
 // Basic clock provider.
 class Clock extends Component {
 
-    frequency = 2;
+    frequency = 1;
 
     constructor(x, y) {
         super(x, y, { left: [ 'e' ], right: [ 'c' ] }, 'clock');

@@ -32,9 +32,9 @@ class Simulation {
     #clocks = [];
     #compiled;
     #alloc8Base = 0;
-    #alloc16Base = 0;
+    #alloc32Base = 0;
     #mem8;
-    #mem16;
+    #mem32;
 
     // Declares a net (which inputs/outputs are connected) and returns the net-index. Attached IO-names must include their suffixes. Meta can be any custom data.
     declareNet(attachedIONames, meta) {
@@ -68,7 +68,7 @@ class Simulation {
         assert.string(suffix);
         const input = 'e' + suffix;
         const output = 'c' + suffix
-        this.#clocks.push({ ticks, tristate, input, output, offset: this.#alloc16() });
+        this.#clocks.push({ ticks, tristate, input, output, offset: this.#alloc32() });
         this.#declareIO(input, 'i', delay ?? Simulation.DEFAULT_DELAY);
         this.#declareIO(output, 'o', delay ?? Simulation.DEFAULT_DELAY);
         return this.#clocks.length - 1;
@@ -97,15 +97,15 @@ class Simulation {
 
     // Compiles the circuit, making it ready for simulate().
     compile() {
-        let result = "'use strict';(mem, mem16) => {\n";
+        let result = "'use strict';(mem, mem32) => {\n";
         result += 'let mask, signal, cmask' + this.#endl();
         result += this.#compileTick();
         result += '}';
         this.#compiled = eval(result);
         this.#mem8 = new Uint8Array(this.#alloc8Base);
-        this.#mem16 = new Int16Array(this.#alloc16Base);
+        this.#mem32 = new Int32Array(this.#alloc32Base);
         for (const clock of this.#clocks) {
-            this.#mem16[clock.offset] = clock.ticks + 2; // clean up first clock cycle
+            this.#mem32[clock.offset] = clock.ticks + 2; // clean up first clock cycle
         }
     }
 
@@ -113,7 +113,7 @@ class Simulation {
     simulate(ticks = 1) {
         ticks |= 0;
         for (let i = 0; i < ticks; ++i) {
-            this.#compiled(this.#mem8, this.#mem16);
+            this.#compiled(this.#mem8, this.#mem32);
         }
     }
 
@@ -164,7 +164,7 @@ class Simulation {
             result.net[netIndex] = this.#mem8[net.offset];
         }
         for (const [ clockIndex, clock ] of this.#clocks.entries()) {
-            result.clock[clockIndex] = this.#mem16[clock.offset];
+            result.clock[clockIndex] = this.#mem32[clock.offset];
         }
         return result;
     }
@@ -175,8 +175,8 @@ class Simulation {
     }
 
     // Allocates memory for a clock.
-    #alloc16() {
-        return this.#alloc16Base++;
+    #alloc32() {
+        return this.#alloc32Base++;
     }
 
     // Declares a named input or output.
@@ -235,9 +235,9 @@ class Simulation {
         const signalBit = this.#compileConst(1 << Simulation.MAX_DELAY);
 
         let code = `${clockMem} -= 1; `                                                 // decrement clock
-        code += `cmask = ${clockMem} >> 15; `                                           // copy sign bit into entire mask
-        code += `${clockMem} = ((${clockMem} & ~cmask) | (${clock.ticks} & cmask)); `;  // either retain current clock value or reset it to ticks
-        code += `${outputMem} = ${signalBit} | (${outputMem} ^ !${clockMem})`;                         // flip output mem each time the clock reaches zero
+        code += `cmask = ${clockMem} >> 31; `                                           // copy sign bit into entire mask
+        code += `${clockMem} = ((${clockMem} & ~cmask) | (${clock.ticks} & cmask)); `;  // either retain current clock value or reset it to ticks on reaching -1
+        code += `${outputMem} = ${signalBit} | (${inputMem} & (${outputMem} ^ !${clockMem}))`;                         // flip output mem each time the clock reaches 0
         return code;
     }
 
@@ -304,7 +304,7 @@ class Simulation {
 
     // Returns code to refer to the state of a clock.
     #compileClockAccess(index) {
-        return 'mem16[' + this.#getClock(index).offset + ']';
+        return 'mem32[' + this.#getClock(index).offset + ']';
     }
 
     // Returns code for a bitmask with the signal and data bits for the given delay being unset.
