@@ -74,6 +74,16 @@ class Simulation {
         return this.#clocks.length - 1;
     }
 
+    // Updates the given clock's parameters and recompiles the circuit while retaining circuit state.
+    updateClock(id, ticks, tristate) {
+        assert.number(id);
+        assert.number(ticks);
+        assert.bool(tristate);
+        this.#clocks[id].ticks = ticks;
+        this.#clocks[id].tristate = tristate;
+        this.#compileFunction();
+    }
+
     // Declares a gate with the given inputs/output and returns the gate-index. For convenience, suffix is appended to all IO-names.
     declareGate(type, inputNames, outputName, suffix, delay = null) {
         assert.string(type);
@@ -95,17 +105,13 @@ class Simulation {
         return this.#gates.length - 1;
     }
 
-    // Compiles the circuit, making it ready for simulate().
+    // Compiles the circuit and initializes memory, making it ready for simulate().
     compile() {
-        let result = "'use strict';(mem, mem32) => {\n";
-        result += 'let mask, signal, cmask' + this.#endl();
-        result += this.#compileTick();
-        result += '}';
-        this.#compiled = eval(result);
+        this.#compileFunction();
         this.#mem8 = new Uint8Array(this.#alloc8Base);
         this.#mem32 = new Int32Array(this.#alloc32Base);
         for (const clock of this.#clocks) {
-            this.#mem32[clock.offset] = clock.ticks + 2; // clean up first clock cycle
+            this.#mem32[clock.offset] = clock.ticks + 2; // clean up first clock cycle offset
         }
     }
 
@@ -130,6 +136,11 @@ class Simulation {
     // Returns a list of defined nets.
     get nets() {
         return this.#nets;
+    }
+
+    // Returns a list of defined clocks.
+    get clocks() {
+        return this.#clocks;
     }
 
     // Sets the value of a net in the simulation. null to unset, true/false/1/0 to set value.
@@ -256,7 +267,7 @@ class Simulation {
         return code;
     }
 
-    // Compiles code to tick gates once.
+    // Compiles and returns code to tick all gates once.
     #compileTick() {
         let result = ''
         // copy net-state to connected ports
@@ -290,6 +301,15 @@ class Simulation {
             }
         }
         return result;
+    }
+
+    // Compiles and sets the internal simulation tick function.
+    #compileFunction() {
+        let code = "'use strict';(mem, mem32) => {\n";
+        code += 'let mask, signal, cmask' + this.#endl();
+        code += this.#compileTick();
+        code += '}';
+        this.#compiled = eval(code);
     }
 
     // Retuns code to refer to an IO state.
@@ -351,6 +371,7 @@ class Simulation {
             throw new Error('Undefined net ' + index);
         }
     }
+
     // Returns a clock declaration.
     #getClock(index) {
         let clock;

@@ -4,6 +4,7 @@
 class Clock extends Component {
 
     frequency = 1;
+    clockId = null;
 
     constructor(x, y) {
         super(x, y, { left: [ 'e' ], right: [ 'c' ] }, 'clock');
@@ -36,6 +37,9 @@ class Clock extends Component {
             if (key === 'e') {
                 let freq = parseInt(prompt('Set new frequency in Hz', this.frequency));
                 this.frequency = isNaN(freq) || freq <= 0 ? 1 : freq;
+                if (this.clockId !== null && app.sim) { // FIXME: insufficient check, running simulation might be for another circuit
+                    app.sim.engine.updateClock(this.clockId, this.ticksPerHalfCycle, true);
+                }
             }
         }
     }
