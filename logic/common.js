@@ -52,6 +52,43 @@ Number.formatSI = function(number) {
     return `${baseNumber}${prefix}`;
 };
 
+// Normalizes javascript iteration mess. Yields [ key, value ].
+function *pairs(iterable) {
+    if (Array.isArray(iterable)) {
+        for (const [ k, v ] of iterable.entries()) {
+            yield [ k, v ];
+        }
+    } else if (iterable instanceof Map) {
+        for (const [ k, v ] of iterable) {
+            yield [ k, v ];
+        }
+    } else if (iterable instanceof Set) {
+        let i = 0;
+        for (const v of iterable) {
+            yield [ i++, v ];
+        }
+    } else if (typeof iterable === 'object') {
+        for (const [ k, v ] of Object.entries(iterable)) {
+            yield [ k, v ];
+        }
+    } else {
+        throw new Error('Unsupported iterable');
+    }
+}
+
+// Normalizes javascript iteration mess. Yields keys yielded by pair.
+function *keys(iterable) {
+    for (const [ k , v ] of pairs(iterable)) {
+        yield k;
+    }
+}
+
+// Normalizes javascript iteration mess. Yields values yielded by pair.
+function *values(iterable) {
+    for (const [ k , v ] of pairs(iterable)) {
+        yield v;
+    }
+}
 
 function assert(condition, message = null) {
     if (!condition) {
