@@ -342,7 +342,7 @@ class Grid {
             Math.ceil(y / Grid.SPACING) * Grid.SPACING - 0.5 * Grid.SPACING
         ];
     }
-    
+
     // Generate a grid id.
     static generateGID() {
         return 'g' + crypto.randomUUID().replaceAll('-', '');
@@ -350,6 +350,7 @@ class Grid {
 
     // Called when a key is pressed and then repeatedly while being held.
     #handleKeyDown(e) {
+        e.preventDefault();
         if (this.#hotkeyTarget) {
             let { gridItem, args } = this.#hotkeyTarget;
             gridItem.onHotkey(e.key, ...args);

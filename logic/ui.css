@@ -281,6 +281,11 @@ html {
 .dialog-container .dialog-row-mask select {
     appearance: base-select;
 }
+.dialog-container .dialog-row-mask select option {
+    color: white;
+    padding-left: 0;
+    margin-left: 0;
+}
 .dialog-container .dialog-button-row {
     margin-top: 10px;
     text-align: right;
