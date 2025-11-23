@@ -134,6 +134,10 @@ class Circuit {
 // Handles loading/saving/selecting circuits and keeping the grid updated.
 class Circuits {
 
+    static EDIT_DIALOG = [
+        { name: 'label', label: 'Circuit label', type: 'string' }
+    ];
+
     static STRINGIFY_SPACE = "\t";
 
     #circuits;
@@ -249,20 +253,24 @@ class Circuits {
     }
 
     // Creates a new circuit.
-    create() {
-        // TODO: need proper input component
-        const label = prompt('Circuit label', this.#generateName());
-        this.#currentCircuit = this.#circuits.length;
-        const circuit = new Circuit(label);
-        this.#circuits.push(circuit);
-        this.select(circuit.uid);
+    async create() {
+        const config = await dialog("Configure circuit", Circuits.EDIT_DIALOG, { label: this.#generateName() });
+        if (config) {
+            this.#currentCircuit = this.#circuits.length;
+            const circuit = new Circuit(config.label);
+            this.#circuits.push(circuit);
+            this.select(circuit.uid);
+        }
     }
 
     // Rename
-    rename(uid) {
+    async rename(uid) {
         const circuit = this.byUID(uid);
-        circuit.label = prompt('Circuit label', circuit.label);
-        app.grid.setCircuit(circuit);
+        const config = await dialog("Configure circuit", Circuits.EDIT_DIALOG, { label: circuit.label });
+        if (config) {
+            circuit.label = config.label;
+            app.grid.setCircuit(circuit);
+        }
     }
 
     // Serializes loaded circuits for saving to file.

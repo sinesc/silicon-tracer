@@ -3,6 +3,10 @@
 // Basic logic gate component.
 class Gate extends Component {
 
+    static EDIT_DIALOG = [
+        { name: 'numInputs', label: 'Number of inputs', type: 'int' }
+    ];
+
     static START_LETTER = 97; // 65 for capitalized
     static UNARY = [ 'not', 'buffer' ];
     static MAX_INPUTS = 8;
@@ -71,15 +75,15 @@ class Gate extends Component {
     }
 
     // Hover hotkey actions.
-    onHotkey(key, what) {
+    async onHotkey(key, what) {
         super.onHotkey(key, what);
         if (what.type === 'hover') {
             if (key === 'e' && !Gate.UNARY.includes(this.type)) {
-                let numInputs = parseInt(prompt('Number of inputs', this.inputs.length));
-                if (!isNaN(numInputs)) {
-                    numInputs = Math.min(8, Math.max(2, numInputs));
+                const config = await dialog("Configure gate", Gate.EDIT_DIALOG, { numInputs: this.inputs.length });
+                if (config) {
+                    const numInputs = Math.min(8, Math.max(2, config.numInputs));
                     const { left, right, inputs, output } = Gate.#generatePorts(numInputs);
-                    let grid = this.grid;
+                    const grid = this.grid;
                     this.unlink();
                     this.setPortsFromNames({ 'left': left, 'right': right });
                     this.inputs = inputs;

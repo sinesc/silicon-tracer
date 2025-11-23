@@ -278,6 +278,9 @@ html {
     border-radius: 2px;
     font-size: var(--font-size-normal);
 }
+.dialog-container .dialog-row-mask input.dialog-error, .dialog-container .dialog-row-mask select.dialog-error {
+    outline-color: red;
+}
 .dialog-container .dialog-row-mask select {
     appearance: base-select;
 }

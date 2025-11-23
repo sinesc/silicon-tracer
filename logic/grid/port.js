@@ -3,6 +3,10 @@
 // An IO port to interface with other circuits.
 class Port extends Interactive {
 
+    static EDIT_DIALOG = [
+        { name: 'name', label: 'Name', type: 'string' }
+    ];
+
     #side;
     #port;
     #labelElement;
@@ -47,7 +51,7 @@ class Port extends Interactive {
     }
 
     // Hover hotkey actions
-    onHotkey(key, what) {
+    async onHotkey(key, what) {
         super.onHotkey(key, what);
         if (what.type === 'hover') {
             let prevState = this.#state;
@@ -58,8 +62,11 @@ class Port extends Interactive {
             } else if (key === '3') {
                 this.#state = null;
             } else if (key === 'e') {
-                this.name = prompt('Set port name', this.name);
-                this.render();
+                const config = await dialog("Configure port", Port.EDIT_DIALOG, { name: this.name });
+                if (config) {
+                    this.name = config.name;
+                    this.render();
+                }
             }
             if (prevState !== this.#state) {
                 if (this.#port.netId !== null && app.sim) {

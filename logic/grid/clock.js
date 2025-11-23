@@ -3,6 +3,10 @@
 // Basic clock provider.
 class Clock extends Component {
 
+    static EDIT_DIALOG = [
+        { name: 'frequency', label: 'Frequency in Hz', type: 'int' }
+    ];
+
     frequency = 1;
     clockId = null;
 
@@ -31,14 +35,16 @@ class Clock extends Component {
     }
 
     // Hover hotkey actions.
-    onHotkey(key, what) {
+    async onHotkey(key, what) {
         super.onHotkey(key, what);
         if (what.type === 'hover') {
             if (key === 'e') {
-                let freq = parseInt(prompt('Set new frequency in Hz', this.frequency));
-                this.frequency = isNaN(freq) || freq <= 0 ? 1 : freq;
-                if (this.clockId !== null && app.sim) { // FIXME: insufficient check, running simulation might be for another circuit
-                    app.sim.engine.updateClock(this.clockId, this.ticksPerHalfCycle, true);
+                const config = await dialog("Configure clock", Clock.EDIT_DIALOG, { frequency: this.frequency });
+                if (config) {
+                    this.frequency = isNaN(config.frequency) || config.frequency <= 0 ? 1 : config.frequency;
+                    if (this.clockId !== null && app.sim) { // FIXME: insufficient check, running simulation might be for another circuit
+                        app.sim.engine.updateClock(this.clockId, this.ticksPerHalfCycle, true);
+                    }
                 }
             }
         }

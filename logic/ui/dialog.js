@@ -6,47 +6,80 @@ function dialog(title, fields, data) {
     assert.array(fields);
     assert.object(data);
 
+    // predefine some validations
+    const validations = {
+        int: { check: (v, f) => isFinite(parseInt(v)), apply: (v, f) => parseInt(v) },
+        float: { check: (v, f) => isFinite(parseFloat(v)), apply: (v, f) => parseFloat(v) },
+        string: { check: (v, f) => String.isString(v), apply: (v, f) => v },
+        select: { check: (v, f) => Object.keys(f.options).includes(v), apply: (v, f) => v },
+    };
+
+    // build html form
     const blackout = element(null, 'div', 'dialog-blackout');
     const containerElement = element(blackout, 'div', 'dialog-container');
     element(containerElement, 'div', 'dialog-title', title);
     const contentElement = element(containerElement, 'div', 'dialog-content');
     const tableElement = element(contentElement, 'table');
-    const formElements = [];
+    const form = [];
 
     for (const field of values(fields)) {
         const rowElement = element(tableElement, 'tr', 'dialog-row');
         element(rowElement, 'td', 'dialog-row-label', field.label ?? field.name.toUpperFirst());
         const rowRight = element(rowElement, 'td', 'dialog-row-mask');
-        let rowField
+        let fieldElement
         if (field.type === 'select') {
-            rowField = element(rowRight, 'select', 'dialog-row-select', { name: field.name, options: field.options, value: data[field.name] });
+            fieldElement = element(rowRight, 'select', 'dialog-row-select', { name: field.name, options: field.options, value: data[field.name] });
         } else {
-            rowField = element(rowRight, 'input', 'dialog-row-input', { name: field.name, value: data[field.name] });
+            fieldElement = element(rowRight, 'input', 'dialog-row-input', { name: field.name, value: data[field.name] });
         }
-        formElements.push(rowField);
+        form.push({ element: fieldElement, field });
     }
 
     const rowElement = element(contentElement, 'div', 'dialog-button-row', );
     const cancelElement = element(rowElement, 'span', 'dialog-button dialog-cancel', 'Cancel');
     const confirmElement = element(rowElement, 'span', 'dialog-button dialog-confirm', 'Ok');
     document.body.appendChild(blackout);
-    formElements[0].focus();
+    form[0].element.focus();
 
+    // validate form input
+    const validate = () => {
+        const result = {};
+        const errors = [];
+        for (const { element, field } of values(form)) {
+            let validation = validations[field.type];
+            if (validation) {
+                if (validation.check(element.value, field)) {
+                    result[field.name] = validation.apply(element.value, field);
+                } else {
+                    errors.push(field.name);
+                }
+            } else {
+                errors.push(field.name);
+            }
+        }
+        return [ errors.length === 0 ? result : null, errors ];
+    };
+
+    // return a promise that resolves on ok/cancel
     return new Promise((resolve, reject) => {
         const confirm = () => {
-            blackout.remove();
-            const result = {};
-            for (const element of values(formElements)) {
-                result[element.name] = element.value;
+            const [ result, errors ] = validate();
+            if (result) {
+                blackout.remove();
+                resolve(result);
+            } else {
+                for (const { element, field } of values(form)) {
+                    element.classList.toggle('dialog-error', errors.includes(field.name));
+                }
             }
-            resolve(result);
         };
         const cancel = () => {
             blackout.remove();
             resolve(null);
         };
-        for (const element of values(formElements)) {
-            if (element.nodeName === 'INPUT') {
+        // handle enter/escape for text inputs
+        for (const { element, field } of values(form)) {
+            if (field.type !== 'select') {
                 element.onkeydown = (e) => {
                     e.stopPropagation();
                     if (e.keyCode === 13) {
