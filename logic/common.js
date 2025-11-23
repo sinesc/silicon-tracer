@@ -168,6 +168,43 @@ assert.class = function(constructor, val, allow_null = false, message = null) {
     }
 }
 
+// Creates an HTML element.
+function element(parent = null, type = 'div', classNames = null, contents = null) {
+    assert.class(Node, parent, true);
+    assert.string(type);
+    assert.string(classNames, true);
+    const element = document.createElement(type);
+    if (classNames) {
+        element.classList.add(...classNames.split(' '));
+    }
+    if (contents) {
+        if (type === 'div' || type === 'span' || type === 'th' || type === 'td') {
+            assert.string(contents);
+            element.innerHTML = contents;
+        } else if (type === 'input') {
+            assert.object(contents);
+            element.type = 'text';
+            element.name = contents.name;
+            element.value = contents.value;
+        } else if (type === 'select') {
+            assert.object(contents);
+            element.name = contents.name;
+            for (const [ k, v ] of pairs(contents.options)) {
+                const option = document.createElement("option");
+                option.value = k;
+                option.text = v;
+                option.selected = k === contents;
+                element.appendChild(option);
+            }
+        }
+    }
+    if (parent) {
+        parent.appendChild(element);
+    }
+    return element;
+}
+
+
 class Point {
     x;
     y;
