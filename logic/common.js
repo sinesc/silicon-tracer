@@ -10,6 +10,18 @@ Object.defineProperty(Object.prototype, "map", {
     }
 });
 
+Object.defineProperty(Object.prototype, "filter", {
+    value: function(c) {
+        let result = Object.create(this);
+        for (let [ k, v ] of Object.entries(this)) {
+            if (c(k, v)) {
+                result[k] = v;
+            }
+        }
+        return result;
+    }
+});
+
 Object.defineProperty(Array.prototype, "swapRemove", {
     value: function(i) {
         if (i < this.length - 1) {
@@ -193,7 +205,7 @@ function element(parent = null, type = 'div', classNames = null, contents = null
                 const option = document.createElement("option");
                 option.value = k;
                 option.text = v;
-                option.selected = k === contents;
+                option.selected = (''+k) === (''+contents.value);
                 element.appendChild(option);
             }
         }
