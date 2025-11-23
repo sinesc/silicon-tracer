@@ -34,21 +34,6 @@ Object.defineProperty(String.prototype, "toUpperFirst", {
     }
 });
 
-Math.nearestOdd = function(v) {
-    v |= 0;
-    return v + !(v % 2);
-};
-
-// generate a grid id
-function generateGID() {
-    return 'g' + crypto.randomUUID().replaceAll('-', '');
-}
-
-// generate a circuit id
-function generateUID() {
-    return 'u' + crypto.randomUUID().replaceAll('-', '');
-}
-
 // format number with metric units
 Number.formatSI = function(number) {
     const SI_PREFIXES_CENTER_INDEX = 8;
@@ -74,7 +59,7 @@ function assert(condition, message = null) {
     }
 }
 
-// provide non-stupid typeof
+// Provide non-stupid typeof
 assert.ty = function(val) {
     if (val === null) {
         return 'null';

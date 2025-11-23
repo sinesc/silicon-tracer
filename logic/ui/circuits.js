@@ -15,7 +15,7 @@ class Circuit {
         assert.object(ports);
         assert.object(gridConfig);
         this.label = label;
-        this.uid = uid ?? generateUID();
+        this.uid = uid ?? Circuit.generateUID();
         this.data = data;
         this.ports = ports;
         this.gridConfig = gridConfig;
@@ -123,6 +123,11 @@ class Circuit {
         for (let item of this.data) {
             item.detachSimulation();
         };
+    }
+
+    // Generate a circuit id.
+    static generateUID() {
+        return 'u' + crypto.randomUUID().replaceAll('-', '');
     }
 }
 

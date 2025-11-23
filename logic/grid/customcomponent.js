@@ -83,8 +83,9 @@ class CustomComponent extends Component {
             let sort = side === 'left' || side === 'right' ? item.y : item.x;
             outline[side].push([ sort, item.name ]);
         }
-        let height = Math.nearestOdd(Math.max(1, outline.left.length, outline.right.length));
-        let width = Math.nearestOdd(Math.max(1, outline.top.length, outline.bottom.length));
+        const nextOdd = (v) => v | 1;
+        let height = nextOdd(Math.max(1, outline.left.length, outline.right.length));
+        let width = nextOdd(Math.max(1, outline.top.length, outline.bottom.length));
         // arrange ports nicely
         for (let side of Object.keys(outline)) {
             // sort by position

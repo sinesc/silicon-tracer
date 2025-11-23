@@ -103,7 +103,7 @@ class Grid {
     // Adds an item to the grid. Automatically done by GridItem constructor.
     addItem(item) {
         assert.class(GridItem, item);
-        item.gid ??= generateGID();
+        item.gid ??= Grid.generateGID();
         this.#circuit.addItem(item);
         item.link(this);
         app.restartSimulation();
@@ -157,16 +157,6 @@ class Grid {
         let mouseGridX = -this.offsetX + mouseX / this.zoom;
         let mouseGridY = -this.offsetY + mouseY / this.zoom;
         return [ mouseGridX, mouseGridY ];
-    }
-
-    // Utility function to align given x/y to grid coordinates and return them.
-    static align(x, y) {
-        assert.number(x);
-        assert.number(y);
-        return [
-            Math.ceil(x / Grid.SPACING) * Grid.SPACING - 0.5 * Grid.SPACING,
-            Math.ceil(y / Grid.SPACING) * Grid.SPACING - 0.5 * Grid.SPACING
-        ];
     }
 
     // Renders the grid and its components.
@@ -341,6 +331,21 @@ class Grid {
         assert.number(level);
         level = level < 0 ? 0 : (level >= Grid.ZOOM_LEVELS.length ? Grid.ZOOM_LEVELS.length - 1 : level);
         this.zoom = Grid.ZOOM_LEVELS[level];
+    }
+
+    // Utility function to align given x/y to grid coordinates and return them.
+    static align(x, y) {
+        assert.number(x);
+        assert.number(y);
+        return [
+            Math.ceil(x / Grid.SPACING) * Grid.SPACING - 0.5 * Grid.SPACING,
+            Math.ceil(y / Grid.SPACING) * Grid.SPACING - 0.5 * Grid.SPACING
+        ];
+    }
+    
+    // Generate a grid id.
+    static generateGID() {
+        return 'g' + crypto.randomUUID().replaceAll('-', '');
     }
 
     // Called when a key is pressed and then repeatedly while being held.

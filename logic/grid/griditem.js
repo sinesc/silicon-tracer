@@ -19,7 +19,7 @@ class GridItem {
     #hoverMessages;
 
     constructor(x, y) {
-        this.#gid = generateGID();
+        this.#gid = Grid.generateGID();
         this.#position = new Point(...Grid.align(x, y));
     }
 
