@@ -3,6 +3,11 @@
 // Custom circuit represented as a component.
 class CustomComponent extends Component {
 
+    static EDIT_DIALOG = [
+        { name: 'label', label: 'Circuit label', type: 'string' },
+        ...Component.EDIT_DIALOG,
+    ];
+
     // Circuit UID for the circuit represented by this custom component.
     uid;
 
@@ -33,7 +38,7 @@ class CustomComponent extends Component {
         this.type = circuit.label;
         super.link(grid);
         this.element.classList.add('custom');
-        this.setHoverMessage(this.inner, () => '<b>' + this.label + '</b>. <i>LMB</i>: Drag to move. <i>R</i>: Rotate, <i>D</i>: Delete, ' + (app.sim ? '' : '<u>') + '<i>Q</i>:Switch to sub-circuit simulation' + (app.sim ? '' : '</u>'), { type: 'hover' });
+        this.setHoverMessage(this.inner, () => '<b>' + this.label + '</b>. <i>LMB</i>: Drag to move, <i>R</i>: Rotate, <i>D</i>: Delete, <i>E</i>: Edit, ' + (app.sim ? '' : '<u>') + '<i>Q</i>:Switch to sub-circuit simulation' + (app.sim ? '' : '</u>'), { type: 'hover' });
     }
 
     // Set the simulation instance of the represented sub-circuit.
@@ -68,6 +73,17 @@ class CustomComponent extends Component {
                 this.grid.setCircuit(circuit);
                 simulation.tickListener = circuit.attachSimulation(simulation.netList, simulation.instance);
             }
+        }
+    }
+
+    // Handle edit hotkey.
+    async onEdit() {
+        const config = await dialog("Configure custom component", CustomComponent.EDIT_DIALOG, { label: this.label, rotation: this.rotation });
+        if (config) {
+            this.rotation = config.rotation;
+            this.type = config.label;
+            let circuit = app.circuits.byUID(this.uid) ?? {};
+            circuit.label = config.label;
         }
     }
 

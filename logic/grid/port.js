@@ -4,7 +4,8 @@
 class Port extends Interactive {
 
     static EDIT_DIALOG = [
-        { name: 'name', label: 'Name', type: 'string' }
+        { name: 'name', label: 'Name', type: 'string' },
+        ...Component.EDIT_DIALOG,
     ];
 
     #side;
@@ -25,7 +26,7 @@ class Port extends Interactive {
     // Link port to a grid, enabling it to be rendered.
     link(grid) {
         super.link(grid);
-        this.setHoverMessage(this.inner, () => 'Port <b>' + this.name + '</b>. <i>LMB</i>: Drag to move. <i>R</i>: Rotate, <i>E</i>: Edit name, <i>1</i>: Set high, <i>2</i>: Set low, <i>3</i>: Unset', { type: 'hover' });
+        this.setHoverMessage(this.inner, () => 'Port <b>' + this.name + '</b>. <i>LMB</i>: Drag to move, <i>1</i>: Set high, <i>2</i>: Set low, <i>3</i>: Unset, <i>R</i>: Rotate, <i>D</i>: Delete, <i>E</i>: Edit', { type: 'hover' });
         this.#labelElement = document.createElement('div');
         this.#labelElement.classList.add('port-name');
         this.element.classList.add('port');
@@ -61,12 +62,6 @@ class Port extends Interactive {
                 this.#state = 0;
             } else if (key === '3') {
                 this.#state = null;
-            } else if (key === 'e') {
-                const config = await dialog("Configure port", Port.EDIT_DIALOG, { name: this.name });
-                if (config) {
-                    this.name = config.name;
-                    this.render();
-                }
             }
             if (prevState !== this.#state) {
                 if (this.#port.netId !== null && app.sim) {
@@ -74,6 +69,16 @@ class Port extends Interactive {
                 }
                 this.render();
             }
+        }
+    }
+
+    // Handle edit hotkey.
+    async onEdit() {
+        const config = await dialog("Configure port", Port.EDIT_DIALOG, { name: this.name, rotation: this.rotation });
+        if (config) {
+            this.name = config.name;
+            this.rotation = config.rotation;
+            this.render();
         }
     }
 

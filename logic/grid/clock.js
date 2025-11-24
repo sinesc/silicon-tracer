@@ -4,7 +4,8 @@
 class Clock extends Component {
 
     static EDIT_DIALOG = [
-        { name: 'frequency', label: 'Frequency in Hz', type: 'int' }
+        { name: 'frequency', label: 'Frequency in Hz', type: 'int', check: (v, f) => { let p = parseInt(v); return isFinite(p) && p >= 1; }, apply: (v, f) => parseInt(v) },
+        ...Component.EDIT_DIALOG,
     ];
 
     frequency = 1;
@@ -26,7 +27,7 @@ class Clock extends Component {
     // Link clock to a grid, enabling it to be rendered.
     link(grid) {
         super.link(grid);
-        this.setHoverMessage(this.inner, () => `<b>${this.frequency} Hz Clock</b>. <i>LMB</i>: Drag to move, <i>R</i>: Rotate, <i>D</i>: Delete, <i>E</i>: Edit frequency`, { type: 'hover' });
+        this.setHoverMessage(this.inner, () => `<b>${this.frequency} Hz Clock</b>. <i>LMB</i>: Drag to move, <i>R</i>: Rotate, <i>D</i>: Delete, <i>E</i>: Edit`, { type: 'hover' });
     }
 
     // Number of ticks in half a cycle.
@@ -34,18 +35,14 @@ class Clock extends Component {
         return app.config.targetTPS / this.frequency / 2;
     }
 
-    // Hover hotkey actions.
-    async onHotkey(key, what) {
-        super.onHotkey(key, what);
-        if (what.type === 'hover') {
-            if (key === 'e') {
-                const config = await dialog("Configure clock", Clock.EDIT_DIALOG, { frequency: this.frequency });
-                if (config) {
-                    this.frequency = isNaN(config.frequency) || config.frequency <= 0 ? 1 : config.frequency;
-                    if (this.clockId !== null && app.sim) { // FIXME: insufficient check, running simulation might be for another circuit
-                        app.sim.engine.updateClock(this.clockId, this.ticksPerHalfCycle, true);
-                    }
-                }
+    // Handle edit hotkey.
+    async onEdit() {
+        const config = await dialog("Configure clock", Clock.EDIT_DIALOG, { frequency: this.frequency, rotation: this.rotation });
+        if (config) {
+            this.frequency = config.frequency;
+            this.rotation = config.rotation;
+            if (this.clockId !== null && app.sim) { // FIXME: insufficient check, running simulation might be for another circuit. just rebuild entire circuit but keep mem8/32
+                app.sim.engine.updateClock(this.clockId, this.ticksPerHalfCycle, true);
             }
         }
     }

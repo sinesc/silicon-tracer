@@ -40,16 +40,20 @@ function dialog(title, fields, data) {
     const confirmElement = element(rowElement, 'span', 'dialog-button dialog-confirm', 'Ok');
     document.body.appendChild(blackout);
     form[0].element.focus();
+    if (form[0].element.select) {
+        form[0].element.select();
+    }
 
     // validate form input
     const validate = () => {
         const result = {};
         const errors = [];
         for (const { element, field } of values(form)) {
-            let validation = validations[field.type];
-            if (validation) {
-                if (validation.check(element.value, field)) {
-                    result[field.name] = validation.apply(element.value, field);
+            let check = field.check ?? validations[field.type].check ?? null;
+            if (check) {
+                if (check(element.value, field)) {
+                    let apply = field.apply ?? validations[field.type].apply ?? null;
+                    result[field.name] = apply ? apply(element.value, field) : element.value;
                 } else {
                     errors.push(field.name);
                 }

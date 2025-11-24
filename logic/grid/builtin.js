@@ -3,6 +3,10 @@
 // Basic gate-like builtin component.
 class Builtin extends Component {
 
+    static EDIT_DIALOG = [
+        ...Component.EDIT_DIALOG,
+    ];
+
     inputs;
     output;
 
@@ -57,6 +61,15 @@ class Builtin extends Component {
     link(grid) {
         super.link(grid);
         this.element.classList.add('builtin');
-        this.setHoverMessage(this.inner, '<b>' + this.label + '</b>. <i>LMB</i>: Drag to move. <i>R</i>: Rotate, <i>D</i>: Delete', { type: 'hover' });
+        this.setHoverMessage(this.inner, '<b>' + this.label + '</b>. <i>LMB</i>: Drag to move, <i>R</i>: Rotate, <i>D</i>: Delete, <i>E</i>: Edit', { type: 'hover' });
+    }
+
+    // Handle edit hotkey.
+    async onEdit() {
+        const config = await dialog(`Configure ${this.label}`, Builtin.EDIT_DIALOG, { rotation: this.rotation });
+        if (config) {
+            this.rotation = config.rotation;
+            this.render();
+        }
     }
 }

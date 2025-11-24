@@ -56,12 +56,12 @@ class Wire extends GridItem {
         this.netId = null;
     }
 
-    // Implement to return whether the element is selected.
+    // Return whether the element is selected.
     get selected() {
         return this.#element.classList.contains('selected');
     }
 
-    // Implement to apply/remove component selection effect.
+    // Apply/remove component selection effect.
     set selected(status) {
         assert.bool(status, true);
         this.#element.classList.toggle('selected', status);

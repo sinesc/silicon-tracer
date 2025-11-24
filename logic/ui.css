@@ -281,6 +281,10 @@ html {
 .dialog-container .dialog-row-mask input.dialog-error, .dialog-container .dialog-row-mask select.dialog-error {
     outline-color: red;
 }
+.dialog-container .dialog-row-mask input::selection {
+    background: var(--button-bg-color);
+    color: black;
+}
 .dialog-container .dialog-row-mask select {
     appearance: base-select;
 }
@@ -305,6 +309,11 @@ html {
     border: 2px solid var(--button-border-color);
     background-color: var(--button-bg-color);
     color: #000;
+    transition: border-color var(--component-color-transition-duration), background-color var(--component-color-transition-duration);
+}
+.dialog-container .dialog-cancel:hover, .dialog-container .dialog-confirm:hover {
+    border-color: var(--button-border-hover-color);
+    background-color: var(--button-bg-hover-color);
 }
 
 /*

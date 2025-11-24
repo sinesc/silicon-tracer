@@ -3,13 +3,19 @@
 // Basic logic gate component.
 class Gate extends Component {
 
-    static EDIT_DIALOG = [
-        { name: 'numInputs', label: 'Number of inputs', type: 'int' }
-    ];
-
     static START_LETTER = 97; // 65 for capitalized
-    static UNARY = [ 'not', 'buffer' ];
+    static UNARY = Object.keys(Simulation.GATE_MAP.filter((k, v) => v.joinOp === null));
     static MAX_INPUTS = 8;
+
+    static UNARY_DIALOG = [
+        { name: 'type', label: 'Logic function', type: 'select', options: Simulation.GATE_MAP.map((k, v) => k.toUpperFirst()).filter((k, v) => Gate.UNARY.includes(k)) },
+        ...Component.EDIT_DIALOG,
+    ];
+    static XARY_DIALOG = [
+        { name: 'numInputs', label: 'Number of inputs', type: 'int', check: (v, f) => { let p = parseInt(v); return isFinite(p) && p > 1 && p <= 8; }, apply: (v, f) => parseInt(v) },
+        { name: 'type', label: 'Logic function', type: 'select', options: Simulation.GATE_MAP.map((k, v) => k.toUpperFirst()).filter((k, v) => !Gate.UNARY.includes(k))  },
+        ...Component.EDIT_DIALOG,
+    ];
 
     inputs;
     output;
@@ -70,27 +76,23 @@ class Gate extends Component {
     link(grid) {
         super.link(grid);
         this.element.classList.add('gate');
-        const editable = !Gate.UNARY.includes(this.type);
-        this.setHoverMessage(this.inner, `<b>${this.label}-Gate</b>. <i>LMB</i>: Drag to move. <i>R</i>: Rotate, <i>D</i>: Delete` + (editable ? ', <i>E</i>: Edit inputs' : ''), { type: 'hover' });
+        this.setHoverMessage(this.inner, `<b>${this.label}-Gate</b>. <i>LMB</i>: Drag to move, <i>R</i>: Rotate, <i>D</i>: Delete, <i>E</i>: Edit`, { type: 'hover' });
     }
 
-    // Hover hotkey actions.
-    async onHotkey(key, what) {
-        super.onHotkey(key, what);
-        if (what.type === 'hover') {
-            if (key === 'e' && !Gate.UNARY.includes(this.type)) {
-                const config = await dialog("Configure gate", Gate.EDIT_DIALOG, { numInputs: this.inputs.length });
-                if (config) {
-                    const numInputs = Math.min(8, Math.max(2, config.numInputs));
-                    const { left, right, inputs, output } = Gate.#generatePorts(numInputs);
-                    const grid = this.grid;
-                    this.unlink();
-                    this.setPortsFromNames({ 'left': left, 'right': right });
-                    this.inputs = inputs;
-                    this.output = output;
-                    this.link(grid);
-                }
-            }
+    // Handle edit hotkey.
+    async onEdit() {
+        const unary = Gate.UNARY.includes(this.type);
+        const config = await dialog("Configure gate", unary ? Gate.UNARY_DIALOG : Gate.XARY_DIALOG, { numInputs: this.inputs.length, type: this.type, rotation: this.rotation });
+        if (config) {
+            const { left, right, inputs, output } = Gate.#generatePorts(config.numInputs ?? this.inputs.length);
+            const grid = this.grid;
+            this.unlink();
+            this.setPortsFromNames({ 'left': left, 'right': right });
+            this.type = config.type;
+            this.inputs = inputs;
+            this.output = output;
+            this.link(grid);
+            this.rotation = config.rotation; // needs to be on grid for rotation to properly update x/y/width/height
         }
     }
 }

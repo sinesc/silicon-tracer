@@ -62,6 +62,10 @@ class ComponentPort {
 // General component used as a base class for Gates/Builtins or user defined circuits when represented within other circuits.
 class Component extends GridItem {
 
+    static EDIT_DIALOG = [
+        { name: 'rotation', label: 'Rotation', type: 'select', options: { 0: "Default", 1: "90°", 2: "180°", 3: "270°" }, apply: (v, f) => parseInt(v) },
+    ];
+
     static SIDES = [ 'top', 'right', 'bottom', 'left' ];
     static PORT_SIZE = 14;
     static INNER_MARGIN = 5;
@@ -164,12 +168,12 @@ class Component extends GridItem {
         });
     }
 
-    // Implement to return whether the element is selected.
+    // Return whether the element is selected.
     get selected() {
         return this.#element.classList.contains('selected');
     }
 
-    // Implement to apply/remove component selection effect.
+    // Apply/remove component selection effect.
     set selected(status) {
         assert.bool(status, true);
         this.#element.classList.toggle('selected', status);
@@ -207,8 +211,17 @@ class Component extends GridItem {
     // Set grid item rotation.
     set rotation(value) {
         assert.number(value);
+        value = value & 3; // clamp to 0-3
         this.dirty ||= this.#rotation !== value;
-        this.#rotation = value;
+        if (this.grid && (value & 1) !== (this.#rotation & 1)) {
+            let x = this.x + (this.width - this.height) / 2;
+            let y = this.y - (this.width - this.height) / 2;
+            [ this.x, this.y ] = Grid.align(x, y);
+            this.#rotation = value;
+            this.updateDimensions();
+        } else {
+            this.#rotation = value;
+        }
     }
 
     // Get component type string.
@@ -280,11 +293,7 @@ class Component extends GridItem {
     onHotkey(key, what) {
         if (key === 'r' && what.type === 'hover') {
             // rotate component with R while mouse is hovering
-            this.rotation = (this.rotation + 1) & 3;
-            this.x += (this.width - this.height) / 2;
-            this.y -= (this.width - this.height) / 2;
-            [ this.x, this.y ] = Grid.align(this.x, this.y);
-            this.updateDimensions();
+            this.rotation += 1;
             this.#element.classList.add('component-rotate-animation');
             setTimeout(() => {
                 this.#element.classList.remove('component-rotate-animation');
@@ -300,7 +309,13 @@ class Component extends GridItem {
                     this.grid.removeItem(this);
                 }
             }, 150);
+        } else if (key === 'e') {
+            this.onEdit();
         }
+    }
+
+    // Implement to handle edit hotkey.
+    async onEdit() {
     }
 
     // Draw drop preview while moving component.
