@@ -8,8 +8,8 @@ function dialog(title, fields, data) {
 
     // predefine some validations
     const validations = {
-        int: { check: (v, f) => isFinite(parseInt(v)), apply: (v, f) => parseInt(v) },
-        float: { check: (v, f) => isFinite(parseFloat(v)), apply: (v, f) => parseFloat(v) },
+        int: { check: (v, f) => isFinite(Number.parseSI(v, true)), apply: (v, f) => Number.parseSI(v, true) },
+        float: { check: (v, f) => isFinite(Number.parseSI(v)), apply: (v, f) => Number.parseSI(v) },
         string: { check: (v, f) => String.isString(v), apply: (v, f) => v },
         select: { check: (v, f) => Object.keys(f.options).includes(v), apply: (v, f) => v },
     };
@@ -96,6 +96,7 @@ function dialog(title, fields, data) {
         }
         confirmElement.onclick = confirm;
         cancelElement.onclick = cancel;
+        containerElement.onclick = (e) => e.stopPropagation();
         blackout.onclick = cancel;
     })
 }

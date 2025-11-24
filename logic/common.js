@@ -46,23 +46,43 @@ Object.defineProperty(String.prototype, "toUpperFirst", {
     }
 });
 
-// format number with metric units
-Number.formatSI = function(number) {
-    const SI_PREFIXES_CENTER_INDEX = 8;
-    const siPrefixes = [ 'y', 'z', 'a', 'f', 'p', 'n', 'μ', 'm', '', 'k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y' ];
+// Formats a number to a string with a metric unit prefix.
+Number.formatSI = function(number, fractionDigits = 2) {
     if (number === 0) {
         return number.toString();
     }
+    const SI_PREFIXES_CENTER_INDEX = 8;
+    const SI_PREFIXES = [ 'y', 'z', 'a', 'f', 'p', 'n', 'μ', 'm', '', 'k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y' ];
     const EXP_STEP_SIZE = 3;
     const base = Math.floor(Math.log10(Math.abs(number)));
     const siBase = (base < 0 ? Math.ceil : Math.floor)(base / EXP_STEP_SIZE);
-    const prefix = siPrefixes[siBase + SI_PREFIXES_CENTER_INDEX];
+    const prefix = SI_PREFIXES[siBase + SI_PREFIXES_CENTER_INDEX];
     if (siBase === 0) {
         return number.toString();
     }
-    const baseNumber = parseFloat((number / Math.pow(10, siBase * EXP_STEP_SIZE)).toFixed(2));
+    const baseNumber = parseFloat((number / Math.pow(10, siBase * EXP_STEP_SIZE)).toFixed(fractionDigits));
     return `${baseNumber}${prefix}`;
 };
+
+// Parses a number with a metric unit prefix to a float.
+Number.parseSI = function(number, asInt = false) {
+    const SI_PREFIXES_CENTER_INDEX = 8;
+    const SI_PREFIXES = [ 'y', 'z', 'a', 'f', 'p', 'n', 'μ', 'm', '', 'k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y' ];
+    const EXP_STEP_SIZE = 3;
+    number = ''+number;
+    const matches = number.match(/^(?<number>(?<sign>[+\-])?(?<integer>[0-9]+)(?:.(?<fraction>[0-9]+))?)(?<prefix>[a-zA-Z])?$/);
+    if (matches) {
+        const  prefixIndex = SI_PREFIXES.indexOf(matches.groups.prefix ?? '');
+        if (prefixIndex === -1) {
+            return null;
+        }
+        const prefixMultiplier = Math.pow(10, EXP_STEP_SIZE * (prefixIndex - SI_PREFIXES_CENTER_INDEX));
+        const result = parseFloat(matches.groups.number) * prefixMultiplier;
+        return isFinite(result) ? (asInt ? Math.round(result) : result) : null;
+    } else {
+        return null; // should be NaN for consistency with parseFloat/Int if that wasn't just such a horribly bad return value
+    }
+}
 
 // Normalizes javascript iteration mess. Yields [ key, value ].
 function *pairs(iterable) {
