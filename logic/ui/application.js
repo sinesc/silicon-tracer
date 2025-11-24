@@ -76,7 +76,7 @@ class Application {
         this.#renderLoop.ticksPerFrameComputed = this.config.targetTPS / (1000 / this.#renderLoop.intervalComputed);
         this.#renderLoop.nextTick += this.#renderLoop.ticksPerFrameComputed;
         if (this.#renderLoop.nextTick >= 1) {
-            this.#renderLoop.nextTick -= 1;
+            this.#renderLoop.nextTick -= Math.floor(this.#renderLoop.nextTick);
             if (!this.config.singleStep && this.sim) {
                 const ticksCapped = this.config.targetTPS / (1000 / 60); // cap is used to work around large intervals when browser window not focused
                 const ticks = Math.max(1, Math.min(this.#renderLoop.ticksPerFrameComputed, ticksCapped));
@@ -325,7 +325,17 @@ class Application {
                     this.startSimulation();
                 }
             });
-            simulationMenu.createSeparator();
+            // Simulate current grid
+            simulationMenu.createActionButton(`Set ticks/s (${Number.formatSI(this.config.targetTPS)})...`, 'Configure simulation speed', async () => {
+                simulationMenuState(false);
+                let result = await dialog('Simulation speed', [ { label: "Ticks per second", name: "targetTPS", type: "int", check: (v) => v > 0 } ], { targetTPS: this.config.targetTPS });
+                if (result) {
+                    this.config.targetTPS = result.targetTPS;
+                }
+            });
+            if (this.simulations().length > 0) {
+                simulationMenu.createSeparator();
+            }
             for (let [ uid, label ] of this.simulations()) {
                 let isCurrent = uid === this.#currentSimulation;
                 let [ button ] = simulationMenu.createActionButton(label, isCurrent ? 'This is the current simulation' : 'Switch to/resume simulation "' + label + '".', () => {
