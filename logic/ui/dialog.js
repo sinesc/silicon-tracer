@@ -96,5 +96,6 @@ function dialog(title, fields, data) {
         }
         confirmElement.onclick = confirm;
         cancelElement.onclick = cancel;
+        blackout.onclick = cancel;
     })
 }

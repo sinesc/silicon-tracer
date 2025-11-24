@@ -12,7 +12,7 @@ class Gate extends Component {
         ...Component.EDIT_DIALOG,
     ];
     static XARY_DIALOG = [
-        { name: 'numInputs', label: 'Number of inputs', type: 'int', check: (v, f) => { let p = parseInt(v); return isFinite(p) && p > 1 && p <= 8; }, apply: (v, f) => parseInt(v) },
+        { name: 'numInputs', label: 'Number of inputs', type: 'select', options: { "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8 }, apply: (v, f) => parseInt(v) },
         { name: 'type', label: 'Logic function', type: 'select', options: Simulation.GATE_MAP.map((k, v) => k.toUpperFirst()).filter((k, v) => !Gate.UNARY.includes(k))  },
         ...Component.EDIT_DIALOG,
     ];

@@ -92,7 +92,7 @@ class Application {
     // Returns list of simulations
     simulations() {
         let simulations = Object.keys(this.#simulations).map((uid) => [ uid, this.circuits.byUID(uid).label ]);
-        simulations.sort((a, b) => a[1] < b[1] ? -1 : (a[1] > b[1] ? 1 : 0));
+        simulations.sort((a, b) => a[1].toLowerCase() < b[1].toLowerCase() ? -1 : (a[1].toLowerCase() > b[1].toLowerCase() ? 1 : 0));
         return simulations;
     }
 

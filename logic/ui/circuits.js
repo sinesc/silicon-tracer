@@ -227,7 +227,7 @@ class Circuits {
     // Returns a list of loaded circuits.
     list() {
         let circuits = this.#circuits.map((c) => [ c.uid, c.label ]);
-        circuits.sort((a, b) => a[1] < b[1] ? -1 : (a[1] > b[1] ? 1 : 0));
+        circuits.sort((a, b) => a[1].toLowerCase() < b[1].toLowerCase() ? -1 : (a[1].toLowerCase() > b[1].toLowerCase() ? 1 : 0));
         return circuits;
     }
 
