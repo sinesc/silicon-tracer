@@ -591,11 +591,6 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
 .grid-zoom-below-65 .component-inner span {
     display: none;
 }
-.component-inner:hover {
-    background-color: var(--component-body-hover-color);
-    border-color: var(--component-border-hover-color);
-    color: #fff;
-}
 .component-port {
     z-index: 14;
     position: absolute;
@@ -615,9 +610,9 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
     display: none;
 }
 .component-port:hover {
-    background-color: #aaa;
-    transition: background-color var(--component-color-transition-duration), color var(--component-color-transition-duration);
+    transition: filter var(--component-color-transition-duration), color var(--component-color-transition-duration);
     color: #fff;
+    filter: brightness(1.75) saturate(0.5);
 }
 .component-port-label {
     pointer-events: none;
@@ -638,11 +633,16 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
 .component:hover .component-port-label {
     opacity: 1;
 }
+.component:hover .component-inner  {
+    background-color: var(--component-body-hover-color);
+    border-color: var(--component-border-hover-color);
+    color: #fff;
+}
 
 /*
  * Custom component
  */
-.component.custom.simulated {
+.component.custom.simulated .component-inner {
     cursor: zoom-in;
 }
 
