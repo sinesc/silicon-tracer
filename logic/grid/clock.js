@@ -4,7 +4,7 @@
 class Clock extends Component {
 
     static EDIT_DIALOG = [
-        { name: 'frequency', label: 'Frequency in Hz', type: 'int', check: (v, f) => { let p = parseInt(v); return isFinite(p) && p >= 1; }, apply: (v, f) => parseInt(v) },
+        { name: 'frequency', label: 'Frequency in Hz', type: 'int', check: (v, f) => { const p = Number.parseSI(v, true); return isFinite(p) && p >= 1; } },
         ...Component.EDIT_DIALOG,
     ];
 
@@ -12,7 +12,7 @@ class Clock extends Component {
     clockId = null;
 
     constructor(x, y) {
-        super(x, y, { left: [ 'e' ], right: [ 'c' ] }, 'clock');
+        super(x, y, { left: [ 'enable' ], right: [ 'c' ] }, 'clock');
     }
 
     // Serializes the object for writing to disk.

@@ -244,11 +244,12 @@ class Simulation {
         const outputMem = this.#compileIOAccess(clock.output);
         const clockMem = this.#compileClockAccess(clock.offset);
         const signalBit = this.#compileConst(1 << Simulation.MAX_DELAY);
+        const ticks = 0 | clock.ticks;
 
-        let code = `${clockMem} -= 1; `                                                 // decrement clock
-        code += `cmask = ${clockMem} >> 31; `                                           // copy sign bit into entire mask
-        code += `${clockMem} = ((${clockMem} & ~cmask) | (${clock.ticks} & cmask)); `;  // either retain current clock value or reset it to ticks on reaching -1
-        code += `${outputMem} = ${signalBit} | (${inputMem} & (${outputMem} ^ !${clockMem}))`;                         // flip output mem each time the clock reaches 0
+        let code = `${clockMem} -= 1; `                                                         // decrement clock
+        code += `cmask = ${clockMem} >> 31; `                                                   // copy sign bit into entire mask
+        code += `${clockMem} = ((${clockMem} & ~cmask) | (${ticks} & cmask)); `;                // either retain current clock value or reset it to ticks on reaching -1
+        code += `${outputMem} = ${signalBit} | (${inputMem} & (${outputMem} ^ !${clockMem}))`;  // flip output mem each time the clock reaches 0
         return code;
     }
 
