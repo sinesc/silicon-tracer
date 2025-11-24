@@ -172,7 +172,8 @@ class Circuit {
 class Circuits {
 
     static EDIT_DIALOG = [
-        { name: 'label', label: 'Circuit label', type: 'string' }
+        { name: 'label', label: 'Circuit label', type: 'string' },
+        { name: 'gapPosition', label: 'Pin gap (when count is even)', type: 'select', options: { start: "Top or left", middle: "Middle", end: "Bottom or right" } },
     ];
 
     static STRINGIFY_SPACE = "\t";
@@ -301,11 +302,12 @@ class Circuits {
     }
 
     // Rename
-    async rename(uid) {
+    async edit(uid) {
         const circuit = this.byUID(uid);
-        const config = await dialog("Configure circuit", Circuits.EDIT_DIALOG, { label: circuit.label });
+        const config = await dialog("Configure circuit", Circuits.EDIT_DIALOG, { label: circuit.label, gapPosition: circuit.gapPosition });
         if (config) {
             circuit.label = config.label;
+            circuit.gapPosition = config.gapPosition;
             app.grid.setCircuit(circuit);
         }
     }

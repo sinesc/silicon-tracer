@@ -355,7 +355,7 @@ class Grid {
             let { gridItem, args } = this.#hotkeyTarget;
             gridItem.onHotkey(e.key, ...args);
         } else if (e.key === 'e') {
-            app.circuits.rename(this.#circuit.uid);
+            app.circuits.edit(this.#circuit.uid);
             this.#dirty |= Grid.DIRTY_OVERLAY;
         } else if (e.key === 'w' && app.sim) {
             // switch to parent simulation instance

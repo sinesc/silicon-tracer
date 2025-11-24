@@ -4,8 +4,7 @@
 class CustomComponent extends Component {
 
     static EDIT_DIALOG = [
-        { name: 'label', label: 'Circuit label', type: 'string' },
-        { name: 'gapPosition', label: 'Pin gap (when count is even)', type: 'select', options: { start: "Top or left", middle: "Middle", end: "Bottom or right" } },
+        ...Circuits.EDIT_DIALOG,
         ...Component.EDIT_DIALOG,
     ];
 
