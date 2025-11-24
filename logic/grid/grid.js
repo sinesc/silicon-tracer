@@ -67,7 +67,7 @@ class Grid {
         }
         this.#circuit.unlink();
         this.#circuit.detachSimulation();
-        this.#circuit.ports = CustomComponent.generateDefaultOutline(this.#circuit);
+        this.#circuit.generateOutline();
         this.#circuit = null;
         this.#infoCircuitLabel = '';
         this.#dirty |= Grid.DIRTY_OVERLAY;

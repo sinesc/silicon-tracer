@@ -7,8 +7,9 @@ class Circuit {
     data;
     ports;
     gridConfig;
+    gapPosition;
 
-    constructor(label, uid = null, data = [], ports = {}, gridConfig = {}) {
+    constructor(label, uid = null, data = [], ports = {}, gridConfig = {}, gapPosition = 'middle') {
         assert.string(label),
         assert.string(uid, true);
         assert.array(data, false, (i) => assert.class(GridItem, i));
@@ -19,6 +20,7 @@ class Circuit {
         this.data = data;
         this.ports = ports;
         this.gridConfig = gridConfig;
+        this.gapPosition = gapPosition;
     }
 
     // Returns item by GID.
@@ -55,7 +57,7 @@ class Circuit {
     // Serializes a circuit for saving to file.
     serialize() {
         let data = this.data.map((item) => item.serialize());
-        return { label: this.label, uid: this.uid, data, ports: this.ports, gridConfig: this.gridConfig };
+        return { label: this.label, uid: this.uid, data, ports: this.ports, gridConfig: this.gridConfig, gapPosition: this.gapPosition };
     }
 
     // Unserializes circuit from decoded JSON-object.
@@ -63,7 +65,7 @@ class Circuit {
         assert.object(circuit);
         const components = circuit.data.map((i) => GridItem.unserialize(i));
         const uid = circuit.uid.includes('-') ? 'u' + circuit.uid.replaceAll('-', '') : circuit.uid; // LEGACY: convert legacy uid
-        return new Circuit(circuit.label, uid, components, circuit.ports, circuit.gridConfig);
+        return new Circuit(circuit.label, uid, components, circuit.ports, circuit.gridConfig, circuit.gapPosition);
     }
 
     // Link circuit to the grid, creating DOM elements for the circuit's components.
@@ -123,6 +125,41 @@ class Circuit {
         for (let item of this.data) {
             item.detachSimulation();
         };
+    }
+
+    // Generates port outline for the circuit's component representation.
+    generateOutline() {
+        // get ports from circuit
+        let ports = this.data.filter((i) => i instanceof Port);
+        let outline = { 'left': [], 'right': [], 'top': [], 'bottom': [] };
+        for (let item of ports) {
+            // side of the component-port on port-components is opposite of where the port-component is facing
+            let side = Component.SIDES[(item.rotation + 2) % 4];
+            // keep track of position so we can arrange ports on component by position in schematic
+            let sort = side === 'left' || side === 'right' ? item.y : item.x;
+            outline[side].push([ sort, item.name ]);
+        }
+        const nextOdd = (v) => v | 1;
+        let height = nextOdd(Math.max(1, outline.left.length, outline.right.length));
+        let width = nextOdd(Math.max(1, outline.top.length, outline.bottom.length));
+        // arrange ports nicely
+        for (let side of Object.keys(outline)) {
+            // sort by position
+            outline[side].sort(([a,], [b,]) => a - b);
+            outline[side] = outline[side].map(([sort, label]) => label);
+            // insert spacers for symmetry
+            let length = side === 'left' || side === 'right' ? height : width;
+            let available = length - outline[side].length;
+            let insertEdges = (new Array(Math.floor(available / 2))).fill(null);
+            let insertCenter = available % 2 ? [ null ] : [];
+            outline[side] = [ ...insertEdges, ...outline[side], ...insertEdges ];
+            let position = this.gapPosition === 'middle' ? outline[side].length / 2 : (this.gapPosition === 'start' ? 0 : outline[side].length);
+            outline[side].splice(position, 0, ...insertCenter);
+        }
+        // reverse left/bottom due to the way we enumerate ports for easier rotation
+        outline['left'].reverse();
+        outline['bottom'].reverse();
+        this.ports = outline;
     }
 
     // Generate a circuit id.
@@ -284,7 +321,7 @@ class Circuits {
         let unserialized = content.circuits.map((c) => Circuit.unserialize(c));
         this.#circuits.push(...unserialized);
         for (let circuit of this.#circuits) {
-            circuit.ports ??= CustomComponent.generateDefaultOutline(circuit.data);
+            circuit.generateOutline();
             Wire.compact(circuit);
         }
         return newCircuitIndex;

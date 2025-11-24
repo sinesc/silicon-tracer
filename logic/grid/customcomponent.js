@@ -5,6 +5,7 @@ class CustomComponent extends Component {
 
     static EDIT_DIALOG = [
         { name: 'label', label: 'Circuit label', type: 'string' },
+        { name: 'gapPosition', label: 'Pin gap (when count is even)', type: 'select', options: { start: "Top or left", middle: "Middle", end: "Bottom or right" } },
         ...Component.EDIT_DIALOG,
     ];
 
@@ -78,46 +79,17 @@ class CustomComponent extends Component {
 
     // Handle edit hotkey.
     async onEdit() {
-        const config = await dialog("Configure custom component", CustomComponent.EDIT_DIALOG, { label: this.label, rotation: this.rotation });
+        let circuit = app.circuits.byUID(this.uid) ?? {};
+        const config = await dialog("Configure custom component", CustomComponent.EDIT_DIALOG, { label: this.label, rotation: this.rotation, gapPosition: circuit.gapPosition });
         if (config) {
+            const grid = this.grid;
+            this.unlink();
+            circuit.gapPosition = config.gapPosition;
+            circuit.label = config.label;
+            circuit.generateOutline();
+            this.link(grid);
             this.rotation = config.rotation;
             this.type = config.label;
-            let circuit = app.circuits.byUID(this.uid) ?? {};
-            circuit.label = config.label;
         }
-    }
-
-    // Generates default port outline for the given circuits component representation.
-    static generateDefaultOutline(circuit) {
-        // get ports from serialized circuit
-        let ports = circuit.data.filter((i) => i instanceof Port);
-        let outline = { 'left': [], 'right': [], 'top': [], 'bottom': [] };
-        for (let item of ports) {
-            // side of the component-port on port-components is opposite of where the port-component is facing
-            let side = Component.SIDES[(item.rotation + 2) % 4];
-            // keep track of position so we can arrange ports on component by position in schematic
-            let sort = side === 'left' || side === 'right' ? item.y : item.x;
-            outline[side].push([ sort, item.name ]);
-        }
-        const nextOdd = (v) => v | 1;
-        let height = nextOdd(Math.max(1, outline.left.length, outline.right.length));
-        let width = nextOdd(Math.max(1, outline.top.length, outline.bottom.length));
-        // arrange ports nicely
-        for (let side of Object.keys(outline)) {
-            // sort by position
-            outline[side].sort(([a,], [b,]) => a - b);
-            outline[side] = outline[side].map(([sort, label]) => label);
-            // insert spacers for symmetry
-            let length = side === 'left' || side === 'right' ? height : width;
-            let available = length - outline[side].length;
-            let insertEdges = (new Array(Math.floor(available / 2))).fill(null);
-            let insertCenter = available % 2 ? [ null ] : [];
-            outline[side] = [ ...insertEdges, ...outline[side], ...insertEdges ];
-            outline[side].splice(outline[side].length / 2, 0, ...insertCenter);
-        }
-        // reverse left/bottom due to the way we enumerate ports for easier rotation
-        outline['left'].reverse();
-        outline['bottom'].reverse();
-        return outline;
     }
 }
