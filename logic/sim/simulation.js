@@ -21,9 +21,9 @@ class Simulation {
     };
 
     static BUILTIN_MAP = {
-        'latch' : { dataTpl: '(l & d) | (~l & q)', inputs: [ 'l', 'd' ], output: 'q' },
-        'buffer3' : { dataTpl: 'd', signalTpl: 'e', inputs: [ 'e', 'd' ], output: 'q' },
-        'not3' : { dataTpl: '~d', signalTpl: 'e', inputs: [ 'e', 'd' ], output: 'q' },
+        'latch' : { dataTpl: '(load & data) | (~load & q)', inputs: [ 'load', 'data' ], output: 'q' },
+        'buffer3' : { dataTpl: 'data', signalTpl: 'enable', inputs: [ 'enable', 'data' ], output: 'q' },
+        'not3' : { dataTpl: '~data', signalTpl: 'enable', inputs: [ 'enable', 'data' ], output: 'q' },
     }
 
     #ioMap = new Map();
@@ -49,8 +49,8 @@ class Simulation {
         assert.string(suffix);
         assert.number(delay, true);
         const rules = Simulation.BUILTIN_MAP[type];
-        const dataTpl = rules.dataTpl.replace(/([a-z])/g, (m) => m + suffix);
-        const signalTpl = (rules.signalTpl ?? '').replace(/([a-z])/g, (m) => m + suffix);
+        const dataTpl = rules.dataTpl.replace(/([a-z]+)/g, (m) => m + suffix);
+        const signalTpl = (rules.signalTpl ?? '').replace(/([a-z]+)/g, (m) => m + suffix);
         const inputs = rules.inputs.map((i) => i + suffix);
         const output = rules.output + suffix;
         this.#gates.push({ inputs, output, dataTpl, signalTpl });
@@ -66,7 +66,7 @@ class Simulation {
         assert.number(ticks);
         assert.bool(tristate);
         assert.string(suffix);
-        const input = 'e' + suffix;
+        const input = 'enable' + suffix;
         const output = 'c' + suffix
         this.#clocks.push({ ticks, tristate, input, output, offset: this.#alloc32() });
         this.#declareIO(input, 'i', delay ?? Simulation.DEFAULT_DELAY);
