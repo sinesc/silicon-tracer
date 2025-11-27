@@ -22,6 +22,7 @@ class Simulation {
 
     static BUILTIN_MAP = {
         'latch' : { dataTpl: '(load & data) | (~load & q)', inputs: [ 'load', 'data' ], output: 'q' },
+        'flipflop' : { dataTpl: '(+load & data) | (~+load & q)', inputs: [ 'load', 'data' ], output: 'q' },
         'buffer3' : { dataTpl: 'data', signalTpl: 'enable', inputs: [ 'enable', 'data' ], output: 'q' },
         'not3' : { dataTpl: '~data', signalTpl: 'enable', inputs: [ 'enable', 'data' ], output: 'q' },
     }
@@ -49,15 +50,35 @@ class Simulation {
         assert.string(suffix);
         assert.number(delay, true);
         const rules = Simulation.BUILTIN_MAP[type];
-        const dataTpl = rules.dataTpl.replace(/([a-z]+)/g, (m) => m + suffix);
-        const signalTpl = (rules.signalTpl ?? '').replace(/([a-z]+)/g, (m) => m + suffix);
+        const replacer = (_, mode, ident) => {
+            let name = ident + suffix;
+            if (mode === '+') {
+                // shortcuts for rising edge detection: prefix name with +
+                // 00 => 0
+                // 01 => 0
+                // 10 => 1
+                // 11 => 0
+                return `(((${name} & 0b10) >> 1) & (~${name} & 0b01))`;
+            } else if (mode === '-') {
+                // shortcuts for falling edge detection: prefix name with -
+                // 00 => 0
+                // 01 => 1
+                // 10 => 0
+                // 11 => 0
+                return `(((~${name} & 0b10) >> 1) & (${name} & 0b01))`;
+            } else {
+                return name;
+            }
+        };
+        const dataTpl = rules.dataTpl.replace(/(\+|\-|\b)([a-z]+)\b/g, replacer);
+        const signalTpl = (rules.signalTpl ?? '').replace(/(\+|\-|\b)([a-z]+)\b/g, replacer);
         const inputs = rules.inputs.map((i) => i + suffix);
         const output = rules.output + suffix;
         this.#gates.push({ inputs, output, dataTpl, signalTpl });
         for (const input of inputs) {
             this.#declareIO(input, 'i', delay ?? Simulation.DEFAULT_DELAY);
         }
-        this.#declareIO(output, 'o', delay ?? Simulation.DEFAULT_DELAY);
+        this.#declareIO(output, 'o', 0);
         return this.#gates.length - 1;
     }
 
@@ -70,7 +91,7 @@ class Simulation {
         const output = 'c' + suffix
         this.#clocks.push({ ticks, tristate, input, output, offset: this.#alloc32() });
         this.#declareIO(input, 'i', delay ?? Simulation.DEFAULT_DELAY);
-        this.#declareIO(output, 'o', delay ?? Simulation.DEFAULT_DELAY);
+        this.#declareIO(output, 'o', 0);
         return this.#clocks.length - 1;
     }
 
@@ -101,7 +122,7 @@ class Simulation {
         for (const input of inputs) {
             this.#declareIO(input, 'i', delay ?? Simulation.DEFAULT_DELAY);
         }
-        this.#declareIO(output, 'o', delay ?? Simulation.DEFAULT_DELAY);
+        this.#declareIO(output, 'o', 0);
         return this.#gates.length - 1;
     }
 
@@ -214,8 +235,8 @@ class Simulation {
     #compileGate(gateIndex, ioReplacements) {
         const gate = this.#gates[gateIndex];
         const outputDelay = this.#getIO(gate.output).delay;
-        const dataOp = gate.dataTpl.replace(/[a-z_][a-z0-9_@]*/g, (match) => ioReplacements[match] ?? 'error');
-        const signalOp = gate.signalTpl.replace(/[a-z_][a-z0-9_@]*/g, (match) => ioReplacements[match] ?? 'error');
+        const dataOp = gate.dataTpl.replace(/\b[a-z_][a-z0-9_@]*\b/g, (match) => ioReplacements[match] ?? 'error');
+        const signalOp = gate.signalTpl.replace(/\b[a-z_][a-z0-9_@]*\b/g, (match) => ioReplacements[match] ?? 'error');
         const outputMem = this.#compileIOAccess(gate.output);
         // perform signal computation, if required, otherwise just set the newest signal bit slot
         const signalShift = Simulation.MAX_DELAY + outputDelay;
@@ -261,6 +282,8 @@ class Simulation {
         let code = `signal = ${outputMem} & ${signalMask}; `;                       // select only the signal bit
         code += `mask = signal | (signal >> ${Simulation.MAX_DELAY}); `;            // and duplicate it into the data bit position to create a mask
         if (reset) {
+            // or'ing output with previous output fixes some oscillations after 1 tick pulses
+            //code += `${netMem} = ((${outputMem} | (${outputMem} >> 1)) & mask)`;  // reset net to io-data/signal on first assert to net
             code += `${netMem} = (${outputMem} & mask)`;                            // reset net to io-data/signal on first assert to net
         } else {
             code += `${netMem} = (${netMem} & ~mask) | (${outputMem} & mask)`;      // apply io-data/signal to net if signal is set
@@ -285,10 +308,10 @@ class Simulation {
             ioReplacements[name] = this.#compileIOAccess(name);
         }
         for (const [ clockIndex, clock ] of this.#clocks.entries()) {
-            result += this.#compileClock(clockIndex, ioReplacements) + this.#endl('clock ' + clock.output);
+            result += this.#compileClock(clockIndex, ioReplacements) + this.#endl('clock ' + clock.output, true);
         }
         for (const [ gateIndex, gate ] of this.#gates.entries()) {
-            result += this.#compileGate(gateIndex, ioReplacements) + this.#endl('compute ' + gate.dataTpl);
+            result += this.#compileGate(gateIndex, ioReplacements) + this.#endl('compute ' + gate.dataTpl, true);
         }
         // copy port-state to attached net
         for (const [ netIndex, net ] of this.#nets.entries()) {
@@ -349,8 +372,11 @@ class Simulation {
     }
 
     // Returns a semicolon followed by an optional comment if DEBUG is set and a newline.
-    #endl(comment) {
-        return '; ' + (Simulation.DEBUG && comment ? '// ' + comment.replace(/@(g[a-f0-9]+)@/g, (m, h) => ':' + h.substr(1, 6) + ':') : '') + "\n";
+    #endl(comment, short = false) {
+        let lastHash = 'why';
+        let result = '; ' + (Simulation.DEBUG && comment ? '// ' + comment.replace(/@(g[a-f0-9]+)@([0-9]+)/g, (m, h, i) => { lastHash = h.substr(1, 6) + ':' + i; return (short ? '' : ':' + lastHash); }) : '');
+        result += (short ? ` of ${lastHash}\n` : "\n");
+        return result;
     }
 
     // Returns an input/output declaration.
