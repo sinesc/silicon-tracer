@@ -38,7 +38,7 @@ class CustomComponent extends Component {
         this.type = circuit.label;
         super.link(grid);
         this.element.classList.add('custom');
-        this.setHoverMessage(this.inner, () => '<b>' + this.label + '</b>. <i>LMB</i>: Drag to move, <i>R</i>: Rotate, <i>D</i>: Delete, <i>E</i>: Edit, ' + (app.sim ? '' : '<u>') + '<i>Q</i>:Switch to sub-circuit simulation' + (app.sim ? '' : '</u>'), { type: 'hover' });
+        this.setHoverMessage(this.inner, () => '<b>' + this.label + '</b>. <i>LMB</i>: Drag to move, <i>R</i>: Rotate, <i>D</i>: Delete, <i>E</i>: Edit, <i>W</i>:Switch to sub-circuit' + (app.sim ? ' simulation' : ''), { type: 'hover' });
     }
 
     // Set the simulation instance of the represented sub-circuit.
@@ -64,14 +64,22 @@ class CustomComponent extends Component {
     // Hover hotkey actions
     onHotkey(key, what) {
         super.onHotkey(key, what);
-        if (key === 'q' && what.type === 'hover') {
-            // switch to subcomponent simulation instance
+        if (key === 'w' && what.type === 'hover') {
             let circuit = app.circuits.byUID(this.uid);
-            if (app.sim && circuit) {
-                let simulation = app.sim;
-                simulation.instance = this.instance;
-                this.grid.setCircuit(circuit);
-                simulation.tickListener = circuit.attachSimulation(simulation.netList, simulation.instance);
+            if (circuit) {
+                if (app.sim) {
+                    // switch to subcomponent simulation instance
+                    let simulation = app.sim;
+                    simulation.instance = this.instance;
+                    this.grid.setCircuit(circuit);
+                    simulation.tickListener = circuit.attachSimulation(simulation.netList, simulation.instance);
+                } else {
+                    // switch to another component, optionally start simulation for that one
+                    app.circuits.select(this.uid);
+                    if (app.config.autoCompile) {
+                        app.startSimulation();
+                    }
+                }
             }
         }
     }
