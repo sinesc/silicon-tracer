@@ -20,7 +20,7 @@
     --wire-color6: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 320);
     --wire-color7: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 290);
     --wire-color8: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 260);
-    --wire-color9: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 205);
+    --wire-color9: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 215);
 
     --wire-colorT-high: oklch(from var(--wire-colorT) calc(l * var(--wire-high-factor) * 1.3) c h);
     --wire-color0-high: oklch(from var(--wire-color0) calc(l * var(--wire-high-factor)) c h);
@@ -483,10 +483,13 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
     height: 100%;
     background-image: radial-gradient(circle, #888 1px, var(--grid-bg-color) 1px);
 }
-.grid.grid-zoom-100 {
-    background-image: radial-gradient(circle, #444 1px, var(--grid-bg-color) 1px);
+.grid[data-zoom] {
+    --zoom-factor: attr(data-zoom type(<number>));
 }
 .grid.grid-zoom-50 {
+    background-image: radial-gradient(circle, #444 1px, var(--grid-bg-color) 1px);
+}
+.grid.grid-zoom-100 {
     background-image: radial-gradient(circle, #444 1px, var(--grid-bg-color) 1px);
 }
 .grid.grid-zoom-175 {
@@ -754,21 +757,24 @@ div.component.port[data-port-state="1"] > div.component-inner > span:before {
 /*
  * Gates
  */
+div.component.gate > div.component-inner {
+    border-radius: calc(var(--zoom-factor) / 100 * 30px);
+}
 div.component.gate[data-component-rotation="0"] > div.component-inner {
-    border-top-right-radius: 50px;
-    border-bottom-right-radius: 50px;
+    border-bottom-left-radius: 3px;
+    border-top-left-radius: 3px;
 }
 div.component.gate[data-component-rotation="1"] > div.component-inner {
-    border-bottom-right-radius: 50px;
-    border-bottom-left-radius: 50px;
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
 }
 div.component.gate[data-component-rotation="2"] > div.component-inner {
-    border-bottom-left-radius: 50px;
-    border-top-left-radius: 50px;
+    border-top-right-radius: 3px;
+    border-bottom-right-radius: 3px;
 }
 div.component.gate[data-component-rotation="3"] > div.component-inner {
-    border-top-left-radius: 50px;
-    border-top-right-radius: 50px;
+    border-bottom-right-radius: 3px;
+    border-bottom-left-radius: 3px;
 }
 
 /*

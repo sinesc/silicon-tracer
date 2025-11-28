@@ -194,6 +194,8 @@ class Grid {
                 }
             }
 
+            this.#element.setAttribute('data-zoom', this.zoom * 100);
+
             // create background grid pattern
             let spacing = Grid.SPACING * this.zoom;
             let offsetX = this.offsetX * this.zoom;
