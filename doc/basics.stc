@@ -219,7 +219,10 @@
 				"offsetX": 40,
 				"offsetY": 52
 			},
-			"gapPosition": "middle"
+			"portConfig": {
+				"gap": "middle",
+				"parity": "odd"
+			}
 		},
 		{
 			"label": "D latch",
@@ -551,7 +554,10 @@
 				"offsetX": 42,
 				"offsetY": 50
 			},
-			"gapPosition": "middle"
+			"portConfig": {
+				"gap": "middle",
+				"parity": "odd"
+			}
 		},
 		{
 			"label": "Edge triggered D flip-flop",
@@ -811,7 +817,7 @@
 							210,
 							40,
 							"h",
-							9
+							1
 						]
 					}
 				},
@@ -847,7 +853,7 @@
 							130,
 							100,
 							"h",
-							9
+							1
 						]
 					}
 				},
@@ -967,7 +973,7 @@
 							210,
 							20,
 							"v",
-							9
+							1
 						]
 					}
 				},
@@ -1039,7 +1045,7 @@
 							130,
 							80,
 							"v",
-							9
+							1
 						]
 					}
 				},
@@ -1103,7 +1109,10 @@
 				"offsetX": 141,
 				"offsetY": 50
 			},
-			"gapPosition": "middle"
+			"portConfig": {
+				"gap": "middle",
+				"parity": "odd"
+			}
 		},
 		{
 			"label": "Full adder",
@@ -1561,7 +1570,10 @@
 				"offsetX": -128,
 				"offsetY": -31
 			},
-			"gapPosition": "middle"
+			"portConfig": {
+				"gap": "middle",
+				"parity": "odd"
+			}
 		},
 		{
 			"label": "2 to 4 line decoder",
@@ -2056,21 +2068,21 @@
 				"left": [
 					null,
 					"a0",
-					null,
 					"a1",
 					null
 				],
 				"right": [
 					"q3",
 					"q2",
-					null,
 					"q1",
 					"q0"
 				],
 				"top": [
+					null,
 					null
 				],
 				"bottom": [
+					null,
 					null
 				]
 			},
@@ -2079,7 +2091,10 @@
 				"offsetX": -216,
 				"offsetY": 76
 			},
-			"gapPosition": "middle"
+			"portConfig": {
+				"gap": "middle",
+				"parity": "even"
+			}
 		},
 		{
 			"label": "4 bit RAM",
@@ -2096,8 +2111,8 @@
 						]
 					},
 					"rotation": 0,
-					"width": 40,
-					"height": 120
+					"width": 60,
+					"height": 100
 				},
 				{
 					"_": {
@@ -2133,18 +2148,6 @@
 						"a": [
 							370,
 							250,
-							60,
-							"h",
-							2
-						]
-					}
-				},
-				{
-					"_": {
-						"c": "Wire",
-						"a": [
-							370,
-							290,
 							60,
 							"h",
 							2
@@ -2202,42 +2205,6 @@
 					"rotation": 1,
 					"width": 80,
 					"height": 40
-				},
-				{
-					"_": {
-						"c": "Wire",
-						"a": [
-							470,
-							310,
-							40,
-							"h",
-							2
-						]
-					}
-				},
-				{
-					"_": {
-						"c": "Wire",
-						"a": [
-							470,
-							290,
-							140,
-							"h",
-							2
-						]
-					}
-				},
-				{
-					"_": {
-						"c": "Wire",
-						"a": [
-							470,
-							250,
-							240,
-							"h",
-							2
-						]
-					}
 				},
 				{
 					"_": {
@@ -2351,23 +2318,11 @@
 					"_": {
 						"c": "Wire",
 						"a": [
-							470,
-							230,
-							340,
-							"h",
-							2
-						]
-					}
-				},
-				{
-					"_": {
-						"c": "Wire",
-						"a": [
 							530,
 							370,
 							40,
 							"v",
-							4
+							3
 						]
 					}
 				},
@@ -2379,7 +2334,7 @@
 							370,
 							40,
 							"v",
-							4
+							3
 						]
 					}
 				},
@@ -2391,7 +2346,7 @@
 							370,
 							40,
 							"v",
-							4
+							3
 						]
 					}
 				},
@@ -2403,7 +2358,7 @@
 							370,
 							40,
 							"v",
-							4
+							3
 						]
 					}
 				},
@@ -2585,7 +2540,7 @@
 							550,
 							360,
 							"h",
-							8
+							1
 						]
 					}
 				},
@@ -2640,6 +2595,42 @@
 					"rotation": 1,
 					"width": 80,
 					"height": 40
+				},
+				{
+					"_": {
+						"c": "Wire",
+						"a": [
+							490,
+							230,
+							320,
+							"h",
+							2
+						]
+					}
+				},
+				{
+					"_": {
+						"c": "Wire",
+						"a": [
+							490,
+							250,
+							220,
+							"h",
+							2
+						]
+					}
+				},
+				{
+					"_": {
+						"c": "Wire",
+						"a": [
+							490,
+							270,
+							120,
+							"h",
+							2
+						]
+					}
 				},
 				{
 					"_": {
@@ -2793,7 +2784,7 @@
 							530,
 							20,
 							"v",
-							8
+							1
 						]
 					}
 				},
@@ -2805,7 +2796,7 @@
 							530,
 							20,
 							"v",
-							8
+							1
 						]
 					}
 				},
@@ -2817,7 +2808,7 @@
 							530,
 							20,
 							"v",
-							8
+							1
 						]
 					}
 				},
@@ -2829,19 +2820,7 @@
 							530,
 							20,
 							"v",
-							8
-						]
-					}
-				},
-				{
-					"_": {
-						"c": "Wire",
-						"a": [
-							510,
-							310,
-							20,
-							"v",
-							2
+							1
 						]
 					}
 				},
@@ -2854,18 +2833,6 @@
 							220,
 							"v",
 							1
-						]
-					}
-				},
-				{
-					"_": {
-						"c": "Wire",
-						"a": [
-							610,
-							290,
-							40,
-							"v",
-							2
 						]
 					}
 				},
@@ -2940,36 +2907,108 @@
 							2
 						]
 					}
+				},
+				{
+					"_": {
+						"c": "Wire",
+						"a": [
+							610,
+							270,
+							60,
+							"v",
+							2
+						]
+					}
+				},
+				{
+					"_": {
+						"c": "Wire",
+						"a": [
+							490,
+							290,
+							20,
+							"h",
+							2
+						]
+					}
+				},
+				{
+					"_": {
+						"c": "Wire",
+						"a": [
+							510,
+							290,
+							40,
+							"v",
+							2
+						]
+					}
+				},
+				{
+					"_": {
+						"c": "Wire",
+						"a": [
+							390,
+							270,
+							40,
+							"h",
+							2
+						]
+					}
+				},
+				{
+					"_": {
+						"c": "Wire",
+						"a": [
+							390,
+							270,
+							20,
+							"v",
+							2
+						]
+					}
+				},
+				{
+					"_": {
+						"c": "Wire",
+						"a": [
+							370,
+							290,
+							20,
+							"h",
+							2
+						]
+					}
 				}
 			],
 			"ports": {
 				"left": [
 					"a0",
 					"a1",
-					null,
 					"load",
 					"data"
 				],
 				"right": [
-					null,
 					null,
 					"q",
 					null,
 					null
 				],
 				"top": [
+					null,
 					null
 				],
 				"bottom": [
+					null,
 					null
 				]
 			},
 			"gridConfig": {
 				"zoom": 1.25,
-				"offsetX": -176,
-				"offsetY": -110
+				"offsetX": -99.43333333333337,
+				"offsetY": -5.414285714285711
 			},
-			"gapPosition": "middle"
+			"portConfig": {}
 		},
 		{
 			"label": "4 bit adder",
@@ -3163,7 +3202,7 @@
 							50,
 							20,
 							"h",
-							2
+							3
 						]
 					}
 				},
@@ -3187,7 +3226,7 @@
 							50,
 							20,
 							"h",
-							2
+							3
 						]
 					}
 				},
@@ -3211,7 +3250,7 @@
 							50,
 							20,
 							"h",
-							2
+							3
 						]
 					}
 				},
@@ -3379,7 +3418,7 @@
 							50,
 							60,
 							"h",
-							9
+							3
 						]
 					}
 				},
@@ -3559,7 +3598,7 @@
 							50,
 							40,
 							"v",
-							9
+							3
 						]
 					}
 				},
@@ -3606,7 +3645,6 @@
 					"b2",
 					"b1",
 					"b0",
-					null,
 					"a3",
 					"a2",
 					"a1",
@@ -3617,16 +3655,17 @@
 					null,
 					"q0",
 					"q1",
-					null,
 					"q2",
 					"q3",
 					null,
 					null
 				],
 				"top": [
-					"cIn"
+					"cIn",
+					null
 				],
 				"bottom": [
+					null,
 					"cOut"
 				]
 			},
@@ -3635,10 +3674,10 @@
 				"offsetX": 20.79999999999999,
 				"offsetY": 359.59999999999997
 			},
-			"gapPosition": "middle"
+			"portConfig": {}
 		},
 		{
-			"label": "Counter",
+			"label": "4 bit counter",
 			"uid": "ua5cc0aaba9f74a358bbd1f7d11b3fa8c",
 			"data": [
 				{
@@ -4245,7 +4284,6 @@
 			"ports": {
 				"left": [
 					null,
-					null,
 					"clock",
 					null,
 					null
@@ -4253,14 +4291,15 @@
 				"right": [
 					"q0",
 					"q1",
-					null,
 					"q2",
 					"q3"
 				],
 				"top": [
+					null,
 					null
 				],
 				"bottom": [
+					null,
 					null
 				]
 			},
@@ -4269,47 +4308,10 @@
 				"offsetX": -40.880952380952436,
 				"offsetY": 188.2857142857143
 			},
-			"gapPosition": "middle"
-		},
-		{
-			"label": "#Demo",
-			"uid": "ud2ac3ee1e5b248a8b902a1b63ad2cfa8",
-			"data": [
-				{
-					"_": {
-						"c": "CustomComponent",
-						"a": [
-							350,
-							250,
-							0,
-							"ua5cc0aaba9f74a358bbd1f7d11b3fa8c"
-						]
-					},
-					"rotation": 0,
-					"width": 40,
-					"height": 120
-				}
-			],
-			"ports": {
-				"left": [
-					null
-				],
-				"right": [
-					null
-				],
-				"top": [
-					null
-				],
-				"bottom": [
-					null
-				]
-			},
-			"gridConfig": {
-				"zoom": 1.25,
-				"offsetX": 0,
-				"offsetY": 0
-			},
-			"gapPosition": "middle"
+			"portConfig": {
+				"gap": "start",
+				"parity": "auto"
+			}
 		}
 	]
 }
