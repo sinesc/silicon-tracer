@@ -170,20 +170,31 @@ class Application {
         if (this.#statusTimer) {
             clearTimeout(this.#statusTimer);
         }
-        this.#statusMessage = String.isString(message) ? message : (Function.isFunction(message) ? message() : null);
-        this.#status.innerHTML = this.#statusMessage ?? '';
-        if (this.#statusMessage) {
+        this.#statusMessage = message;
+        const messageText = String.isString(message) ? message : (Function.isFunction(message) ? message() : null);
+        this.#status.innerHTML = messageText ?? '';
+        if (messageText) {
             this.#status.classList.remove('app-status-faded');
-        } else if (!this.#statusMessage) {
+        } else if (!messageText) {
             // set default help text when no status message has been set for a while
             this.#statusTimer = setTimeout(() => {
-                if (!this.#statusMessage) {
+                if (!messageText) {
                     this.#status.classList.remove('app-status-faded');
-                    let hasParent = app.sim && app.sim.instance > 0;
-                    this.#status.innerHTML = 'Grid. <i>LMB</i>: Select area, <i>SHIFT+LMB</i>: Add to selection, <i>MMB</i>: Drag grid, <i>MW</i>: Zoom grid, <i>E</i>: Rename circuit, ' + (hasParent ? '' : '<u>') + '<i>W</i>: Switch to parent simulation' + (hasParent ? '' : '</u>');
+                    this.#status.innerHTML = this.grid.defaultStatusMessage();
                 }
             }, 500);
         }
+    }
+
+    // Immediately update status with previously set message(-function).
+    updateStatus() {
+        if (this.#statusTimer) {
+            clearTimeout(this.#statusTimer);
+        }
+        const message = this.#statusMessage;
+        const messageText = String.isString(message) ? message : (Function.isFunction(message) ? message() : null);
+        this.#status.classList.remove('app-status-faded');
+        this.#status.innerHTML = messageText ?? this.grid.defaultStatusMessage();
     }
 
     // Clears the current status message.

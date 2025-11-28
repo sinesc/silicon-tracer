@@ -24,6 +24,7 @@ class Grid {
     #selection = [];
     #hotkeyTarget = null;
     #circuit;
+    #netColor = 1;
 
     constructor(parent) {
         assert.class(Node, parent);
@@ -223,10 +224,9 @@ class Grid {
         this.#dirty = Grid.DIRTY_NONE;
     }
 
-    // Returns the next to be used net color.
-    get nextNetColor() {
-        let netList = NetList.identify(this.#circuit, false);
-        return netList.nets.length % 10;
+    // Returns the current default net color.
+    get netColor() {
+        return this.#netColor;
     }
 
     // Applies net colors to components on the grid. Returns next to be used color.
@@ -348,6 +348,13 @@ class Grid {
         return 'g' + crypto.randomUUID().replaceAll('-', '');
     }
 
+    // Returns the grids default status message.
+    defaultStatusMessage() {
+        const netColor = `<span data-net-color="${this.netColor}">default net color</span>`;
+        const hasParent = app.sim && app.sim.instance > 0;
+        return 'Grid. <i>LMB</i>: Select area, <i>SHIFT+LMB</i>: Add to selection, <i>MMB</i>: Drag grid, <i>MW</i>: Zoom grid, <i>E</i>: Rename circuit, <i>0</i> - <i>9</i>: Set ' + netColor + ', ' + (hasParent ? '' : '<u>') + '<i>W</i>: Switch to parent simulation' + (hasParent ? '' : '</u>');
+    }
+
     // Called when a key is pressed and then repeatedly while being held.
     #handleKeyDown(e) {
         e.preventDefault();
@@ -358,7 +365,7 @@ class Grid {
             app.circuits.edit(this.#circuit.uid);
             this.#dirty |= Grid.DIRTY_OVERLAY;
         } else if (e.key === 'w' && app.sim) {
-            // switch to parent simulation instance
+            // switch to parent simulation instance // TODO: when not simulating this should switch to the previous circuit. this requires adding a navigation history
             let simulation = app.sim;
             let parentInstance = simulation.netList.instances[simulation.instance].parentInstance;
             if (parentInstance !== null) {
@@ -367,6 +374,9 @@ class Grid {
                 this.setCircuit(circuit);
                 simulation.tickListener = circuit.attachSimulation(simulation.netList, parentInstance);
             }
+        } else if (e.key >= '0' && e.key <= '9') {
+            this.#netColor = parseInt(e.key);
+            app.updateStatus();
         }
     }
 
