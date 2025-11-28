@@ -27,7 +27,7 @@ class Clock extends Component {
     // Link clock to a grid, enabling it to be rendered.
     link(grid) {
         super.link(grid);
-        this.setHoverMessage(this.inner, () => `<b>${this.frequency} Hz Clock</b>. <i>LMB</i>: Drag to move, <i>R</i>: Rotate, <i>D</i>: Delete, <i>E</i>: Edit`, { type: 'hover' });
+        this.setHoverMessage(this.inner, () => `<b>${this.frequency} Hz Clock</b>. <i>LMB</i>: Drag to move, <i>R</i>: Rotate, <i>DEL</i>: Delete, <i>E</i>: Edit`, { type: 'hover' });
     }
 
     // Number of ticks in half a cycle.

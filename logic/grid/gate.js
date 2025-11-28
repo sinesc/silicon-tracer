@@ -76,7 +76,7 @@ class Gate extends Component {
     link(grid) {
         super.link(grid);
         this.element.classList.add('gate');
-        this.setHoverMessage(this.inner, `<b>${this.label}-Gate</b>. <i>LMB</i>: Drag to move, <i>R</i>: Rotate, <i>D</i>: Delete, <i>E</i>: Edit`, { type: 'hover' });
+        this.setHoverMessage(this.inner, `<b>${this.label}-Gate</b>. <i>LMB</i>: Drag to move, <i>R</i>: Rotate, <i>DEL</i>: Delete, <i>E</i>: Edit`, { type: 'hover' });
     }
 
     // Handle edit hotkey.

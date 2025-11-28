@@ -4,7 +4,7 @@
 class Wire extends GridItem {
 
     static DEBUG_BOX = false;
-    static HOVER_MESSAGE = 'Wire. <i>LMB</i>: Branch off new wire. <i>D</i> Delete, <i>0</i> - <i>9</i>: Set net color.';// TODO: <i>Shift+LMB</i>: Drag along the normal.
+    static HOVER_MESSAGE = 'Wire. <i>LMB</i>: Branch off new wire. <i>DEL</i> Delete, <i>0</i> - <i>9</i>: Set net color.';// TODO: <i>Shift+LMB</i>: Drag along the normal.
     static THICKNESS = 3;
 
     #element;
@@ -114,7 +114,7 @@ class Wire extends GridItem {
                 this.grid.circuit.itemByGID(netWire.gid).color = color;
             }
             this.grid.markDirty(true);
-        } else if (key === 'd' && what.type === 'hover') {
+        } else if (key === 'Delete' && what.type === 'hover') {
             this.#element.classList.add('wire-delete-animation');
             setTimeout(() => {
                 if (this.#element) { // deletion might already be in progress

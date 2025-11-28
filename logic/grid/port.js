@@ -26,7 +26,7 @@ class Port extends Interactive {
     // Link port to a grid, enabling it to be rendered.
     link(grid) {
         super.link(grid);
-        this.setHoverMessage(this.inner, () => 'Port <b>' + this.name + '</b>. <i>LMB</i>: Drag to move, <i>1</i>: Set high, <i>2</i>: Set low, <i>3</i>: Unset, <i>R</i>: Rotate, <i>D</i>: Delete, <i>E</i>: Edit', { type: 'hover' });
+        this.setHoverMessage(this.inner, () => 'Port <b>' + this.name + '</b>. <i>LMB</i>: Drag to move, <i>1</i>: Set high, <i>2</i>: Set low, <i>3</i>: Unset, <i>R</i>: Rotate, <i>DEL</i>: Delete, <i>E</i>: Edit', { type: 'hover' });
         this.#labelElement = document.createElement('div');
         this.#labelElement.classList.add('port-name');
         this.element.classList.add('port');

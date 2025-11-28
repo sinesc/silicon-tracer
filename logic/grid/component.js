@@ -137,7 +137,7 @@ class Component extends GridItem {
             let labelElement = document.createElement('div');
             labelElement.classList.add('component-port-label');
             this.#element.appendChild(labelElement);
-            // update this.ports with computed port properties
+            // update component port with linked dom nodes
             item.element = port;
             item.labelElement = labelElement;
             // register a drag event for the port, will trigger onDrag with the port name
@@ -230,10 +230,11 @@ class Component extends GridItem {
     }
 
     // Set component type string.
-    set type(val) {
-        this.#type = val;
+    set type(value) {
+        assert.string(value);
+        this.#type = value;
         if (this.#element) {
-            this.#element.setAttribute('data-component-type', this.#type);
+            this.#element.setAttribute('data-component-type', this.#type); // TODO set dirty instead
         }
         if (this.#inner) {
             this.#inner.innerHTML = '<span>' + this.label + '</span>';
@@ -301,7 +302,7 @@ class Component extends GridItem {
                 this.dirty = true;
                 this.render();
             }, 150);
-        } else if (key === 'd' && what.type === 'hover') {
+        } else if (key === 'Delete' && what.type === 'hover') {
             this.#element.classList.add('component-delete-animation');
             setTimeout(() => {
                 if (this.#element) { // deletion might already be in progress
