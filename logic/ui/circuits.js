@@ -327,19 +327,22 @@ class Circuits {
 
     // Serializes loaded circuits for saving to file.
     #serialize() {
-        return { version: 1, circuits: this.#circuits.map((c) => c.serialize()) };
+        return { version: 1, currentUID: this.current.uid, circuits: this.#circuits.map((c) => c.serialize()) };
     }
 
     // Unserializes circuits from file.
     #unserialize(content) {
-        const newCircuitIndex = this.#circuits.length;
-        let unserialized = content.circuits.map((c) => Circuit.unserialize(c));
+        let selectedCircuitIndex = this.#circuits.length;
+        const unserialized = content.circuits.map((c) => Circuit.unserialize(c));
         this.#circuits.push(...unserialized);
-        for (let circuit of this.#circuits) {
+        for (const [ index, circuit ] of pairs(this.#circuits)) {
             circuit.generateOutline();
             Wire.compact(circuit);
+            if (circuit.uid === content.currentUID) {
+                selectedCircuitIndex = index;
+            }
         }
-        return newCircuitIndex;
+        return selectedCircuitIndex;
     }
 
     // Returns a generated name if the given name is empty.
