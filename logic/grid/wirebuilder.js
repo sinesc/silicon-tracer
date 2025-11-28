@@ -38,11 +38,15 @@ class WireBuilder extends GridItem { // TODO: Not actually a grid item, but uses
         this.#fliptest = fliptest ?? ( (x, y) => false );
 
         this.#wireH = new Wire(x1, y1, this.width, 'h', this.color);
-        this.grid.addItem(this.#wireH);
+        this.#wireH.limbo = true;
+        this.grid.addItem(this.#wireH, false);
         this.#wireH.element.classList.add('wire-building');
+
         this.#wireV = new Wire(x1, y1, this.height, 'v', this.color);
-        this.grid.addItem(this.#wireV);
+        this.#wireV.limbo = true;
+        this.grid.addItem(this.#wireV, false);
         this.#wireV.element.classList.add('wire-building');
+        
         this.#updateWires();
 
         if (WireBuilder.DEBUG_BOX) {
@@ -87,7 +91,7 @@ class WireBuilder extends GridItem { // TODO: Not actually a grid item, but uses
             app.setStatus(WireBuilder.DRAWING_CONNECTION_MESSAGE, true);
             this.grid.requestHotkeyTarget(this, true, { ...what, type: 'connect' }); // pass 'what' to onHotkey()
         } else if (status !== 'stop') {
-            this.setBounding(what.startX, what.startY, x, y);
+            this.#setBounding(what.startX, what.startY, x, y);
             this.render();
         } else {
             app.clearStatus(true);
@@ -97,15 +101,26 @@ class WireBuilder extends GridItem { // TODO: Not actually a grid item, but uses
         }
     }
 
+    // Renders the wires onto the grid.
+    render() {
+        this.#wireH.render();
+        this.#wireV.render();
+        if (WireBuilder.DEBUG_BOX) {
+            this.#debugRenderBox();
+        }
+    }
+
     // Upon removal of the builder also remove any zero length wires produced by it and compact wires.
     #remove() {
         this.#wireH.element.classList.remove('wire-building');
+        this.#wireH.limbo = false;
         this.#wireV.element.classList.remove('wire-building');
+        this.#wireV.limbo = false;
         if (this.width === 0) {
-            this.grid.removeItem(this.#wireH);
+            this.grid.removeItem(this.#wireH, false);
         }
         if (this.height === 0) {
-            this.grid.removeItem(this.#wireV);
+            this.grid.removeItem(this.#wireV, false);
         }
         if (WireBuilder.DEBUG_BOX) {
             this.grid.removeVisual(this.debug);
@@ -118,7 +133,7 @@ class WireBuilder extends GridItem { // TODO: Not actually a grid item, but uses
     }
 
     // Sets wire corner bounding box.
-    setBounding(x1, y1, x2, y2) {
+    #setBounding(x1, y1, x2, y2) {
         [ x1, y1 ] = Grid.align(x1, y1);
         [ x2, y2 ] = Grid.align(x2, y2);
         this.x = x1;
@@ -127,15 +142,6 @@ class WireBuilder extends GridItem { // TODO: Not actually a grid item, but uses
         this.height = y2 - y1;
         this.#updateWires();
     };
-
-    // Renders the wires onto the grid.
-    render() {
-        this.#wireH.render();
-        this.#wireV.render();
-        if (WireBuilder.DEBUG_BOX) {
-            this.#debugRenderBox();
-        }
-    }
 
     // Updates wire positions from endpoints.
     #updateWires() {

@@ -102,22 +102,28 @@ class Grid {
     }
 
     // Adds an item to the grid. Automatically done by GridItem constructor.
-    addItem(item) {
+    addItem(item, restart = true) {
         assert.class(GridItem, item);
+        assert.bool(restart);
         item.gid ??= Grid.generateGID();
         this.#circuit.addItem(item);
         item.link(this);
-        app.restartSimulation();
+        if (restart) {
+            app.restartSimulation();
+        }
         return item;
     }
 
     // Removes an item from the grid and the current circuit.
-    removeItem(item) {
+    removeItem(item, restart = true) {
         assert.class(GridItem, item);
+        assert.bool(restart);
         item.unlink();
         this.#circuit.removeItem(item);
         this.releaseHotkeyTarget(item);
-        app.restartSimulation();
+        if (restart) {
+            app.restartSimulation();
+        }
         return item;
     }
 

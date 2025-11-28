@@ -13,6 +13,7 @@ class Wire extends GridItem {
     width; // TODO: replace width/height with length/direction
     height;
     direction;
+    limbo = false;
 
     constructor(x, y, length, direction, color = null) {
         assert.number(length);
@@ -32,7 +33,7 @@ class Wire extends GridItem {
             ...super.serialize(),
             _: { c: this.constructor.name, a: [ this.x, this.y, direction === 'h' ? this.width : this.height, direction, this.color ]},
         };
-    }v
+    }
 
     // Link wire to a grid, enabling it to be rendered.
     link(grid) {
@@ -106,7 +107,7 @@ class Wire extends GridItem {
 
     // Hover hotkey actions
     onHotkey(key, what) {
-        if (what.type === 'hover' && key >= '0' && key <= '9') {
+        if (key >= '0' && key <= '9' && what.type === 'hover') {
             let netList = NetList.identify(this.grid.circuit, false)
             let myNetId = netList.findWire(this);
             let color = parseInt(key);

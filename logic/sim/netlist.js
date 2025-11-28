@@ -77,7 +77,7 @@ class NetList {
         const subInstances = { }; // maps CustomComponent gids in each instance to their sub-instance
         instances.push({ circuit, subInstances, parentInstance });
         // get all individual wires
-        const wires = circuit.data.filter((i) => i instanceof Wire).map((w) => {
+        const wires = circuit.data.filter((i) => i instanceof Wire && !i.limbo).map((w) => {
             return new NetWire([ new Point(w.x, w.y), new Point(w.x + w.width, w.y + w.height) ], w.gid, instance);
         });
         // get all component ports
