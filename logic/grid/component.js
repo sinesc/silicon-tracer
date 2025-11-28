@@ -310,7 +310,7 @@ class Component extends GridItem {
                     this.grid.removeItem(this);
                 }
             }, 150);
-        } else if (key === 'e') {
+        } else if (key === 'e' && what.type === 'hover') {
             this.onEdit();
         }
     }

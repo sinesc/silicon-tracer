@@ -52,7 +52,7 @@ class Port extends Interactive {
     }
 
     // Hover hotkey actions
-    async onHotkey(key, what) {
+    onHotkey(key, what) {
         super.onHotkey(key, what);
         if (what.type === 'hover') {
             let prevState = this.#state;

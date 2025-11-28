@@ -7,7 +7,7 @@ class Application {
     toolbar;
     circuits;
     config = {
-        targetTPS: 100000,
+        targetTPS: 10000,
         autoCompile: true,
         singleStep: false,
     };
