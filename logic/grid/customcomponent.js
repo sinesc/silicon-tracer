@@ -4,7 +4,7 @@
 class CustomComponent extends Component {
 
     static EDIT_DIALOG = [
-        ...Circuits.EDIT_DIALOG,
+        //{ name: 'label', label: 'Component label', type: 'string' },
         ...Component.EDIT_DIALOG,
     ];
 
@@ -79,16 +79,16 @@ class CustomComponent extends Component {
     // Handle edit hotkey.
     async onEdit() {
         let circuit = app.circuits.byUID(this.uid) ?? {};
-        const config = await dialog("Configure custom component", CustomComponent.EDIT_DIALOG, { label: this.label, rotation: this.rotation, gapPosition: circuit.gapPosition });
-        if (config) {
-            const grid = this.grid;
-            this.unlink();
-            circuit.gapPosition = config.gapPosition;
-            circuit.label = config.label;
-            circuit.generateOutline();
-            this.link(grid);
-            this.rotation = config.rotation;
-            this.type = config.label;
+        const result = await dialog("Configure custom component", CustomComponent.EDIT_DIALOG, { /*label: this.label || circuit.label,*/ rotation: this.rotation });
+        if (result) {
+            //const grid = this.grid;
+            //this.unlink();
+            //circuit.gapPosition = result.gapPosition;
+            //circuit.label = result.label;
+            //circuit.generateOutline();
+            //this.link(grid);
+            this.rotation = result.rotation;
+            //this.type = result.label;
         }
     }
 }
