@@ -7,20 +7,21 @@ class Circuit {
     data;
     ports;
     gridConfig;
-    gapPosition;
+    portConfig;
 
-    constructor(label, uid = null, data = [], ports = {}, gridConfig = {}, gapPosition = 'middle') {
+    constructor(label, uid = null, data = [], ports = {}, gridConfig = {}, portConfig = {}) {
         assert.string(label),
         assert.string(uid, true);
         assert.array(data, false, (i) => assert.class(GridItem, i));
         assert.object(ports);
         assert.object(gridConfig);
+        assert.object(portConfig);
         this.label = label;
         this.uid = uid ?? Circuit.generateUID();
         this.data = data;
         this.ports = ports;
         this.gridConfig = gridConfig;
-        this.gapPosition = gapPosition;
+        this.portConfig = portConfig;
     }
 
     // Returns item by GID.
@@ -57,7 +58,7 @@ class Circuit {
     // Serializes a circuit for saving to file.
     serialize() {
         let data = this.data.map((item) => item.serialize());
-        return { label: this.label, uid: this.uid, data, ports: this.ports, gridConfig: this.gridConfig, gapPosition: this.gapPosition };
+        return { label: this.label, uid: this.uid, data, ports: this.ports, gridConfig: this.gridConfig, portConfig: this.portConfig };
     }
 
     // Unserializes circuit from decoded JSON-object.
@@ -65,7 +66,7 @@ class Circuit {
         assert.object(circuit);
         const components = circuit.data.map((i) => GridItem.unserialize(i));
         const uid = circuit.uid.includes('-') ? 'u' + circuit.uid.replaceAll('-', '') : circuit.uid; // LEGACY: convert legacy uid
-        return new Circuit(circuit.label, uid, components, circuit.ports, circuit.gridConfig, circuit.gapPosition);
+        return new Circuit(circuit.label, uid, components, circuit.ports, circuit.gridConfig, circuit.portConfig);
     }
 
     // Link circuit to the grid, creating DOM elements for the circuit's components.
@@ -139,22 +140,32 @@ class Circuit {
             let sort = side === 'left' || side === 'right' ? item.y : item.x;
             outline[side].push([ sort, item.name ]);
         }
-        const nextOdd = (v) => v | 1;
-        let height = nextOdd(Math.max(1, outline.left.length, outline.right.length));
-        let width = nextOdd(Math.max(1, outline.top.length, outline.bottom.length));
-        // arrange ports nicely
+        // determine if edges need to be even or odd length (for rotation to work properly, edges need to be either all odd or all even length)
+        let height = Math.max(1, outline.left.length, outline.right.length);
+        let width = Math.max(1, outline.top.length, outline.bottom.length);
+        const parity = this.portConfig.parity ?? 'auto';
+        const even = parity === 'auto' ? Math.max(width, height) % 2 === 0 : parity === 'even';
+        // adjust width and height to both be either even or odd
+        height += even !== (height % 2 === 0) ? 1 : 0;
+        width += even !== (width % 2 === 0) ? 1 : 0;
+        // also ensure minimum allowed component size is met
+        height = Math.max(even ? 2 : 1, height);
+        width = Math.max(even ? 2 : 1, width);
+        // arrange ports as specified
         for (let side of Object.keys(outline)) {
             // sort by position
             outline[side].sort(([a,], [b,]) => a - b);
             outline[side] = outline[side].map(([sort, label]) => label);
-            // insert spacers for symmetry
+            // determine expected length of side (number of required ports) and actual number of ports
             let length = side === 'left' || side === 'right' ? height : width;
             let available = length - outline[side].length;
-            let insertEdges = (new Array(Math.floor(available / 2))).fill(null);
-            let insertCenter = available % 2 ? [ null ] : [];
-            outline[side] = [ ...insertEdges, ...outline[side], ...insertEdges ];
-            let position = this.gapPosition === 'middle' ? outline[side].length / 2 : (this.gapPosition === 'start' ? 0 : outline[side].length);
-            outline[side].splice(position, 0, ...insertCenter);
+            // prepare additional ports to insert on the outside and/or center (or wherever configured) of the side
+            let edgePorts = (new Array(Math.floor(available / 2))).fill(null);
+            let centerPorts = available % 2 === 1 ? [ null ] : [];
+            // insert ports according to configured position
+            outline[side] = [ ...edgePorts, ...outline[side], ...edgePorts ];
+            let position = this.portConfig.gap === 'middle' ? outline[side].length / 2 : (this.portConfig.gap === 'start' ? 0 : outline[side].length);
+            outline[side].splice(position, 0, ...centerPorts);
         }
         // reverse left/bottom due to the way we enumerate ports for easier rotation
         outline['left'].reverse();
@@ -173,7 +184,8 @@ class Circuits {
 
     static EDIT_DIALOG = [
         { name: 'label', label: 'Circuit label', type: 'string' },
-        { name: 'gapPosition', label: 'Pin gap (when count is even)', type: 'select', options: { start: "Top or left", middle: "Middle", end: "Bottom or right" } },
+        { name: 'gap', label: 'Pin gap', type: 'select', options: { start: "Top or left", middle: "Middle", end: "Bottom or right" } },
+        { name: 'parity', label: 'Side lengths', type: 'select', options: { auto: "Automatic", even: "Even", odd: "Odd" } },
     ];
 
     static STRINGIFY_SPACE = "\t";
@@ -304,10 +316,11 @@ class Circuits {
     // Rename
     async edit(uid) {
         const circuit = this.byUID(uid);
-        const config = await dialog("Configure circuit", Circuits.EDIT_DIALOG, { label: circuit.label, gapPosition: circuit.gapPosition });
-        if (config) {
-            circuit.label = config.label;
-            circuit.gapPosition = config.gapPosition;
+        const result = await dialog("Configure circuit", Circuits.EDIT_DIALOG, { label: circuit.label, gap: circuit.portConfig.gap, parity: circuit.portConfig.parity });
+        if (result) {
+            circuit.label = result.label;
+            circuit.portConfig.gap = result.gap;
+            circuit.portConfig.parity = result.parity;
             app.grid.setCircuit(circuit);
         }
     }
