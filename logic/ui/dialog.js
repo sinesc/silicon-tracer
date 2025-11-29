@@ -23,6 +23,21 @@ function dialog(title, fields, data) {
     const form = [];
 
     for (const field of values(fields)) {
+        // check field definition
+        assert.string(field.name);
+        assert.string(field.type);
+        if (!Object.hasOwn(data, field.name)) {
+            throw new Error(`Field "${field.name}" does not exist in the input data`);
+        }
+        if (!Object.hasOwn(validations, field.type)) {
+            if (!Object.hasOwn(data, field.check)) {
+                throw new Error(`Field "${field.name}" uses an unknown validation and does not define its own check function`);
+            }
+            if (!Object.hasOwn(data, field.apply)) {
+                throw new Error(`Field "${field.name}" uses an unknown validation and does not define its own apply function`);
+            }
+        }
+        // construct field html, add field to form
         const rowElement = element(tableElement, 'tr', 'dialog-row');
         element(rowElement, 'td', 'dialog-row-label', field.label ?? field.name.toUpperFirst());
         const rowRight = element(rowElement, 'td', 'dialog-row-mask');
@@ -49,14 +64,10 @@ function dialog(title, fields, data) {
         const result = {};
         const errors = [];
         for (const { element, field } of values(form)) {
-            let check = field.check ?? validations[field.type].check ?? null;
-            if (check) {
-                if (check(element.value, field)) {
-                    let apply = field.apply ?? validations[field.type].apply ?? null;
-                    result[field.name] = apply ? apply(element.value, field) : element.value;
-                } else {
-                    errors.push(field.name);
-                }
+            const check = field.check ?? validations[field.type].check;
+            if (check(element.value, field)) {
+                const apply = field.apply ?? validations[field.type].apply;
+                result[field.name] = apply(element.value, field);
             } else {
                 errors.push(field.name);
             }
