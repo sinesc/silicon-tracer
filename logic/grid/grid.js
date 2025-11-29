@@ -78,7 +78,7 @@ class Grid {
 
     // Sets current grid circuit.
     setCircuit(circuit) {
-        assert.class(Circuit, circuit);
+        assert.class(Circuits.Circuit, circuit);
         this.unsetCircuit();
         circuit.gridConfig.zoom ??= Grid.ZOOM_LEVELS[Grid.DEFAULT_ZOOM_LEVEL];
         circuit.gridConfig.offsetX ??= 0;

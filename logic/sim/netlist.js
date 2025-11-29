@@ -14,7 +14,7 @@ class NetList {
 
     // Identifies nets in the given circuit and returns a netlist.
     static identify(circuit, recurse) {
-        assert.class(Circuit, circuit);
+        assert.class(Circuits.Circuit, circuit);
         assert.bool(recurse);
         return NetList.#identifyNets(circuit, recurse, []);
     }
@@ -78,7 +78,7 @@ class NetList {
         instances.push({ circuit, subInstances, parentInstance });
         // get all individual wires
         const wires = circuit.data.filter((i) => i instanceof Wire && !i.limbo).map((w) => {
-            return new NetWire([ new Point(w.x, w.y), new Point(w.x + w.width, w.y + w.height) ], w.gid, instance);
+            return new NetList.NetWire([ new Point(w.x, w.y), new Point(w.x + w.width, w.y + w.height) ], w.gid, instance);
         });
         // get all component ports
         const components = circuit.data.filter((i) => !(i instanceof Wire));
@@ -106,7 +106,7 @@ class NetList {
             }
             for (const port of component.getPorts()) {
                 let { x, y } = port.coords(component.width, component.height, component.rotation);
-                ports.push(new NetPort(new Point(x + component.x, y + component.y), port.name, component.gid, instance, mergeNets[port.name] ?? null));
+                ports.push(new NetList.NetPort(new Point(x + component.x, y + component.y), port.name, component.gid, instance, mergeNets[port.name] ?? null));
             }
         }
         let netList = NetList.#fromWires(wires, ports);
@@ -170,7 +170,7 @@ class NetList {
 }
 
 // A port connected to a net.
-class NetPort {
+NetList.NetPort = class {
     point;
     name;
     gid;
@@ -194,7 +194,7 @@ class NetPort {
 }
 
 // A wire in a net.
-class NetWire {
+NetList.NetWire = class {
     points;
     gid;
     instance;

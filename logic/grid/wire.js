@@ -187,7 +187,7 @@ class Wire extends GridItem {
 
     // Compact/reduce overlapping wires on the given grid or circuit.
     static compact(container) {
-        assert(container instanceof Grid || container instanceof Circuit, 'container must be a Grid or Circuit');
+        assert(container instanceof Grid || container instanceof Circuits.Circuit, 'container must be a Grid or Circuit');
 
         const preMergedWires = Wire.#getAllWires(container);
         const intersections = Wire.#findIntersections(preMergedWires);
