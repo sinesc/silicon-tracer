@@ -3,17 +3,17 @@
 // Main application class, handles UI interaction.
 class Application {
 
-    grid;
-    toolbar;
-    circuits;
     config = {
         targetTPS: 10000,
         autoCompile: true,
         singleStep: false,
     };
 
-    #simulations = {};
-    #currentSimulation;
+    grid;
+    toolbar;
+    circuits;
+    simulations;
+
     // move all into single object, e.g. #status = { ..
     #status;
     #statusMessage = null;
@@ -34,10 +34,12 @@ class Application {
     constructor(gridParent, toolbarParent, logo = null) {
         assert.class(Node, gridParent);
         assert.class(Node, toolbarParent);
+        assert.class(Node, logo, true);
 
         this.grid = new Grid(gridParent);
         this.toolbar = new Toolbar(toolbarParent);
-        this.circuits = new Circuits();
+        this.circuits = new Circuits(this);
+        this.simulations = new Simulations(this);
 
         this.#status = document.createElement('div');
         this.#status.classList.add('app-status');
@@ -57,108 +59,6 @@ class Application {
         requestAnimationFrame(() => this.#render());
         // update stats overlay once a second
         setInterval(() => this.#renderStats(), 1000);
-    }
-
-    #renderStats() {
-        this.grid.setSimulationDetails(`${Number.formatSI(this.config.targetTPS)} ticks/s target<br>${Number.formatSI(Math.round(this.#renderLoop.ticksCounted))} ticks/s actual<br>${Math.round(this.#renderLoop.load)}% core load<br>${this.#renderLoop.framesCounted} frames/s`);
-        this.#renderLoop.ticksCounted = 0;
-        this.#renderLoop.framesCounted = 0;
-    }
-
-    #render() {
-        let lastFrame = this.#renderLoop.renderLast;
-        this.#renderLoop.renderLast = performance.now();
-        this.#renderLoop.intervalComputed = this.#renderLoop.renderLast - lastFrame;
-        requestAnimationFrame(() => this.#render());
-        this.grid.render();
-        this.#renderLoop.framesCounted += 1;
-        // handle both TPS smaller or larger than FPS
-        this.#renderLoop.ticksPerFrameComputed = this.config.targetTPS / (1000 / this.#renderLoop.intervalComputed);
-        this.#renderLoop.nextTick += this.#renderLoop.ticksPerFrameComputed;
-        if (this.#renderLoop.nextTick >= 1) {
-            this.#renderLoop.nextTick -= Math.floor(this.#renderLoop.nextTick);
-            if (!this.config.singleStep && this.sim) {
-                const ticksCapped = this.config.targetTPS / (1000 / 60); // cap is used to work around large intervals when browser window not focused
-                const ticks = Math.max(1, Math.min(this.#renderLoop.ticksPerFrameComputed, ticksCapped));
-                this.#renderLoop.ticksCounted += ticks;
-                this.runSimulation(ticks);
-            }
-        }
-        // compute load (time spent computing/time available)
-        const elapsedTime = performance.now() - this.#renderLoop.renderLast;
-        this.#renderLoop.load = elapsedTime / this.#renderLoop.intervalComputed * 100;
-    }
-
-    // Returns list of simulations
-    simulations() {
-        let simulations = Object.keys(this.#simulations).map((uid) => [ uid, this.circuits.byUID(uid).label ]);
-        simulations.sort((a, b) => a[1].toLowerCase() < b[1].toLowerCase() ? -1 : (a[1].toLowerCase() > b[1].toLowerCase() ? 1 : 0));
-        return simulations;
-    }
-
-    // Returns the current simulation.
-    get sim() {
-        return this.#currentSimulation ? this.#simulations[this.#currentSimulation] : null;
-    }
-
-    // Start or continue simulation for current circuit.
-    startSimulation() {
-        let circuit = this.circuits.current;
-        if (this.#currentSimulation !== circuit.uid) {
-            this.#currentSimulation = circuit.uid;
-            if (this.#simulations[this.#currentSimulation]) {
-                // resume existing
-                let existingSimulation = this.#simulations[this.#currentSimulation];
-                existingSimulation.tickListener = circuit.attachSimulation(existingSimulation.netList, 0);
-                this.grid.setSimulationLabel(circuit.label);
-            } else {
-                // start new
-                let netList = NetList.identify(circuit, true);
-                let engine = netList.compileSimulation();
-                let tickListener = circuit.attachSimulation(netList, 0);
-                let start = performance.now();
-                this.#simulations[this.#currentSimulation] = { engine, start, netList, tickListener, instance: 0 };
-                this.grid.setSimulationLabel(circuit.label);
-            }
-        }
-    }
-
-    // Runs the current simulation for the given amount of ticks.
-    runSimulation(ticks) {
-        assert.number(ticks);
-        // apply manual simulation states each tick
-        let currentSimulation = this.#simulations[this.#currentSimulation];
-        for (let { portName, component } of currentSimulation.tickListener) {
-            component.applyState(portName, currentSimulation.engine); // FIXME: net state needs to be applied each actual tick
-        }
-        this.sim.engine.simulate(ticks);
-    }
-
-    // Stop current simulation.
-    stopSimulation() {
-        if (!this.#currentSimulation) {
-            return;
-        }
-        delete this.#simulations[this.#currentSimulation];
-        this.#currentSimulation = null;
-        this.grid.circuit.detachSimulation();
-        this.grid.setSimulationLabel(null);
-        this.grid.markDirty();
-    }
-
-    // Restarts a running simulation. Does not start a simulation that isn't already running.
-    restartSimulation() {
-        if (!this.#currentSimulation) {
-            return;
-        }
-        this.stopSimulation();
-        this.startSimulation();
-    }
-
-    // Clear all simulations.
-    clearSimulations() {
-        this.#currentSimulation = null;
-        this.#simulations = { };
     }
 
     // Sets a status message. Pass null to unset and revert back to default status.
@@ -210,6 +110,38 @@ class Application {
         this.#statusTimer = setTimeout(() => this.setStatus(), Grid.STATUS_DELAY);
     }
 
+    // Called periodically to update stats overlay.
+    #renderStats() {
+        this.grid.setSimulationDetails(`${Number.formatSI(this.config.targetTPS)} ticks/s target<br>${Number.formatSI(Math.round(this.#renderLoop.ticksCounted))} ticks/s actual<br>${Math.round(this.#renderLoop.load)}% core load<br>${this.#renderLoop.framesCounted} frames/s`);
+        this.#renderLoop.ticksCounted = 0;
+        this.#renderLoop.framesCounted = 0;
+    }
+
+    // Called each animation-frame to render elements.
+    #render() {
+        const lastFrame = this.#renderLoop.renderLast;
+        this.#renderLoop.renderLast = performance.now();
+        this.#renderLoop.intervalComputed = this.#renderLoop.renderLast - lastFrame;
+        requestAnimationFrame(() => this.#render());
+        this.grid.render();
+        this.#renderLoop.framesCounted += 1;
+        // handle both TPS smaller or larger than FPS
+        this.#renderLoop.ticksPerFrameComputed = this.config.targetTPS / (1000 / this.#renderLoop.intervalComputed);
+        this.#renderLoop.nextTick += this.#renderLoop.ticksPerFrameComputed;
+        if (this.#renderLoop.nextTick >= 1) {
+            this.#renderLoop.nextTick -= Math.floor(this.#renderLoop.nextTick);
+            if (!this.config.singleStep) {
+                const ticksCapped = this.config.targetTPS / (1000 / 60); // cap is used to work around large intervals when browser window not focused
+                const ticks = Math.max(1, Math.min(this.#renderLoop.ticksPerFrameComputed, ticksCapped));
+                this.#renderLoop.ticksCounted += ticks;
+                this.simulations.current?.tick(ticks);
+            }
+        }
+        // compute load (time spent computing/time available)
+        const elapsedTime = performance.now() - this.#renderLoop.renderLast;
+        this.#renderLoop.load = elapsedTime / this.#renderLoop.intervalComputed * 100;
+    }
+
     // Initialize main menu entries.
     #initMenu() {
 
@@ -220,18 +152,16 @@ class Application {
         fileMenu.createActionButton('Open...', 'Close all circuits and load new circuits from a file.', async () => {
             fileMenuState(false);
             await this.circuits.loadFile(true);
-            this.clearSimulations();
-            if (this.config.autoCompile) {
-                this.startSimulation();
-            }
+            this.simulations.clear();
+            this.#maybeStartSimulation();
             updateFileMenu();
             updateCircuitMenu();
         });
         let [ addButton ] = fileMenu.createActionButton('Open additional...', 'Load additional circuits from a file, keeping open circuits.', async () => {
             fileMenuState(false);
-            await this.circuits.loadFile(false);
+            await this.circuits.loadFile(false); // TODO don't switch to new circuit
             if (this.config.autoCompile) {
-                this.startSimulation();
+                this.simulations.select(this.circuits.current).start();
             }
             updateFileMenu();
             updateCircuitMenu();
@@ -250,7 +180,8 @@ class Application {
         fileMenu.createActionButton('Close', 'Close all open circuits.', async () => {
             fileMenuState(false);
             this.circuits.closeFile();
-            this.clearSimulations();
+            this.simulations.clear();
+            this.#maybeStartSimulation();
             updateFileMenu();
             updateCircuitMenu();
         });
@@ -275,9 +206,11 @@ class Application {
 
         updateCircuitMenu = () => {
             circuitMenu.clear();
-            circuitMenu.createActionButton('New...', 'Create a new circuit.', () => {
+            circuitMenu.createActionButton('New...', 'Create a new circuit.', async () => {
                 circuitMenuState(false);
-                this.circuits.create();
+                if (await this.circuits.create()) {
+                    this.#maybeStartSimulation();
+                }
                 addButton.classList.remove('toolbar-menu-button-disabled');
                 updateCircuitMenu();
             });
@@ -294,9 +227,7 @@ class Application {
                 let [ switchButton ] = circuitMenu.createActionButton(label, isCurrentCircuit ? 'This is the current circuit' : 'Switch grid to circuit "' + label + '".', () => {
                     circuitMenuState(false);
                     this.circuits.select(uid);
-                    if (this.config.autoCompile) {
-                        this.startSimulation();
-                    }
+                    this.#maybeStartSimulation();
                 });
                 switchButton.classList.add(!isCurrentGrid ? 'toolbar-circuit-select' : 'toolbar-circuit-select-fullrow');
                 switchButton.classList.toggle('toolbar-menu-button-disabled', isCurrentCircuit);
@@ -310,14 +241,32 @@ class Application {
 
         updateSimulationMenu = () => {
             simulationMenu.clear();
-            let toggleAction = () => this.circuits.current.uid === this.#currentSimulation ? 'stop' : (this.#simulations[this.circuits.current.uid] ? 'resume' : 'start');
-            let toggleButtonText = (action) => (action === 'stop' ? 'Stop' : (action === 'resume' ? 'Resume' : 'Start at')) + ' "' + this.circuits.current.label + '"';
+            let toggleAction = () => {
+                const sim = this.simulations.current;
+                const isCurrent = this.circuits.current.uid === sim?.uid;
+                if (isCurrent && sim) {
+                    return sim.running ? 'stop' : (sim.started ? 'resume' : 'start');
+                } else {
+                    return 'new';
+                }
+            };
+            let toggleButtonText = (action) => {
+                if (action === 'start') {
+                    return `Start at "${this.simulations.current.label}"`;
+                } else if (action === 'resume') {
+                    return `Resume "${this.simulations.current.label}"`;
+                } else if (action === 'stop') {
+                    return `Stop "${this.simulations.current.label}"`;
+                } else if (action === 'new') {
+                    return `Start at "${this.circuits.current.label}"`;
+                }
+            };
             // Continuous simulation toggle
             simulationMenu.createToggleButton('Autostart', 'Automatically starts a new simulation when switching circuits.', this.config.autoCompile, (enabled) => {
                 this.config.autoCompile = enabled;
                 if (enabled) {
                     this.config.singleStep = false;
-                    this.startSimulation();
+                    this.simulations.select(this.circuits.current).start();
                 }
                 updateSimulationMenu();
             });
@@ -327,13 +276,16 @@ class Application {
                 let action = toggleAction();
                 if (action === 'stop') {
                     this.config.autoCompile = false;
-                    this.stopSimulation();
+                    this.simulations.current.stop();
                     // switch to whatever circuit was being viewed when the simulation ended
                     app.circuits.select(app.grid.circuit.uid);
                 } else if (action === 'resume' || action === 'start') {
-                    // startSimulation resumes if a simulation for the current circuit already exists
+                    // start will just resume if the simulation already exists
                     this.config.singleStep = false;
-                    this.startSimulation();
+                    this.simulations.current.start();
+                } else if (action === 'new') {
+                    // start new simulation for current circuit
+                    this.simulations.select(this.circuits.current).start();
                 }
             });
             // Simulate current grid
@@ -344,19 +296,28 @@ class Application {
                     this.config.targetTPS = result.targetTPS;
                 }
             });
-            if (this.simulations().length > 0) {
+            if (this.simulations.list().length > 0) {
                 simulationMenu.createSeparator();
             }
-            for (let [ uid, label ] of this.simulations()) {
-                let isCurrent = uid === this.#currentSimulation;
+            for (let [ uid, label ] of this.simulations.list()) {
+                let isCurrent = uid === this.simulations.current?.uid;
                 let [ button ] = simulationMenu.createActionButton(label, isCurrent ? 'This is the current simulation' : 'Switch to/resume simulation "' + label + '".', () => {
                     simulationMenuState(false);
                     app.circuits.select(uid);
                     this.config.singleStep = false;
-                    this.startSimulation();
+                    this.simulations.select(this.circuits.current).start();
                 });
                 button.classList.toggle('toolbar-menu-button-disabled', isCurrent);
             }
+        }
+    }
+
+    // Starts a simulation for the current circuit if autocompile is enabled, otherwise unsets current simulation.
+    #maybeStartSimulation() {
+        if (this.config.autoCompile) {
+            this.simulations.select(this.circuits.current).start();
+        } else {
+            this.simulations.select(this.circuits.current, false);
         }
     }
 

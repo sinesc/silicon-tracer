@@ -64,8 +64,9 @@ class Port extends Interactive {
                 this.#state = null;
             }
             if (prevState !== this.#state) {
-                if (this.#port.netId !== null && app.sim) {
-                    app.sim.engine.setNetValue(this.#port.netId, this.#state);
+                const sim = app.simulations.current;
+                if (this.#port.netId !== null && sim) {
+                    sim.engine.setNetValue(this.#port.netId, this.#state);
                 }
                 this.render();
             }
@@ -104,7 +105,8 @@ class Port extends Interactive {
         super.renderNetState();
 
         // render extra big state indicator around entire component
-        let state = this.#port.netId !== null && app.sim ? '' + app.sim.engine.getNetValue(this.#port.netId) : '';
+        const sim = app.simulations.current;
+        const state = this.#port.netId !== null && sim.engine ? '' + sim.engine.getNetValue(this.#port.netId) : '';
         if (this.element.getAttribute('data-net-state') !== state) {
             this.element.setAttribute('data-net-state', state);
         }

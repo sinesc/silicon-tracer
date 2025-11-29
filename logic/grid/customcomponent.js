@@ -38,7 +38,7 @@ class CustomComponent extends Component {
         this.type = circuit.label;
         super.link(grid);
         this.element.classList.add('custom');
-        this.setHoverMessage(this.inner, () => '<b>' + this.label + '</b>. <i>LMB</i>: Drag to move, <i>R</i>: Rotate, <i>DEL</i>: Delete, <i>E</i>: Edit, <i>W</i>:Switch to sub-circuit' + (app.sim ? ' simulation' : ''), { type: 'hover' });
+        this.setHoverMessage(this.inner, () => '<b>' + this.label + '</b>. <i>LMB</i>: Drag to move, <i>R</i>: Rotate, <i>DEL</i>: Delete, <i>E</i>: Edit, <i>W</i>:Switch to sub-circuit' + (app.simulations.current ? ' simulation' : ''), { type: 'hover' });
     }
 
     // Set the simulation instance of the represented sub-circuit.
@@ -65,20 +65,15 @@ class CustomComponent extends Component {
     onHotkey(key, what) {
         super.onHotkey(key, what);
         if (key === 'w' && what.type === 'hover') {
-            let circuit = app.circuits.byUID(this.uid);
-            if (circuit) {
-                if (app.sim) {
-                    // switch to subcomponent simulation instance
-                    let simulation = app.sim;
-                    simulation.instance = this.instance;
-                    this.grid.setCircuit(circuit);
-                    simulation.tickListener = circuit.attachSimulation(simulation.netList, simulation.instance);
-                } else {
-                    // switch to another component, optionally start simulation for that one
-                    app.circuits.select(this.uid);
-                    if (app.config.autoCompile) {
-                        app.startSimulation();
-                    }
+            const sim = app.simulations.current;
+            if (sim && this.instance !== null) {
+                // switch to subcomponent simulation instance
+                sim.reattach(this.instance);
+            } else {
+                // switch to another component, optionally start simulation for that one
+                app.circuits.select(this.uid);
+                if (app.config.autoCompile) {
+                    app.simulation.select(this.uid).start();
                 }
             }
         }

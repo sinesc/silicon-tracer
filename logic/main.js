@@ -8,9 +8,10 @@ app.start();
 if (true) {
 
     app.toolbar.createActionButton('Dump ASM', 'Outputs simulation code to console.', () => {
-        if (app.sim) {
+        const sim = app.simulations.current;
+        if (sim) {
             let portInfo = [];
-            for (let { offset, meta } of app.sim.engine.nets) {
+            for (let { offset, meta } of sim.engine.nets) {
                 for (let port of meta) {
                     let gid = port.match(/@(g[a-f0-9]+)@/)[1] ?? null;
                     let item = app.circuits.current.itemByGID(gid);
@@ -19,7 +20,7 @@ if (true) {
                     }
                 }
             }
-            console.log(app.sim.engine.code() + portInfo.join("\n"));
+            console.log(sim.engine.code() + portInfo.join("\n"));
         } else {
             console.log('No simulation running');
         }
@@ -31,7 +32,7 @@ if (true) {
         app.runSimulation(1);
         console.clear();
         console.log('tick ' + (tick++));
-        let mem = app.sim.engine.mem();
+        let mem = app.simulations.current.engine.mem();
         for (let [ k, v ] of Object.entries(mem.io)) {
             let abbrev = k.replace(/@(g[a-f0-9]+)@/g, (m, h) => ':' + h.substr(1, 6) + ':');
             console.log(abbrev + ': ' + bin(v));

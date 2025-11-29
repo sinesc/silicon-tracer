@@ -46,7 +46,7 @@ class WireBuilder extends GridItem { // TODO: Not actually a grid item, but uses
         this.#wireV.limbo = true;
         this.grid.addItem(this.#wireV, false);
         this.#wireV.element.classList.add('wire-building');
-        
+
         this.#updateWires();
 
         if (WireBuilder.DEBUG_BOX) {
@@ -97,7 +97,7 @@ class WireBuilder extends GridItem { // TODO: Not actually a grid item, but uses
             app.clearStatus(true);
             this.grid.releaseHotkeyTarget(this, true);
             this.#remove();
-            app.restartSimulation();
+            app.simulations.current?.reset();
         }
     }
 

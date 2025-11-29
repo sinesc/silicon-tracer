@@ -298,7 +298,7 @@ class Component extends GridItem {
             this.#element.classList.add('component-rotate-animation');
             setTimeout(() => {
                 this.#element.classList.remove('component-rotate-animation');
-                app.restartSimulation();
+                app.simulations.current?.reset();
                 this.dirty = true;
                 this.render();
             }, 150);
@@ -346,7 +346,7 @@ class Component extends GridItem {
             this.#dropPreview = null;
             what.grabOffsetX = null;
             what.grabOffsetY = null;
-            app.restartSimulation();
+            app.simulations.current?.reset();
         }
     }
 
@@ -524,7 +524,8 @@ class Component extends GridItem {
     // Renders/updates the current net state of the component ports to the grid.
     renderNetState() {
         this.getPorts().forEach((item) => {
-            let state = item.netId !== null && app.sim ? '' + app.sim.engine.getNetValue(item.netId) : '';
+            const sim = app.simulations.current;
+            const state = item.netId !== null && sim.engine ? '' + sim.engine.getNetValue(item.netId) : '';
             if (item.element.getAttribute('data-net-state') !== state) {
                 item.element.setAttribute('data-net-state', state);
             }

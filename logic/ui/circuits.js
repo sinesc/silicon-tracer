@@ -1,6 +1,6 @@
 "use strict";
 
-// Handles loading/saving/selecting circuits.
+// Circuit management. Handles loading/saving/selecting circuits.
 class Circuits {
 
     static EDIT_DIALOG = [
@@ -11,10 +11,16 @@ class Circuits {
 
     static STRINGIFY_SPACE = "\t";
 
+    #app;
     #circuits;
     #currentCircuit;
     #fileHandle = null;
     #fileName = null;
+
+    constructor(app) {
+        assert.class(Application, app);
+        this.#app = app;
+    }
 
     // Loads circuits from file, returning the filename if circuits was previously empty.
     async loadFile(clear) {
@@ -90,7 +96,7 @@ class Circuits {
         return true;
     }
 
-    // Returns circuit by UID.
+    // Returns circuit by UID. // TODO: use map/object instead of array
     byUID(uid) {
         return this.#circuits.find((c) => c.uid === uid) ?? null;
     }
@@ -117,7 +123,7 @@ class Circuits {
         if (index > -1) {
             this.#currentCircuit = index;
             const circuit = this.#circuits[index];
-            app.grid.setCircuit(circuit);
+            this.#app.grid.setCircuit(circuit);
             return;
         }
         throw new Error('Could not find circuit ' + uid);
@@ -131,7 +137,9 @@ class Circuits {
             const circuit = new Circuits.Circuit(config.label);
             this.#circuits.push(circuit);
             this.select(circuit.uid);
+            return true;
         }
+        return false;
     }
 
     // Rename
@@ -142,8 +150,10 @@ class Circuits {
             circuit.label = result.label;
             circuit.portConfig.gap = result.gap;
             circuit.portConfig.parity = result.parity;
-            app.grid.setCircuit(circuit);
+            this.#app.grid.setCircuit(circuit);
+            return true;
         }
+        return false;
     }
 
     // Serializes loaded circuits for saving to file.

@@ -41,8 +41,8 @@ class Clock extends Component {
         if (config) {
             this.frequency = config.frequency;
             this.rotation = config.rotation;
-            if (this.clockId !== null && app.sim) { // FIXME: insufficient check, running simulation might be for another circuit. just rebuild entire circuit but keep mem8/32
-                app.sim.engine.updateClock(this.clockId, this.ticksPerHalfCycle, true);
+            if (this.clockId !== null && app.simulations.current) { // FIXME: insufficient check, running simulation might be for another circuit. just rebuild entire circuit but keep mem8/32
+                app.simulations.current.engine.updateClock(this.clockId, this.ticksPerHalfCycle, true);
             }
         }
     }
