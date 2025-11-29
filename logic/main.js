@@ -5,7 +5,7 @@ app.start();
 
 // dev/debug stuff
 
-if (true) {
+if (false) {
 
     app.toolbar.createActionButton('Dump ASM', 'Outputs simulation code to console.', () => {
         const sim = app.simulations.current;
@@ -29,7 +29,7 @@ if (true) {
     let tick = 0;
     app.toolbar.createActionButton('Tick', 'Ticks the simulation once', () => {
         app.config.singleStep = true;
-        app.runSimulation(1);
+        app.simulations.current.tick(1);
         console.clear();
         console.log('tick ' + (tick++));
         let mem = app.simulations.current.engine.mem();
