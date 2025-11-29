@@ -602,6 +602,7 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
     display: none;
 }
 .component-port {
+    pointer-events: all;
     z-index: 14;
     position: absolute;
     background-color: var(--component-port-border-color);
