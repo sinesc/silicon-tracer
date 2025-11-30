@@ -296,7 +296,7 @@ class Application {
             // Simulate current grid
             simulationMenu.createActionButton(`Set ticks/s (${Number.formatSI(this.config.targetTPS)})...`, 'Configure simulation speed', async () => {
                 simulationMenuState(false);
-                let result = await dialog('Simulation speed', [ { label: "Ticks per second", name: "targetTPS", type: "int", check: (v, f) => { const p = Number.parseSI(v, true); return isFinite(p) && p >= 1; } } ], { targetTPS: this.config.targetTPS });
+                let result = await dialog('Simulation speed', [ { label: "Ticks per second", name: "targetTPS", type: "int", check: (v, f) => { const p = Number.parseSI(v, true); return isFinite(p) && p >= 1; } } ], { targetTPS: Number.formatSI(this.config.targetTPS, true) });
                 if (result) {
                     this.config.targetTPS = result.targetTPS;
                 }

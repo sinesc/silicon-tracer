@@ -47,7 +47,7 @@ Object.defineProperty(String.prototype, "toUpperFirst", {
 });
 
 // Formats a number to a string with a metric unit prefix.
-Number.formatSI = function(number, fractionDigits = 2) {
+Number.formatSI = function(number, lossless = false, fractionDigits = 2) {
     if (number === 0) {
         return number.toString();
     }
@@ -61,7 +61,8 @@ Number.formatSI = function(number, fractionDigits = 2) {
         return number.toString();
     }
     const baseNumber = parseFloat((number / Math.pow(10, siBase * EXP_STEP_SIZE)).toFixed(fractionDigits));
-    return `${baseNumber}${prefix}`;
+    const result = `${baseNumber}${prefix}`;
+    return !lossless || Number.parseSI(result) === number ? result : number.toString();
 };
 
 // Parses a number with a metric unit prefix to a float.
