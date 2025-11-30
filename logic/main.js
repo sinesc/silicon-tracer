@@ -3,8 +3,25 @@
 const app = new Application(document.querySelector('#content'), document.querySelector('#toolbar'), document.querySelector('#header h1'));
 app.start();
 
-// dev/debug stuff
+// add 'Open example' button on github demo
+if (location.hostname === 'sinesc.github.io' && location.pathname === '/silicon-tracer/') {
+    const [ exampleButton ] = app.toolbar.createActionButton('Open example', 'Loads an example circuit.', async () => {
+        const response = await fetch('https://sinesc.github.io/silicon-tracer/doc/basics.stc');
+        const content = await response.json();
+        const uid = app.circuits.unserialize(content);
+        app.circuits.select(uid);
+        if (app.config.autoCompile) {
+            app.simulations.select(app.circuits.current).start();
+        } else {
+            app.simulations.select(app.circuits.current, false);
+        }
+        exampleButton.classList.add('toolbar-menu-button-disabled', 'example-button-fade');
+        setTimeout(() => exampleButton.remove(), 1500);
+    });
+    exampleButton.classList.add('example-button');
+}
 
+// dev/debug stuff
 if (false) {
 
     app.toolbar.createActionButton('Dump ASM', 'Outputs simulation code to console.', () => {

@@ -193,6 +193,14 @@ html {
     vertical-align: top;
     margin-left: 10px;
 }
+#toolbar .example-button {
+    background: radial-gradient(circle, rgb(187 187 187) 1%, rgb(201 113 130) 100%);
+    opacity: 1;
+    transition: opacity 0.5s;
+}
+#toolbar .example-button.example-button-fade {
+    opacity: 0;
+}
 
 /*
  * Focus hint, see main.js.
