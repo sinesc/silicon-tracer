@@ -299,6 +299,7 @@ class Application {
                 let result = await dialog('Simulation speed', [ { label: "Ticks per second", name: "targetTPS", type: "int", check: (v, f) => { const p = Number.parseSI(v, true); return isFinite(p) && p >= 1; } } ], { targetTPS: Number.formatSI(this.config.targetTPS, true) });
                 if (result) {
                     this.config.targetTPS = result.targetTPS;
+                    this.simulations.updateClocks(this.config.targetTPS);
                 }
             });
             if (this.simulations.list().length > 0) {

@@ -83,6 +83,14 @@ class Simulations {
             }
         }
     }
+
+    // Update clock ticks/cycle value. Required when simulation tickrate is changed.
+    updateClocks(targetTPS) {
+        assert.number(targetTPS);
+        for (let simulation of values(this.#simulations)) {
+            simulation.engine.updateClocks(targetTPS);
+        }
+    }
 }
 
 Simulations.Simulation = class {

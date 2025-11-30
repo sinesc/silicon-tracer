@@ -82,27 +82,18 @@ class Simulation {
         return this.#gates.length - 1;
     }
 
-    // Declares a clock that will be on/off for the given number of ticks. Suffix is appended to the builtin's pre-defined IO-names.
-    declareClock(ticks, tristate, suffix, delay = null) {
-        assert.number(ticks);
+    // Declares a clock with the given frequency at the given tps. Suffix is appended to the builtin's pre-defined IO-names.
+    declareClock(frequency, tps, tristate, suffix, delay = null) {
+        assert.number(frequency);
+        assert.number(tps);
         assert.bool(tristate);
         assert.string(suffix);
         const input = 'enable' + suffix;
         const output = 'c' + suffix
-        this.#clocks.push({ ticks, tristate, input, output, offset: this.#alloc32() });
+        this.#clocks.push({ frequency, tps, tristate, input, output, offset: this.#alloc32() });
         this.#declareIO(input, 'i', delay ?? Simulation.DEFAULT_DELAY);
         this.#declareIO(output, 'o', 0);
         return this.#clocks.length - 1;
-    }
-
-    // Updates the given clock's parameters and recompiles the circuit while retaining circuit state.
-    updateClock(id, ticks, tristate) {
-        assert.number(id);
-        assert.number(ticks);
-        assert.bool(tristate);
-        this.#clocks[id].ticks = ticks;
-        this.#clocks[id].tristate = tristate;
-        this.#compileFunction();
     }
 
     // Declares a gate with the given inputs/output and returns the gate-index. For convenience, suffix is appended to all IO-names.
@@ -132,8 +123,24 @@ class Simulation {
         this.#mem8 = new Uint8Array(this.#alloc8Base);
         this.#mem32 = new Int32Array(this.#alloc32Base);
         for (const clock of this.#clocks) {
-            this.#mem32[clock.offset] = clock.ticks + 2; // clean up first clock cycle offset
+            const ticks = Simulation.#computeClockTicks(clock.tps, clock.frequency);
+            this.#mem32[clock.offset] = ticks + 2; // clean up first clock cycle (clock triggers on 0 but counter resets at -1)
         }
+    }
+
+    // Updates all clocks in the circuit for the given TPS and recompiles the simulation without resetting it.
+    updateClocks(tps) {
+        assert.number(tps);
+        for (let clock of values(this.#clocks)) {
+            const previousMaxTicks = Simulation.#computeClockTicks(clock.tps, clock.frequency);
+            // set new tps to compute ticks/cycle
+            clock.tps = tps;
+            // new tps will not change the tick counter for the current cycle, so we have to fix that as well
+            const newMaxTicks = Simulation.#computeClockTicks(clock.tps, clock.frequency);
+            const remainingTicks = this.#mem32[clock.offset];
+            this.#mem32[clock.offset] = 0 | (remainingTicks * newMaxTicks / previousMaxTicks);
+        }
+        this.#compileFunction();
     }
 
     // Runs the simulation for the given number of ticks.
@@ -224,7 +231,7 @@ class Simulation {
         const inputDelay = this.#getIO(ioName).delay;
         const netMem = this.#compileNetAccess(netIndex);
         const inputMem = this.#compileIOAccess(ioName);
-        const clearMask = this.#compileDelayMask(inputDelay);
+        const clearMask = this.#compileDelayMask(inputDelay); // TODO: add optimized 0 tick path, then switch gates from input to output delay (since they typically have more inputs than outputs)
         return `${inputMem} = ((${inputMem} >> 1) & ${clearMask}) | (${netMem} << ${inputDelay})`;   // shift net value up to newest io-data/signal bits and apply
     }
 
@@ -268,15 +275,13 @@ class Simulation {
     }
 
     // Compiles a clock reading from one input and writing to an output.
-    #compileClock(clockIndex, ioReplacements) { // TODO: enable, tristate
+    #compileClock(clockIndex, ioReplacements) { // TODO: tristate
         const clock = this.#clocks[clockIndex];
-        const output = this.#getIO(clock.output);
         const inputMem = ioReplacements[clock.input];
         const outputMem = this.#compileIOAccess(clock.output);
         const clockMem = this.#compileClockAccess(clock.offset);
         const signalBit = this.#compileConst(1 << Simulation.MAX_DELAY);
-        const ticks = 0 | clock.ticks;
-
+        const ticks = Simulation.#computeClockTicks(clock.tps, clock.frequency);
         let code = `${clockMem} -= 1; `                                                         // decrement clock
         code += `cmask = ${clockMem} >> 31; `                                                   // copy sign bit into entire mask
         code += `${clockMem} = ((${clockMem} & ~cmask) | (${ticks} & cmask)); `;                // either retain current clock value or reset it to ticks on reaching -1
@@ -292,6 +297,7 @@ class Simulation {
         let code = `signal = ${outputMem} & ${signalMask}; `;                       // select only the signal bit
         code += `mask = signal | (signal >> ${Simulation.MAX_DELAY}); `;            // and duplicate it into the data bit position to create a mask
         if (reset) {
+            // TODO avoid mask assignment in this case
             // or'ing output with previous output fixes some oscillations after 1 tick pulses
             //code += `${netMem} = ((${outputMem} | (${outputMem} >> 1)) & mask)`;  // reset net to io-data/signal on first assert to net
             code += `${netMem} = (${outputMem} & mask)`;                            // reset net to io-data/signal on first assert to net
@@ -420,5 +426,10 @@ class Simulation {
         } else {
             throw new Error('Undefined clock ' + index);
         }
+    }
+
+    // Computes number of ticks between clock edges.
+    static #computeClockTicks(tps, frequency) {
+        return 0 | (tps / frequency / 2);
     }
 }

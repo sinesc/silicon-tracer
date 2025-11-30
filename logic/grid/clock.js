@@ -9,7 +9,6 @@ class Clock extends Component {
     ];
 
     frequency = 1;
-    clockId = null;
 
     constructor(x, y) {
         super(x, y, { left: [ 'enable' ], right: [ 'c' ] }, 'clock');
@@ -30,20 +29,12 @@ class Clock extends Component {
         this.setHoverMessage(this.inner, () => `<b>${this.frequency} Hz Clock</b>. <i>LMB</i>: Drag to move, <i>R</i>: Rotate, <i>DEL</i>: Delete, <i>E</i>: Edit`, { type: 'hover' });
     }
 
-    // Number of ticks in half a cycle.
-    get ticksPerHalfCycle() {
-        return app.config.targetTPS / this.frequency / 2;
-    }
-
     // Handle edit hotkey.
     async onEdit() {
         const config = await dialog("Configure clock", Clock.EDIT_DIALOG, { frequency: this.frequency, rotation: this.rotation });
         if (config) {
             this.frequency = config.frequency;
             this.rotation = config.rotation;
-            if (this.clockId !== null && app.simulations.current) { // FIXME: insufficient check, running simulation might be for another circuit. just rebuild entire circuit but keep mem8/32
-                app.simulations.current.engine.updateClock(this.clockId, this.ticksPerHalfCycle, true);
-            }
             this.redraw();
         }
     }
