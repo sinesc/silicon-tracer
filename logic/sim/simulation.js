@@ -235,23 +235,36 @@ class Simulation {
         const dataOp = gate.dataTpl.replace(/\b[a-z_][a-z0-9_@]*\b/g, (match) => ioReplacements[match] ?? 'error');
         const signalOp = gate.signalTpl.replace(/\b[a-z_][a-z0-9_@]*\b/g, (match) => ioReplacements[match] ?? 'error');
         const outputMem = this.#compileIOAccess(gate.output);
-        // perform signal computation, if required, otherwise just set the newest signal bit slot
-        const signalShift = Simulation.MAX_DELAY + outputDelay;
-        const signalBit = this.#compileConst(1 << signalShift);
         let computeSignal;
-        if (signalOp !== '') {
-            // perform signal computation, then shift result into newest signal bit slot
-            computeSignal = `((${signalOp}) << ${signalShift}) & ${signalBit}`;
+        if (outputDelay > 0) {
+            // perform signal computation, if required, otherwise just set the newest signal bit slot
+            const signalShift = Simulation.MAX_DELAY + outputDelay;
+            const signalBit = this.#compileConst(1 << signalShift);
+            if (signalOp !== '') {
+                // perform signal computation, then shift result into newest signal bit slot
+                computeSignal = `((${signalOp}) << ${signalShift}) & ${signalBit}`;
+            } else {
+                computeSignal = `${signalBit}`;
+            }
+            // perform data computation, then shift result into newest data bit slot and join both result parts
+            const dataShift = outputDelay;
+            const dataBit = this.#compileConst(1 << dataShift);
+            const computeData = `((${dataOp}) << ${dataShift}) & ${dataBit}`;
+            // unset previously newest signal and data bits and replace with newly computed ones, write back
+            const clearMask = this.#compileDelayMask(outputDelay);
+            return `${outputMem} = ((${outputMem} >> 1) & ${clearMask}) | ((${computeSignal}) | (${computeData}))`;
         } else {
-            computeSignal = `${signalBit}`;
+            // optimized path for 0 delay outputs
+            const signalShift = Simulation.MAX_DELAY;
+            const signalBit = this.#compileConst(1 << signalShift);
+            const dataBit = this.#compileConst(1);
+            if (signalOp !== '') {
+                computeSignal = `((${signalOp}) << ${signalShift})`; // skipping masking with signalBit here since the shift ensures it can't leak into data
+            } else {
+                computeSignal = `${signalBit}`;
+            }
+            return `${outputMem} = ${computeSignal} | ((${dataOp}) & ${dataBit})`; // not skipping masking with dataBit here since some builtins would leak data into signal
         }
-        // perform data computation, then shift result into newest data bit slot and join both result parts
-        const dataShift = outputDelay;
-        const dataBit = this.#compileConst(1 << dataShift);
-        const computeData = `((${dataOp}) << ${dataShift}) & ${dataBit}`;
-        // unset previously newest signal and data bits and replace with newly computed ones, write back
-        const clearMask = this.#compileDelayMask(outputDelay);
-        return `${outputMem} = ((${outputMem} >> 1) & ${clearMask}) | ((${computeSignal}) | (${computeData}))`;
     }
 
     // Compiles a clock reading from one input and writing to an output.
