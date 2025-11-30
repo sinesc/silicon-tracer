@@ -97,7 +97,6 @@ class WireBuilder extends GridItem { // TODO: Not actually a grid item, but uses
             app.clearStatus(true);
             this.grid.releaseHotkeyTarget(this, true);
             this.#remove();
-            app.simulations.current?.reset();
         }
     }
 
@@ -130,6 +129,7 @@ class WireBuilder extends GridItem { // TODO: Not actually a grid item, but uses
         }
         Wire.compact(this.grid);
         this.grid.markDirty(true);
+        app.simulations.markDirty(this.grid.circuit);
     }
 
     // Sets wire corner bounding box.

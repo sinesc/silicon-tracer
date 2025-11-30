@@ -31,8 +31,8 @@ class Circuits {
         if (clear) {
             this.#circuits = [ ];
         }
-        const newCircuitIndex = this.#unserialize(content);
-        this.select(this.#circuits[newCircuitIndex].uid);
+        const newCircuitUID = this.unserialize(content);
+        this.select(newCircuitUID);
         if (clear || !haveCircuits) {
             // no other circuits loaded, make this the new file handle
             this.#fileHandle = handle;
@@ -131,7 +131,7 @@ class Circuits {
 
     // Creates a new circuit.
     async create() {
-        const config = await dialog("Configure circuit", Circuits.EDIT_DIALOG, { label: this.#generateName() });
+        const config = await dialog("Create circuit", Circuits.EDIT_DIALOG, { label: this.#generateName(), gap: 'middle', parity: 'automatic' });
         if (config) {
             this.#currentCircuit = this.#circuits.length;
             const circuit = new Circuits.Circuit(config.label);
@@ -162,18 +162,18 @@ class Circuits {
     }
 
     // Unserializes circuits from file.
-    #unserialize(content) {
-        let selectedCircuitIndex = this.#circuits.length;
+    unserialize(content) {
+        let selectedUID = null;
         const unserialized = content.circuits.map((c) => Circuits.Circuit.unserialize(c));
         this.#circuits.push(...unserialized);
         for (const [ index, circuit ] of pairs(this.#circuits)) {
             circuit.generateOutline();
             Wire.compact(circuit);
-            if (circuit.uid === content.currentUID) {
-                selectedCircuitIndex = index;
+            if (selectedUID === null || circuit.uid === content.currentUID) {
+                selectedUID = circuit.uid;
             }
         }
-        return selectedCircuitIndex;
+        return selectedUID;
     }
 
     // Returns a generated name if the given name is empty.
@@ -273,7 +273,7 @@ Circuits.Circuit = class {
         const tickListener = [];
         for (const net of netList.nets) {
             // collect list of interactive components in circuit
-            let interactiveComponents = net.ports.map((p) => ({ portName: p.name, component: this.itemByGID(p.gid) })).filter((p) => p.component instanceof Interactive && p.component.instance === subCircuitInstance);
+            let interactiveComponents = net.ports.map((p) => ({ portName: p.name, component: this.itemByGID(p.gid) })).filter((p) => p.component instanceof Interactive /*&& p.component.instance === subCircuitInstance */);
             tickListener.push(...interactiveComponents);
             // link ports on components
             for (const { name, gid, instance } of net.ports) {

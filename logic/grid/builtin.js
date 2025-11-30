@@ -69,7 +69,7 @@ class Builtin extends Component {
         const config = await dialog(`Configure ${this.label}`, Builtin.EDIT_DIALOG, { rotation: this.rotation });
         if (config) {
             this.rotation = config.rotation;
-            this.render();
+            this.redraw();
         }
     }
 }

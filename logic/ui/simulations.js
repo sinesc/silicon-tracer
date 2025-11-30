@@ -70,6 +70,19 @@ class Simulations {
             this.#currentSimulation = null;
         }
     }
+
+    // Marks the given circuit as modified causing simulations that include it to be recompiled.
+    markDirty(circuit) {
+        for (let simulation of values(this.#simulations)) {
+            if (simulation.includes(circuit)) {
+                if (simulation === this.current) {
+                    simulation.reset();
+                } else {
+                    simulation.markDirty();
+                }
+            }
+        }
+    }
 }
 
 Simulations.Simulation = class {
@@ -77,8 +90,8 @@ Simulations.Simulation = class {
     #circuit;
     #netList;
     #engine;
-    #tickListener;
-    #instance;
+    #tickListener = [];
+    #instance = 0;
     #running = false;
     #started = false;
 
@@ -95,7 +108,7 @@ Simulations.Simulation = class {
         return this.#running;
     }
 
-    // Returns whether the simulation had been started at some point and is no longer in its original state.
+    // Returns whether the simulation had been started at some point and is no longer in its initial state.
     get started() {
         return this.#started;
     }
@@ -152,11 +165,18 @@ Simulations.Simulation = class {
         }
     }
 
+    // Marks the simulation as modified and in need of a recompilation.
+    markDirty() {
+        this.#compile(); // TODO: flag as dirty instead
+    }
+
     // Re-attach simulation to a subcircuit.
     reattach(instance) {
         assert.number(instance);
         const circuit = this.#netList.instances[instance].circuit;
-        this.#app.grid.setCircuit(circuit);
+        if (this.#app.grid.circuit !== circuit) {
+            this.#app.grid.setCircuit(circuit);
+        }
         this.#instance = instance;
         this.#tickListener = circuit.attachSimulation(this.#netList, instance);
     }
@@ -170,6 +190,12 @@ Simulations.Simulation = class {
         }
         this.#started = true;
         this.#engine.simulate(ticks);
+    }
+
+    // Returns whether the simulation includes the given circuit.
+    includes(circuit) {
+        assert.class(Circuits.Circuit, circuit);
+        return this.#netList.instances.some((i) => i.circuit === circuit);
     }
 
     // Attach simulation to its root circuit.

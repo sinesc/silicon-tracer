@@ -93,6 +93,7 @@ class Gate extends Component {
             this.output = output;
             this.link(grid);
             this.rotation = config.rotation; // needs to be on grid for rotation to properly update x/y/width/height
+            this.redraw();
         }
     }
 }

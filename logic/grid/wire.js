@@ -10,7 +10,7 @@ class Wire extends GridItem {
     #element;
     color;
     netId = null;
-    width; // TODO: replace width/height with length/direction
+    width; // TODO: replace width/height with length/direction, use get/set to mark as dirty
     height;
     direction;
     limbo = false;

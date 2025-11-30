@@ -92,6 +92,7 @@ class CustomComponent extends Component {
             //this.link(grid);
             this.rotation = result.rotation;
             //this.type = result.label;
+            this.redraw();
         }
     }
 }

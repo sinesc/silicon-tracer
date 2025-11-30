@@ -41,7 +41,6 @@ class Toolbar {
                 let [ x, y ] = app.grid.screenToGrid(e.clientX, e.clientY);
                 let component = create(app.grid, x, y);
                 component.dragStart(x, y, { type: "component", grabOffsetX: component.width / 2, grabOffsetY: component.height / 2 });
-                component.render();
             }
         };
         this.#element.appendChild(button);

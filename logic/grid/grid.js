@@ -109,7 +109,7 @@ class Grid {
         this.#circuit.addItem(item);
         item.link(this);
         if (restart) {
-            app.simulations.current?.reset();
+            app.simulations.markDirty(this.#circuit);
         }
         return item;
     }
@@ -122,7 +122,7 @@ class Grid {
         this.#circuit.removeItem(item);
         this.releaseHotkeyTarget(item);
         if (restart) {
-            app.simulations.current?.reset();
+            app.simulations.markDirty(this.#circuit);
         }
         return item;
     }

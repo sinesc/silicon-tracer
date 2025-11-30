@@ -298,9 +298,7 @@ class Component extends GridItem {
             this.#element.classList.add('component-rotate-animation');
             setTimeout(() => {
                 this.#element.classList.remove('component-rotate-animation');
-                app.simulations.current?.reset();
-                this.dirty = true;
-                this.render();
+                this.redraw();
             }, 150);
         } else if (key === 'Delete' && what.type === 'hover') {
             this.#element.classList.add('component-delete-animation');
@@ -346,7 +344,7 @@ class Component extends GridItem {
             this.#dropPreview = null;
             what.grabOffsetX = null;
             what.grabOffsetY = null;
-            app.simulations.current?.reset();
+            this.redraw();
         }
     }
 

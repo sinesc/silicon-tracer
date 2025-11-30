@@ -80,6 +80,13 @@ class GridItem {
     // Implement to render the net-state of the item to the grid.
     renderNetState() { }
 
+    // Call after the grid item is modified to ensure the component is fully redrawn and the simulation is updated.
+    redraw() {
+        app.simulations.markDirty(this.grid.circuit);
+        this.dirty = true;
+        this.render(); // avoid brief flicker after animations
+    }
+
     // Implement to return whether the grid item is selected.
     get selected() { return false; }
 
@@ -140,7 +147,10 @@ class GridItem {
     }
 
     // Sets the optionally aligned item position.
-    setPosition(x, y, aligned) {
+    setPosition(x, y, aligned = false) {
+        assert.number(x);
+        assert.number(y);
+        assert.bool(aligned);
         if (aligned) {
             [ x, y ] = Grid.align(x, y);
         }

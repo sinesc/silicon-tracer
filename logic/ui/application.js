@@ -54,6 +54,7 @@ class Application {
         this.#startFocusMonitor();
         this.#startLogoMonitor();
         this.circuits.clear();
+        this.simulations.select(this.circuits.current).start();
         // start simulation/render loop
         this.#renderLoop.renderLast = performance.now();
         requestAnimationFrame(() => this.#render());
@@ -123,7 +124,11 @@ class Application {
         this.#renderLoop.renderLast = performance.now();
         this.#renderLoop.intervalComputed = this.#renderLoop.renderLast - lastFrame;
         requestAnimationFrame(() => this.#render());
-        this.grid.render();
+        const sim = this.simulations.current;
+        // after each circuit modification the simulation will not have been ticked yet and net-state won't be known. this causes a brief flickering each time the circuit changes, so we skip that single frame
+        if (!(sim && sim.running && !sim.started)) {
+            this.grid.render();
+        }
         this.#renderLoop.framesCounted += 1;
         // handle both TPS smaller or larger than FPS
         this.#renderLoop.ticksPerFrameComputed = this.config.targetTPS / (1000 / this.#renderLoop.intervalComputed);
@@ -134,7 +139,7 @@ class Application {
                 const ticksCapped = this.config.targetTPS / (1000 / 60); // cap is used to work around large intervals when browser window not focused
                 const ticks = Math.max(1, Math.min(this.#renderLoop.ticksPerFrameComputed, ticksCapped));
                 this.#renderLoop.ticksCounted += ticks;
-                this.simulations.current?.tick(ticks);
+                sim?.tick(ticks);
             }
         }
         // compute load (time spent computing/time available)

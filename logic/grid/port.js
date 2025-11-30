@@ -68,7 +68,7 @@ class Port extends Interactive {
                 if (this.#port.netId !== null && sim) {
                     sim.engine.setNetValue(this.#port.netId, this.#state);
                 }
-                this.render();
+                this.dirty = true;
             }
         }
     }
@@ -79,7 +79,7 @@ class Port extends Interactive {
         if (config) {
             this.name = config.name;
             this.rotation = config.rotation;
-            this.render();
+            this.redraw();
         }
     }
 
