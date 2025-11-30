@@ -138,10 +138,7 @@ class Simulation {
 
     // Runs the simulation for the given number of ticks.
     simulate(ticks = 1) {
-        ticks |= 0;
-        for (let i = 0; i < ticks; ++i) {
-            this.#compiled(this.#mem8, this.#mem32);
-        }
+        this.#compiled(ticks, this.#mem8, this.#mem32);
     }
 
     // Returns whether the simulation is ready to run (has been compiled).
@@ -329,9 +326,12 @@ class Simulation {
 
     // Compiles and sets the internal simulation tick function.
     #compileFunction() {
-        let code = "'use strict';(mem, mem32) => {\n";
+        let code = "'use strict';(ticks, mem, mem32) => {\n";
         code += 'let mask, signal, cmask' + this.#endl();
+        code += 'ticks |= 0;' + this.#endl();
+        code += 'for (let i = 0; i < ticks; ++i) {' + this.#endl();
         code += this.#compileTick();
+        code += '}';
         code += '}';
         this.#compiled = eval(code);
     }
