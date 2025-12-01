@@ -39,7 +39,7 @@ class Wire extends GridItem {
     link(grid) {
         super.link(grid);
         this.#element = document.createElement('div');
-        this.#element.classList.add('wire-' + this.direction);
+        this.#element.classList.add('wire', 'wire-' + this.direction);
         this.registerDrag(this.#element, { type: 'connect', ordering: this.direction === 'h' ? 'vh' : 'hv' });
         this.setHoverMessage(this.#element, Wire.HOVER_MESSAGE, { type: 'hover' });
         this.grid.addVisual(this.#element);
