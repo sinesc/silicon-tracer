@@ -86,7 +86,7 @@ class Simulations {
 
     // Update clock ticks/cycle value. Required when simulation tickrate is changed.
     updateClocks(targetTPS) {
-        assert.number(targetTPS);
+        assert.integer(targetTPS);
         for (let simulation of values(this.#simulations)) {
             simulation.engine.updateClocks(targetTPS);
         }
@@ -180,7 +180,7 @@ Simulations.Simulation = class {
 
     // Re-attach simulation to a subcircuit.
     reattach(instance) {
-        assert.number(instance);
+        assert.integer(instance);
         const circuit = this.#netList.instances[instance].circuit;
         if (this.#app.grid.circuit !== circuit) {
             this.#app.grid.setCircuit(circuit);
@@ -191,7 +191,7 @@ Simulations.Simulation = class {
 
     // Ticks the current simulation for the given amount of ticks.
     tick(ticks) {
-        assert.number(ticks);
+        assert.integer(ticks);
         // apply manual simulation states each tick
         for (let { portName, component } of this.tickListener) {
             component.applyState(portName, this.#engine);

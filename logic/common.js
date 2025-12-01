@@ -167,6 +167,13 @@ assert.number = function(val, allow_null = false, message = null) {
     }
 }
 
+assert.integer = function(val, allow_null = false, message = null) {
+    if (!Number.isInteger(val) && !(allow_null && val === null)) {
+        let ty = assert.ty(val);
+        throw new Error(message?.replace('%', ty) ?? 'Assertion failed: Expected integer, got ' + ty);
+    }
+}
+
 assert.array = function(val, allow_null = false, itemTester = null, message = null) {
     let ty = assert.ty(val);
     if (ty !== 'array' && !(allow_null && ty === 'null')) {

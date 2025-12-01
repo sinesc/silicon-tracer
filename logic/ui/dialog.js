@@ -8,8 +8,8 @@ function dialog(title, fields, data) {
 
     // predefine some validations
     const validations = {
-        int: { check: (v, f) => isFinite(Number.parseSI(v, true)), apply: (v, f) => Number.parseSI(v, true) },
-        float: { check: (v, f) => isFinite(Number.parseSI(v)), apply: (v, f) => Number.parseSI(v) },
+        int: { check: (v, f) => Number.isInteger(Number.parseSI(v)), apply: (v, f) => Number.parseSI(v, true) },
+        float: { check: (v, f) => Number.isFinite(Number.parseSI(v)), apply: (v, f) => Number.parseSI(v) },
         string: { check: (v, f) => String.isString(v), apply: (v, f) => v },
         select: { check: (v, f) => Object.keys(f.options).includes(v), apply: (v, f) => v },
     };

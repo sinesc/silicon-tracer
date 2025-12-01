@@ -12,8 +12,8 @@ class ComponentPort {
     constructor(name, originalSide, index, color = null, element = null, labelElement = null) {
         assert.string(name, true);
         assert.string(originalSide);
-        assert.number(index);
-        assert.number(color, true);
+        assert.integer(index);
+        assert.integer(color, true);
         assert.object(element, true);
         assert.object(labelElement, true);
         this.name = name;
@@ -186,7 +186,7 @@ class Component extends GridItem {
 
     // Set grid item width.
     set width(value) {
-        assert.number(value);
+        assert.integer(value);
         this.dirty ||= this.#width !== value;
         this.#width = value;
     }
@@ -198,7 +198,7 @@ class Component extends GridItem {
 
     // Set grid item height.
     set height(value) {
-        assert.number(value);
+        assert.integer(value);
         this.dirty ||= this.#height !== value;
         this.#height = value;
     }
@@ -210,7 +210,7 @@ class Component extends GridItem {
 
     // Set grid item rotation.
     set rotation(value) {
-        assert.number(value);
+        assert.integer(value);
         value = value & 3; // clamp to 0-3
         this.dirty ||= this.#rotation !== value;
         if (this.grid && (value & 1) !== (this.#rotation & 1)) {

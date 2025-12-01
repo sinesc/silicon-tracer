@@ -180,7 +180,7 @@ NetList.NetPort = class {
         assert.class(Point, point);
         assert.string(name);
         assert.string(gid);
-        assert.number(instance);
+        assert.integer(instance);
         assert.object(subnet, true);
         this.point = point;
         this.name = name;
@@ -201,7 +201,7 @@ NetList.NetWire = class {
     constructor(points, gid, instance) {
         assert.array(points, false, (i) => assert.class(Point, i));
         assert.string(gid);
-        assert.number(instance);
+        assert.integer(instance);
         this.points = points;
         this.gid = gid;
         this.instance = instance;

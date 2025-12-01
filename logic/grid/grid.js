@@ -298,7 +298,7 @@ class Grid {
         return this.#circuit.gridConfig.zoom;
     }
 
-    // Gets the zoom factor.
+    // Sets the zoom factor.
     set zoom(value) {
         assert.number(value);
         this.#dirty |= this.#circuit.gridConfig.zoom !== value ? Grid.DIRTY_INNER : 0;
@@ -336,7 +336,7 @@ class Grid {
 
     // Sets a new zoom level index.
     set zoomLevel(level) {
-        assert.number(level);
+        assert.integer(level);
         level = level < 0 ? 0 : (level >= Grid.ZOOM_LEVELS.length ? Grid.ZOOM_LEVELS.length - 1 : level);
         this.zoom = Grid.ZOOM_LEVELS[level];
     }

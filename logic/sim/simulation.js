@@ -48,7 +48,7 @@ class Simulation {
     declareBuiltin(type, suffix, delay = null) {
         assert.string(type);
         assert.string(suffix);
-        assert.number(delay, true);
+        assert.integer(delay, true);
         const rules = Simulation.BUILTIN_MAP[type];
         const replacer = (_, mode, ident) => {
             let name = ident + suffix;
@@ -85,7 +85,7 @@ class Simulation {
     // Declares a clock with the given frequency at the given tps. Suffix is appended to the builtin's pre-defined IO-names.
     declareClock(frequency, tps, tristate, suffix, delay = null) {
         assert.number(frequency);
-        assert.number(tps);
+        assert.integer(tps);
         assert.bool(tristate);
         assert.string(suffix);
         const input = 'enable' + suffix;
@@ -102,7 +102,7 @@ class Simulation {
         assert.string(suffix);
         assert.array(inputNames, false, (i) => assert.string(i));
         assert.string(outputName);
-        assert.number(delay, true);
+        assert.integer(delay, true);
         const rules = Simulation.GATE_MAP[type];
         const inputs = inputNames.map((i) => i + suffix);
         const output = outputName + suffix;
@@ -130,7 +130,7 @@ class Simulation {
 
     // Updates all clocks in the circuit for the given TPS and recompiles the simulation without resetting it.
     updateClocks(tps) {
-        assert.number(tps);
+        assert.integer(tps);
         for (let clock of values(this.#clocks)) {
             const previousMaxTicks = Simulation.#computeClockTicks(clock.tps, clock.frequency);
             // set new tps to compute ticks/cycle
@@ -168,17 +168,17 @@ class Simulation {
         return this.#clocks;
     }
 
-    // Sets the value of a net in the simulation. null to unset, true/false/1/0 to set value.
+    // Sets the value of a net in the simulation. null to unset, 1/0 to set value.
     setNetValue(index, value) {
-        assert.number(index);
-        assert.number(value, true);
+        assert.integer(index);
+        assert.integer(value, true);
         const offset = this.#getNet(index).offset;
         this.#mem8[offset] = ((value !== null) << Simulation.MAX_DELAY) | value;
     }
 
     // Gets the value of a net in the simulation.
     getNetValue(index) {
-        assert.number(index);
+        assert.integer(index);
         const offset = this.#getNet(index).offset;
         const value = this.#mem8[offset];
         return value & (1 << Simulation.MAX_DELAY) ? value & 1 : null;
@@ -219,7 +219,7 @@ class Simulation {
     #declareIO(name, type, delay = null) {
         assert.string(name);
         assert.string(type);
-        assert.number(delay, true);
+        assert.integer(delay, true);
         if (!/^[a-z_][a-z0-9_@]*$/.test(name)) {
             throw new Error('Invalid io name "' + name + '"');
         }

@@ -20,7 +20,7 @@ class WireBuilder extends GridItem { // TODO: Not actually a grid item, but uses
         assert.number(x2);
         assert.number(y2);
         assert.string(ordering, true);
-        assert.number(color, true);
+        assert.integer(color, true);
         assert.function(fliptest, true);
 
         // TODO: try to avoid GridItem parent without duplicating drag-support

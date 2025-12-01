@@ -15,7 +15,7 @@ class CustomComponent extends Component {
     #instance = null;
 
     constructor(x, y, rotation, uid) {
-        assert.number(rotation);
+        assert.integer(rotation);
         assert.string(uid);
         let circuit = app.circuits.byUID(uid) ?? {};
         super(x, y, circuit.ports ?? {}, circuit.label ?? '');
@@ -43,7 +43,7 @@ class CustomComponent extends Component {
 
     // Set the simulation instance of the represented sub-circuit.
     set instance(value) {
-        assert.number(value, true);
+        assert.integer(value, true);
         if (this.element) {
             this.element.classList.toggle('simulated', value !== null);
         }

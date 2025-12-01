@@ -137,7 +137,7 @@ class Application {
             this.#renderLoop.nextTick -= Math.floor(this.#renderLoop.nextTick);
             if (!this.config.singleStep) {
                 const ticksCapped = this.config.targetTPS / (1000 / 60); // cap is used to work around large intervals when browser window not focused
-                const ticks = Math.max(1, Math.min(this.#renderLoop.ticksPerFrameComputed, ticksCapped));
+                const ticks = 0 | Math.max(1, Math.min(this.#renderLoop.ticksPerFrameComputed, ticksCapped));
                 this.#renderLoop.ticksCounted += ticks;
                 sim?.tick(ticks);
             }
@@ -296,7 +296,7 @@ class Application {
             // Simulate current grid
             simulationMenu.createActionButton(`Set ticks/s (${Number.formatSI(this.config.targetTPS)})...`, 'Configure simulation speed', async () => {
                 simulationMenuState(false);
-                let result = await dialog('Simulation speed', [ { label: "Ticks per second", name: "targetTPS", type: "int", check: (v, f) => { const p = Number.parseSI(v, true); return isFinite(p) && p >= 1; } } ], { targetTPS: Number.formatSI(this.config.targetTPS, true) });
+                let result = await dialog('Simulation speed', [ { label: "Ticks per second", name: "targetTPS", type: "int", check: (v, f) => { const p = Number.parseSI(v); return Number.isInteger(p) && p >= 1; } } ], { targetTPS: Number.formatSI(this.config.targetTPS, true) });
                 if (result) {
                     this.config.targetTPS = result.targetTPS;
                     this.simulations.updateClocks(this.config.targetTPS);
