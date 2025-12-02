@@ -111,9 +111,9 @@ class Simulation {
         const signalTpl = '';
         this.#gates.push({ inputs, output, dataTpl, signalTpl });
         for (const input of inputs) {
-            this.#declareIO(input, 'i', delay ?? Simulation.DEFAULT_DELAY);
+            this.#declareIO(input, 'i', 0);
         }
-        this.#declareIO(output, 'o', 0);
+        this.#declareIO(output, 'o', delay ?? Simulation.DEFAULT_DELAY);
         return this.#gates.length - 1;
     }
 
@@ -231,8 +231,15 @@ class Simulation {
         const inputDelay = this.#getIO(ioName).delay;
         const netMem = this.#compileNetAccess(netIndex);
         const inputMem = this.#compileIOAccess(ioName);
-        const clearMask = this.#compileDelayMask(inputDelay); // TODO: add optimized 0 tick path, then switch gates from input to output delay (since they typically have more inputs than outputs)
-        return `${inputMem} = ((${inputMem} >> 1) & ${clearMask}) | (${netMem} << ${inputDelay})`;   // shift net value up to newest io-data/signal bits and apply
+        if (inputDelay > 0) {
+            // shift net value up to newest io-data/signal bits and apply
+            const clearMask = this.#compileDelayMask(inputDelay);
+            return `${inputMem} = ((${inputMem} >> 1) & ${clearMask}) | (${netMem} << ${inputDelay})`;
+        } else {
+            // 0 delay path, not much to do
+            // TODO: 0-tick-input: skip this, have gate read straight from net instead
+            return `${inputMem} = ${netMem}`;
+        }
     }
 
     // Compiles a gate reading from one or more inputs and writing to an output.
@@ -295,13 +302,11 @@ class Simulation {
         const outputMem = this.#compileIOAccess(ioName);
         const signalMask = this.#compileConst(1 << Simulation.MAX_DELAY);
         let code = `signal = ${outputMem} & ${signalMask}; `;                       // select only the signal bit
-        code += `mask = signal | (signal >> ${Simulation.MAX_DELAY}); `;            // and duplicate it into the data bit position to create a mask
+        const maskCode = `signal | (signal >> ${Simulation.MAX_DELAY})`;            // duplicate signal bit into data bit to build a mask
         if (reset) {
-            // TODO avoid mask assignment in this case
-            // or'ing output with previous output fixes some oscillations after 1 tick pulses
-            //code += `${netMem} = ((${outputMem} | (${outputMem} >> 1)) & mask)`;  // reset net to io-data/signal on first assert to net
-            code += `${netMem} = (${outputMem} & mask)`;                            // reset net to io-data/signal on first assert to net
+            code += `${netMem} = (${outputMem} & (${maskCode}))`;                   // reset net to io-data/signal on first assert to net
         } else {
+            code += `mask = ${maskCode}; `;
             code += `${netMem} = (${netMem} & ~mask) | (${outputMem} & mask)`;      // apply io-data/signal to net if signal is set
         }
         return code;
@@ -314,6 +319,7 @@ class Simulation {
         for (const [ netIndex, net ] of this.#nets.entries()) {
             for (const name of net.io) {
                 if (this.#getIO(name).in) {
+                    // TODO 0-tick-input: skip this
                     result += this.#compileNetToInput(name, netIndex) + this.#endl('tick and set ' + name + ' from net ' + netIndex);
                 }
             }
@@ -321,7 +327,7 @@ class Simulation {
         // process inputs using defined gates
         const ioReplacements = { };
         for (const [ name ] of this.#ioMap) {
-            ioReplacements[name] = this.#compileIOAccess(name);
+            ioReplacements[name] = this.#compileIOAccess(name); // TODO: 0-tick-input: generate net-access instead of io-access
         }
         for (const [ clockIndex, clock ] of this.#clocks.entries()) {
             result += this.#compileClock(clockIndex, ioReplacements) + this.#endl('clock ' + clock.output, true);
