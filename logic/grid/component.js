@@ -2,13 +2,17 @@
 
 // IO port on a component.
 class ComponentPort {
+
     name;
     originalSide;
     index;
     color;
     element;
     labelElement;
+
+    // Net-id for this item. Directly set by Circuit.attachSimulation()
     netId = null;
+
     constructor(name, originalSide, index, color = null, element = null, labelElement = null) {
         assert.string(name, true);
         assert.string(originalSide);
@@ -23,6 +27,7 @@ class ComponentPort {
         this.element = element;
         this.labelElement = labelElement;
     }
+
     // Removes port dom elements from grid.
     unlink() {
         this.labelElement?.remove();
@@ -30,6 +35,7 @@ class ComponentPort {
         this.element?.remove();
         this.element = null;
     }
+
     // Returns port coordinates for the given parent component width/height.
     static portCoords(width, height, side, index, offsetCenter) {
         // for correct rotation required: top: left->right, right: top->bottom, bottom: right->left, left: bottom->top
@@ -43,15 +49,18 @@ class ComponentPort {
         let y = map[side].y + (map[side].stepY ?? 0) * index - (offsetCenter ? Component.PORT_SIZE / 2 : 0);
         return new Point(x, y);
     }
+
     // Returns the port side name after given component rotation is considered.
     static portSide(rotation, originalSide) {
         let index = Component.SIDES.indexOf(originalSide);
         return Component.SIDES[(index + rotation) % 4];
     }
+
     // Returns the port coordinates after component rotation is considered. Also requires component width and height as input.
     coords(width, height, rotation, offsetCenter) {
         return ComponentPort.portCoords(width, height, this.side(rotation), this.index, offsetCenter);
     }
+
     // Returns the port side name after component rotation is considered.
     side(rotation) {
         let index = Component.SIDES.indexOf(this.originalSide);
@@ -522,8 +531,7 @@ class Component extends GridItem {
     // Renders/updates the current net state of the component ports to the grid.
     renderNetState() {
         this.getPorts().forEach((item) => {
-            const sim = app.simulations.current;
-            const state = item.netId !== null && sim.engine ? '' + sim.engine.getNetValue(item.netId) : '';
+            const state = this.getNetState(item.netId);
             if (item.element.getAttribute('data-net-state') !== state) {
                 item.element.setAttribute('data-net-state', state);
             }

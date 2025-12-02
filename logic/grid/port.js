@@ -105,8 +105,7 @@ class Port extends Interactive {
         super.renderNetState();
 
         // render extra big state indicator around entire component
-        const sim = app.simulations.current;
-        const state = this.#port.netId !== null && sim.engine ? '' + sim.engine.getNetValue(this.#port.netId) : '';
+        const state = this.getNetState(this.#port.netId);
         if (this.element.getAttribute('data-net-state') !== state) {
             this.element.setAttribute('data-net-state', state);
         }

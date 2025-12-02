@@ -19,6 +19,8 @@ class GridItem {
     #hoverMessages;
 
     constructor(x, y) {
+        assert.number(x);
+        assert.number(y);
         this.#gid = Grid.generateGID();
         this.#position = new Point(...Grid.align(x, y));
     }
@@ -32,6 +34,7 @@ class GridItem {
 
     // Unserializes a circuit item to a grid idem.
     static unserialize(item) {
+        assert.object(item);
         const cname = item._.c;
         const cargs = item._.a;
         let instance;
@@ -58,8 +61,16 @@ class GridItem {
         return instance;
     }
 
+    // Gets the net-state attribute string for the given netId.
+    getNetState(netId) {
+        assert.integer(netId, true);
+        const sim = app.simulations.current;
+        return !sim.engine ? '' : (netId === null ? 'null' : '' + sim.engine.getNetValue(netId));
+    }
+
     // Link item to a grid, enabling it to be rendered.
     link(grid) {
+        assert.class(Grid, grid);
         this.grid = grid;
         this.#hoverMessages = new WeakMap();
         this.dirty = true;

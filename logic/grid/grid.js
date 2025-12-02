@@ -224,6 +224,7 @@ class Grid {
                     item.render();
                     item.dirty = false;
                 }
+
                 item.renderNetState();
             }
         }

@@ -9,10 +9,15 @@ class Wire extends GridItem {
 
     #element;
     color;
+
+    // Net-id for this item. Directly set by Circuit.attachSimulation()
     netId = null;
+
     width; // TODO: replace width/height with length/direction, use get/set to mark as dirty
     height;
     direction;
+
+    // Whether the wire is actually on the grid yet. false during wire-drag.
     limbo = false;
 
     constructor(x, y, length, direction, color = null) {
@@ -179,8 +184,7 @@ class Wire extends GridItem {
 
     // Renders/updates the current net state of the wire to the grid.
     renderNetState() {
-        const sim = app.simulations.current;
-        const state = this.netId !== null && sim.engine ? '' + sim.engine.getNetValue(this.netId) : '';
+        const state = this.getNetState(this.netId);
         if (this.#element.getAttribute('data-net-state') !== state) {
             this.#element.setAttribute('data-net-state', state);
         }
