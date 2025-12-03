@@ -22,7 +22,7 @@ if (location.hostname === 'sinesc.github.io' && location.pathname === '/silicon-
 }
 
 // dev/debug stuff
-if (false) {
+app.debug = () => {
 
     app.toolbar.createActionButton('Dump ASM', 'Outputs simulation code to console.', () => {
         const sim = app.simulations.current;
@@ -79,4 +79,4 @@ if (false) {
         }
     };
 
-}
+};
