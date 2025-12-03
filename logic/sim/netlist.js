@@ -7,16 +7,23 @@ class NetList {
     instances;
 
     // Construct a new netlist.
-    constructor(nets, unconnectedWires, unconnectedPorts) {
+    constructor(nets, unconnectedWires, unconnectedPorts, instances) {
+        assert.array(nets);
+        assert.array(unconnectedWires);
+        assert.array(unconnectedPorts);
+        assert.array(instances);
         this.nets = nets;
         this.unconnected = { wires: unconnectedWires, ports: unconnectedPorts };
+        this.instances = instances;
     }
 
     // Identifies nets in the given circuit and returns a netlist.
     static identify(circuit, recurse) {
         assert.class(Circuits.Circuit, circuit);
         assert.bool(recurse);
-        return NetList.#identifyNets(circuit, recurse, []);
+        const netList = NetList.#identifyNets(circuit, recurse, []);
+        NetList.#joinNetsBySharedPort(netList.nets);
+        return netList;
     }
 
     // Compiles a simulation and returns it.
@@ -72,8 +79,16 @@ class NetList {
         return null;
     }
 
-    // Identifies nets on the grid and returns a [ NetList, Map<String, Grid-less-Component> ].
+    // Identifies nets on the grid and returns a NetList.
     static #identifyNets(circuit, recurse, instances = [], parentInstance = null) {
+        const { wires, ports, subcomponentNets } = NetList.#circuitToNetItems(circuit, recurse, instances, parentInstance); // TODO: include unconnected subcomponent items in final result
+        const { nets, unconnectedWires, unconnectedPorts } = NetList.#netItemsToNets(wires, ports);
+        nets.push(...subcomponentNets);
+        return new NetList(nets, unconnectedWires, unconnectedPorts, instances);
+    }
+
+    // Assemble lists of net-ports and net-wires to simplify access to relevant grid item properties (coordinates, gids, ...)
+    static #circuitToNetItems(circuit, recurse, instances = [], parentInstance = null) {
         const instance = instances.length;
         const subInstances = { }; // maps CustomComponent gids in each instance to their sub-instance
         instances.push({ circuit, subInstances, parentInstance });
@@ -84,7 +99,7 @@ class NetList {
         // get all component ports
         const components = circuit.data.filter((i) => !(i instanceof Wire));
         const ports = [];
-        const appendNets = []; // nets that are internal to custom components and just need to be added to the overall list of nets
+        const subcomponentNets = []; // nets that are internal to custom components and just need to be added to the overall list of nets
         for (const component of components) {
             const mergeNets = { }; // nets that connect to external ports and need to be merged with parent component nets
             // get custom component inner nets and identify which need to be merged with the parent component nets
@@ -103,30 +118,25 @@ class NetList {
                     const netId = subNetlist.findPort(componentExternalPort);
                     if (netId !== null) {
                         mergeNets[componentExternalPort.name] = subNetlist.nets[netId];
-                        //subNetlist.nets.splice(netId, 1);
                         mergedIds.push(netId);
                     }
                 }
                 for (const [ id, net ] of pairs(subNetlist.nets)) {
                     if (!mergedIds.includes(id)) {
-                        appendNets.push(net);
+                        subcomponentNets.push(net);
                     }
                 }
-                //appendNets.push(...subNetlist.nets);
             }
             for (const port of component.getPorts()) {
                 const { x, y } = port.coords(component.width, component.height, component.rotation);
                 ports.push(new NetList.NetPort(new Point(x + component.x, y + component.y), port.name, component.gid, instance, mergeNets[port.name] ?? null));
             }
         }
-        let netList = NetList.#fromWires(wires, ports);
-        netList.nets.push(...appendNets);
-        netList.instances = instances;
-        return netList;
+        return { wires, ports, subcomponentNets };
     }
 
     // Creates a netlist from NetWires and NetPorts. Both wires and ports will be emptied during this process.
-    static #fromWires(wires, ports) {
+    static #netItemsToNets(wires, ports) {
         const nets = [];
         const unconnectedWires = [];
         while (wires.length > 0) {
@@ -170,12 +180,16 @@ class NetList {
                 unconnectedWires.push(...netWires);
             }
         }
-        // merge nets that have been directly connected inside a subnet (custom-component with two+ ports of its circuit directly connected)
+        return { nets, unconnectedWires, unconnectedPorts: ports };
+    }
+
+    // merge nets that have been directly connected inside a subnet (custom-component with two+ ports of its circuit directly connected)
+    static #joinNetsBySharedPort(nets) {
         let haveChanges;
         let remaining = 10;
         do {
             haveChanges = false;
-            // TODO if ports were an object mapping uniqueName => port it would be a lot easier to do this
+            // TODO if ports were an object mapping uniqueName => port it would be a lot easier to do this, likewise gid => wire
             current: for (let c = nets.length - 1; c >= 1; --c) { // current: backwards from last to 1
                 target: for (let t = 0; t < c; ++t) { // target: forwards from 0 to current - 1
                     const currentPorts = nets[c].ports;
@@ -213,7 +227,6 @@ class NetList {
         if (remaining <= 0) {
             throw new Error('Failed to merge all subnets within retry limit');
         }
-        return new NetList(nets, unconnectedWires, ports);
     }
 
     // Returns whether line-endpoints of one line intersect any point on the other line.
