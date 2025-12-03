@@ -170,12 +170,14 @@ class NetList {
                 unconnectedWires.push(...netWires);
             }
         }
-        for (let i = 0; i < 10; i++) { //FIXME: hack, run until nets no longer change
-
-            // merge nets that have been directly connected inside a subnet (custom-component with two+ ports of its circuit directly connected)
+        // merge nets that have been directly connected inside a subnet (custom-component with two+ ports of its circuit directly connected)
+        let haveChanges;
+        let remaining = 10;
+        do {
+            haveChanges = false;
             // TODO if ports were an object mapping uniqueName => port it would be a lot easier to do this
             current: for (let c = nets.length - 1; c >= 1; --c) { // current: backwards from last to 1
-                target: for (let t = 0; t < c; ++t) { // target: forwards from 0 to current -1
+                target: for (let t = 0; t < c; ++t) { // target: forwards from 0 to current - 1
                     const currentPorts = nets[c].ports;
                     const targetPorts = nets[t].ports;
                     let haveCommonPorts = false;
@@ -202,11 +204,14 @@ class NetList {
                         }
                         // dissolve current net
                         nets.pop();
+                        haveChanges = true;
                         break current;
                     }
                 }
             }
-
+        } while (haveChanges && --remaining > 0);
+        if (remaining <= 0) {
+            throw new Error('Failed to merge all subnets within retry limit');
         }
         return new NetList(nets, unconnectedWires, ports);
     }
