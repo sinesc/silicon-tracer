@@ -59,7 +59,7 @@ class NetList {
         }
     }
 
-    // Returns the netId of the given port.
+    // Returns the netId of the given port or null.
     findPort(port) {
         assert.class(Port, port);
         for (let [ index, net ] of this.nets.entries()) {
@@ -69,6 +69,7 @@ class NetList {
                 }
             }
         }
+        return null;
     }
 
     // Identifies nets on the grid and returns a [ NetList, Map<String, Grid-less-Component> ].
@@ -97,15 +98,24 @@ class NetList {
                 }
                 const subPorts = subCircuit.data.filter((i) => i instanceof Port);
                 const subNetlist = NetList.#identifyNets(subCircuit, recurse, instances, instance);
+                const mergedIds = [];
                 for (const componentExternalPort of subPorts) {
                     const netId = subNetlist.findPort(componentExternalPort);
-                    mergeNets[componentExternalPort.name] = subNetlist.nets[netId];
-                    subNetlist.nets.splice(netId, 1);
+                    if (netId !== null) {
+                        mergeNets[componentExternalPort.name] = subNetlist.nets[netId];
+                        //subNetlist.nets.splice(netId, 1);
+                        mergedIds.push(netId);
+                    }
                 }
-                appendNets.push(...subNetlist.nets);
+                for (const [ id, net ] of pairs(subNetlist.nets)) {
+                    if (!mergedIds.includes(id)) {
+                        appendNets.push(net);
+                    }
+                }
+                //appendNets.push(...subNetlist.nets);
             }
             for (const port of component.getPorts()) {
-                let { x, y } = port.coords(component.width, component.height, component.rotation);
+                const { x, y } = port.coords(component.width, component.height, component.rotation);
                 ports.push(new NetList.NetPort(new Point(x + component.x, y + component.y), port.name, component.gid, instance, mergeNets[port.name] ?? null));
             }
         }
@@ -159,6 +169,44 @@ class NetList {
             } else {
                 unconnectedWires.push(...netWires);
             }
+        }
+        for (let i = 0; i < 10; i++) { //FIXME: hack, run until nets no longer change
+
+            // merge nets that have been directly connected inside a subnet (custom-component with two+ ports of its circuit directly connected)
+            // TODO if ports were an object mapping uniqueName => port it would be a lot easier to do this
+            current: for (let c = nets.length - 1; c >= 1; --c) { // current: backwards from last to 1
+                target: for (let t = 0; t < c; ++t) { // target: forwards from 0 to current -1
+                    const currentPorts = nets[c].ports;
+                    const targetPorts = nets[t].ports;
+                    let haveCommonPorts = false;
+                    // check if current and target share at least one port
+                    for (const port of currentPorts) {
+                        if (targetPorts.some((p) => p.uniqueName === port.uniqueName)) {
+                            haveCommonPorts = true;
+                            break;
+                        }
+                    }
+                    // merge ports that aren't already in the target
+                    if (haveCommonPorts) {
+                        const currentWires = nets[c].wires;
+                        const targetWires = nets[t].wires;
+                        for (const port of currentPorts) {
+                            if (!targetPorts.some((p) => p.uniqueName === port.uniqueName)) {
+                                targetPorts.push(port);
+                            }
+                        }
+                        for (const wire of currentWires) {
+                            if (!targetWires.some((w) => w.gid === wire.gid)) {
+                                targetWires.push(wire);
+                            }
+                        }
+                        // dissolve current net
+                        nets.pop();
+                        break current;
+                    }
+                }
+            }
+
         }
         return new NetList(nets, unconnectedWires, ports);
     }
