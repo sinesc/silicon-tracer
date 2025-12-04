@@ -3,8 +3,6 @@
 // Handles compiling and running the actual simulation.
 class Simulation {
 
-    static DEBUG = true;
-
     static DEFAULT_DELAY = 1;
     static ARRAY_BITS = 8;
     static MAX_DELAY = Simulation.ARRAY_BITS / 2;
@@ -27,6 +25,7 @@ class Simulation {
         'not3' : { dataTpl: '~data', signalTpl: 'enable', inputs: [ 'enable', 'data' ], output: 'q' },
     }
 
+    #debug = false;
     #ioMap = new Map();
     #nets = [];
     #gates = [];
@@ -36,6 +35,11 @@ class Simulation {
     #alloc32Base = 0;
     #mem8;
     #mem32;
+
+    constructor(debug = false) {
+        assert.bool(debug);
+        this.#debug = debug;
+    }
 
     // Declares a net (which inputs/outputs are connected) and returns the net-index. Attached IO-names must include their suffixes. Meta can be any custom data.
     declareNet(attachedIONames, meta) {
@@ -385,7 +389,7 @@ class Simulation {
 
     // Returns code for a constant (written in binary notation for better readability of compiled code).
     #compileConst(value) {
-        if (Simulation.DEBUG) {
+        if (this.#debug) {
             let result = '0b';
             for (let i = Simulation.ARRAY_BITS - 1; i >= 0; --i) {
                 result += ((value & (1 << i)) > 0 ? '1' : '0');
@@ -396,11 +400,11 @@ class Simulation {
         }
     }
 
-    // Returns a semicolon followed by an optional comment if DEBUG is set and a newline.
+    // Returns a semicolon followed by an optional comment if debug is set and a newline.
     #endl(comment, short = false) {
-        let lastHash = 'why';
-        let result = '; ' + (Simulation.DEBUG && comment ? '// ' + comment.replace(/@(g[a-f0-9]+)@([0-9]+)/g, (m, h, i) => { lastHash = h.substr(1, 6) + ':' + i; return (short ? '' : ':' + lastHash); }) : '');
-        result += (short ? ` of ${lastHash}\n` : "\n");
+        let lastHash = '';
+        let result = '; ' + (this.#debug && comment ? '// ' + comment.replace(/@(g[a-f0-9]+)@([0-9]+)/g, (m, h, i) => { lastHash = h.substr(1, 6) + ':' + i; return (short ? '' : ':' + lastHash); }) : '');
+        result += (this.#debug && comment && short ? ` of ${lastHash}\n` : "\n");
         return result;
     }
 

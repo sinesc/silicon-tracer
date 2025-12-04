@@ -24,6 +24,11 @@ if (location.hostname === 'sinesc.github.io' && location.pathname === '/silicon-
 // dev/debug stuff
 app.debug = () => {
 
+    app.config.debugCompileComments = true;
+    app.config.debugShowGid = true;
+    app.config.debugShowCoords = true;
+    app.config.debugShowWireBox = true;
+
     app.toolbar.createActionButton('Dump ASM', 'Outputs simulation code to console.', () => {
         const sim = app.simulations.current;
         if (sim) {

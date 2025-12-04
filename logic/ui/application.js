@@ -7,6 +7,10 @@ class Application {
         targetTPS: 10000,
         autoCompile: true,
         singleStep: false,
+        debugCompileComments: false,
+        debugShowGid: false,
+        debugShowCoords: false,
+        debugShowWireBox: false,
     };
 
     grid;
@@ -36,8 +40,8 @@ class Application {
         assert.class(Node, toolbarParent);
         assert.class(Node, logo, true);
 
-        this.grid = new Grid(gridParent);
-        this.toolbar = new Toolbar(toolbarParent);
+        this.grid = new Grid(this, gridParent);
+        this.toolbar = new Toolbar(this, toolbarParent);
         this.circuits = new Circuits(this);
         this.simulations = new Simulations(this);
 
@@ -63,7 +67,9 @@ class Application {
     }
 
     // Sets a status message. Pass null to unset and revert back to default status.
-    setStatus(message, lock) {
+    setStatus(message, lock = false, item = null) {
+        assert.bool(lock);
+        assert.class(GridItem, item, true);
         if (this.#statusLocked && !lock) {
             return;
         }
@@ -73,7 +79,7 @@ class Application {
         }
         this.#statusMessage = message;
         const messageText = String.isString(message) ? message : (Function.isFunction(message) ? message() : null);
-        this.#status.innerHTML = messageText ?? '';
+        this.#status.innerHTML = messageText !== null ? (this.config.debugShowGid && item ? item.gid.slice(0, 6) + ': ' : '') + messageText : '';
         if (messageText) {
             this.#status.classList.remove('app-status-faded');
         } else if (!messageText) {

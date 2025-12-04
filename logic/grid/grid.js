@@ -3,7 +3,6 @@
 // The circuit drawing grid.
 class Grid {
 
-    static DEBUG_COORDS = false;
     static ZOOM_LEVELS = [ 0.5, 0.65, 0.85, 1.0, 1.25, 1.50, 1.75, 2.0, 2.5, 3.0 ];
     static DEFAULT_ZOOM_LEVEL = 4;
     static SPACING = 20;
@@ -13,6 +12,7 @@ class Grid {
     static DIRTY_INNER      = 0b0010;
     static DIRTY_OVERLAY    = 0b0100;
 
+    #app;
     #dirty = Grid.DIRTY_INNER | Grid.DIRTY_OUTER | Grid.DIRTY_OVERLAY;
     #element;
     #infoElement;
@@ -26,8 +26,10 @@ class Grid {
     #circuit;
     #netColor = 1;
 
-    constructor(parent) {
+    constructor(app, parent) {
+        assert.class(Application, app);
         assert.class(Node, parent);
+        this.#app = app;
         this.#element = document.createElement('div');
         this.#element.classList.add('grid');
         this.#element.onmousedown = this.#handleDragStart.bind(this);
@@ -44,7 +46,7 @@ class Grid {
 
         parent.appendChild(this.#element);
 
-        if (Grid.DEBUG_COORDS) {
+        if (app.config.debugShowCoords) {
             this.debug = document.createElement('div');
             this.debug.classList.add('debug-info');
             this.#element.appendChild(this.debug);
@@ -73,7 +75,7 @@ class Grid {
         this.#infoCircuitLabel = '';
         this.#dirty |= Grid.DIRTY_OVERLAY;
         this.#hotkeyTarget = null;
-        app.clearStatus(true);
+        this.#app.clearStatus(true);
     }
 
     // Sets current grid circuit.
@@ -109,7 +111,7 @@ class Grid {
         this.#circuit.addItem(item);
         item.link(this);
         if (restart) {
-            app.simulations.markDirty(this.#circuit);
+            this.#app.simulations.markDirty(this.#circuit);
         }
         return item;
     }
@@ -122,7 +124,7 @@ class Grid {
         this.#circuit.removeItem(item);
         this.releaseHotkeyTarget(item);
         if (restart) {
-            app.simulations.markDirty(this.#circuit);
+            this.#app.simulations.markDirty(this.#circuit);
         }
         return item;
     }
@@ -360,7 +362,7 @@ class Grid {
     // Returns the grids default status message.
     defaultStatusMessage() {
         const netColor = `<span data-net-color="${this.netColor}">default net color</span>`;
-        const sim = app.simulations.current;
+        const sim = this.#app.simulations.current;
         const hasParent = sim && sim.instance > 0;
         return 'Grid. <i>LMB</i>: Select area, <i>SHIFT+LMB</i>: Add to selection, <i>MMB</i>: Drag grid, <i>MW</i>: Zoom grid, <i>E</i>: Rename circuit, <i>0</i> - <i>9</i>: Set ' + netColor + ', ' + (hasParent ? '' : '<u>') + '<i>W</i>: Switch to parent simulation' + (hasParent ? '' : '</u>');
     }
@@ -368,12 +370,12 @@ class Grid {
     // Called when a key is pressed and then repeatedly while being held.
     #handleKeyDown(e) {
         e.preventDefault();
-        const sim = app.simulations.current;
+        const sim = this.#app.simulations.current;
         if (this.#hotkeyTarget) {
             let { gridItem, args } = this.#hotkeyTarget;
             gridItem.onHotkey(e.key, ...args);
         } else if (e.key === 'e') {
-            app.circuits.edit(this.#circuit.uid);
+            this.#app.circuits.edit(this.#circuit.uid);
             this.#dirty |= Grid.DIRTY_OVERLAY;
         } else if (e.key === 'w' && sim) {
             // switch to parent simulation instance // TODO: when not simulating this should switch to the previous circuit. this requires adding a navigation history
@@ -383,7 +385,7 @@ class Grid {
             }
         } else if (e.key >= '0' && e.key <= '9') {
             this.#netColor = parseInt(e.key);
-            app.updateStatus();
+            this.#app.updateStatus();
         }
     }
 

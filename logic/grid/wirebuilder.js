@@ -3,7 +3,6 @@
 // Used to build wire corners.
 class WireBuilder extends GridItem { // TODO: Not actually a grid item, but uses a lot of grid item functionality.
 
-    static DEBUG_BOX = false;
     static DRAWING_CONNECTION_MESSAGE = 'Drawing connection. <i>R</i>: Add point, continue drawing from here.';
 
     #wireH;
@@ -49,7 +48,7 @@ class WireBuilder extends GridItem { // TODO: Not actually a grid item, but uses
 
         this.#updateWires();
 
-        if (WireBuilder.DEBUG_BOX) {
+        if (app.config.debugShowWireBox) {
             this.debug = document.createElement('div');
             this.debug.classList.add('wirebuilder-debug');
             this.grid.addVisual(this.debug);
@@ -104,7 +103,7 @@ class WireBuilder extends GridItem { // TODO: Not actually a grid item, but uses
     render() {
         this.#wireH.render();
         this.#wireV.render();
-        if (WireBuilder.DEBUG_BOX) {
+        if (app.config.debugShowWireBox) {
             this.#debugRenderBox();
         }
     }
@@ -121,7 +120,7 @@ class WireBuilder extends GridItem { // TODO: Not actually a grid item, but uses
         if (this.height === 0) {
             this.grid.removeItem(this.#wireV, false);
         }
-        if (WireBuilder.DEBUG_BOX) {
+        if (app.config.debugShowWireBox) {
             this.grid.removeVisual(this.debug);
             for (let i = 0; i < 3; ++i) {
                 this.grid.removeVisual(this['debug' + i]);

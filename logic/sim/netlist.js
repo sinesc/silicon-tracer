@@ -27,8 +27,9 @@ class NetList {
     }
 
     // Compiles a simulation and returns it.
-    compileSimulation() {
-        let sim = new Simulation();
+    compileSimulation(debug = false) {
+        assert.bool(debug);
+        let sim = new Simulation(debug);
         // declare gates from component map
         for (const [instance, { circuit }] of this.instances.entries()) {
             for (let component of circuit.data.filter((i) => !(i instanceof Wire))) {

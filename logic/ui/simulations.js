@@ -224,7 +224,7 @@ Simulations.Simulation = class {
     // Compiles the simulation.
     #compile() {
         this.#netList = NetList.identify(this.#circuit, true);
-        this.#engine = this.#netList.compileSimulation();
+        this.#engine = this.#netList.compileSimulation(this.#app.config.debugCompileComments);
         this.#started = false;
     }
 }

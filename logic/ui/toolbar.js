@@ -3,11 +3,14 @@
 // Handles tool/menubar.
 class Toolbar {
 
+    #app;
     #element;
     #menuStates;
 
-    constructor(parent) {
+    constructor(app, parent) {
+        assert.class(Application, app);
         assert.class(Node, parent);
+        this.#app = app;
         this.#menuStates = new WeakUnorderedSet();
         this.#element = document.createElement('div');
         this.#element.classList.add('toolbar');
@@ -38,14 +41,14 @@ class Toolbar {
             e.preventDefault();
             e.stopPropagation();
             if (!button.classList.contains('toolbar-menu-button-disabled')) {
-                let [ x, y ] = app.grid.screenToGrid(e.clientX, e.clientY);
-                let component = create(app.grid, x, y);
+                let [ x, y ] = this.#app.grid.screenToGrid(e.clientX, e.clientY);
+                let component = create(this.#app.grid, x, y);
                 component.dragStart(x, y, { type: "component", grabOffsetX: component.width / 2, grabOffsetY: component.height / 2 });
             }
         };
         this.#element.appendChild(button);
-        button.onmouseenter = () => app.setStatus(hoverMessage);
-        button.onmouseleave = () => app.clearStatus();
+        button.onmouseenter = () => this.#app.setStatus(hoverMessage);
+        button.onmouseleave = () => this.#app.clearStatus();
         return [ button ];
     }
 
@@ -62,8 +65,8 @@ class Toolbar {
             }
         };
         this.#element.appendChild(button);
-        button.onmouseenter = () => app.setStatus(hoverMessage);
-        button.onmouseleave = () => app.clearStatus();
+        button.onmouseenter = () => this.#app.setStatus(hoverMessage);
+        button.onmouseleave = () => this.#app.clearStatus();
         return [ button ];
     }
 
@@ -105,7 +108,7 @@ class Toolbar {
         button.classList.add('toolbar-menu-button');
         button.appendChild(subToolbarContainer);
         this.#element.appendChild(button);
-        let subToolbar = new Toolbar(subToolbarContainer);
+        let subToolbar = new Toolbar(this.#app, subToolbarContainer);
         return [ button, stateFn, subToolbar ];
     }
 
@@ -139,8 +142,8 @@ class Toolbar {
                 action(state);
             }
         };
-        button.onmouseenter = () => app.setStatus(hoverMessage);
-        button.onmouseleave = () => app.clearStatus();
+        button.onmouseenter = () => this.#app.setStatus(hoverMessage);
+        button.onmouseleave = () => this.#app.clearStatus();
         return [ button, stateFn ];
     }
 }
