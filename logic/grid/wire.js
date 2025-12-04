@@ -119,6 +119,7 @@ class Wire extends GridItem {
                 this.grid.circuit.itemByGID(netWire.gid).color = color;
             }
             this.grid.markDirty(true);
+            return true;
         } else if (key === 'Delete' && what.type === 'hover') {
             this.#element.classList.add('wire-delete-animation');
             setTimeout(() => {
@@ -128,6 +129,7 @@ class Wire extends GridItem {
                     this.grid.removeItem(this);
                 }
             }, 150);
+            return true;
         }
     }
 

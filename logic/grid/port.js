@@ -53,8 +53,9 @@ class Port extends Interactive {
 
     // Hover hotkey actions
     onHotkey(key, what) {
-        super.onHotkey(key, what);
-        if (what.type === 'hover') {
+        if (super.onHotkey(key, what)) {
+            return true;
+        } else if (key >= '0' && key <= '3' && what.type === 'hover') {
             let prevState = this.#state;
             if (key === '1') {
                 this.#state = 1;
@@ -70,6 +71,7 @@ class Port extends Interactive {
                 }
                 this.dirty = true;
             }
+            return true;
         }
     }
 

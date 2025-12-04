@@ -309,6 +309,7 @@ class Component extends GridItem {
                 this.#element.classList.remove('component-rotate-animation');
                 this.redraw();
             }, 150);
+            return true;
         } else if (key === 'Delete' && what.type === 'hover') {
             this.#element.classList.add('component-delete-animation');
             setTimeout(() => {
@@ -317,8 +318,10 @@ class Component extends GridItem {
                     this.grid.removeItem(this);
                 }
             }, 150);
+            return true;
         } else if (key === 'e' && what.type === 'hover') {
             this.onEdit();
+            return true;
         }
     }
 

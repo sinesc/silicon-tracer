@@ -63,8 +63,9 @@ class CustomComponent extends Component {
 
     // Hover hotkey actions
     onHotkey(key, what) {
-        super.onHotkey(key, what);
-        if (key === 'w' && what.type === 'hover') {
+        if (super.onHotkey(key, what)) {
+            return true;
+        } else if (key === 'w' && what.type === 'hover') {
             const sim = app.simulations.current;
             if (sim && this.instance !== null) {
                 // switch to subcomponent simulation instance
@@ -76,6 +77,7 @@ class CustomComponent extends Component {
                     app.simulation.select(this.uid).start();
                 }
             }
+            return true;
         }
     }
 

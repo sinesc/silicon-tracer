@@ -107,8 +107,10 @@ class GridItem {
     // Implement to handle drag events.
     onDrag(x, y, status, ...args) { }
 
-    // Implement to handle hover hotkey events.
-    onHotkey(key, ...args) { }
+    // Implement to handle hover hotkey events. Return true to prevent default action.
+    onHotkey(key, ...args) {
+        return false;
+    }
 
     // Return grid item x position.
     get x() {

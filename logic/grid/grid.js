@@ -369,23 +369,27 @@ class Grid {
 
     // Called when a key is pressed and then repeatedly while being held.
     #handleKeyDown(e) {
-        e.preventDefault();
         const sim = this.#app.simulations.current;
         if (this.#hotkeyTarget) {
             let { gridItem, args } = this.#hotkeyTarget;
-            gridItem.onHotkey(e.key, ...args);
+            if (gridItem.onHotkey(e.key, ...args)) {
+                e.preventDefault();
+            }
         } else if (e.key === 'e') {
             this.#app.circuits.edit(this.#circuit.uid);
             this.#dirty |= Grid.DIRTY_OVERLAY;
+            e.preventDefault();
         } else if (e.key === 'w' && sim) {
             // switch to parent simulation instance // TODO: when not simulating this should switch to the previous circuit. this requires adding a navigation history
             const parentInstance = sim.parentInstance;
             if (parentInstance !== null) {
                 sim.reattach(parentInstance);
             }
+            e.preventDefault();
         } else if (e.key >= '0' && e.key <= '9') {
             this.#netColor = parseInt(e.key);
             this.#app.updateStatus();
+            e.preventDefault();
         }
     }
 

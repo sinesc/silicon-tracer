@@ -79,6 +79,7 @@ class WireBuilder extends GridItem { // TODO: Not actually a grid item, but uses
             this.grid.releaseHotkeyTarget(this, true);
             let wireBuilder = new WireBuilder(what.startX, what.startY, x, y, what.ordering, this.color);
             wireBuilder.dragStart(x, y, dragConnectionWhat);
+            return true;
         }
     }
 
