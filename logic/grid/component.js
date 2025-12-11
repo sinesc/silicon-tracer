@@ -383,7 +383,9 @@ class Component extends GridItem {
 
     // Called while a registered visual is being dragged.
     onDrag(x, y, status, what) {
-        if (what.type === 'component') {
+        if (super.onDrag(x, y, status, what)) {
+            return true;
+        } else if (what.type === 'component') {
             this.onMove(x, y, status, what);
         } else if (what.type === 'port' && status === 'start') {
             this.onConnect(x, y, status, what);

@@ -106,8 +106,19 @@ class GridItem {
     // Implement to apply/remove grid item selection effect.
     set selected(status) { }
 
-    // Implement to handle drag events.
-    onDrag(x, y, status, ...args) { }
+    // Extend to handle drag events.
+    onDrag(x, y, status, what) {
+        const selection = this.grid.selection;
+        if (selection.length > 0) {
+            what.items ??= (new Array(selection.length)).fill(null, 0, selection.length).map((_) => ({})); // the ridiculousness that is js just to actually "fill" an array with distinct objects
+            for (const [ index, item ] of pairs(this.grid.selection)) {
+                item.onMove(x, y, status, what.items[index]);
+            }
+            return true;
+        } else {
+            return false;
+        }
+    }
 
     // Implement to handle hover hotkey events. Return true to prevent default action.
     onHotkey(key, ...args) {

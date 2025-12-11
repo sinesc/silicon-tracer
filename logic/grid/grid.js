@@ -376,6 +376,11 @@ class Grid {
         this.zoom = Grid.ZOOM_LEVELS[level];
     }
 
+    // Returns the currently selected grid items, if any.
+    get selection() {
+        return this.#selection;
+    }
+
     // Utility function to align given x/y to grid coordinates and return them.
     static align(x, y) {
         assert.number(x);

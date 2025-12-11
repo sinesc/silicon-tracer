@@ -104,8 +104,27 @@ class Wire extends GridItem {
 
     // Called while a registered visual is being dragged.
     onDrag(x, y, status, what) {
-        if (status === 'start') {
+        if (super.onDrag(x, y, status, what)) {
+            return true;
+        } else if (status === 'start') {
             this.onConnect(x, y, status, what);
+        }
+    }
+
+    // Called when dragging a selected wire.
+    onMove(x, y, status, what) {
+        // get offset between component top/left and mouse grab point
+        if (status === 'start') {
+            what.grabOffsetX ??= x - this.x;
+            what.grabOffsetY ??= y - this.y;
+        }
+        // set new position, align it on stop
+        this.setPosition(x - what.grabOffsetX, y - what.grabOffsetY, status === 'stop');
+        // draw grid-aligned drop-preview outline
+        if (status === 'stop') {
+            what.grabOffsetX = null;
+            what.grabOffsetY = null;
+            this.redraw();
         }
     }
 
