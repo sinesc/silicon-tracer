@@ -121,6 +121,13 @@ class Simulation {
         return this.#gates.length - 1;
     }
 
+    // Declares a push/pull resistor.
+    declareResistor(type, suffix) {
+        assert.string(type);
+        assert.string(suffix);
+        this.#declareIO('r' + suffix, type === 'up' ? 'u' : 'd', 0);
+    }
+
     // Compiles the circuit and initializes memory, making it ready for simulate().
     compile() {
         this.#compileFunction();
@@ -227,7 +234,13 @@ class Simulation {
         if (!/^[a-z_][a-z0-9_@]*$/.test(name)) {
             throw new Error('Invalid io name "' + name + '"');
         }
-        this.#ioMap.set(name, { offset: this.#alloc8(), delay: delay ?? Simulation.DEFAULT_DELAY, in: type.indexOf('i') !== -1, out: type.indexOf('o') !== -1 });
+        this.#ioMap.set(name, {
+            offset: this.#alloc8(),
+            delay: delay ?? Simulation.DEFAULT_DELAY,
+            in: type.indexOf('i') !== -1,
+            out: type.indexOf('o') !== -1,
+            pull: type.indexOf('u') !== -1 ? 1 : (type.indexOf('d') !== -1 ? 0 : null),
+        });
     }
 
     // Compiles a net to input assertion.
@@ -244,6 +257,18 @@ class Simulation {
             // TODO: 0-tick-input: skip this, have gate read straight from net instead
             return `${inputMem} = ${netMem}`;
         }
+    }
+
+    // Compiles an output to net assertion.
+    #compileResistorToNet(netIndex, ioName) {
+        const output = this.#getIO(ioName);
+        const netMem = this.#compileNetAccess(netIndex);
+        const signalMask = this.#compileConst(1 << Simulation.MAX_DELAY);
+        const pullConst = this.#compileConst(1 << Simulation.MAX_DELAY | output.pull);
+        let code = `signal = ${netMem} & ${signalMask}; `;                      // select only the signal bit of the NET
+        code += `mask = signal | (signal >> ${Simulation.MAX_DELAY}); `;        // duplicate signal bit into data bit to build a mask
+        code += `${netMem} = (${netMem} & mask) | (${pullConst} & ~mask)`;      // apply pull-value to net if NET signal is not set
+        return code;
     }
 
     // Compiles a gate reading from one or more inputs and writing to an output.
@@ -305,13 +330,13 @@ class Simulation {
         const netMem = this.#compileNetAccess(netIndex);
         const outputMem = this.#compileIOAccess(ioName);
         const signalMask = this.#compileConst(1 << Simulation.MAX_DELAY);
-        let code = `signal = ${outputMem} & ${signalMask}; `;                       // select only the signal bit
+        let code = `signal = ${outputMem} & ${signalMask}; `;                       // select only the signal bit of the OUTPUT
         const maskCode = `signal | (signal >> ${Simulation.MAX_DELAY})`;            // duplicate signal bit into data bit to build a mask
         if (reset) {
             code += `${netMem} = (${outputMem} & (${maskCode}))`;                   // reset net to io-data/signal on first assert to net
         } else {
             code += `mask = ${maskCode}; `;
-            code += `${netMem} = (${netMem} & ~mask) | (${outputMem} & mask)`;      // apply io-data/signal to net if signal is set
+            code += `${netMem} = (${netMem} & ~mask) | (${outputMem} & mask)`;      // apply io-data/signal to net if OUTPUT signal is set
         }
         return code;
     }
@@ -341,12 +366,19 @@ class Simulation {
         }
         // copy port-state to attached net
         for (const [ netIndex, net ] of this.#nets.entries()) {
-            // first write to net resets it
+            // write normal outputs to nets, also have first write just reset it (less code)
             let resetNet = true;
             for (const name of net.io ) {
                 if (this.#getIO(name).out) {
                     result += this.#compileOutputToNet(netIndex, name, resetNet) + this.#endl((resetNet ? 're' : '') + 'set net ' + netIndex + ' from ' + name);
                     resetNet = false;
+                }
+            }
+            // write resistor output to nets (these only write if the net has no signal)
+            for (const name of net.io ) {
+                let pull = this.#getIO(name).pull;
+                if (pull !== null) {
+                    result += this.#compileResistorToNet(netIndex, name) + this.#endl('pull net ' + netIndex + (pull ? 'up' : 'down') + ' from ' + name);
                 }
             }
         }
