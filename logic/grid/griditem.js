@@ -109,7 +109,7 @@ class GridItem {
     // Extend to handle drag events.
     onDrag(x, y, status, what) {
         const selection = this.grid.selection;
-        if (selection.length > 0) {
+        if (selection.length > 0 && this.selected) {
             what.items ??= (new Array(selection.length)).fill(null, 0, selection.length).map((_) => ({})); // the ridiculousness that is js just to actually "fill" an array with distinct objects
             for (const [ index, item ] of pairs(this.grid.selection)) {
                 item.onMove(x, y, status, what.items[index]);
