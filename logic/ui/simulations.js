@@ -149,6 +149,9 @@ Simulations.Simulation = class {
 
     // Returns the simulation engine used to compile this simulation.
     get engine() {
+        if (!this.#engine) {
+            this.#compile();
+        }
         return this.#engine;
     }
 
@@ -167,7 +170,7 @@ Simulations.Simulation = class {
     // Recompiles and reattaches the simulation if it is running.
     reset() {
         this.#app.grid.circuit.detachSimulation();
-        this.#compile();
+        this.#engine = null;
         if (this.running) {
             this.reattach(this.#instance); // FIXME: only works if recompile didn't change instance ids
         }
@@ -175,7 +178,7 @@ Simulations.Simulation = class {
 
     // Marks the simulation as modified and in need of a recompilation.
     markDirty() {
-        this.#compile(); // TODO: flag as dirty instead
+        this.#engine = null;
     }
 
     // Re-attach simulation to a subcircuit.
@@ -192,6 +195,9 @@ Simulations.Simulation = class {
     // Ticks the current simulation for the given amount of ticks.
     tick(ticks) {
         assert.integer(ticks);
+        if (!this.#engine) {
+            this.#compile();
+        }
         // apply manual simulation states each tick
         for (let { portName, component } of this.tickListener) {
             component.applyState(portName, this.#engine);
