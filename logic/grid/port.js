@@ -4,7 +4,7 @@
 class Port extends Interactive {
 
     static EDIT_DIALOG = [
-        { name: 'name', label: 'Name', type: 'string' },
+        { name: 'name', label: 'Name', type: 'string', check: function(v, f) { return v === '' || this.checkNameIsUnique(v, this.grid.circuit) } },
         ...Component.EDIT_DIALOG,
     ];
 
@@ -77,12 +77,22 @@ class Port extends Interactive {
 
     // Handle edit hotkey.
     async onEdit() {
-        const config = await dialog("Configure port", Port.EDIT_DIALOG, { name: this.name, rotation: this.rotation });
+        const config = await dialog("Configure port", Port.EDIT_DIALOG, { name: this.name, rotation: this.rotation }, this);
         if (config) {
             this.name = config.name;
             this.rotation = config.rotation;
             this.redraw();
         }
+    }
+
+    // Checks whether the given name is unique among ports in the circuit.
+    checkNameIsUnique(name, circuit = null) {
+        for (const port of values(circuit.data.filter((i) => i instanceof Port))) {
+            if (port !== this && port.name === name) {
+                return false;
+            }
+        }
+        return true;
     }
 
     // Renders the port onto the grid.

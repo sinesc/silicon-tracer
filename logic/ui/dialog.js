@@ -1,10 +1,11 @@
 "use strict";
 
 // Opens a modal dialog with the given fields and returns the user input to the awaiting caller.
-function dialog(title, fields, data) {
+function dialog(title, fields, data, context = null) {
     assert.string(title),
     assert.array(fields);
     assert.object(data);
+    assert.object(context, true);
 
     // predefine some validations
     const validations = {
@@ -65,9 +66,9 @@ function dialog(title, fields, data) {
         const errors = [];
         for (const { element, field } of values(form)) {
             const check = field.check ?? validations[field.type].check;
-            if (check(element.value, field)) {
+            if (check.call(context, element.value, field)) {
                 const apply = field.apply ?? validations[field.type].apply;
-                result[field.name] = apply(element.value, field);
+                result[field.name] = apply.call(context, element.value, field);
             } else {
                 errors.push(field.name);
             }
