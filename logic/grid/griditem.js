@@ -44,6 +44,8 @@ class GridItem {
             instance = new Gate(...cargs);
         } else if (cname === 'Clock') {
             instance = new Clock(...cargs);
+        } else if (cname === 'PullResistor') {
+            instance = new PullResistor(...cargs);
         } else if (cname === 'Builtin') {
             instance = new Builtin(...cargs);
         } else if (cname === 'Wire') {

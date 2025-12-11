@@ -360,6 +360,11 @@ class Application {
         this.toolbar.createComponentButton('Clock', '<b>Clock</b>. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => {
             return grid.addItem(new Clock(x, y));
         });
+
+        // add a pull resistor component
+        this.toolbar.createComponentButton('Pull', '<b>Pull up/down resistor</b>. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => {
+            return grid.addItem(new PullResistor(x, y));
+        });
     }
 
     // Show warning when not focussed to avoid confusion. In this state mouse wheel events still register but hotkeys don't.

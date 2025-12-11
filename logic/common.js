@@ -208,6 +208,12 @@ assert.class = function(constructor, val, allow_null = false, message = null) {
     }
 }
 
+assert.enum = function(allowed, val, allow_null = false, message = null) {
+    if (!(allow_null && val === null) && !allowed.includes(val)) {
+        throw new Error(message ?? 'Assertion failed: Value is not among the allowed values');
+    }
+}
+
 // Creates an HTML element.
 function element(parent = null, type = 'div', classNames = null, contents = null) {
     assert.class(Node, parent, true);

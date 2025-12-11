@@ -40,6 +40,8 @@ class NetList {
                     sim.declareBuiltin(component.type, suffix);
                 } else if (component instanceof Clock) {
                     sim.declareClock(component.frequency, app.config.targetTPS, true, suffix);
+                } else if (component instanceof PullResistor) {
+                    sim.declarePullResistor(component.direction, suffix);
                 }
             }
         }
@@ -47,7 +49,7 @@ class NetList {
         for (let net of this.nets) {
             // create new net from connected gate i/o-ports
             let interactiveComponents = net.ports.filter((p) => this.instances[p.instance].circuit.itemByGID(p.gid) instanceof Interactive);
-            let attachedPorts = net.ports.filter((p) => { const c = this.instances[p.instance].circuit.itemByGID(p.gid); return c instanceof Gate || c instanceof Builtin || c instanceof Clock; }).map((p) => p.uniqueName);
+            let attachedPorts = net.ports.filter((p) => { const c = this.instances[p.instance].circuit.itemByGID(p.gid); return c instanceof Gate || c instanceof Builtin || c instanceof Clock || c instanceof PullResistor; }).map((p) => p.uniqueName);
             net.netId = sim.declareNet(attachedPorts, interactiveComponents.map((p) => p.uniqueName));
         }
         // compile

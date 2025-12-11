@@ -122,10 +122,10 @@ class Simulation {
     }
 
     // Declares a push/pull resistor.
-    declareResistor(type, suffix) {
-        assert.string(type);
+    declarePullResistor(type, suffix) {
+        assert.enum([ 'up', 'down' ], type);
         assert.string(suffix);
-        this.#declareIO('r' + suffix, type === 'up' ? 'u' : 'd', 0);
+        this.#declareIO('q' + suffix, type === 'up' ? 'u' : 'd', 0);
     }
 
     // Compiles the circuit and initializes memory, making it ready for simulate().
