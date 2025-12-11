@@ -325,7 +325,7 @@ class Grid {
         const netColor = `<span data-net-color="${this.netColor}">default net color</span>`;
         const sim = this.#app.simulations.current;
         const hasParent = sim && sim.instance > 0;
-        return 'Grid. <i>LMB</i>: Select area, <i>SHIFT+LMB</i>: Add to selection, <i>MMB</i>: Drag grid, <i>MW</i>: Zoom grid, <i>E</i>: Rename circuit, <i>0</i> - <i>9</i>: Set ' + netColor + ', ' + (hasParent ? '' : '<u>') + '<i>W</i>: Switch to parent simulation' + (hasParent ? '' : '</u>');
+        return 'Grid. <i>LMB</i>: Drag to select area, <i>SHIFT+LMB</i>: Add selection, <i>CTRL+LMB</i>: Subtract selection, <i>MMB</i>: Drag grid, <i>MW</i>: Zoom grid, <i>E</i>: Rename circuit, <i>0</i> - <i>9</i>: Set ' + netColor + ', ' + (hasParent ? '' : '<u>') + '<i>W</i>: Switch to parent simulation' + (hasParent ? '' : '</u>');
     }
 
     // Sets the zoom factor.
@@ -446,7 +446,7 @@ class Grid {
     }
 
     // Renders a selection box in grid-div-relative coordinates.
-    #renderSelection(x, y, width, height, join) {
+    #renderSelection(x, y, width, height, addSelection) {
         // render box
         if (width < 0) {
             x += width;
@@ -470,7 +470,7 @@ class Grid {
         for (const c of this.#circuit.data) {
             const currentlySelected = this.#selection.indexOf(c) > -1;
             if (c.x + m >= sX && c.y + m >= sY && c.x + c.width - m <= sX + sWidth && c.y + c.height - m <= sY + sHeight) {
-                c.selected = !currentlySelected || join;
+                c.selected = addSelection;
             } else {
                 c.selected = currentlySelected;
             }
@@ -484,29 +484,30 @@ class Grid {
         const dragStartX = e.clientX - this.#element.offsetLeft;
         const dragStartY = e.clientY - this.#element.offsetTop;
         const shiftDown = e.shiftKey;
+        const ctrlDown = e.ctrlKey;
         if (e.which === 1) {
             // start selection
             this.#selectionElement.classList.remove('hidden');
-            if (!shiftDown) {
+            if (!shiftDown && !ctrlDown) {
                 this.#selection = [];
             }
             this.#renderSelection(dragStartX, dragStartY, 0, 0, shiftDown);
         } else if (e.which > 2) {
             return;
         }
-        document.onmousemove = this.#handleDragMove.bind(this, dragStartX, dragStartY, this.offsetX, this.offsetY, shiftDown);
+        document.onmousemove = this.#handleDragMove.bind(this, dragStartX, dragStartY, this.offsetX, this.offsetY, !ctrlDown);
         document.onmouseup = this.#handleDragStop.bind(this);
     }
 
     // Called on mouse drag, moves the grid or selects area.
-    #handleDragMove(dragStartX, dragStartY, gridOffsetX, gridOffsetY, shiftDown, e) {
+    #handleDragMove(dragStartX, dragStartY, gridOffsetX, gridOffsetY, addSelection, e) {
         e.preventDefault();
         e.stopPropagation();
         const deltaX = (e.clientX - this.#element.offsetLeft) - dragStartX;
         const deltaY = (e.clientY - this.#element.offsetTop) - dragStartY;
         if (e.which === 1) {
             // select area
-            this.#renderSelection(dragStartX, dragStartY, deltaX, deltaY, shiftDown);
+            this.#renderSelection(dragStartX, dragStartY, deltaX, deltaY, addSelection);
         } else if (e.which === 2) {
             // drag grid
             this.offsetX = gridOffsetX + deltaX / this.zoom;
