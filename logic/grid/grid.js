@@ -240,15 +240,15 @@ class Grid {
         return this.#netColor;
     }
 
-    // Applies net colors to components on the grid. Returns next to be used color.
+    // Applies net colors to component ports on the grid.
     applyNetColors() {
         let netList = NetList.identify(this.#circuit, false);
-        let color = 0;
+        // match port colors with attached wire colors, ensure consistent color across entire net
         for (let net of netList.nets) {
-            let applyColor = null;
+            // find net color (when dragging from unconnected wire to connected wire the new wire will have color null)
+            let applyColor = net.wires.values().map((nw) => this.#circuit.itemByGID(nw.gid)).find((w) => w.color !== null)?.color ?? this.netColor;
             for (let { gid } of net.wires) {
                 let wire = this.#circuit.itemByGID(gid);
-                applyColor ??= wire.color ?? color;
                 wire.color = applyColor;
             }
             for (let port of net.ports) {
@@ -256,18 +256,18 @@ class Grid {
                 let portName = port.name;
                 component.portByName(portName).color = applyColor;
             }
-            color = (color + 1) % 10;
         }
+        // clear color of unconnected wires
         for (let netWire of netList.unconnected.wires) {
             let wire = this.#circuit.itemByGID(netWire.gid);
             wire.color = null;
         }
+        // clear color of unconnected ports
         for (let port of netList.unconnected.ports) {
             let component = this.#circuit.itemByGID(port.gid);
             let portName = port.name;
             component.portByName(portName).color = null;
         }
-        return color;
     }
 
     // Makes given grid item become the hotkey-target and when locked also prevents hover events from stealing hotkey focus until released.

@@ -33,7 +33,7 @@ class WireBuilder extends GridItem { // TODO: Not actually a grid item, but uses
         this.width = x2 - x1;
         this.height = y2 - y1;
         this.#ordering = ordering ?? 'hv';
-        this.color = color ?? this.grid.netColor;
+        this.color = color;
         this.#fliptest = fliptest ?? ( (x, y) => false );
 
         this.#wireH = new Wire(x1, y1, this.width, 'h', this.color);

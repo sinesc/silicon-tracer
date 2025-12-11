@@ -7,7 +7,7 @@ class Wire extends GridItem {
     static THICKNESS = 3;
 
     #element;
-    color;
+    #color;
 
     // Net-id for this item. Directly set by Circuit.attachSimulation()
     netId = null;
@@ -131,6 +131,18 @@ class Wire extends GridItem {
             }, 150);
             return true;
         }
+    }
+
+    // Return wire color.
+    get color() {
+        return this.#color;
+    }
+
+    // Set wire color.
+    set color(value) {
+        assert.integer(value, true);
+        this.dirty ||= this.#color !== value;
+        this.#color = value;
     }
 
     // Sets connection endpoints, optionally aligned to the grid.
