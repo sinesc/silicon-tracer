@@ -15,16 +15,20 @@ class Grid {
     #app;
     #dirty = Grid.DIRTY_INNER | Grid.DIRTY_OUTER | Grid.DIRTY_OVERLAY;
     #element;
-    #infoElement;
-    #infoCircuitLabel = null;
-    #infoSimulationLabel = null;
-    #infoSimulationDetails = null;
-    #infoFPSCount = { current: 0, last: 0 };
     #selectionElement;
     #selection = [];
     #hotkeyTarget = null;
     #circuit;
     #netColor = 1;
+
+    #infoBox = {
+        element: null,
+        circuitLabel: null,
+        circuitDetails: null,
+        simulationLabel: null,
+        simulationDetails: null,
+        FPSCount: { current: 0, last: 0 },
+    };
 
     constructor(app, parent) {
         assert.class(Application, app);
@@ -35,10 +39,10 @@ class Grid {
         this.#element.onmousedown = this.#handleDragStart.bind(this);
         this.#element.onwheel = this.#handleZoom.bind(this);
 
-        this.#infoElement = document.createElement('div');
-        this.#infoElement.classList.add('grid-info');
-        this.#element.appendChild(this.#infoElement);
-        this.#infoElement.innerHTML = '';
+        this.#infoBox.element = document.createElement('div');
+        this.#infoBox.element.classList.add('grid-info');
+        this.#element.appendChild(this.#infoBox.element);
+        this.#infoBox.element.innerHTML = '';
 
         this.#selectionElement = document.createElement('div');
         this.#selectionElement.classList.add('grid-selection', 'hidden');
@@ -72,7 +76,7 @@ class Grid {
         this.#circuit.detachSimulation();
         this.#circuit.generateOutline();
         this.#circuit = null;
-        this.#infoCircuitLabel = '';
+        this.#infoBox.circuitLabel = '';
         this.#dirty |= Grid.DIRTY_OVERLAY;
         this.#hotkeyTarget = null;
         this.#app.clearStatus(true);
@@ -87,20 +91,21 @@ class Grid {
         circuit.gridConfig.offsetY ??= 0;
         this.#circuit = circuit;
         this.#circuit.link(this);
-        this.#infoCircuitLabel = circuit.label;
+        this.#infoBox.circuitLabel = circuit.label;
+        this.#updateCircuitDetails();
         this.#dirty |= Grid.DIRTY_INNER | Grid.DIRTY_OUTER | Grid.DIRTY_OVERLAY;
     }
 
     // Sets the simulation label displayed on the grid.
     setSimulationLabel(label) {
-        this.#dirty |= this.#infoSimulationLabel !== label ? Grid.DIRTY_OVERLAY : 0;
-        this.#infoSimulationLabel = label;
+        this.#dirty |= this.#infoBox.simulationLabel !== label ? Grid.DIRTY_OVERLAY : 0;
+        this.#infoBox.simulationLabel = label;
     }
 
     // Sets the simulation details displayed on the grid.
     setSimulationDetails(details) {
-        this.#dirty |= this.#infoSimulationDetails !== details ? Grid.DIRTY_OVERLAY : 0;
-        this.#infoSimulationDetails = details;
+        this.#dirty |= this.#infoBox.simulationDetails !== details ? Grid.DIRTY_OVERLAY : 0;
+        this.#infoBox.simulationDetails = details;
     }
 
     // Adds an item to the grid. Automatically done by GridItem constructor.
@@ -113,6 +118,7 @@ class Grid {
         if (restart) {
             this.#app.simulations.markDirty(this.#circuit);
         }
+        this.#updateCircuitDetails();
         return item;
     }
 
@@ -126,6 +132,7 @@ class Grid {
         if (restart) {
             this.#app.simulations.markDirty(this.#circuit);
         }
+        this.#updateCircuitDetails();
         return item;
     }
 
@@ -172,9 +179,10 @@ class Grid {
     render() {
 
         if (this.#dirty & Grid.DIRTY_OVERLAY) {
-            this.#infoElement.innerHTML = '<div class="info-section">Circuit</div><div class="info-title">' + this.#infoCircuitLabel + '</div>' +
-                (!this.#infoSimulationLabel ? '' : '<div class="info-section">Simulation</div><div class="info-title">' + this.#infoSimulationLabel + '</div>') +
-                (!this.#infoSimulationDetails ? '' : '<div class="info-details">' + this.#infoSimulationDetails + '</div>');
+            this.#infoBox.element.innerHTML = '<div class="info-section">Circuit</div><div class="info-title">' + this.#infoBox.circuitLabel + '</div>' +
+                (!this.#infoBox.circuitDetails ? '' : '<div class="info-details">' + this.#infoBox.circuitDetails + '</div>') +
+                (!this.#infoBox.simulationLabel ? '' : '<div class="info-section">Simulation</div><div class="info-title">' + this.#infoBox.simulationLabel + '</div>') +
+                (!this.#infoBox.simulationDetails ? '' : '<div class="info-details">' + this.#infoBox.simulationDetails + '</div>');
         }
 
         if (this.#dirty & (Grid.DIRTY_OUTER | Grid.DIRTY_INNER)) {
@@ -231,7 +239,7 @@ class Grid {
             }
         }
 
-        this.#infoFPSCount.current += 1;
+        this.#infoBox.FPSCount.current += 1;
         this.#dirty = Grid.DIRTY_NONE;
     }
 
@@ -294,6 +302,30 @@ class Grid {
     markDirty(inner = false) {
         assert.bool(inner);
         this.#dirty |= inner ? Grid.DIRTY_INNER : Grid.DIRTY_OUTER;
+    }
+
+    // Computes circuit statistics
+    circuitStats() {
+        let gates = 0;
+        const netList = NetList.identify(this.#circuit, true);
+        for (const instance of values(netList.instances)) {
+            for (const item of values(instance.circuit.data)) {
+                if (item instanceof Gate) {
+                    gates += 1;
+                } else if (item instanceof Builtin) {
+                    gates += item.gates;
+                }
+            }
+        }
+        return { nets: netList.nets.length, gates };
+    }
+
+    // Returns the grids default status message.
+    defaultStatusMessage() {
+        const netColor = `<span data-net-color="${this.netColor}">default net color</span>`;
+        const sim = this.#app.simulations.current;
+        const hasParent = sim && sim.instance > 0;
+        return 'Grid. <i>LMB</i>: Select area, <i>SHIFT+LMB</i>: Add to selection, <i>MMB</i>: Drag grid, <i>MW</i>: Zoom grid, <i>E</i>: Rename circuit, <i>0</i> - <i>9</i>: Set ' + netColor + ', ' + (hasParent ? '' : '<u>') + '<i>W</i>: Switch to parent simulation' + (hasParent ? '' : '</u>');
     }
 
     // Sets the zoom factor.
@@ -359,12 +391,12 @@ class Grid {
         return 'g' + crypto.randomUUID().replaceAll('-', '');
     }
 
-    // Returns the grids default status message.
-    defaultStatusMessage() {
-        const netColor = `<span data-net-color="${this.netColor}">default net color</span>`;
-        const sim = this.#app.simulations.current;
-        const hasParent = sim && sim.instance > 0;
-        return 'Grid. <i>LMB</i>: Select area, <i>SHIFT+LMB</i>: Add to selection, <i>MMB</i>: Drag grid, <i>MW</i>: Zoom grid, <i>E</i>: Rename circuit, <i>0</i> - <i>9</i>: Set ' + netColor + ', ' + (hasParent ? '' : '<u>') + '<i>W</i>: Switch to parent simulation' + (hasParent ? '' : '</u>');
+    // Update circuit details in infobox.
+    #updateCircuitDetails() {
+        const stats = this.circuitStats();
+        const prevDetails = this.#infoBox.circuitDetails;
+        this.#infoBox.circuitDetails = `Gates: ${stats.gates}<br>Nets: ${stats.nets}`;
+        this.#dirty |= this.#infoBox.circuitDetails !== prevDetails ? Grid.DIRTY_OVERLAY : 0;
     }
 
     // Called when a key is pressed and then repeatedly while being held.

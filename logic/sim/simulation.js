@@ -19,10 +19,10 @@ class Simulation {
     };
 
     static BUILTIN_MAP = {
-        'latch' : { dataTpl: '(load & data) | (~load & q)', inputs: [ 'load', 'data' ], output: 'q' },
-        'flipflop' : { dataTpl: '(+clock & data) | (~+clock & q)', inputs: [ 'clock', 'data' ], output: 'q' },
-        'buffer3' : { dataTpl: 'data', signalTpl: 'enable', inputs: [ 'enable', 'data' ], output: 'q' },
-        'not3' : { dataTpl: '~data', signalTpl: 'enable', inputs: [ 'enable', 'data' ], output: 'q' },
+        'latch' : { dataTpl: '(load & data) | (~load & q)', inputs: [ 'load', 'data' ], output: 'q', statsGates: 4  },
+        'flipflop' : { dataTpl: '(+clock & data) | (~+clock & q)', inputs: [ 'clock', 'data' ], output: 'q', statsGates: 6 },
+        'buffer3' : { dataTpl: 'data', signalTpl: 'enable', inputs: [ 'enable', 'data' ], output: 'q', statsGates: 1 },
+        'not3' : { dataTpl: '~data', signalTpl: 'enable', inputs: [ 'enable', 'data' ], output: 'q', statsGates: 1 },
     }
 
     #debug = false;

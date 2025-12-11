@@ -9,6 +9,7 @@ class Builtin extends Component {
 
     inputs;
     output;
+    gates;
 
     constructor(x, y, type) {
 
@@ -47,6 +48,7 @@ class Builtin extends Component {
 
         this.inputs = inputs;
         this.output = output;
+        this.gates = Simulation.BUILTIN_MAP[type].statsGates;
     }
 
     // Serializes the object for writing to disk.
