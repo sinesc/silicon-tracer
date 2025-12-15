@@ -819,7 +819,7 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
     transition: opacity var(--component-delete-duration);
     opacity: 0;
 }
-/* wirebuilder debugging */
+/* debugging */
 .wirebuilder-debug {
     pointer-events: none;
     z-index: 11;
@@ -845,19 +845,19 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
     margin-top: -20px;
     text-align: center;
 }
-.wirebuilder-debug-point {
+.debug-point {
     pointer-events: none;
     z-index: 11;
     display: block;
     position: absolute;
 }
-.wirebuilder-debug-point0::after {
+.debug-point0::after {
     content: '0';
 }
-.wirebuilder-debug-point1::after {
+.debug-point1::after {
     content: '1';
 }
-.wirebuilder-debug-point2::after {
+.debug-point2::after {
     content: '2';
 }
 

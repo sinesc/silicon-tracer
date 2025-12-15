@@ -549,14 +549,21 @@ class Grid {
     }
 
     // adds a debug marker at the given location
-    #debugPoint(x, y, i = 0) {
-        let element = document.createElement('div');
-        element.classList.add('wirebuilder-debug-point', 'wirebuilder-debug-point' + i);
-        let vx = (x + this.offsetX) * this.zoom;
-        let vy = (y + this.offsetY) * this.zoom;
-        element.style.display = 'block';
-        element.style.left = (vx - 6) + 'px';
-        element.style.top = (vy - 6) + 'px';
-        this.addVisual(element);
+    debugPoint(point, i = 0, existingElement = null) {
+        let element = existingElement ?? document.createElement('div');
+        if (point === null) {
+            element.style.display = 'none';
+        } else {
+            let vx = (point.x + this.offsetX) * this.zoom;
+            let vy = (point.y + this.offsetY) * this.zoom;
+            element.style.display = 'block';
+            element.style.left = (vx - 6) + 'px';
+            element.style.top = (vy - 6) + 'px';
+        }
+        if (!existingElement) {
+            element.classList.add('debug-point', 'debug-point' + i);
+            this.addVisual(element);
+        }
+        return element;
     }
 }

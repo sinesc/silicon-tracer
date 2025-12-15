@@ -50,11 +50,6 @@ class WireBuilder extends GridItem { // Note: Not actually a grid item, but uses
             this.#debugElement = document.createElement('div');
             this.#debugElement.classList.add('wirebuilder-debug');
             this.grid.addVisual(this.#debugElement);
-            for (let i = 0; i < 3; ++i) {
-                this['debug' + i] = document.createElement('div');
-                this['debug' + i].classList.add('wirebuilder-debug-point', 'wirebuilder-debug-point' + i);
-                this.grid.addVisual(this['debug' + i]);
-            }
         }
     }
 
@@ -185,23 +180,8 @@ class WireBuilder extends GridItem { // Note: Not actually a grid item, but uses
         this.#debugElement.style.height = Math.abs(v.height) + "px";
         let points = this.#points();
         for (let i = 0; i < 3; ++i) {
-            this.#debugRenderPoint(i, i < points.length ? points[i] : null);
+            this['debug' + i] = this.grid.debugPoint(i < points.length ? points[i] : null, i, this['debug' + i] ?? null);
         }
         this.#debugElement.innerHTML = '<span>' + points.map((p) => JSON.stringify(p)).join('<br>') + '</span>';
-    }
-
-    // Renders a debug point on one of the 3 distinct wire corner/end points.
-    #debugRenderPoint(i, c) {
-        if (c === null) {
-            this['debug' + i].style.display = 'none';
-        } else {
-            let x = c.x;
-            let y = c.y;
-            let vx = (x + this.grid.offsetX) * this.grid.zoom;
-            let vy = (y + this.grid.offsetY) * this.grid.zoom;
-            this['debug' + i].style.display = 'block';
-            this['debug' + i].style.left = (vx - 6) + 'px';
-            this['debug' + i].style.top = (vy - 6) + 'px';
-        }
     }
 }
