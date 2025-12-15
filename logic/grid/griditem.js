@@ -12,8 +12,9 @@ class GridItem {
     // Grid ID used to link simulation items with grid items
     #gid;
 
-    // Position on grid
+    // Position/size on grid
     #position;
+    #size;
 
     // Registered hover messages, Map(element => message).
     #hoverMessages;
@@ -23,12 +24,15 @@ class GridItem {
         assert.number(y);
         this.#gid = Grid.generateGID();
         this.#position = new Point(...Grid.align(x, y));
+        this.#size = new Point(0, 0);
     }
 
     // Serializes the object for writing to disk.
     serialize() {
         return {
             _: { c: this.constructor.name, a: [] },
+            width: this.#size.x,
+            height: this.#size.y,
         };
     }
 
@@ -97,7 +101,6 @@ class GridItem {
     redraw() {
         app.simulations.markDirty(this.grid.circuit);
         this.dirty = true;
-        this.render(); // avoid brief flicker after animations
     }
 
     // Implement to return whether the grid item is selected.
@@ -149,19 +152,43 @@ class GridItem {
         this.#position.y = value;
     }
 
+    // Return grid item width.
+    get width() {
+        return this.#size.x;
+    }
+
+    // Set grid item width.
+    set width(value) {
+        assert.integer(value);
+        this.dirty ||= this.#size.x !== value;
+        this.#size.x = value;
+    }
+
+    // Return grid item height.
+    get height() {
+        return this.#size.y;
+    }
+
+    // Set grid item height.
+    set height(value) {
+        assert.integer(value);
+        this.dirty ||= this.#size.y !== value;
+        this.#size.y = value;
+    }
+
     // Return grid item gid.
     get gid() {
         return this.#gid;
     }
 
-    // Gets the grid-relative screen x-coordinate for this grid item.
-    get visualX() {
-        return (this.x + this.grid.offsetX) * this.grid.zoom;
-    }
-
-    // Gets the grid-relative screen y-coordinate for this grid item.
-    get visualY() {
-        return (this.y + this.grid.offsetY) * this.grid.zoom;
+    // Gets the grid-relative screen coordinate/dimensions for this grid item.
+    get visual() {
+        return {
+            x: (this.x + this.grid.offsetX) * this.grid.zoom,
+            y: (this.y + this.grid.offsetY) * this.grid.zoom,
+            width: this.width * this.grid.zoom,
+            height: this.height * this.grid.zoom,
+        };
     }
 
     // Converts in-simulation/on-grid to visual coordinates (for rendering).

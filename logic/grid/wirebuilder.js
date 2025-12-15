@@ -1,7 +1,7 @@
 "use strict";
 
 // Used to build wire corners.
-class WireBuilder extends GridItem { // TODO: Not actually a grid item, but uses a lot of grid item functionality.
+class WireBuilder extends GridItem { // Note: Not actually a grid item, but uses a lot of grid item functionality.
 
     static DRAWING_CONNECTION_MESSAGE = 'Drawing connection. <i>R</i>: Add point, continue drawing from here.';
 
@@ -9,8 +9,7 @@ class WireBuilder extends GridItem { // TODO: Not actually a grid item, but uses
     #wireV;
     #ordering;
     #fliptest;
-    width;
-    height;
+    #debugElement;
     color;
 
     constructor(x1, y1, x2, y2, ordering = null, color = null, fliptest = null) {
@@ -22,7 +21,6 @@ class WireBuilder extends GridItem { // TODO: Not actually a grid item, but uses
         assert.integer(color, true);
         assert.function(fliptest, true);
 
-        // TODO: try to avoid GridItem parent without duplicating drag-support
         super(0, 0);
         this.grid = app.grid;
 
@@ -49,9 +47,9 @@ class WireBuilder extends GridItem { // TODO: Not actually a grid item, but uses
         this.#updateWires();
 
         if (app.config.debugShowWireBox) {
-            this.debug = document.createElement('div');
-            this.debug.classList.add('wirebuilder-debug');
-            this.grid.addVisual(this.debug);
+            this.#debugElement = document.createElement('div');
+            this.#debugElement.classList.add('wirebuilder-debug');
+            this.grid.addVisual(this.#debugElement);
             for (let i = 0; i < 3; ++i) {
                 this['debug' + i] = document.createElement('div');
                 this['debug' + i].classList.add('wirebuilder-debug-point', 'wirebuilder-debug-point' + i);
@@ -92,20 +90,10 @@ class WireBuilder extends GridItem { // TODO: Not actually a grid item, but uses
             this.grid.requestHotkeyTarget(this, true, { ...what, type: 'connect' }); // pass 'what' to onHotkey()
         } else if (status !== 'stop') {
             this.#setBounding(what.startX, what.startY, x, y);
-            this.render();
         } else {
             app.clearStatus(true);
             this.grid.releaseHotkeyTarget(this, true);
             this.#remove();
-        }
-    }
-
-    // Renders the wires onto the grid.
-    render() {
-        this.#wireH.render();
-        this.#wireV.render();
-        if (app.config.debugShowWireBox) {
-            this.#debugRenderBox();
         }
     }
 
@@ -122,7 +110,7 @@ class WireBuilder extends GridItem { // TODO: Not actually a grid item, but uses
             this.grid.removeItem(this.#wireV, false);
         }
         if (app.config.debugShowWireBox) {
-            this.grid.removeVisual(this.debug);
+            this.grid.removeVisual(this.#debugElement);
             for (let i = 0; i < 3; ++i) {
                 this.grid.removeVisual(this['debug' + i]);
             }
@@ -141,6 +129,9 @@ class WireBuilder extends GridItem { // TODO: Not actually a grid item, but uses
         this.width = x2 - x1;
         this.height = y2 - y1;
         this.#updateWires();
+        if (app.config.debugShowWireBox) {
+            this.#debugRenderBox();
+        }
     };
 
     // Updates wire positions from endpoints.
@@ -185,20 +176,18 @@ class WireBuilder extends GridItem { // TODO: Not actually a grid item, but uses
 
     // Renders a debug bounding box around for the wire corner.
     #debugRenderBox() {
-        let z = this.grid.zoom;
-        let x0 = this.grid.offsetX;
-        let y0 = this.grid.offsetY;
-        let hx = this.width < 0 ? this.x + this.width : this.x;
-        let hy = this.height < 0 ? this.y + this.height : this.y;
-        this.debug.style.left = (x0 + hx * z) + "px";
-        this.debug.style.top = (y0 + hy * z) + "px";
-        this.debug.style.width = Math.abs(this.width * z) + "px";
-        this.debug.style.height = Math.abs(this.height * z) + "px";
+        let v = this.visual;
+        let hx = v.width < 0 ? v.x + v.width : v.x;
+        let hy = v.height < 0 ? v.y + v.height : v.y;
+        this.#debugElement.style.left = hx + "px";
+        this.#debugElement.style.top = hy + "px";
+        this.#debugElement.style.width = Math.abs(v.width) + "px";
+        this.#debugElement.style.height = Math.abs(v.height) + "px";
         let points = this.#points();
         for (let i = 0; i < 3; ++i) {
             this.#debugRenderPoint(i, i < points.length ? points[i] : null);
         }
-        this.debug.innerHTML = '<span>' + points.map((p) => JSON.stringify(p)).join('<br>') + '</span>';
+        this.#debugElement.innerHTML = '<span>' + points.map((p) => JSON.stringify(p)).join('<br>') + '</span>';
     }
 
     // Renders a debug point on one of the 3 distinct wire corner/end points.

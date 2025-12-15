@@ -12,8 +12,6 @@ class Wire extends GridItem {
     // Net-id for this item. Directly set by Circuit.attachSimulation()
     netId = null;
 
-    width; // TODO: replace width/height with length/direction, use get/set to mark as dirty
-    height;
     direction;
 
     // Whether the wire is actually on the grid yet. false during wire-drag.
@@ -98,7 +96,6 @@ class Wire extends GridItem {
         }
 
         let wireBuilder = new WireBuilder(x, y, x, y, what.ordering, this.color, fliptest);
-        wireBuilder.render();
         wireBuilder.dragStart(x, y, what);
     }
 
@@ -174,7 +171,7 @@ class Wire extends GridItem {
         this.y = y1;
         this.width = direction === 'h' ? length : 0;
         this.height = direction === 'v' ? length : 0;
-    };
+    }
 
     // Returns the 2 endpoint coordinates of this connection.
     points() {
@@ -185,29 +182,26 @@ class Wire extends GridItem {
     render() {
 
         let thickness = Wire.THICKNESS * this.grid.zoom;
-        let x = this.visualX;
-        let y = this.visualY ;
-        let width = this.width * this.grid.zoom;
-        let height = this.height * this.grid.zoom;
+        let v = this.visual;
         let t = thickness / 2;
 
         this.#element.setAttribute('data-net-color', this.color ?? '');
 
-        if (this.width !== 0) {
-            let hx = width < 0 ? x + width : x;
-            let hw = Math.abs(width);
+        if (v.width !== 0) {
+            let hx = v.width < 0 ? v.x + v.width : v.x;
+            let hw = Math.abs(v.width);
             this.#element.style.left = (hx - t) + "px";
-            this.#element.style.top = (y - t) + "px";
-            this.#element.style.width = (hw + 2 * t) + "px";
+            this.#element.style.top = (v.y - t) + "px";
+            this.#element.style.width = (hw + thickness) + "px";
             this.#element.style.height = thickness + "px";
             this.#element.style.display = '';
-        } else if (this.height !== 0) {
-            let vy = height < 0 ? y + height : y;
-            let vh = Math.abs(height);
-            this.#element.style.left = (x + width - t) + "px";
+        } else if (v.height !== 0) {
+            let vy = v.height < 0 ? v.y + v.height : v.y;
+            let vh = Math.abs(v.height);
+            this.#element.style.left = (v.x + v.width - t) + "px";
             this.#element.style.top = (vy - t) + "px";
             this.#element.style.width = thickness + "px";
-            this.#element.style.height = (vh + 2 * t) + "px";
+            this.#element.style.height = (vh + thickness) + "px";
             this.#element.style.display = '';
         } else {
             this.#element.style.display = 'none';

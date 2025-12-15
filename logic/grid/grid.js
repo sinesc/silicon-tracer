@@ -20,6 +20,7 @@ class Grid {
     #hotkeyTarget = null;
     #circuit;
     #netColor = 1;
+    #debugElement;
 
     #infoBox = {
         element: null,
@@ -50,12 +51,10 @@ class Grid {
 
         parent.appendChild(this.#element);
 
-        if (app.config.debugShowCoords) {
-            this.debug = document.createElement('div');
-            this.debug.classList.add('debug-info');
-            this.#element.appendChild(this.debug);
-            document.addEventListener('mousemove', this.#debugHandleMouse.bind(this));
-        }
+        this.#debugElement = document.createElement('div');
+        this.#debugElement.classList.add('debug-info');
+        this.#element.appendChild(this.#debugElement);
+        document.addEventListener('mousemove', this.#debugHandleMouse.bind(this));
 
         // TODO: may have to go to parent UI
         // TODO: GridItems currently register document.onmouse* temporarily. those should probably follow the same logic: register onmouse* here and then pass on to whichever element wants to have them
@@ -407,7 +406,18 @@ class Grid {
     // Called when a key is pressed and then repeatedly while being held.
     #handleKeyDown(e) {
         const sim = this.#app.simulations.current;
-        if (this.#hotkeyTarget) {
+        if (this.selection.length > 0) {
+            // check selection hotkeys before item hotkeys
+            if (e.key === 'Delete' || e.ctrlKey && [ 'x', 'c', 'v' ].includes(e.key)) {
+                // CTRL+C/X/V checked before hotkey target specific keys
+                this.#circuit.detachSimulation();
+                for (const item of this.selection) {
+                    this.removeItem(item, false);
+                }
+                this.#app.simulations.markDirty(this.#circuit);
+            }
+        } else if (this.#hotkeyTarget) {
+            // handle target specific hotkeys
             let { gridItem, args } = this.#hotkeyTarget;
             if (gridItem.onHotkey(e.key, ...args)) {
                 e.preventDefault();
@@ -528,11 +538,13 @@ class Grid {
 
     // Called on mouse move, updates mouse coordinates and tooltip.
     #debugHandleMouse(e) {
-        let mouseX = e.clientX;
-        let mouseY = e.clientY;
-        if (this.screenInBounds(mouseX, mouseY)) {
-            let [ x, y ] = this.screenToGrid(mouseX, mouseY);
-            this.debug.innerHTML = 'x: ' + Math.round(x) + ' y: ' + Math.round(y) + ' zoom: ' + this.zoom;
+        if (app.config.debugShowCoords) {
+            let mouseX = e.clientX;
+            let mouseY = e.clientY;
+            if (this.screenInBounds(mouseX, mouseY)) {
+                let [ x, y ] = this.screenToGrid(mouseX, mouseY);
+                this.#debugElement.innerHTML = 'x: ' + Math.round(x) + ' y: ' + Math.round(y) + ' zoom: ' + this.zoom;
+            }
         }
     }
 

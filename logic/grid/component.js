@@ -84,8 +84,6 @@ class Component extends GridItem {
     #dropPreview;
     #ports;
     #type;
-    #width;
-    #height;
     #rotation = 0;
 
     constructor(x, y, ports, type) {
@@ -101,8 +99,6 @@ class Component extends GridItem {
             ...super.serialize(),
             _: { c: this.constructor.name, a: [ this.x, this.y, this.#ports.map((p) => p.name), this.#type ]},
             rotation: this.#rotation,
-            width: this.#width,
-            height: this.#height,
         };
     }
 
@@ -188,30 +184,6 @@ class Component extends GridItem {
         this.#element.classList.toggle('selected', status);
     }
 
-    // Return grid item width.
-    get width() {
-        return this.#width;
-    }
-
-    // Set grid item width.
-    set width(value) {
-        assert.integer(value);
-        this.dirty ||= this.#width !== value;
-        this.#width = value;
-    }
-
-    // Return grid item height.
-    get height() {
-        return this.#height;
-    }
-
-    // Set grid item height.
-    set height(value) {
-        assert.integer(value);
-        this.dirty ||= this.#height !== value;
-        this.#height = value;
-    }
-
     // Return grid item rotation.
     get rotation() {
         return this.#rotation;
@@ -263,16 +235,6 @@ class Component extends GridItem {
     // Returns the inner element of the component.
     get inner() {
         return this.#inner;
-    }
-
-    // Gets the screen width for this component.
-    get visualWidth() {
-        return this.width * this.grid.zoom;
-    }
-
-    // Gets the screen height for this component.
-    get visualHeight() {
-        return this.height * this.grid.zoom;
     }
 
     // Returns the name of the side that is currently rotated to the top of the component.
@@ -349,8 +311,8 @@ class Component extends GridItem {
             let [ visualX, visualY ] = this.gridToVisual(alignedX, alignedY);
             this.#dropPreview.style.left = visualX + "px";
             this.#dropPreview.style.top = visualY + "px";
-            this.#dropPreview.style.width = this.visualWidth + "px";
-            this.#dropPreview.style.height = this.visualHeight + "px";
+            this.#dropPreview.style.width = this.visual.width + "px";
+            this.#dropPreview.style.height = this.visual.height + "px";
         } else {
             this.grid.removeVisual(this.#dropPreview);
             this.#dropPreview = null;
@@ -377,7 +339,6 @@ class Component extends GridItem {
             bottom: (x, y) => y < py,
         };
         let wireBuilder = new WireBuilder(px, py, x, y, ordering, port.color, MINIMA[portSide]);
-        wireBuilder.render();
         wireBuilder.dragStart(x, y, what);
     }
 
@@ -435,17 +396,18 @@ class Component extends GridItem {
             this.#renderPorts();
         }
 
-        this.#element.style.left = this.visualX + "px";
-        this.#element.style.top = this.visualY + "px";
-        this.#element.style.width = this.visualWidth + "px";
-        this.#element.style.height = this.visualHeight + "px";
+        const v = this.visual;
+        this.#element.style.left = v.x + "px";
+        this.#element.style.top = v.y + "px";
+        this.#element.style.width = v.width + "px";
+        this.#element.style.height = v.height + "px";
         this.element.setAttribute('data-component-rotation', this.rotation);
 
-        if ((this.width < this.height || (this.width === this.height && this.#ports[this.rotatedTop].length === 0 && this.#ports[this.rotatedBottom].length === 0)) && this.visualWidth < 200) {
-            this.#inner.style.lineHeight = (this.visualWidth - (Component.INNER_MARGIN * 2)) + "px";
+        if ((this.width < this.height || (this.width === this.height && this.#ports[this.rotatedTop].length === 0 && this.#ports[this.rotatedBottom].length === 0)) && v.width < 200) {
+            this.#inner.style.lineHeight = (v.width- (Component.INNER_MARGIN * 2)) + "px";
             this.#inner.style.writingMode = 'vertical-rl';
         } else {
-            this.#inner.style.lineHeight = (this.visualHeight - (Component.INNER_MARGIN * 2)) + "px";
+            this.#inner.style.lineHeight = (v.height - (Component.INNER_MARGIN * 2)) + "px";
             this.#inner.style.writingMode = 'horizontal-tb';
         }
     }
@@ -478,7 +440,7 @@ class Component extends GridItem {
                 style = {
                     writingMode: 'sideways-lr',
                     left: (x - visualLabelPadding) + "px",
-                    bottom: (this.visualHeight - visualPortSize - visualLabelPadding + visualPortInset) + "px",
+                    bottom: (this.visual.height - visualPortSize - visualLabelPadding + visualPortInset) + "px",
                     paddingTop: visualLabelPadding + "px",
                     paddingBottom: visualPortPadding + "px",
                     width: visualLabelLineHeight + "px",
@@ -487,7 +449,7 @@ class Component extends GridItem {
                 style = {
                     writingMode: 'horizontal-tb',
                     top: (y - visualLabelPadding) + "px",
-                    right: (this.visualWidth - visualPortSize - visualLabelPadding + visualPortInset) + "px",
+                    right: (this.visual.width - visualPortSize - visualLabelPadding + visualPortInset) + "px",
                     paddingLeft: visualLabelPadding + "px",
                     paddingRight: visualPortPadding + "px",
                     height: visualLabelLineHeight + "px",
