@@ -85,6 +85,11 @@ Number.parseSI = function(number, asInt = false) {
     }
 }
 
+// Returns the fractional part of a number
+Math.fract = function(number) {
+    return (number - (0 | number));
+}
+
 // Normalizes javascript iteration mess. Yields [ key, value ].
 function *pairs(iterable) {
     if (Array.isArray(iterable)) {

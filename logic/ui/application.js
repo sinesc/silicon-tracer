@@ -30,6 +30,7 @@ class Application {
         nextTick: 0,
         intervalComputed: 0.016,
         ticksPerFrameComputed: 0,
+        ticksFraction: 0,
         load: 0,
         ticksCounted: 0,
         framesCounted: 0,
@@ -142,10 +143,13 @@ class Application {
         if (this.#renderLoop.nextTick >= 1) {
             this.#renderLoop.nextTick -= Math.floor(this.#renderLoop.nextTick);
             if (!this.config.singleStep) {
-                const ticksCapped = this.config.targetTPS / (1000 / 60); // cap is used to work around large intervals when browser window not focused
-                const ticks = 0 | Math.max(1, Math.min(this.#renderLoop.ticksPerFrameComputed, ticksCapped));
-                this.#renderLoop.ticksCounted += ticks;
-                sim?.tick(ticks);
+                const ticksCapped = this.config.targetTPS / (1000 / 60);                            // cap is used to work around large intervals when browser window is not focused
+                const ticks = Math.max(1, Math.min(this.#renderLoop.ticksPerFrameComputed, ticksCapped));
+                this.#renderLoop.ticksFraction += Math.fract(ticks);                                // accumulate fractional ticks
+                const ticksTotal = Math.trunc(ticks) + Math.trunc(this.#renderLoop.ticksFraction);  //   and apply once at least one full tick has accumulated
+                this.#renderLoop.ticksCounted += ticksTotal;
+                sim?.tick(ticksTotal);
+                this.#renderLoop.ticksFraction -= Math.trunc(this.#renderLoop.ticksFraction);       // subtract applied number of fractional ticks from remaining fractional ticks
             }
         }
         // compute load (time spent computing/time available)
