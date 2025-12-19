@@ -251,10 +251,11 @@ Circuits.Circuit = class {
         return new Circuits.Circuit(circuit.label, uid, components, circuit.ports, circuit.gridConfig, circuit.portConfig);
     }
 
-    // Link circuit to the grid, creating DOM elements for the circuit's components.
+    // Link circuit to the grid, creating DOM elements for the circuit's components. Ensures the item is detached.
     link(grid) {
         assert.class(Grid, grid);
         for (let item of this.data) {
+            item.detachSimulation();
             item.link(grid);
         }
     }
@@ -298,7 +299,9 @@ Circuits.Circuit = class {
         // link circuits inside custom components to their corresponding simulation instance
         for (const [ gid, instance ] of Object.entries(netList.instances[subCircuitInstance].subInstances)) {
             const component = this.itemByGID(gid);
-            component.instance = instance;
+            if (component) {
+                component.instance = instance;
+            }
         }
         return tickListener;
     }

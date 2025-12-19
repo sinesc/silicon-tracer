@@ -72,7 +72,6 @@ class Grid {
             return;
         }
         this.#circuit.unlink();
-        this.#circuit.detachSimulation();
         this.#circuit.generateOutline();
         this.#circuit = null;
         this.#infoBox.circuitLabel = '';
@@ -220,7 +219,7 @@ class Grid {
 
             // apply wire net colors to attached ports
             if (dirtyGrid || this.#circuit.data.findIndex((item) => item.dirty) !== -1) {
-                this.applyNetColors();
+                this.#applyNetColors();
             }
 
             // render components
@@ -240,41 +239,6 @@ class Grid {
 
         this.#infoBox.FPSCount.current += 1;
         this.#dirty = Grid.DIRTY_NONE;
-    }
-
-    // Returns the current default net color.
-    get netColor() {
-        return this.#netColor;
-    }
-
-    // Applies net colors to component ports on the grid.
-    applyNetColors() {
-        let netList = NetList.identify(this.#circuit, false);
-        // match port colors with attached wire colors, ensure consistent color across entire net
-        for (let net of netList.nets) {
-            // find net color (when dragging from unconnected wire to connected wire the new wire will have color null)
-            let applyColor = net.wires.values().map((nw) => this.#circuit.itemByGID(nw.gid)).find((w) => w.color !== null)?.color ?? this.netColor;
-            for (let { gid } of net.wires) {
-                let wire = this.#circuit.itemByGID(gid);
-                wire.color = applyColor;
-            }
-            for (let port of net.ports) {
-                let component = this.#circuit.itemByGID(port.gid);
-                let portName = port.name;
-                component.portByName(portName).color = applyColor;
-            }
-        }
-        // clear color of unconnected wires
-        for (let netWire of netList.unconnected.wires) {
-            let wire = this.#circuit.itemByGID(netWire.gid);
-            wire.color = null;
-        }
-        // clear color of unconnected ports
-        for (let port of netList.unconnected.ports) {
-            let component = this.#circuit.itemByGID(port.gid);
-            let portName = port.name;
-            component.portByName(portName).color = null;
-        }
     }
 
     // Makes given grid item become the hotkey-target and when locked also prevents hover events from stealing hotkey focus until released.
@@ -303,25 +267,9 @@ class Grid {
         this.#dirty |= inner ? Grid.DIRTY_INNER : Grid.DIRTY_OUTER;
     }
 
-    // Computes circuit statistics
-    circuitStats() {
-        let gates = 0;
-        const netList = NetList.identify(this.#circuit, true);
-        for (const instance of values(netList.instances)) {
-            for (const item of values(instance.circuit.data)) {
-                if (item instanceof Gate) {
-                    gates += 1;
-                } else if (item instanceof Builtin) {
-                    gates += item.gates;
-                }
-            }
-        }
-        return { nets: netList.nets.length, gates };
-    }
-
     // Returns the grids default status message.
     defaultStatusMessage() {
-        const netColor = `<span data-net-color="${this.netColor}">default net color</span>`;
+        const netColor = `<span data-net-color="${this.#netColor}">default net color</span>`;
         const sim = this.#app.simulations.current;
         const hasParent = sim && sim.instance > 0;
         return 'Grid. <i>LMB</i>: Drag to select area, <i>SHIFT+LMB</i>: Add selection, <i>CTRL+LMB</i>: Subtract selection, <i>MMB</i>: Drag grid, <i>MW</i>: Zoom grid, <i>E</i>: Rename circuit, <i>0</i> - <i>9</i>: Set ' + netColor + ', ' + (hasParent ? '' : '<u>') + '<i>W</i>: Switch to parent simulation' + (hasParent ? '' : '</u>');
@@ -395,9 +343,55 @@ class Grid {
         return 'g' + crypto.randomUUID().replaceAll('-', '');
     }
 
+    // Applies net colors to component ports on the grid.
+    #applyNetColors() {
+        let netList = NetList.identify(this.#circuit, false);
+        // match port colors with attached wire colors, ensure consistent color across entire net
+        for (let net of netList.nets) {
+            // find net color (when dragging from unconnected wire to connected wire the new wire will have color null)
+            let applyColor = net.wires.values().map((nw) => this.#circuit.itemByGID(nw.gid)).find((w) => w.color !== null)?.color ?? this.#netColor;
+            for (let { gid } of net.wires) {
+                let wire = this.#circuit.itemByGID(gid);
+                wire.color = applyColor;
+            }
+            for (let port of net.ports) {
+                let component = this.#circuit.itemByGID(port.gid);
+                let portName = port.name;
+                component.portByName(portName).color = applyColor;
+            }
+        }
+        // clear color of unconnected wires
+        for (let netWire of netList.unconnected.wires) {
+            let wire = this.#circuit.itemByGID(netWire.gid);
+            wire.color = null;
+        }
+        // clear color of unconnected ports
+        for (let port of netList.unconnected.ports) {
+            let component = this.#circuit.itemByGID(port.gid);
+            let portName = port.name;
+            component.portByName(portName).color = null;
+        }
+    }
+
+    // Computes circuit statistics
+    #computeCircuitStats() {
+        let gates = 0;
+        const netList = NetList.identify(this.#circuit, true);
+        for (const instance of values(netList.instances)) {
+            for (const item of values(instance.circuit.data)) {
+                if (item instanceof Gate) {
+                    gates += 1;
+                } else if (item instanceof Builtin) {
+                    gates += item.gates;
+                }
+            }
+        }
+        return { nets: netList.nets.length, gates };
+    }
+
     // Update circuit details in infobox.
     #updateCircuitDetails() {
-        const stats = this.circuitStats();
+        const stats = this.#computeCircuitStats();
         const prevDetails = this.#infoBox.circuitDetails;
         this.#infoBox.circuitDetails = `Gates: ${stats.gates}<br>Nets: ${stats.nets}`;
         this.#dirty |= this.#infoBox.circuitDetails !== prevDetails ? Grid.DIRTY_OVERLAY : 0;
@@ -455,7 +449,7 @@ class Grid {
         this.offsetY -= mouseGridY - mouseGridYAfter;
     }
 
-    // Renders a selection box in grid-div-relative coordinates.
+    // Renders a selection box in grid-div-relative coordinates and sets 'selected' property on components
     #renderSelection(x, y, width, height, addSelection) {
         // render box
         if (width < 0) {
