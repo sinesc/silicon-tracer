@@ -70,9 +70,29 @@
     --wire-color8-null: oklch(from var(--wire-color8) calc(l * var(--wire-low-factor)) calc(c * var(--wire-null-factor)) h / var(--wire-null-alpha));
     --wire-color9-null: oklch(from var(--wire-color9) calc(l * var(--wire-low-factor)) calc(c * var(--wire-null-factor)) h / var(--wire-null-alpha));
 
+    --main-bg-color: #000;
     --grid-bg-color: #111;
+    --overlay-bg-color: #00000048;
+    --overlay-border-color: #4444448a;
     --header-bg-color: #1a1a1a;
     --header-border-color: #222;
+    --button-hover-factor: 1.2;
+    --button-bg-color: #999;
+    --button-border-color: #666;
+    --button-bg-hover-color: oklch(from var(--button-bg-color) calc(l * var(--button-hover-factor)) c h);
+    --button-border-hover-color: oklch(from var(--button-border-color) calc(l * var(--button-hover-factor)) c h);
+    --text-color: #fff;
+    --muted-text-color: #bbb;
+    --disabled-text-color: #777;
+    --inverted-text-color: #000;
+    --error-text-color: #f00;
+    --warning-text-color: #f80;
+    --selection-hue: 200deg;
+    --selection-brightness: 0.8;
+    --font-size-normal: 1em;
+    --font-size-small: 0.8em;
+    --font-size-large: 1.4em;
+    --font-size-double: 2em;
     --component-rotate-duration: 0.15s;
     --component-color-transition-duration: 0.15s;
     --component-delete-duration: 0.25s;
@@ -83,18 +103,6 @@
     --component-preview-color: #444;
     --component-port-body-color: #444;
     --component-port-border-color: #6d6d6d;
-    --button-hover-factor: 1.2;
-    --button-bg-color: #999;
-    --button-border-color: #666;
-    --button-bg-hover-color: oklch(from var(--button-bg-color) calc(l * var(--button-hover-factor)) c h);
-    --button-border-hover-color: oklch(from var(--button-border-color) calc(l * var(--button-hover-factor)) c h);
-    --disabled-text-color: #777;
-    --selection-hue: 200deg;
-    --selection-brightness: 0.8;
-    --font-size-normal: 1em;
-    --font-size-small: 0.8em;
-    --font-size-large: 1.4em;
-    --font-size-double: 2em;
 }
 
 /*
@@ -126,8 +134,8 @@ body.dragging * {
  * General UI/layout
  */
 html {
-    background-color: black;
-    color: white;
+    background-color: var(--main-bg-color);
+    color: var(--text-color);
     font-family: Roboto, sans-serif;
     font-size: 14px;
     user-select: none;
@@ -201,6 +209,12 @@ html {
 #toolbar .example-button.example-button-fade {
     opacity: 0;
 }
+.error {
+    color: var(--error-text-color);
+}
+.warning {
+    color: var(--warning-text-color);
+}
 
 /*
  * Focus hint, see main.js.
@@ -239,8 +253,8 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
     bottom: 0;
     right: 0;
     padding: 5px;
-    background-color: #00000038;
-    border: 1px solid #4444448a;
+    background-color: var(--overlay-bg-color);
+    border: 1px solid var(--overlay-border-color);
     border-radius: 3px;
     opacity: 1;
     transition: opacity 0.5s;
@@ -249,7 +263,7 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
     opacity: 0;
 }
 .app-status i {
-    color: #bbb;
+    color: var(--muted-text-color);
     font-weight: bold;
 }
 .app-status i::before {
@@ -264,7 +278,7 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
 }
 .app-status u {
     text-decoration: none;
-    color: #bbb;
+    color: var(--muted-text-color);
     opacity: 0.5;
 }
 
@@ -278,7 +292,7 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
     right: 0;
     top: 0;
     bottom: 0;
-    background-color: #0008;
+    background-color: var(--overlay-bg-color);
 }
 .dialog-container {
     z-index: 257;
@@ -310,12 +324,12 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
     box-sizing: border-box;
     width: 200px;
     padding: 4px;
-    color: white;
+    color: var(--text-color);
     border-radius: 2px;
     font-size: var(--font-size-normal);
 }
 .dialog-container .dialog-row-mask input.dialog-error, .dialog-container .dialog-row-mask select.dialog-error {
-    outline-color: red;
+    outline-color: var(--error-text-color);
 }
 .dialog-container .dialog-row-mask input::selection {
     background: var(--button-bg-color);
@@ -325,7 +339,7 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
     appearance: base-select;
 }
 .dialog-container .dialog-row-mask select option {
-    color: white;
+    color: var(--text-color);
     padding-left: 0;
     margin-left: 0;
 }
@@ -344,7 +358,7 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
     text-shadow: 1px 1px 2px #555;
     border: 2px solid var(--button-border-color);
     background-color: var(--button-bg-color);
-    color: #000;
+    color: var(--inverted-text-color);
     transition: border-color var(--component-color-transition-duration), background-color var(--component-color-transition-duration);
 }
 .dialog-container .dialog-cancel:hover, .dialog-container .dialog-confirm:hover {
@@ -360,7 +374,7 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
     cursor: default;
     transition: border-color var(--component-color-transition-duration);
     border-radius: 4px;
-    color: #ffffff;
+    color: var(--text-color);;
     text-align: center;
     box-sizing: border-box;
     margin: 2px;
@@ -384,7 +398,7 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
     text-shadow: 1px 1px 2px #555;
     border: 2px solid var(--button-border-color);
     background-color: var(--button-bg-color);
-    color: #000;
+    color: var(--inverted-text-color);
 }
 .toolbar > .toolbar-action-button:hover {
     border-color: var(--button-border-hover-color);
@@ -395,7 +409,7 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
     border: 2px solid var(--button-border-color);
     text-shadow: 1px 1px 2px #555;
     background-color: var(--button-bg-color);
-    color: #000;
+    color: var(--inverted-text-color);
 }
 .toolbar > .toolbar-toggle-button:hover {
     border-color: var(--button-border-hover-color);
@@ -510,7 +524,7 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
     right: 0;
     padding: 5px;
     margin: 10px;
-    background-color: #00000038;
+    background-color: var(--overlay-bg-color);
     pointer-events: none;
     text-align: right;
     min-width: 140px;
@@ -520,8 +534,8 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
     font-size: var(--font-size-normal);
     font-weight: bold;
 }
-.grid-info .info-title + .info-section {
-    margin-top: 5px;
+.grid-info .info-details + .info-section {
+    margin-top: 8px;
 }
 .grid-info .info-title {
     opacity: 0.3;
@@ -591,7 +605,7 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
     border: 1px solid var(--component-border-color);
     transition: border-color var(--component-rotate-duration);
     border-radius: 3px;
-    color: #ddd;
+    color: var(--muted-text-color);
     text-align: center;
     box-sizing: border-box;
     margin: 5px; /* fixme: needs to match component, should just be set there */
@@ -604,7 +618,7 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
 .component .component-inner:hover  {
     background-color: var(--component-body-hover-color);
     border-color: var(--component-border-hover-color);
-    color: #fff;
+    color: var(--text-color);
 }
 .grid-zoom-below-65 .component-inner span {
     display: none;
@@ -617,7 +631,7 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
     border-radius: 3px;
     font-size: var(--font-size-small);
     text-align: center;
-    color: #ddd;
+    color: var(--muted-text-color);
     border: 1px solid var(--component-port-body-color);
     box-sizing: border-box;
     transition: background-color var(--component-color-transition-duration);
@@ -630,7 +644,7 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
 }
 .component-port:hover {
     transition: filter var(--component-color-transition-duration), color var(--component-color-transition-duration);
-    color: #fff;
+    color: var(--text-color);
     filter: brightness(1.75) saturate(0.5);
 }
 .component-port-label {
@@ -638,11 +652,11 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
     z-index: 13;
     position: absolute;
     white-space: nowrap;
-    background-color: #00000038;
-    border: 1px solid #4444448a;
+    background-color: var(--overlay-bg-color);
+    border: 1px solid var(--overlay-border-color);
     border-radius: 3px;
     box-sizing: border-box;
-    color: #ccc;
+    color: var(--muted-text-color);
     opacity: 0;
     transition: opacity var(--component-color-transition-duration);
 }
@@ -668,9 +682,9 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
     z-index: 13;
     position: absolute;
     white-space: nowrap;
-    background-color: #00000038;
+    background-color: var(--overlay-bg-color);
     box-sizing: border-box;
-    color: #ccc;
+    color: var(--muted-text-color);
 }
 .component.port[data-net-state] > .component-inner {
     outline: 4px solid transparent;

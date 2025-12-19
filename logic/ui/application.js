@@ -120,7 +120,9 @@ class Application {
 
     // Called periodically to update stats overlay.
     #renderStats() {
-        this.grid.setSimulationDetails(`${Number.formatSI(this.config.targetTPS)} ticks/s target<br>${Number.formatSI(Math.round(this.#renderLoop.ticksCounted))} ticks/s actual<br>${Math.round(this.#renderLoop.load)}% core load<br>${this.#renderLoop.framesCounted} frames/s`);
+        const load = Math.round(this.#renderLoop.load);
+        const loadClass = load >= 95 ? 'error' : (load >= 90 ? 'warning' : '');
+        this.grid.setSimulationDetails(`${Number.formatSI(this.config.targetTPS)} ticks/s target<br>${Number.formatSI(Math.round(this.#renderLoop.ticksCounted))} ticks/s actual<br><span class="${loadClass}">${load}%</span> core load<br>${this.#renderLoop.framesCounted} frames/s`);
         this.#renderLoop.ticksCounted = 0;
         this.#renderLoop.framesCounted = 0;
     }
