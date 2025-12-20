@@ -71,7 +71,7 @@ class GridItem {
     getNetState(netId) {
         assert.integer(netId, true);
         const sim = app.simulations.current;
-        return !sim.engine ? '' : (netId === null ? 'null' : '' + sim.engine.getNetValue(netId));
+        return !sim || !sim.engine ? '' : (netId === null ? 'null' : '' + sim.engine.getNetValue(netId));
     }
 
     // Link item to a grid, enabling it to be rendered.

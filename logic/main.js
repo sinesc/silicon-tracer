@@ -10,11 +10,7 @@ if (location.hostname === 'sinesc.github.io' && location.pathname === '/silicon-
         const content = await response.json();
         const uid = app.circuits.unserialize(content);
         app.circuits.select(uid);
-        if (app.config.autoCompile) {
-            app.simulations.select(app.circuits.current).start();
-        } else {
-            app.simulations.select(app.circuits.current, false);
-        }
+        app.simulations.select(app.circuits.current, app.config.autoCompile);
         exampleButton.classList.add('toolbar-menu-button-disabled', 'example-button-fade');
         setTimeout(() => exampleButton.remove(), 1500);
     });

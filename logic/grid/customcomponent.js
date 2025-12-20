@@ -73,9 +73,8 @@ class CustomComponent extends Component {
             } else {
                 // switch to another component, optionally start simulation for that one
                 app.circuits.select(this.uid);
-                if (app.config.autoCompile) {
-                    app.simulation.select(this.uid).start();
-                }
+                const circuit = app.circuits.byUID(this.uid);
+                app.simulations.select(circuit, app.config.autoCompile);
             }
             return true;
         }

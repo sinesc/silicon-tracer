@@ -30,28 +30,29 @@ class Simulations {
         return this.#currentSimulation ? this.#simulations[this.#currentSimulation] : null;
     }
 
-    // Makes the simulation for the given circuit current. Optionally creates a simulation if necessary.
-    select(circuit, create = true) {
+    // Makes the simulation for the given circuit current. Passing null as circuit will detach any attached simulation.
+    // Optionally creates a simulation if necessary.
+    select(circuit, create = true, attach = true) {
         assert.class(Circuits.Circuit, circuit, true);
         assert.bool(create);
-        this.current?.stop();
-        if (circuit === null) {
-            this.#currentSimulation = null;
-            this.#app.grid.setSimulationLabel(null);
-            return null;
+        assert.bool(attach);
+        let simulation;
+        if (circuit && this.#simulations[circuit.uid]) {
+            this.#currentSimulation = circuit.uid;
+            simulation = this.#simulations[this.#currentSimulation];
+        } else if (circuit && create) {
+            this.#currentSimulation = circuit.uid;
+            simulation = this.create(circuit);
         } else {
-            if (this.#simulations[circuit.uid]) {
-                this.#currentSimulation = circuit.uid;
-                return this.#simulations[this.#currentSimulation];
-            } else if (create) {
-                this.#currentSimulation = circuit.uid;
-                return this.create(circuit);
-            } else {
-                this.#app.grid.setSimulationLabel(null);
-                this.#currentSimulation = null;
-                return null;
-            }
+            this.#app.grid.setSimulationLabel(null);
+            this.#app.grid.circuit.detachSimulation();
+            this.#currentSimulation = null;
+            simulation = null;
         }
+        if (simulation && attach) {
+            simulation.attach();
+        }
+        return simulation;
     }
 
     // Creates a simulation for the given circuit.
@@ -67,6 +68,7 @@ class Simulations {
         delete this.#simulations[circuit.uid];
         if (circuit.uid === this.#currentSimulation) {
             this.#app.grid.setSimulationLabel(null);
+            this.#app.grid.circuit.detachSimulation();
             this.#currentSimulation = null;
         }
     }
@@ -96,8 +98,7 @@ Simulations.Simulation = class {
     #engine;
     #tickListener = [];
     #instance = 0;
-    #running = false;
-    #started = false;
+    #dirty = true;
     #attached = false;
 
     constructor(app, circuit) {
@@ -106,16 +107,6 @@ Simulations.Simulation = class {
         this.#app = app;
         this.#circuit = circuit;
         this.#compile();
-    }
-
-    // Returns whether the simulation should be running right now.
-    get running() {
-        return this.#running;
-    }
-
-    // Returns whether the simulation had been started at some point and is no longer in its initial state.
-    get started() {
-        return this.#started;
     }
 
     // Returns the UID of the root circuit/simulation.
@@ -135,7 +126,6 @@ Simulations.Simulation = class {
 
     // Returns the parent instance id of the currently attached simulation subcomponent.
     get parentInstance() {
-        this.#checkDirty();
         return this.#netList.instances[this.instance].parentInstance;
     }
 
@@ -147,62 +137,35 @@ Simulations.Simulation = class {
 
     // Returns the simulation engine used to compile this simulation.
     get engine() {
-        //this.#checkDirty();
         return this.#engine;
     }
 
-    // Set convenience property "running" to true and attach the simulation.
-    start() {
-        this.#checkDirty();
-        this.#running = true;
-        this.#attach();
+    get attached() {
+        return this.#attached;
     }
-
-    // Set convenience property "running" to false and detach the simulation.
-    stop() {
-        this.#checkDirty();
-        this.#running = false;
-        this.#detach();
-    }
-
-    // Recompiles and reattaches the simulation if it is running.
-    /*reset() {
-        this.#app.grid.circuit.detachSimulation();
-        this.#engine = null;
-        if (this.running) {
-            this.reattach(this.#instance); // FIXME: only works if recompile didn't change instance ids
-        }
-    }*/
 
     // Marks the simulation as modified and in need of a recompilation.
     markDirty() {
-        if (this.#engine) {
-            this.#engine = null;
-            this.#started = false;
-            // when dirty, #attached needs to store whether the simulation WAS attached so that attachment can be restored correctly
-            const wasAttached = this.#attached;
-            if (this.#attached) {
-                this.#detach();
-            }
-            this.#attached = wasAttached;
-        }
+        this.#dirty = true;
     }
 
-    #checkDirty() {
-        if (!this.#engine) {
+    // Checks if the simulation requires recompilation/attachment (and does so if required).
+    checkDirty() {
+        if (this.#dirty) {
             this.#compile();
-            // when dirty, #attached stores whether the simulation WAS attached, but it isn't actually attached
+            const circuit = this.#netList.instances[this.#instance].circuit
             if (this.#attached) {
-                this.#attached = false;
-                this.#attach();
+                this.#tickListener = circuit.attachSimulation(this.#netList, this.#instance);
             }
+            this.#app.grid.markDirty();
+            return true;
         }
+        return false;
     }
 
     // Re-attach simulation to a subcircuit.
     reattach(instance) {
         assert.integer(instance);
-        this.#checkDirty();
         const circuit = this.#netList.instances[instance].circuit;
         if (this.#app.grid.circuit !== circuit) {
             this.#app.grid.setCircuit(circuit);
@@ -214,27 +177,21 @@ Simulations.Simulation = class {
     // Ticks the current simulation for the given amount of ticks.
     tick(ticks) {
         assert.integer(ticks);
-        this.#checkDirty();
         // apply manual simulation states each tick
         for (let { portName, component } of this.tickListener) {
             component.applyState(portName, this.#engine);
         }
-        this.#started = true;
         this.#engine.simulate(ticks);
     }
 
     // Returns whether the simulation includes the given circuit.
     includes(circuit) {
-        //this.#checkDirty();
         assert.class(Circuits.Circuit, circuit);
         return this.#netList.instances.some((i) => i.circuit === circuit);
     }
 
     // Attach simulation to its root circuit.
-    #attach() {
-        if (this.#attached) {
-            throw Error('Cannot attach: Already attached');
-        }
+    attach() {
         this.#tickListener = this.#circuit.attachSimulation(this.#netList, 0);
         this.#instance = 0;
         this.#app.grid.setSimulationLabel(this.#circuit.label);
@@ -243,10 +200,7 @@ Simulations.Simulation = class {
     }
 
     // Detach simulation.
-    #detach() {
-        if (!this.#attached) {
-            throw Error('Cannot detach: Not attached');
-        }
+    detach() {
         this.#app.grid.circuit.detachSimulation();
         this.#app.grid.setSimulationLabel(null);
         this.#app.grid.markDirty();
@@ -257,6 +211,6 @@ Simulations.Simulation = class {
     #compile() {
         this.#netList = NetList.identify(this.#circuit, true);
         this.#engine = this.#netList.compileSimulation(this.#app.config.debugCompileComments);
-        this.#started = false;
+        this.#dirty = false;
     }
 }

@@ -59,7 +59,7 @@ class Application {
         this.#startFocusMonitor();
         this.#startLogoMonitor();
         this.circuits.clear();
-        this.simulations.select(this.circuits.current).start();
+        this.simulations.select(this.circuits.current, this.config.autoCompile);
         // start simulation/render loop
         this.#renderLoop.renderLast = performance.now();
         requestAnimationFrame(() => this.#render());
@@ -135,7 +135,7 @@ class Application {
         requestAnimationFrame(() => this.#render());
         const sim = this.simulations.current;
         // after each circuit modification the simulation will not have been ticked yet and net-state won't be known. this causes a brief flickering each time the circuit changes, so we skip that single frame
-        if (!(sim && sim.running && !sim.started)) {
+        if (!sim || !sim.checkDirty()) {
             this.grid.render();
         }
         this.#renderLoop.framesCounted += 1;
@@ -170,16 +170,14 @@ class Application {
             fileMenuState(false);
             await this.circuits.loadFile(true);
             this.simulations.clear();
-            this.#maybeStartSimulation();
+            this.simulations.select(this.circuits.current, this.config.autoCompile);
             updateFileMenu();
             updateCircuitMenu();
         });
         let [ addButton ] = fileMenu.createActionButton('Open additional...', 'Load additional circuits from a file, keeping open circuits.', async () => {
             fileMenuState(false);
             await this.circuits.loadFile(false); // TODO don't switch to new circuit
-            if (this.config.autoCompile) {
-                this.simulations.select(this.circuits.current).start();
-            }
+            this.simulations.select(this.circuits.current, this.config.autoCompile);
             updateFileMenu();
             updateCircuitMenu();
         });
@@ -198,7 +196,7 @@ class Application {
             fileMenuState(false);
             this.circuits.closeFile();
             this.simulations.clear();
-            this.#maybeStartSimulation();
+            this.simulations.select(this.circuits.current, this.config.autoCompile);
             updateFileMenu();
             updateCircuitMenu();
         });
@@ -226,7 +224,7 @@ class Application {
             circuitMenu.createActionButton('New...', 'Create a new circuit.', async () => {
                 circuitMenuState(false);
                 if (await this.circuits.create()) {
-                    this.#maybeStartSimulation();
+                    this.simulations.select(this.circuits.current, this.config.autoCompile);
                 }
                 addButton.classList.remove('toolbar-menu-button-disabled');
                 updateCircuitMenu();
@@ -244,7 +242,7 @@ class Application {
                 let [ switchButton ] = circuitMenu.createActionButton(label, isCurrentCircuit ? 'This is the current circuit' : 'Switch grid to circuit "' + label + '".', () => {
                     circuitMenuState(false);
                     this.circuits.select(uid);
-                    this.#maybeStartSimulation();
+                    this.simulations.select(this.circuits.current, this.config.autoCompile);
                 });
                 switchButton.classList.add(!isCurrentGrid ? 'toolbar-circuit-select' : 'toolbar-circuit-select-fullrow');
                 switchButton.classList.toggle('toolbar-menu-button-disabled', isCurrentCircuit);
@@ -261,21 +259,13 @@ class Application {
             let toggleAction = () => {
                 const sim = this.simulations.current;
                 const isCurrent = this.circuits.current.uid === sim?.uid;
-                if (isCurrent && sim) {
-                    return sim.running ? 'stop' : (sim.started ? 'resume' : 'start');
-                } else {
-                    return 'new';
-                }
+                return isCurrent && sim ? 'stop' : 'start';
             };
             let toggleButtonText = (action) => {
                 if (action === 'start') {
-                    return `Start at "${this.simulations.current.label}"`;
-                } else if (action === 'resume') {
-                    return `Resume "${this.simulations.current.label}"`;
+                    return `Start at "${this.circuits.current.label}"`;
                 } else if (action === 'stop') {
                     return `Stop "${this.simulations.current.label}"`;
-                } else if (action === 'new') {
-                    return `Start at "${this.circuits.current.label}"`;
                 }
             };
             // Continuous simulation toggle
@@ -283,7 +273,7 @@ class Application {
                 this.config.autoCompile = enabled;
                 if (enabled) {
                     this.config.singleStep = false;
-                    this.simulations.select(this.circuits.current).start();
+                    this.simulations.select(this.circuits.current, this.config.autoCompile);
                 }
                 updateSimulationMenu();
             });
@@ -293,16 +283,19 @@ class Application {
                 let action = toggleAction();
                 if (action === 'stop') {
                     this.config.autoCompile = false;
-                    this.simulations.current.stop();
+                    if (this.simulations.current) {
+                        const circuit = this.circuits.byUID(this.simulations.current.uid);
+                        if (circuit) {
+                            this.simulations.delete(circuit);
+                        }
+                    }
+                    this.simulations.select(null);
                     // switch to whatever circuit was being viewed when the simulation ended
                     app.circuits.select(app.grid.circuit.uid);
                 } else if (action === 'resume' || action === 'start') {
                     // start will just resume if the simulation already exists
                     this.config.singleStep = false;
-                    this.simulations.current.start();
-                } else if (action === 'new') {
-                    // start new simulation for current circuit
-                    this.simulations.select(this.circuits.current).start();
+                    this.simulations.select(this.circuits.current, true);
                 }
             });
             // Simulate current grid
@@ -323,19 +316,10 @@ class Application {
                     simulationMenuState(false);
                     app.circuits.select(uid);
                     this.config.singleStep = false;
-                    this.simulations.select(this.circuits.current).start();
+                    this.simulations.select(this.circuits.current, this.config.autoCompile);
                 });
                 button.classList.toggle('toolbar-menu-button-disabled', isCurrent);
             }
-        }
-    }
-
-    // Starts a simulation for the current circuit if autocompile is enabled, otherwise unsets current simulation.
-    #maybeStartSimulation() {
-        if (this.config.autoCompile) {
-            this.simulations.select(this.circuits.current).start();
-        } else {
-            this.simulations.select(this.circuits.current, false);
         }
     }
 
