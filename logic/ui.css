@@ -588,11 +588,6 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
     transition: transform var(--component-rotate-duration);
     transform: rotate(90deg);
 }
-.component-rotate-animation span {
-    display: block;
-    transition: transform var(--component-rotate-duration);
-    transform: rotate(-90deg);
-}
 .component-delete-animation {
     transition: opacity var(--component-delete-duration);
     opacity: 0;
@@ -615,7 +610,7 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
     text-shadow: 1px 1px 2px black;
     font-size: var(--font-size-small);
 }
-.component .component-inner:hover, .component:has(.component-port:hover ) .component-inner {
+.component .component-inner:hover, .component:has(.component-port:hover) .component-inner {
     background-color: var(--component-body-hover-color);
     border-color: var(--component-border-hover-color);
     color: var(--text-color);
@@ -696,70 +691,70 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
 .component.port[data-net-state="0"] > .component-inner:has(+div[data-net-color="0"]) {
     outline-color: var(--wire-color0-low);
 }
-.component.port[data-net-state="1"] > .component-inner:has(+div[data-net-color="0"])  {
+.component.port[data-net-state="1"] > .component-inner:has(+div[data-net-color="0"]) {
     outline-color: var(--wire-color0-high);
     box-shadow: 1px 1px 3px var(--wire-color0-high-alpha), -1px -1px 3px var(--wire-color0-high-alpha);
 }
 .component.port[data-net-state="0"] > .component-inner:has(+div[data-net-color="1"]) {
     outline-color: var(--wire-color1-low);
 }
-.component.port[data-net-state="1"] > .component-inner:has(+div[data-net-color="1"])  {
+.component.port[data-net-state="1"] > .component-inner:has(+div[data-net-color="1"]) {
     outline-color: var(--wire-color1-high);
     box-shadow: 1px 1px 3px var(--wire-color1-high-alpha), -1px -1px 3px var(--wire-color1-high-alpha);
 }
 .component.port[data-net-state="0"] > .component-inner:has(+div[data-net-color="2"]) {
     outline-color: var(--wire-color2-low);
 }
-.component.port[data-net-state="1"] > .component-inner:has(+div[data-net-color="2"])  {
+.component.port[data-net-state="1"] > .component-inner:has(+div[data-net-color="2"]) {
     outline-color: var(--wire-color2-high);
     box-shadow: 1px 1px 3px var(--wire-color2-high-alpha), -1px -1px 3px var(--wire-color2-high-alpha);
 }
 .component.port[data-net-state="0"] > .component-inner:has(+div[data-net-color="3"]) {
     outline-color: var(--wire-color3-low);
 }
-.component.port[data-net-state="1"] > .component-inner:has(+div[data-net-color="3"])  {
+.component.port[data-net-state="1"] > .component-inner:has(+div[data-net-color="3"]) {
     outline-color: var(--wire-color3-high);
     box-shadow: 1px 1px 3px var(--wire-color3-high-alpha), -1px -1px 3px var(--wire-color3-high-alpha);
 }
 .component.port[data-net-state="0"] > .component-inner:has(+div[data-net-color="4"]) {
     outline-color: var(--wire-color4-low);
 }
-.component.port[data-net-state="1"] > .component-inner:has(+div[data-net-color="4"])  {
+.component.port[data-net-state="1"] > .component-inner:has(+div[data-net-color="4"]) {
     outline-color: var(--wire-color4-high);
     box-shadow: 1px 1px 3px var(--wire-color4-high-alpha), -1px -1px 3px var(--wire-color4-high-alpha);
 }
 .component.port[data-net-state="0"] > .component-inner:has(+div[data-net-color="5"]) {
     outline-color: var(--wire-color5-low);
 }
-.component.port[data-net-state="1"] > .component-inner:has(+div[data-net-color="5"])  {
+.component.port[data-net-state="1"] > .component-inner:has(+div[data-net-color="5"]) {
     outline-color: var(--wire-color5-high);
     box-shadow: 1px 1px 3px var(--wire-color5-high-alpha), -1px -1px 3px var(--wire-color5-high-alpha);
 }
 .component.port[data-net-state="0"] > .component-inner:has(+div[data-net-color="6"]) {
     outline-color: var(--wire-color6-low);
 }
-.component.port[data-net-state="1"] > .component-inner:has(+div[data-net-color="6"])  {
+.component.port[data-net-state="1"] > .component-inner:has(+div[data-net-color="6"]) {
     outline-color: var(--wire-color6-high);
     box-shadow: 1px 1px 3px var(--wire-color6-high-alpha), -1px -1px 3px var(--wire-color6-high-alpha);
 }
 .component.port[data-net-state="0"] > .component-inner:has(+div[data-net-color="7"]) {
     outline-color: var(--wire-color7-low);
 }
-.component.port[data-net-state="1"] > .component-inner:has(+div[data-net-color="7"])  {
+.component.port[data-net-state="1"] > .component-inner:has(+div[data-net-color="7"]) {
     outline-color: var(--wire-color7-high);
     box-shadow: 1px 1px 3px var(--wire-color7-high-alpha), -1px -1px 3px var(--wire-color7-high-alpha);
 }
 .component.port[data-net-state="0"] > .component-inner:has(+div[data-net-color="8"]) {
     outline-color: var(--wire-color8-low);
 }
-.component.port[data-net-state="1"] > .component-inner:has(+div[data-net-color="8"])  {
+.component.port[data-net-state="1"] > .component-inner:has(+div[data-net-color="8"]) {
     outline-color: var(--wire-color8-high);
     box-shadow: 1px 1px 3px var(--wire-color8-high-alpha), -1px -1px 3px var(--wire-color8-high-alpha);
 }
 .component.port[data-net-state="0"] > .component-inner:has(+div[data-net-color="9"]) {
     outline-color: var(--wire-color9-low);
 }
-.component.port[data-net-state="1"] > .component-inner:has(+div[data-net-color="9"])  {
+.component.port[data-net-state="1"] > .component-inner:has(+div[data-net-color="9"]) {
     outline-color: var(--wire-color9-high);
     box-shadow: 1px 1px 3px var(--wire-color9-high-alpha), -1px -1px 3px var(--wire-color9-high-alpha);
 }
