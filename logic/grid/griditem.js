@@ -301,7 +301,7 @@ class GridItem {
             this.grid.releaseHotkeyTarget(this);
         }
         // set the status message, if any
-        let message = this.#hoverMessages.get(element);
+        let message = !this.selected ? this.#hoverMessages.get(element) : '<b>Multiple items.</b> <i>LMB</i>: Drag to move, <i>R</i>: Rotate, <i>DEL</i>: Delete, <i>CTRL+C</i>: Copy, <i>CTRL+X</i>: Cut';
         if (message) {
             if (status === 'start') {
                 app.setStatus(message, false, this);
