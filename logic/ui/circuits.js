@@ -267,10 +267,11 @@ Circuits.Circuit = class {
         }
     }
 
-    // Attach a simulation to the circuit.
+    // Attach a simulation to the circuit. Also detaches previous simulation.
     attachSimulation(netList, subCircuitInstance) {
         assert.class(NetList, netList);
         assert.integer(subCircuitInstance);
+        this.detachSimulation();
         const tickListener = [];
         for (const net of netList.nets) {
             // collect list of interactive components in circuit
