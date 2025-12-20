@@ -27,21 +27,28 @@ class NetList {
     }
 
     // Compiles a simulation and returns it.
-    compileSimulation(debug = false) {
+    compileSimulation(rawMem, debug = false) {
+        assert.object(rawMem, true);
+        if (rawMem) {
+            assert.class(Uint8Array, rawMem.mem8);
+            assert.class(Int32Array, rawMem.mem32);
+        }
         assert.bool(debug);
-        let sim = new Simulation(debug);
+        const sim = new Simulation(debug);
         // declare gates from component map
         for (const [instance, { circuit }] of this.instances.entries()) {
-            for (let component of circuit.data.filter((i) => !(i instanceof Wire))) {
-                let suffix = '@' + component.gid + '@' + instance;
-                if (component instanceof Gate) { // TODO: exclude unconnected gates via netList.unconnected.ports when all gate ports are listed as unconnected
-                    sim.declareGate(component.type, component.inputs, component.output, suffix);
-                } else if (component instanceof Builtin) {
-                    sim.declareBuiltin(component.type, suffix);
-                } else if (component instanceof Clock) {
-                    sim.declareClock(component.frequency, app.config.targetTPS, true, suffix);
-                } else if (component instanceof PullResistor) {
-                    sim.declarePullResistor(component.direction, suffix);
+            for (const component of circuit.data.filter((i) => !(i instanceof Wire))) {
+                const suffix = '@' + component.gid + '@' + instance;
+                if (this.#isConnected(component, suffix)) {
+                    if (component instanceof Gate) {
+                        sim.declareGate(component.type, component.inputs, component.output, suffix);
+                    } else if (component instanceof Builtin) {
+                        sim.declareBuiltin(component.type, suffix);
+                    } else if (component instanceof Clock) {
+                        sim.declareClock(component.frequency, app.config.targetTPS, true, suffix);
+                    } else if (component instanceof PullResistor) {
+                        sim.declarePullResistor(component.direction, suffix);
+                    }
                 }
             }
         }
@@ -53,8 +60,15 @@ class NetList {
             net.netId = sim.declareNet(attachedPorts, interactiveComponents.map((p) => p.uniqueName));
         }
         // compile
-        sim.compile();
+        sim.compile(rawMem);
         return sim;
+    }
+
+    // Returns a hash of this netlist.
+    hash() {
+        // imagine this is a hash because I sure as heck am not going to use the idiocy that is subtle crypt's async digest function. holy hell WHY?!? next up async math operators or what?
+        // FIXME: this needs to be ordered, output order is currently unstable
+        return JSON.stringify(this.nets);
     }
 
     // Returns the netId of the given wire.
@@ -80,6 +94,19 @@ class NetList {
             }
         }
         return null;
+    }
+
+    // Returns whether the given component is connected to a net with at least one port.
+    #isConnected(component, suffix) {
+        let connected = false;
+        for (const port of component.getPorts()) {
+            const uniqueName = port.name + suffix;
+            if (!this.unconnected.ports.find((p) => p.uniqueName === uniqueName)) {
+                connected = true;
+                break;
+            }
+        }
+        return connected;
     }
 
     // Identifies nets on the grid and returns a NetList.

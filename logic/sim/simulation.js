@@ -129,13 +129,20 @@ class Simulation {
     }
 
     // Compiles the circuit and initializes memory, making it ready for simulate().
-    compile() {
+    compile(rawMem = null) {
+        assert.object(rawMem, true);
+        if (rawMem) {
+            assert.class(Uint8Array, rawMem.mem8);
+            assert.class(Int32Array, rawMem.mem32);
+        }
         this.#compileFunction();
-        this.#mem8 = new Uint8Array(this.#alloc8Base);
-        this.#mem32 = new Int32Array(this.#alloc32Base);
-        for (const clock of this.#clocks) {
-            const ticks = Simulation.#computeClockTicks(clock.tps, clock.frequency);
-            this.#mem32[clock.offset] = ticks + 2; // clean up first clock cycle (clock triggers on 0 but counter resets at -1)
+        this.#mem8 = rawMem?.mem8 ?? new Uint8Array(this.#alloc8Base);
+        this.#mem32 = rawMem?.mem32 ?? new Int32Array(this.#alloc32Base);
+        if (!rawMem?.mem32) {
+            for (const clock of this.#clocks) {
+                const ticks = Simulation.#computeClockTicks(clock.tps, clock.frequency);
+                this.#mem32[clock.offset] = ticks + 2; // clean up first clock cycle (clock triggers on 0 but counter resets at -1)
+            }
         }
     }
 
@@ -193,6 +200,11 @@ class Simulation {
         const offset = this.#getNet(index).offset;
         const value = this.#mem8[offset];
         return value & (1 << Simulation.MAX_DELAY) ? value & 1 : null;
+    }
+
+    // Returns raw simulation memory. // TODO: rename to mem, rename code&mem to debugCode/Mem
+    rawMem() {
+        return { mem8: this.#mem8, mem32: this.#mem32 };
     }
 
     // Returns code of the simulation for debugging purposes.

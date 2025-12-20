@@ -100,6 +100,7 @@ Simulations.Simulation = class {
     #instance = 0;
     #dirty = true;
     #attached = false;
+    #netListHash;
 
     constructor(app, circuit) {
         assert.class(Application, app);
@@ -210,7 +211,10 @@ Simulations.Simulation = class {
     // Compiles the simulation.
     #compile() {
         this.#netList = NetList.identify(this.#circuit, true);
-        this.#engine = this.#netList.compileSimulation(this.#app.config.debugCompileComments);
+        const newHash = this.#netList.hash();
+        const retainMemory = this.#engine && this.#netListHash === newHash;
+        this.#engine = this.#netList.compileSimulation(retainMemory ? this.#engine.rawMem() : null, this.#app.config.debugCompileComments);
+        this.#netListHash = newHash;
         this.#dirty = false;
     }
 }
