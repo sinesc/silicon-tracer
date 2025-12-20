@@ -615,7 +615,7 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
     text-shadow: 1px 1px 2px black;
     font-size: var(--font-size-small);
 }
-.component .component-inner:hover  {
+.component .component-inner:hover, .component:has(.component-port:hover ) .component-inner {
     background-color: var(--component-body-hover-color);
     border-color: var(--component-border-hover-color);
     color: var(--text-color);
@@ -662,6 +662,9 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
 }
 .grid-zoom-below-125 .component-port-label {
     display: none;
+}
+.component:hover {
+    z-index: 12; /* required for labels to pop over other components */
 }
 .component:hover .component-port-label {
     opacity: 1;
