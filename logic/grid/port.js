@@ -97,11 +97,9 @@ class Port extends Interactive {
 
     // Renders the port onto the grid.
     render() {
-        if (this.element.classList.contains('component-rotate-animation')) {
-            return;
+        if (!super.render()) {
+            return false;
         }
-
-        super.render();
 
         // render permanently visible label
         let side = ComponentPort.portSide(this.rotation, 'bottom');
@@ -110,6 +108,8 @@ class Port extends Interactive {
 
         // render user-set state (lightbulb/circle thing)
         this.element.setAttribute('data-port-state', this.#state ?? '');
+
+        return true;
     }
 
     // Renders/updates the current net state of the wire to the grid.

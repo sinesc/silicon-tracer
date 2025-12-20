@@ -181,6 +181,10 @@ class Wire extends GridItem {
     // Renders the connection onto the grid.
     render() {
 
+        if (!super.render()) {
+            return false;
+        }
+
         let thickness = Wire.THICKNESS * this.grid.zoom;
         let v = this.visual;
         let t = thickness / 2;
@@ -206,6 +210,8 @@ class Wire extends GridItem {
         } else {
             this.#element.style.display = 'none';
         }
+
+        return true;
     }
 
     // Renders/updates the current net state of the wire to the grid.

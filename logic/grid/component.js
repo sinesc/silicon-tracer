@@ -268,8 +268,8 @@ class Component extends GridItem {
             this.rotation += 1;
             this.#element.classList.add('component-rotate-animation');
             setTimeout(() => {
-                this.#element.classList.remove('component-rotate-animation');
-                this.redraw();
+                // queue class removal for next render call to avoid brief flickering
+                this.redraw(() => this.#element.classList.remove('component-rotate-animation'));
             }, 150);
             return true;
         } else if (key === 'Delete' && what.type === 'hover') {
@@ -387,8 +387,12 @@ class Component extends GridItem {
     // Renders the component onto the grid.
     render() {
 
+        if (!super.render()) {
+            return false;
+        }
+
         if (this.#element.classList.contains('component-rotate-animation')) {
-            return;
+            return false;
         }
 
         // don't need to update ports when only moving
@@ -410,6 +414,8 @@ class Component extends GridItem {
             this.#inner.style.lineHeight = (v.height - (Component.INNER_MARGIN * 2)) + "px";
             this.#inner.style.writingMode = 'horizontal-tb';
         }
+
+        return true;
     }
 
     // Renders a label next to a port.

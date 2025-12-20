@@ -19,6 +19,9 @@ class GridItem {
     // Registered hover messages, Map(element => message).
     #hoverMessages;
 
+    // List of functions to call once before the next render.
+    #beforeRender = [];
+
     constructor(x, y) {
         assert.number(x);
         assert.number(y);
@@ -92,13 +95,24 @@ class GridItem {
     detachSimulation() { }
 
     // Implement to render the item to the grid.
-    render() { }
+    render() {
+        if (this.#beforeRender.length > 0) {
+            for (const func of this.#beforeRender) {
+                func();
+            }
+            this.#beforeRender = [];
+        }
+        return true;
+    }
 
     // Implement to render the net-state of the item to the grid.
     renderNetState() { }
 
     // Call after the grid item is modified to ensure the component is fully redrawn and the simulation is updated.
-    redraw() {
+    redraw(beforeRender) {
+        if (beforeRender) {
+            this.#beforeRender.push(beforeRender);
+        }
         app.simulations.markDirty(this.grid.circuit);
         this.dirty = true;
     }
