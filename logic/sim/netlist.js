@@ -27,14 +27,14 @@ class NetList {
     }
 
     // Compiles a simulation and returns it.
-    compileSimulation(rawMem, debug = false) {
+    compileSimulation(rawMem, debug, checkNetConflicts) {
         assert.object(rawMem, true);
         if (rawMem) {
             assert.class(Uint8Array, rawMem.mem8);
             assert.class(Int32Array, rawMem.mem32);
         }
         assert.bool(debug);
-        const sim = new Simulation(debug);
+        const sim = new Simulation(debug, checkNetConflicts);
         // declare gates from component map
         for (const [instance, { circuit }] of this.instances.entries()) {
             for (const component of circuit.data.filter((i) => !(i instanceof Wire))) {

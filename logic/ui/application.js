@@ -7,6 +7,7 @@ class Application {
         targetTPS: 10000,
         autoCompile: true,
         singleStep: false,
+        checkNetConflicts: false,
         debugCompileComments: false,
         debugShowGid: false,
         debugShowCoords: false,
@@ -274,6 +275,15 @@ class Application {
                 if (enabled) {
                     this.config.singleStep = false;
                     this.simulations.select(this.circuits.current, this.config.autoCompile);
+                }
+                updateSimulationMenu();
+            });
+            simulationMenu.createToggleButton('Check net conflicts', 'Networks with multiple active gate outputs will be highlighted.', this.config.checkNetConflicts, (enabled) => {
+                this.config.checkNetConflicts = enabled;
+                if (enabled) {
+                    this.config.singleStep = false;
+                    this.simulations.markDirty(null)
+                    this.simulations.select(this.circuits.current, true);
                 }
                 updateSimulationMenu();
             });

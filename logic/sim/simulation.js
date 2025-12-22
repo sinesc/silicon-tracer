@@ -26,7 +26,8 @@ class Simulation {
         'not3' : { dataTpl: '~data', signalTpl: 'enable', inputs: [ 'enable', 'data' ], output: 'q', statsGates: 1 },
     }
 
-    #debug = false;
+    #debug;
+    #checkConflict;
     #ioMap = new Map();
     #nets = [];
     #gates = [];
@@ -37,9 +38,11 @@ class Simulation {
     #mem8;
     #mem32;
 
-    constructor(debug = false) {
+    constructor(debug = false, checkConflict = false) {
         assert.bool(debug);
+        assert.bool(checkConflict);
         this.#debug = debug;
+        this.#checkConflict = checkConflict;
     }
 
     // Declares a net (which inputs/outputs are connected) and returns the net-index. Attached IO-names must include their suffixes. Meta can be any custom data.
@@ -197,12 +200,12 @@ class Simulation {
         this.#mem8[offset] = ((value !== null) << Simulation.MAX_DELAY) | value;
     }
 
-    // Gets the value of a net in the simulation.
+    // Gets the value of a net in the simulation. null indicates there is no signal, -1 a signal conflict, 0/1 normal state.
     getNetValue(index) {
         assert.integer(index);
         const offset = this.#getNet(index).offset;
         const value = this.#mem8[offset];
-        return value & (1 << Simulation.MAX_DELAY) ? value & 1 : null;
+        return (value & (1 << (Simulation.MAX_DELAY + 1))) ? -1 : (value & (1 << Simulation.MAX_DELAY) ? value & 1 : null);
     }
 
     // Returns raw simulation memory. // TODO: rename to mem, rename code&mem to debugCode/Mem
@@ -351,6 +354,9 @@ class Simulation {
         } else {
             code += `mask = ${maskCode}; `;
             code += `${netMem} = (${netMem} & ~mask) | (${outputMem} & mask)`;      // apply io-data/signal to net if OUTPUT signal is set
+            if (this.#checkConflict) {
+                code += ` | ((${netMem} & ${outputMem} & ${signalMask}) << 1)`;
+            }
         }
         return code;
     }

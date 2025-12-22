@@ -73,10 +73,11 @@ class Simulations {
         }
     }
 
-    // Marks the given circuit as modified causing simulations that include it to be recompiled.
+    // Marks the given circuit (or all circuits if null) as modified causing simulations that include it to be recompiled.
     markDirty(circuit) {
+        assert.class(Circuits.Circuit, circuit, true);
         for (let simulation of values(this.#simulations)) {
-            if (simulation.includes(circuit)) {
+            if (circuit === null || simulation.includes(circuit)) {
                 simulation.markDirty();
             }
         }
@@ -213,7 +214,7 @@ Simulations.Simulation = class {
         this.#netList = NetList.identify(this.#circuit, true);
         const newHash = this.#netList.hash();
         const retainMemory = this.#engine && this.#netListHash === newHash;
-        this.#engine = this.#netList.compileSimulation(retainMemory ? this.#engine.rawMem() : null, this.#app.config.debugCompileComments);
+        this.#engine = this.#netList.compileSimulation(retainMemory ? this.#engine.rawMem() : null, this.#app.config.debugCompileComments, this.#app.config.checkNetConflicts);
         this.#netListHash = newHash;
         this.#dirty = false;
     }
