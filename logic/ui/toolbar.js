@@ -34,6 +34,9 @@ class Toolbar {
 
     // Creates a button that can be dragged onto the grid.
     createComponentButton(label, hoverMessage, create) {
+        assert.string(label);
+        assert.string(hoverMessage);
+        assert.function(create);
         let button = document.createElement('div');
         button.innerHTML = label;
         button.classList.add('toolbar-button', 'toolbar-component-button');
@@ -54,6 +57,9 @@ class Toolbar {
 
     // Creates a button that can be clicked to trigger an action.
     createActionButton(label, hoverMessage, action) {
+        assert.string(label);
+        assert.string(hoverMessage);
+        assert.function(action);
         let button = document.createElement('div');
         button.innerHTML = label;
         button.classList.add('toolbar-button', 'toolbar-action-button');
@@ -72,6 +78,10 @@ class Toolbar {
 
     // Creates a button that can be toggled on or off. Returns a function that sets/returns the current button state.
     createToggleButton(label, hoverMessage, defaultState, action) {
+        assert.string(label);
+        assert.string(hoverMessage);
+        assert.bool(defaultState);
+        assert.function(action);
         let [ button, stateFn ] = this.#createToggleButton(label, hoverMessage, defaultState, action);
         this.#element.appendChild(button);
         return [ button, stateFn ];
@@ -80,6 +90,9 @@ class Toolbar {
     // Creates a menu-button to open/close a sub-toolbar acting as a menu. Returns a new toolbar
     // as well as a state function to get/set the menu state.
     createMenuButton(label, hoverMessage, openAction) {
+        assert.string(label);
+        assert.string(hoverMessage);
+        assert.function(openAction);
         let subToolbarContainer = document.createElement('div');
         subToolbarContainer.classList.add('toolbar-menu-container');
         let [ button, stateFn ] = this.#createToggleButton(label, hoverMessage, false, (open) => {
