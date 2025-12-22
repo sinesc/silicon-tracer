@@ -134,6 +134,8 @@ class Simulation {
         if (rawMem) {
             assert.class(Uint8Array, rawMem.mem8);
             assert.class(Int32Array, rawMem.mem32);
+            assert(rawMem.mem8.length === this.#alloc8Base, 'incompatible u8 memory size');
+            assert(rawMem.mem32.length === this.#alloc32Base, 'incompatible i32 memory size');
         }
         this.#compileFunction();
         this.#mem8 = rawMem?.mem8 ?? new Uint8Array(this.#alloc8Base);

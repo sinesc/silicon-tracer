@@ -275,7 +275,7 @@ Circuits.Circuit = class {
         const tickListener = [];
         for (const net of netList.nets) {
             // collect list of interactive components in circuit
-            let interactiveComponents = net.ports.map((p) => ({ portName: p.name, component: this.itemByGID(p.gid) })).filter((p) => p.component instanceof Interactive /*&& p.component.instance === subCircuitInstance */);
+            let interactiveComponents = net.ports.map((p) => ({ portName: p.name, component: this.itemByGID(p.gid) })).filter((p) => p.component instanceof Interactive);
             tickListener.push(...interactiveComponents);
             // link ports on components
             for (const { name, gid, instance } of net.ports) {
@@ -297,7 +297,7 @@ Circuits.Circuit = class {
                 }
             }
         }
-        // link circuits inside custom components to their corresponding simulation instance
+        // set simulation instance on custom components to allow for "zooming"/navigating into the correct instance of the circuit they represent
         for (const [ gid, instance ] of Object.entries(netList.instances[subCircuitInstance].subInstances)) {
             const component = this.itemByGID(gid);
             if (component) {
