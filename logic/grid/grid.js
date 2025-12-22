@@ -376,17 +376,32 @@ class Grid {
     }
 
     // Called when a key is pressed and then repeatedly while being held.
-    #handleKeyDown(e) {
+    async #handleKeyDown(e) {
         const sim = this.#app.simulations.current;
-        if (this.selection.length > 0) {
+        if (e.ctrlKey && e.key === 'v') {
+            // check paste hotkey before item hotkeys
+            const serialized = JSON.parse(await navigator.clipboard.readText());
+            const items = serialized.map((item) => GridItem.unserialize(item));
+            for (let item of items) {
+                this.addItem(item);
+                item.selected = true;
+            }
+            this.#selection = items;
+            this.#app.simulations.markDirty(this.#circuit);
+        } else if (this.#selection.length > 0) {
             // check selection hotkeys before item hotkeys
-            if (e.key === 'Delete' || e.ctrlKey && [ 'x', 'c', 'v' ].includes(e.key)) {
+            if (e.key === 'Delete' || (e.ctrlKey && [ 'x', 'c' ].includes(e.key))) {
                 // CTRL+C/X/V checked before hotkey target specific keys
-                this.#circuit.detachSimulation();
-                for (const item of this.selection) {
-                    this.removeItem(item, false);
+                if (e.key === 'c' || e.key === 'x') {
+                    await navigator.clipboard.writeText(JSON.stringify(this.#selection.map((item) => item.serialize())));
                 }
-                this.#app.simulations.markDirty(this.#circuit);
+                if (e.key === 'Delete' || e.key === 'x') {
+                    this.#circuit.detachSimulation();
+                    for (const item of this.#selection) {
+                        this.removeItem(item, false);
+                    }
+                    this.#app.simulations.markDirty(this.#circuit);
+                }
             }
         } else if (this.#hotkeyTarget) {
             // handle target specific hotkeys
