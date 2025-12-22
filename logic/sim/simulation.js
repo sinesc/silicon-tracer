@@ -6,6 +6,7 @@ class Simulation {
     static DEFAULT_DELAY = 1;
     static ARRAY_BITS = 8;
     static MAX_DELAY = Simulation.ARRAY_BITS / 2;
+    static OPTIMIZE_0TICK_INPUTS = true;
 
     static GATE_MAP = {
         'buffer': { negIn: false, negOut: false, joinOp: null },
@@ -267,8 +268,7 @@ class Simulation {
             const clearMask = this.#compileDelayMask(inputDelay);
             return `${inputMem} = ((${inputMem} >> 1) & ${clearMask}) | (${netMem} << ${inputDelay})`;
         } else {
-            // 0 delay path, not much to do
-            // TODO: 0-tick-input: skip this, have gate read straight from net instead
+            // 0 delay path, not much to do (note: never used if OPTIMIZE_0TICK_INPUTS is true)
             return `${inputMem} = ${netMem}`;
         }
     }
@@ -359,27 +359,39 @@ class Simulation {
     #compileTick() {
         let result = ''
         // copy net-state to connected ports
-        for (const [ netIndex, net ] of this.#nets.entries()) {
+        const directNetIO = new Map();
+        for (const [ netIndex, net ] of pairs(this.#nets)) {
             for (const name of net.io) {
-                if (this.#getIO(name).in) {
-                    // TODO 0-tick-input: skip this
-                    result += this.#compileNetToInput(name, netIndex) + this.#endl('tick and set ' + name + ' from net ' + netIndex);
+                const io = this.#getIO(name);
+                if (io.in) {
+                    // skip 0-tick inputs: we modify ioReplacements to have these directly read from the net
+                    if (Simulation.OPTIMIZE_0TICK_INPUTS && io.delay === 0) {
+                        directNetIO.set(name, netIndex);
+                    } else if (io.delay > 0) {
+                        result += this.#compileNetToInput(name, netIndex) + this.#endl('tick and set ' + name + ' from net ' + netIndex);
+                    }
                 }
             }
         }
         // process inputs using defined gates
         const ioReplacements = { };
-        for (const [ name ] of this.#ioMap) {
-            ioReplacements[name] = this.#compileIOAccess(name); // TODO: 0-tick-input: generate net-access instead of io-access
+        for (const [ name, io ] of pairs(this.#ioMap)) {
+            const netIndex = directNetIO.get(name);
+            // skip 0-tick inputs: if this input is in the list of 0-tick inputs replace input with net access
+            if (netIndex !== undefined) {
+                ioReplacements[name] = this.#compileNetAccess(netIndex);
+            } else {
+                ioReplacements[name] = this.#compileIOAccess(name);
+            }
         }
-        for (const [ clockIndex, clock ] of this.#clocks.entries()) {
+        for (const [ clockIndex, clock ] of pairs(this.#clocks)) {
             result += this.#compileClock(clockIndex, ioReplacements) + this.#endl('clock ' + clock.output, true);
         }
-        for (const [ gateIndex, gate ] of this.#gates.entries()) {
+        for (const [ gateIndex, gate ] of pairs(this.#gates)) {
             result += this.#compileGate(gateIndex, ioReplacements) + this.#endl('compute ' + gate.dataTpl, true);
         }
         // copy port-state to attached net
-        for (const [ netIndex, net ] of this.#nets.entries()) {
+        for (const [ netIndex, net ] of pairs(this.#nets)) {
             // write normal outputs to nets, also have first write just reset it (less code)
             let resetNet = true;
             for (const name of net.io ) {
@@ -389,7 +401,7 @@ class Simulation {
                 }
             }
             // write resistor output to nets (these only write if the net has no signal)
-            for (const name of net.io ) {
+            for (const name of values(net.io)) {
                 let pull = this.#getIO(name).pull;
                 if (pull !== null) {
                     result += this.#compileResistorToNet(netIndex, name) + this.#endl('pull net ' + netIndex + (pull ? 'up' : 'down') + ' from ' + name);
