@@ -7,7 +7,7 @@ class Application {
         targetTPS: 10000,
         autoCompile: true,
         singleStep: false,
-        checkNetConflicts: false,
+        checkNetConflicts: true,
         debugCompileComments: false,
         debugShowGid: false,
         debugShowCoords: false,
@@ -138,6 +138,9 @@ class Application {
         // after each circuit modification the simulation will not have been ticked yet and net-state won't be known. this causes a brief flickering each time the circuit changes, so we skip that single frame
         if (!sim || !sim.checkDirty()) {
             this.grid.render();
+        }
+        if (sim) {
+            this.grid.setCircuitDetails(`Gates: ${sim.stats.gates}<br>Nets: ${sim.stats.nets}`);
         }
         this.#renderLoop.framesCounted += 1;
         // handle both TPS smaller or larger than FPS
@@ -280,10 +283,9 @@ class Application {
             });
             simulationMenu.createToggleButton('Check net conflicts', 'Networks with multiple active gate outputs will be highlighted.', this.config.checkNetConflicts, (enabled) => {
                 this.config.checkNetConflicts = enabled;
+                this.simulations.markDirty(null)
                 if (enabled) {
-                    this.config.singleStep = false;
-                    this.simulations.markDirty(null)
-                    this.simulations.select(this.circuits.current, true);
+                    this.simulations.select(this.circuits.current, this.config.autoCompile);
                 }
                 updateSimulationMenu();
             });

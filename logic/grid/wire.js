@@ -134,14 +134,14 @@ class Wire extends GridItem {
             for (let netWire of netList.nets[myNetId].wires) {
                 this.grid.circuit.itemByGID(netWire.gid).color = color;
             }
-            this.grid.markDirty(true);
+            this.grid.markDirty();
             return true;
         } else if (key === 'Delete' && what.type === 'hover') {
             this.#element.classList.add('wire-delete-animation');
             setTimeout(() => {
                 if (this.#element) { // deletion might already be in progress
                     this.#element.classList.remove('wire-delete-animation');
-                    this.grid.markDirty(true);
+                    this.grid.markDirty();
                     this.grid.removeItem(this);
                 }
             }, 150);

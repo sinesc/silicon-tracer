@@ -90,8 +90,13 @@ class Grid {
         this.#circuit = circuit;
         this.#circuit.link(this);
         this.#infoBox.circuitLabel = circuit.label;
-        this.#updateCircuitDetails();
         this.#dirty |= Grid.DIRTY_INNER | Grid.DIRTY_OUTER | Grid.DIRTY_OVERLAY;
+    }
+
+    // Update circuit details in infobox.
+    setCircuitDetails(details) {
+        this.#dirty |= this.#infoBox.circuitDetails !== details ? Grid.DIRTY_OVERLAY : 0;
+        this.#infoBox.circuitDetails = details;
     }
 
     // Sets the simulation label displayed on the grid.
@@ -116,7 +121,6 @@ class Grid {
         if (restart) {
             this.#app.simulations.markDirty(this.#circuit);
         }
-        this.#updateCircuitDetails();
         return item;
     }
 
@@ -130,7 +134,6 @@ class Grid {
         if (restart) {
             this.#app.simulations.markDirty(this.#circuit);
         }
-        this.#updateCircuitDetails();
         return item;
     }
 
@@ -261,10 +264,9 @@ class Grid {
         }
     }
 
-    // Mark grid as dirty (require redraw). Set inner to also redraw component inner elements.
-    markDirty(inner = false) {
-        assert.bool(inner);
-        this.#dirty |= inner ? Grid.DIRTY_INNER : Grid.DIRTY_OUTER;
+    // Mark grid as dirty (require redraw).
+    markDirty() {
+        this.#dirty |= Grid.DIRTY_INNER | Grid.DIRTY_OUTER;
     }
 
     // Returns the grids default status message.
@@ -371,30 +373,6 @@ class Grid {
             let portName = port.name;
             component.portByName(portName).color = null;
         }
-    }
-
-    // Computes circuit statistics
-    #computeCircuitStats() {
-        let gates = 0;
-        const netList = NetList.identify(this.#circuit, true);
-        for (const instance of values(netList.instances)) {
-            for (const item of values(instance.circuit.data)) {
-                if (item instanceof Gate) {
-                    gates += 1;
-                } else if (item instanceof Builtin) {
-                    gates += item.gates;
-                }
-            }
-        }
-        return { nets: netList.nets.length, gates };
-    }
-
-    // Update circuit details in infobox.
-    #updateCircuitDetails() {
-        const stats = this.#computeCircuitStats();
-        const prevDetails = this.#infoBox.circuitDetails;
-        this.#infoBox.circuitDetails = `Gates: ${stats.gates}<br>Nets: ${stats.nets}`;
-        this.#dirty |= this.#infoBox.circuitDetails !== prevDetails ? Grid.DIRTY_OVERLAY : 0;
     }
 
     // Called when a key is pressed and then repeatedly while being held.

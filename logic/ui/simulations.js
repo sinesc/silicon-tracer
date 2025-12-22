@@ -102,6 +102,7 @@ Simulations.Simulation = class {
     #dirty = true;
     #attached = false;
     #netListHash;
+    #stats;
 
     constructor(app, circuit) {
         assert.class(Application, app);
@@ -144,6 +145,11 @@ Simulations.Simulation = class {
 
     get attached() {
         return this.#attached;
+    }
+
+    // Returns circuit stats.
+    get stats() {
+        return this.#stats;
     }
 
     // Marks the simulation as modified and in need of a recompilation.
@@ -214,8 +220,26 @@ Simulations.Simulation = class {
         this.#netList = NetList.identify(this.#circuit, true);
         const newHash = this.#netList.hash();
         const retainMemory = this.#engine && this.#netListHash === newHash;
+        if (!retainMemory) {
+            this.#computeCircuitStats()
+        }
         this.#engine = this.#netList.compileSimulation(retainMemory ? this.#engine.rawMem() : null, this.#app.config.debugCompileComments, this.#app.config.checkNetConflicts);
         this.#netListHash = newHash;
         this.#dirty = false;
+    }
+
+    // Computes circuit statistics
+    #computeCircuitStats() {
+        let gates = 0;
+        for (const instance of values(this.#netList.instances)) {
+            for (const item of values(instance.circuit.data)) {
+                if (item instanceof Gate) {
+                    gates += 1;
+                } else if (item instanceof Builtin) {
+                    gates += item.gates;
+                }
+            }
+        }
+        this.#stats = { nets: this.#netList.nets.length, gates };
     }
 }
