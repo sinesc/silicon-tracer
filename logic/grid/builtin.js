@@ -8,7 +8,7 @@ class Builtin extends Component {
     ];
 
     inputs;
-    output;
+    outputs;
     gates;
 
     constructor(x, y, type) {
@@ -16,7 +16,8 @@ class Builtin extends Component {
         // override inputs if gate requires it
         const inputs = Simulation.BUILTIN_MAP[type].inputs;
         const numInputs = inputs.length;
-        const output = Simulation.BUILTIN_MAP[type].output;
+        const outputs = Object.keys(Simulation.BUILTIN_MAP[type].outputs);
+        const numOutputs = outputs.length;
 
         // compute blank spots for symmetry
         let blankAfter = -1;
@@ -26,8 +27,6 @@ class Builtin extends Component {
             blankAfter = numInputs / 2 - 1;
             numSlots += 1;
         }
-
-        const outputAt = (numSlots - 1) / 2;
 
         // inputs
         const left = [];
@@ -40,14 +39,24 @@ class Builtin extends Component {
 
         // output
         const right = [];
-        for (let i = 0; i < numSlots; ++i) {
-            right.push(i === outputAt ? output : null);
+        if (numOutputs === 1) {
+            const outputAt = (numSlots - 1) / 2;
+            for (let i = 0; i < numSlots; ++i) {
+                right.push(i === outputAt ? outputs[0] : null);
+            }
+        } else {
+            for (let i = 0; i < numOutputs; ++i) {
+                right.push(outputs[i]);
+                if (i === blankAfter) {
+                    right.push(null);
+                }
+            }
         }
 
         super(x, y, { 'left': left, 'right': right }, type);
 
         this.inputs = inputs;
-        this.output = output;
+        this.outputs = outputs;
         this.gates = Simulation.BUILTIN_MAP[type].statsGates;
     }
 

@@ -20,10 +20,11 @@ class Simulation {
     };
 
     static BUILTIN_MAP = {
-        'latch' : { dataTpl: '(load & data) | (~load & q)', inputs: [ 'load', 'data' ], output: 'q', statsGates: 4  },
-        'flipflop' : { dataTpl: '(+clock & data) | (~+clock & q)', inputs: [ 'clock', 'data' ], output: 'q', statsGates: 6 },
-        'buffer3' : { dataTpl: 'data', signalTpl: 'enable', inputs: [ 'enable', 'data' ], output: 'q', statsGates: 1 },
-        'not3' : { dataTpl: '~data', signalTpl: 'enable', inputs: [ 'enable', 'data' ], output: 'q', statsGates: 1 },
+        'latch'     : { outputs: { q: '(load & data) | (~load & q)' }, inputs: [ 'load', 'data' ], statsGates: 4  },
+        'flipflop'  : { outputs: { q: '(+clock & data) | (~+clock & q)' }, inputs: [ 'clock', 'data' ], statsGates: 6 },
+        'buffer3'   : { outputs: { q: 'data' }, signals: { q: 'enable' }, inputs: [ 'enable', 'data' ], statsGates: 1 },
+        'not3'      : { outputs: { q: '~data' }, signals: { q: 'enable' }, inputs: [ 'enable', 'data' ], statsGates: 1 },
+        'adder'     : { outputs: { q: '(a ^ b) ^ cIn', cOut: '((a ^ b) & cIn) | (a & b)' }, inputs: [ 'a', 'b', 'cIn' ], statsGates: 5  },
     }
 
     #debug;
@@ -78,15 +79,20 @@ class Simulation {
                 return name;
             }
         };
-        const dataTpl = rules.dataTpl.replace(/(\+|\-|\b)([a-z]+)\b/g, replacer);
-        const signalTpl = (rules.signalTpl ?? '').replace(/(\+|\-|\b)([a-z]+)\b/g, replacer);
         const inputs = rules.inputs.map((i) => i + suffix);
-        const output = rules.output + suffix;
-        this.#gates.push({ inputs, output, dataTpl, signalTpl });
-        for (const input of inputs) {
+        const outputs = { };
+        const signals = { };
+        for (const [ name, eq ] of pairs(rules.outputs)) {
+            outputs[name + suffix] = eq.replace(/(\+|\-|\b)([a-z]+)\b/gi, replacer);
+            signals[name + suffix] = ((rules.signals ?? { })[name] ?? '').replace(/(\+|\-|\b)([a-z]+)\b/gi, replacer);
+        }
+        this.#gates.push({ inputs, outputs, signals, type });
+        for (const input of values(inputs)) {
             this.#declareIO(input, 'i', delay ?? Simulation.DEFAULT_DELAY);
         }
-        this.#declareIO(output, 'o', 0);
+        for (const output of keys(outputs)) {
+            this.#declareIO(output, 'o', 0);
+        }
         return this.#gates.length - 1;
     }
 
@@ -115,9 +121,11 @@ class Simulation {
         const inputs = inputNames.map((i) => i + suffix);
         const output = outputName + suffix;
         const inner = inputs.map((v) => (rules.negIn ? '(~' + v + ')' : v)).join(' ' + rules.joinOp + ' ');
-        const dataTpl = rules.negOut ? '(~(' + inner + '))' : inner;
-        const signalTpl = '';
-        this.#gates.push({ inputs, output, dataTpl, signalTpl });
+        const outputs = { };
+        outputs[output] = rules.negOut ? '(~(' + inner + '))' : inner;
+        const signals = { };
+        signals[output] = '';
+        this.#gates.push({ inputs, outputs, signals, type });
         for (const input of inputs) {
             this.#declareIO(input, 'i', 0);
         }
@@ -249,7 +257,7 @@ class Simulation {
         assert.string(name);
         assert.string(type);
         assert.integer(delay, true);
-        if (!/^[a-z_][a-z0-9_@]*$/.test(name)) {
+        if (!/^[a-z_][a-z0-9_@]*$/i.test(name)) {
             throw new Error('Invalid io name "' + name + '"');
         }
         this.#ioMap.set(name, {
@@ -291,40 +299,44 @@ class Simulation {
     // Compiles a gate reading from one or more inputs and writing to an output.
     #compileGate(gateIndex, ioReplacements) {
         const gate = this.#gates[gateIndex];
-        const outputDelay = this.#getIO(gate.output).delay;
-        const dataOp = gate.dataTpl.replace(/\b[a-z_][a-z0-9_@]*\b/g, (match) => ioReplacements[match] ?? 'error');
-        const signalOp = gate.signalTpl.replace(/\b[a-z_][a-z0-9_@]*\b/g, (match) => ioReplacements[match] ?? 'error');
-        const outputMem = this.#compileIOAccess(gate.output);
-        let computeSignal;
-        if (outputDelay > 0) {
-            // perform signal computation, if required, otherwise just set the newest signal bit slot
-            const signalShift = Simulation.MAX_DELAY + outputDelay;
-            const signalBit = this.#compileConst(1 << signalShift);
-            if (signalOp !== '') {
-                // perform signal computation, then shift result into newest signal bit slot
-                computeSignal = `((${signalOp}) << ${signalShift}) & ${signalBit}`;
+        let result = [];
+        for (const name of keys(gate.outputs)) {
+            const outputDelay = this.#getIO(name).delay;
+            const dataOp = gate.outputs[name].replace(/\b[a-z_][a-z0-9_@]*\b/gi, (match) => ioReplacements[match] ?? 'error');
+            const signalOp = gate.signals[name].replace(/\b[a-z_][a-z0-9_@]*\b/gi, (match) => ioReplacements[match] ?? 'error');
+            const outputMem = this.#compileIOAccess(name);
+            let computeSignal;
+            if (outputDelay > 0) {
+                // perform signal computation, if required, otherwise just set the newest signal bit slot
+                const signalShift = Simulation.MAX_DELAY + outputDelay;
+                const signalBit = this.#compileConst(1 << signalShift);
+                if (signalOp !== '') {
+                    // perform signal computation, then shift result into newest signal bit slot
+                    computeSignal = `((${signalOp}) << ${signalShift}) & ${signalBit}`;
+                } else {
+                    computeSignal = `${signalBit}`;
+                }
+                // perform data computation, then shift result into newest data bit slot and join both result parts
+                const dataShift = outputDelay;
+                const dataBit = this.#compileConst(1 << dataShift);
+                const computeData = `((${dataOp}) << ${dataShift}) & ${dataBit}`;
+                // unset previously newest signal and data bits and replace with newly computed ones, write back
+                const clearMask = this.#compileDelayMask(outputDelay);
+                result.push(`${outputMem} = ((${outputMem} >> 1) & ${clearMask}) | ((${computeSignal}) | (${computeData}))`);
             } else {
-                computeSignal = `${signalBit}`;
+                // optimized path for 0 delay outputs
+                const signalShift = Simulation.MAX_DELAY;
+                const signalBit = this.#compileConst(1 << signalShift);
+                const dataBit = this.#compileConst(1);
+                if (signalOp !== '') {
+                    computeSignal = `((${signalOp}) << ${signalShift})`; // skipping masking with signalBit here since the shift ensures it can't leak into data
+                } else {
+                    computeSignal = `${signalBit}`;
+                }
+                result.push(`${outputMem} = ${computeSignal} | ((${dataOp}) & ${dataBit})`); // not skipping masking with dataBit here since some builtins would leak data into signal
             }
-            // perform data computation, then shift result into newest data bit slot and join both result parts
-            const dataShift = outputDelay;
-            const dataBit = this.#compileConst(1 << dataShift);
-            const computeData = `((${dataOp}) << ${dataShift}) & ${dataBit}`;
-            // unset previously newest signal and data bits and replace with newly computed ones, write back
-            const clearMask = this.#compileDelayMask(outputDelay);
-            return `${outputMem} = ((${outputMem} >> 1) & ${clearMask}) | ((${computeSignal}) | (${computeData}))`;
-        } else {
-            // optimized path for 0 delay outputs
-            const signalShift = Simulation.MAX_DELAY;
-            const signalBit = this.#compileConst(1 << signalShift);
-            const dataBit = this.#compileConst(1);
-            if (signalOp !== '') {
-                computeSignal = `((${signalOp}) << ${signalShift})`; // skipping masking with signalBit here since the shift ensures it can't leak into data
-            } else {
-                computeSignal = `${signalBit}`;
-            }
-            return `${outputMem} = ${computeSignal} | ((${dataOp}) & ${dataBit})`; // not skipping masking with dataBit here since some builtins would leak data into signal
         }
+        return result.join('; ');
     }
 
     // Compiles a clock reading from one input and writing to an output.
@@ -394,7 +406,7 @@ class Simulation {
             result += this.#compileClock(clockIndex, ioReplacements) + this.#endl('clock ' + clock.output, true);
         }
         for (const [ gateIndex, gate ] of pairs(this.#gates)) {
-            result += this.#compileGate(gateIndex, ioReplacements) + this.#endl('compute ' + gate.dataTpl, true);
+            result += this.#compileGate(gateIndex, ioReplacements) + this.#endl('compute ' + gate.type, true);
         }
         // copy port-state to attached net
         for (const [ netIndex, net ] of pairs(this.#nets)) {

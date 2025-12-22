@@ -351,7 +351,7 @@ class Application {
         }
 
         // add extra gate-like builtins
-        for (let [ builtinType, ] of Object.entries(Simulation.BUILTIN_MAP)) {
+        for (const builtinType of keys(Simulation.BUILTIN_MAP)) {
             let builtinLabel = builtinType.toUpperFirst();
             this.toolbar.createComponentButton(builtinLabel, '<b>' + builtinLabel + '</b> builtin. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => {
                 return grid.addItem(new Builtin(x, y, builtinType));
