@@ -6,6 +6,7 @@ class Toolbar {
     #app;
     #element;
     #menuStates;
+    #menuOpen = null;
 
     constructor(app, parent) {
         assert.class(Application, app);
@@ -106,11 +107,13 @@ class Toolbar {
                         otherstateFn(false);
                     }
                 });
+                this.#menuOpen = button;
                 // close menu on click outside of menu
                 document.onclick = (e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     document.onclick = null;
+                    this.#menuOpen = null;
                     stateFn(false);
                 }
             } else {
@@ -120,9 +123,23 @@ class Toolbar {
         this.#menuStates.add(stateFn);
         button.classList.add('toolbar-menu-button');
         button.appendChild(subToolbarContainer);
+        // hover-open: modify mouse-enter to open another menu if one is already open, modify stateFn to disable hover-open when a menu is intentionally closed
+        const originalMouseEnter = button.onmouseenter;
+        button.onmouseenter = (e) => {
+            if (this.#menuOpen && this.#menuOpen !== button) {
+                button.onclick(e);
+            }
+            originalMouseEnter.call(button, e);
+        };
+        const menuStateFn = (state) => {
+            if (!state) {
+                this.#menuOpen = null;
+            }
+            return stateFn(state);
+        };
         this.#element.appendChild(button);
         let subToolbar = new Toolbar(this.#app, subToolbarContainer);
-        return [ button, stateFn, subToolbar ];
+        return [ button, menuStateFn, subToolbar ];
     }
 
     // Creates a separator
