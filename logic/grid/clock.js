@@ -26,12 +26,12 @@ class Clock extends Component {
     // Link clock to a grid, enabling it to be rendered.
     link(grid) {
         super.link(grid);
-        this.setHoverMessage(this.inner, () => `<b>${this.frequency} Hz Clock</b>. <i>LMB</i>: Drag to move, <i>R</i>: Rotate, <i>DEL</i>: Delete, <i>E</i>: Edit`, { type: 'hover' });
+        this.setHoverMessage(this.inner, () => `<b>${Number.formatSI(this.frequency, true)}Hz Clock</b>. <i>LMB</i>: Drag to move, <i>R</i>: Rotate, <i>DEL</i>: Delete, <i>E</i>: Edit`, { type: 'hover' });
     }
 
     // Handle edit hotkey.
     async onEdit() {
-        const config = await dialog("Configure clock", Clock.EDIT_DIALOG, { frequency: this.frequency, rotation: this.rotation });
+        const config = await dialog("Configure clock", Clock.EDIT_DIALOG, { frequency: Number.formatSI(this.frequency, true), rotation: this.rotation });
         if (config) {
             this.frequency = config.frequency;
             this.rotation = config.rotation;
