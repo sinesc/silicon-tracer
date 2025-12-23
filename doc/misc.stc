@@ -1,5 +1,6 @@
 {
 	"version": 1,
+	"currentUID": "uba4d80be70d7416c8626e5d3342f2159",
 	"circuits": [
 		{
 			"label": "Gates",
@@ -15,9 +16,9 @@
 							2
 						]
 					},
-					"rotation": 0,
 					"width": 40,
-					"height": 80
+					"height": 80,
+					"rotation": 0
 				},
 				{
 					"_": {
@@ -28,9 +29,9 @@
 							"right"
 						]
 					},
-					"rotation": 1,
 					"width": 80,
 					"height": 40,
+					"rotation": 1,
 					"name": "A"
 				},
 				{
@@ -42,9 +43,9 @@
 							"right"
 						]
 					},
-					"rotation": 1,
 					"width": 80,
 					"height": 40,
+					"rotation": 1,
 					"name": "B"
 				},
 				{
@@ -56,9 +57,9 @@
 							"left"
 						]
 					},
-					"rotation": 3,
 					"width": 80,
 					"height": 40,
+					"rotation": 3,
 					"name": "Q"
 				},
 				{
@@ -71,9 +72,9 @@
 							2
 						]
 					},
-					"rotation": 0,
 					"width": 40,
-					"height": 80
+					"height": 80,
+					"rotation": 0
 				},
 				{
 					"_": {
@@ -84,9 +85,9 @@
 							"right"
 						]
 					},
-					"rotation": 1,
 					"width": 80,
 					"height": 40,
+					"rotation": 1,
 					"name": "A"
 				},
 				{
@@ -98,9 +99,9 @@
 							"right"
 						]
 					},
-					"rotation": 1,
 					"width": 80,
 					"height": 40,
+					"rotation": 1,
 					"name": "B"
 				},
 				{
@@ -112,9 +113,9 @@
 							"left"
 						]
 					},
-					"rotation": 3,
 					"width": 80,
 					"height": 40,
+					"rotation": 3,
 					"name": "Q"
 				},
 				{
@@ -127,9 +128,9 @@
 							2
 						]
 					},
-					"rotation": 0,
 					"width": 40,
-					"height": 80
+					"height": 80,
+					"rotation": 0
 				},
 				{
 					"_": {
@@ -140,9 +141,9 @@
 							"right"
 						]
 					},
-					"rotation": 1,
 					"width": 80,
 					"height": 40,
+					"rotation": 1,
 					"name": "A"
 				},
 				{
@@ -154,9 +155,9 @@
 							"right"
 						]
 					},
-					"rotation": 1,
 					"width": 80,
 					"height": 40,
+					"rotation": 1,
 					"name": "B"
 				},
 				{
@@ -168,9 +169,9 @@
 							"left"
 						]
 					},
-					"rotation": 3,
 					"width": 80,
 					"height": 40,
+					"rotation": 3,
 					"name": "Q"
 				},
 				{
@@ -183,9 +184,9 @@
 							1
 						]
 					},
-					"rotation": 0,
 					"width": 40,
-					"height": 40
+					"height": 40,
+					"rotation": 0
 				},
 				{
 					"_": {
@@ -196,9 +197,9 @@
 							"right"
 						]
 					},
-					"rotation": 1,
 					"width": 80,
 					"height": 40,
+					"rotation": 1,
 					"name": "D"
 				},
 				{
@@ -210,9 +211,9 @@
 							"left"
 						]
 					},
-					"rotation": 3,
 					"width": 80,
 					"height": 40,
+					"rotation": 3,
 					"name": "Q"
 				},
 				{
@@ -225,9 +226,9 @@
 							2
 						]
 					},
-					"rotation": 0,
 					"width": 40,
-					"height": 80
+					"height": 80,
+					"rotation": 0
 				},
 				{
 					"_": {
@@ -238,9 +239,9 @@
 							"right"
 						]
 					},
-					"rotation": 1,
 					"width": 80,
 					"height": 40,
+					"rotation": 1,
 					"name": "A"
 				},
 				{
@@ -252,9 +253,9 @@
 							"right"
 						]
 					},
-					"rotation": 1,
 					"width": 80,
 					"height": 40,
+					"rotation": 1,
 					"name": "B"
 				},
 				{
@@ -266,9 +267,9 @@
 							"left"
 						]
 					},
-					"rotation": 3,
 					"width": 80,
 					"height": 40,
+					"rotation": 3,
 					"name": "Q"
 				},
 				{
@@ -281,9 +282,9 @@
 							2
 						]
 					},
-					"rotation": 0,
 					"width": 40,
-					"height": 80
+					"height": 80,
+					"rotation": 0
 				},
 				{
 					"_": {
@@ -294,9 +295,9 @@
 							"right"
 						]
 					},
-					"rotation": 1,
 					"width": 80,
 					"height": 40,
+					"rotation": 1,
 					"name": "A"
 				},
 				{
@@ -308,9 +309,9 @@
 							"right"
 						]
 					},
-					"rotation": 1,
 					"width": 80,
 					"height": 40,
+					"rotation": 1,
 					"name": "B"
 				},
 				{
@@ -322,9 +323,9 @@
 							"left"
 						]
 					},
-					"rotation": 3,
 					"width": 80,
 					"height": 40,
+					"rotation": 3,
 					"name": "Q"
 				},
 				{
@@ -337,9 +338,9 @@
 							1
 						]
 					},
-					"rotation": 0,
 					"width": 40,
-					"height": 40
+					"height": 40,
+					"rotation": 0
 				},
 				{
 					"_": {
@@ -350,9 +351,9 @@
 							"right"
 						]
 					},
-					"rotation": 1,
 					"width": 80,
 					"height": 40,
+					"rotation": 1,
 					"name": "D"
 				},
 				{
@@ -364,9 +365,9 @@
 							"left"
 						]
 					},
-					"rotation": 3,
 					"width": 80,
 					"height": 40,
+					"rotation": 3,
 					"name": "Q"
 				},
 				{
@@ -379,9 +380,9 @@
 							2
 						]
 					},
-					"rotation": 0,
 					"width": 40,
-					"height": 80
+					"height": 80,
+					"rotation": 0
 				},
 				{
 					"_": {
@@ -392,9 +393,9 @@
 							"right"
 						]
 					},
-					"rotation": 1,
 					"width": 80,
 					"height": 40,
+					"rotation": 1,
 					"name": "A"
 				},
 				{
@@ -406,9 +407,9 @@
 							"right"
 						]
 					},
-					"rotation": 1,
 					"width": 80,
 					"height": 40,
+					"rotation": 1,
 					"name": "B"
 				},
 				{
@@ -420,9 +421,9 @@
 							"left"
 						]
 					},
-					"rotation": 3,
 					"width": 80,
 					"height": 40,
+					"rotation": 3,
 					"name": "Q"
 				},
 				{
@@ -435,7 +436,9 @@
 							"h",
 							7
 						]
-					}
+					},
+					"width": 40,
+					"height": 0
 				},
 				{
 					"_": {
@@ -447,7 +450,9 @@
 							"h",
 							8
 						]
-					}
+					},
+					"width": 40,
+					"height": 0
 				},
 				{
 					"_": {
@@ -459,7 +464,9 @@
 							"h",
 							9
 						]
-					}
+					},
+					"width": 40,
+					"height": 0
 				},
 				{
 					"_": {
@@ -471,7 +478,9 @@
 							"h",
 							0
 						]
-					}
+					},
+					"width": 40,
+					"height": 0
 				},
 				{
 					"_": {
@@ -483,7 +492,9 @@
 							"h",
 							1
 						]
-					}
+					},
+					"width": 40,
+					"height": 0
 				},
 				{
 					"_": {
@@ -495,7 +506,9 @@
 							"h",
 							2
 						]
-					}
+					},
+					"width": 40,
+					"height": 0
 				},
 				{
 					"_": {
@@ -507,7 +520,9 @@
 							"h",
 							3
 						]
-					}
+					},
+					"width": 40,
+					"height": 0
 				},
 				{
 					"_": {
@@ -519,7 +534,9 @@
 							"h",
 							3
 						]
-					}
+					},
+					"width": 40,
+					"height": 0
 				},
 				{
 					"_": {
@@ -531,7 +548,9 @@
 							"h",
 							2
 						]
-					}
+					},
+					"width": 40,
+					"height": 0
 				},
 				{
 					"_": {
@@ -543,7 +562,9 @@
 							"h",
 							1
 						]
-					}
+					},
+					"width": 40,
+					"height": 0
 				},
 				{
 					"_": {
@@ -555,7 +576,9 @@
 							"h",
 							0
 						]
-					}
+					},
+					"width": 40,
+					"height": 0
 				},
 				{
 					"_": {
@@ -567,7 +590,9 @@
 							"h",
 							4
 						]
-					}
+					},
+					"width": 40,
+					"height": 0
 				},
 				{
 					"_": {
@@ -579,7 +604,9 @@
 							"h",
 							5
 						]
-					}
+					},
+					"width": 40,
+					"height": 0
 				},
 				{
 					"_": {
@@ -591,7 +618,9 @@
 							"h",
 							6
 						]
-					}
+					},
+					"width": 40,
+					"height": 0
 				},
 				{
 					"_": {
@@ -603,7 +632,9 @@
 							"h",
 							7
 						]
-					}
+					},
+					"width": 40,
+					"height": 0
 				},
 				{
 					"_": {
@@ -615,7 +646,9 @@
 							"h",
 							8
 						]
-					}
+					},
+					"width": 40,
+					"height": 0
 				},
 				{
 					"_": {
@@ -627,7 +660,9 @@
 							"h",
 							9
 						]
-					}
+					},
+					"width": 40,
+					"height": 0
 				},
 				{
 					"_": {
@@ -639,7 +674,9 @@
 							"h",
 							0
 						]
-					}
+					},
+					"width": 40,
+					"height": 0
 				},
 				{
 					"_": {
@@ -651,7 +688,9 @@
 							"h",
 							7
 						]
-					}
+					},
+					"width": 40,
+					"height": 0
 				},
 				{
 					"_": {
@@ -663,7 +702,9 @@
 							"h",
 							6
 						]
-					}
+					},
+					"width": 40,
+					"height": 0
 				},
 				{
 					"_": {
@@ -675,7 +716,9 @@
 							"h",
 							5
 						]
-					}
+					},
+					"width": 40,
+					"height": 0
 				},
 				{
 					"_": {
@@ -687,7 +730,9 @@
 							"h",
 							4
 						]
-					}
+					},
+					"width": 40,
+					"height": 0
 				},
 				{
 					"_": {
@@ -698,9 +743,9 @@
 							"buffer3"
 						]
 					},
-					"rotation": 0,
 					"width": 40,
-					"height": 80
+					"height": 80,
+					"rotation": 0
 				},
 				{
 					"_": {
@@ -711,9 +756,9 @@
 							"right"
 						]
 					},
-					"rotation": 1,
 					"width": 80,
 					"height": 40,
+					"rotation": 1,
 					"name": "D"
 				},
 				{
@@ -726,7 +771,9 @@
 							"h",
 							2
 						]
-					}
+					},
+					"width": 40,
+					"height": 0
 				},
 				{
 					"_": {
@@ -737,9 +784,9 @@
 							"right"
 						]
 					},
-					"rotation": 1,
 					"width": 80,
 					"height": 40,
+					"rotation": 1,
 					"name": "E"
 				},
 				{
@@ -751,9 +798,9 @@
 							"left"
 						]
 					},
-					"rotation": 3,
 					"width": 80,
 					"height": 40,
+					"rotation": 3,
 					"name": "Q"
 				},
 				{
@@ -765,9 +812,9 @@
 							"not3"
 						]
 					},
-					"rotation": 0,
 					"width": 40,
-					"height": 80
+					"height": 80,
+					"rotation": 0
 				},
 				{
 					"_": {
@@ -778,9 +825,9 @@
 							"right"
 						]
 					},
-					"rotation": 1,
 					"width": 80,
 					"height": 40,
+					"rotation": 1,
 					"name": "D"
 				},
 				{
@@ -792,9 +839,9 @@
 							"right"
 						]
 					},
-					"rotation": 1,
 					"width": 80,
 					"height": 40,
+					"rotation": 1,
 					"name": "E"
 				},
 				{
@@ -806,9 +853,9 @@
 							"left"
 						]
 					},
-					"rotation": 3,
 					"width": 80,
 					"height": 40,
+					"rotation": 3,
 					"name": "Q"
 				},
 				{
@@ -821,7 +868,9 @@
 							"h",
 							3
 						]
-					}
+					},
+					"width": 40,
+					"height": 0
 				},
 				{
 					"_": {
@@ -833,7 +882,9 @@
 							"h",
 							4
 						]
-					}
+					},
+					"width": 40,
+					"height": 0
 				},
 				{
 					"_": {
@@ -845,7 +896,9 @@
 							"h",
 							5
 						]
-					}
+					},
+					"width": 40,
+					"height": 0
 				},
 				{
 					"_": {
@@ -857,7 +910,9 @@
 							"h",
 							6
 						]
-					}
+					},
+					"width": 40,
+					"height": 0
 				},
 				{
 					"_": {
@@ -869,7 +924,9 @@
 							"h",
 							7
 						]
-					}
+					},
+					"width": 40,
+					"height": 0
 				}
 			],
 			"ports": {
@@ -883,7 +940,6 @@
 					"A",
 					"A",
 					"B",
-					null,
 					"B",
 					"A",
 					"A",
@@ -904,7 +960,6 @@
 					"Q",
 					"Q",
 					"Q",
-					null,
 					"Q",
 					"Q",
 					"Q",
@@ -916,9 +971,11 @@
 					null
 				],
 				"top": [
+					null,
 					null
 				],
 				"bottom": [
+					null,
 					null
 				]
 			},
@@ -926,260 +983,320 @@
 				"zoom": 1.25,
 				"offsetX": -433,
 				"offsetY": -50
-			}
-		},
-		{
-			"label": "Port locations",
-			"uid": "u701725a08c474218a9fedf1a77e2f64b",
-			"data": [
-				{
-					"_": {
-						"c": "Port",
-						"a": [
-							570,
-							310,
-							"right"
-						]
-					},
-					"rotation": 1,
-					"width": 80,
-					"height": 40,
-					"name": "f"
-				},
-				{
-					"_": {
-						"c": "Port",
-						"a": [
-							570,
-							250,
-							"right"
-						]
-					},
-					"rotation": 1,
-					"width": 80,
-					"height": 40,
-					"name": "g"
-				},
-				{
-					"_": {
-						"c": "Port",
-						"a": [
-							570,
-							190,
-							"right"
-						]
-					},
-					"rotation": 1,
-					"width": 80,
-					"height": 40,
-					"name": "h"
-				},
-				{
-					"_": {
-						"c": "Port",
-						"a": [
-							850,
-							250,
-							"left"
-						]
-					},
-					"rotation": 3,
-					"width": 80,
-					"height": 40,
-					"name": "b"
-				},
-				{
-					"_": {
-						"c": "Port",
-						"a": [
-							850,
-							310,
-							"left"
-						]
-					},
-					"rotation": 3,
-					"width": 80,
-					"height": 40,
-					"name": "c"
-				},
-				{
-					"_": {
-						"c": "Port",
-						"a": [
-							670,
-							90,
-							"right"
-						]
-					},
-					"rotation": 2,
-					"width": 40,
-					"height": 80,
-					"name": "a"
-				},
-				{
-					"_": {
-						"c": "Port",
-						"a": [
-							670,
-							370,
-							"right"
-						]
-					},
-					"rotation": 0,
-					"width": 40,
-					"height": 80,
-					"name": "e"
-				},
-				{
-					"_": {
-						"c": "Port",
-						"a": [
-							730,
-							370,
-							"right"
-						]
-					},
-					"rotation": 0,
-					"width": 40,
-					"height": 80,
-					"name": "d"
-				}
-			],
-			"ports": {
-				"left": [
-					"f",
-					"g",
-					"h"
-				],
-				"right": [
-					"b",
-					null,
-					"c"
-				],
-				"top": [
-					null,
-					"a",
-					null
-				],
-				"bottom": [
-					"d",
-					null,
-					"e"
-				]
 			},
-			"gridConfig": {
-				"zoom": 1.25,
-				"offsetX": -431,
-				"offsetY": 56
-			}
+			"portConfig": {}
 		},
 		{
-			"label": "Some Toys",
-			"uid": "u83545572e1a04d07b279891d3bbc8f79",
+			"label": "Tester",
+			"uid": "u4ca8bb9f216e41148bacc04246fa2f9c",
 			"data": [
 				{
 					"_": {
 						"c": "Port",
 						"a": [
 							150,
-							150,
+							210,
 							"right"
 						]
 					},
-					"rotation": 1,
 					"width": 80,
 					"height": 40,
-					"name": "E"
+					"rotation": 1,
+					"name": ""
 				},
 				{
 					"_": {
-						"c": "Gate",
+						"c": "Wire",
 						"a": [
-							350,
-							150,
-							"or",
-							2
-						]
-					},
-					"rotation": 0,
-					"width": 40,
-					"height": 80
-				},
-				{
-					"_": {
-						"c": "Gate",
-						"a": [
-							450,
-							170,
-							"not",
+							250,
+							250,
+							40,
+							"h",
 							1
 						]
 					},
-					"rotation": 0,
 					"width": 40,
-					"height": 40
+					"height": 0
 				},
 				{
 					"_": {
-						"c": "Gate",
+						"c": "Port",
 						"a": [
-							270,
 							150,
-							"not",
-							1
+							250,
+							"right"
 						]
 					},
-					"rotation": 0,
-					"width": 40,
-					"height": 40
+					"width": 80,
+					"height": 40,
+					"rotation": 1,
+					"name": ""
 				},
 				{
 					"_": {
 						"c": "Wire",
 						"a": [
 							230,
-							170,
-							40,
+							270,
+							60,
 							"h",
-							0
+							1
 						]
-					}
+					},
+					"width": 60,
+					"height": 0
+				},
+				{
+					"_": {
+						"c": "Port",
+						"a": [
+							150,
+							290,
+							"right"
+						]
+					},
+					"width": 80,
+					"height": 40,
+					"rotation": 1,
+					"name": ""
 				},
 				{
 					"_": {
 						"c": "Wire",
 						"a": [
+							230,
 							310,
-							170,
+							20,
+							"h",
+							1
+						]
+					},
+					"width": 20,
+					"height": 0
+				},
+				{
+					"_": {
+						"c": "Wire",
+						"a": [
+							250,
+							290,
 							40,
 							"h",
 							1
 						]
-					}
+					},
+					"width": 40,
+					"height": 0
 				},
 				{
 					"_": {
 						"c": "Wire",
+						"a": [
+							230,
+							230,
+							20,
+							"h",
+							1
+						]
+					},
+					"width": 20,
+					"height": 0
+				},
+				{
+					"_": {
+						"c": "Port",
 						"a": [
 							390,
-							190,
-							60,
-							"h",
-							2
+							250,
+							"left"
 						]
-					}
+					},
+					"width": 80,
+					"height": 40,
+					"rotation": 3,
+					"name": ""
+				},
+				{
+					"_": {
+						"c": "Port",
+						"a": [
+							390,
+							210,
+							"right"
+						]
+					},
+					"width": 80,
+					"height": 40,
+					"rotation": 3,
+					"name": ""
 				},
 				{
 					"_": {
 						"c": "Wire",
 						"a": [
-							490,
-							190,
-							80,
+							370,
+							230,
+							20,
 							"h",
-							3
+							1
 						]
-					}
+					},
+					"width": 20,
+					"height": 0
+				},
+				{
+					"_": {
+						"c": "Port",
+						"a": [
+							390,
+							290,
+							"left"
+						]
+					},
+					"width": 80,
+					"height": 40,
+					"rotation": 3,
+					"name": ""
+				},
+				{
+					"_": {
+						"c": "Wire",
+						"a": [
+							370,
+							310,
+							20,
+							"h",
+							1
+						]
+					},
+					"width": 20,
+					"height": 0
+				},
+				{
+					"_": {
+						"c": "Port",
+						"a": [
+							150,
+							170,
+							"right"
+						]
+					},
+					"width": 80,
+					"height": 40,
+					"rotation": 1,
+					"name": ""
+				},
+				{
+					"_": {
+						"c": "Wire",
+						"a": [
+							230,
+							190,
+							40,
+							"h",
+							1
+						]
+					},
+					"width": 40,
+					"height": 0
+				},
+				{
+					"_": {
+						"c": "Wire",
+						"a": [
+							270,
+							230,
+							20,
+							"h",
+							1
+						]
+					},
+					"width": 20,
+					"height": 0
+				},
+				{
+					"_": {
+						"c": "Port",
+						"a": [
+							150,
+							330,
+							"right"
+						]
+					},
+					"width": 80,
+					"height": 40,
+					"rotation": 1,
+					"name": ""
+				},
+				{
+					"_": {
+						"c": "Wire",
+						"a": [
+							230,
+							350,
+							40,
+							"h",
+							1
+						]
+					},
+					"width": 40,
+					"height": 0
+				},
+				{
+					"_": {
+						"c": "Wire",
+						"a": [
+							270,
+							310,
+							20,
+							"h",
+							1
+						]
+					},
+					"width": 20,
+					"height": 0
+				},
+				{
+					"_": {
+						"c": "Port",
+						"a": [
+							390,
+							170,
+							"left"
+						]
+					},
+					"width": 80,
+					"height": 40,
+					"rotation": 3,
+					"name": ""
+				},
+				{
+					"_": {
+						"c": "Wire",
+						"a": [
+							350,
+							190,
+							40,
+							"h",
+							1
+						]
+					},
+					"width": 40,
+					"height": 0
+				},
+				{
+					"_": {
+						"c": "Wire",
+						"a": [
+							330,
+							230,
+							20,
+							"h",
+							1
+						]
+					},
+					"width": 20,
+					"height": 0
 				},
 				{
 					"_": {
@@ -1187,489 +1304,290 @@
 						"a": [
 							330,
 							250,
-							180,
-							"h",
-							3
-						]
-					}
-				},
-				{
-					"_": {
-						"c": "Wire",
-						"a": [
-							510,
-							190,
-							60,
-							"v",
-							3
-						]
-					}
-				},
-				{
-					"_": {
-						"c": "Wire",
-						"a": [
-							330,
-							210,
-							20,
-							"h",
-							3
-						]
-					}
-				},
-				{
-					"_": {
-						"c": "Wire",
-						"a": [
-							330,
-							210,
-							40,
-							"v",
-							3
-						]
-					}
-				},
-				{
-					"_": {
-						"c": "Port",
-						"a": [
-							570,
-							170,
-							"left"
-						]
-					},
-					"rotation": 3,
-					"width": 80,
-					"height": 40,
-					"name": "Q"
-				},
-				{
-					"_": {
-						"c": "Gate",
-						"a": [
-							470,
-							330,
-							"nand",
-							2
-						]
-					},
-					"rotation": 0,
-					"width": 40,
-					"height": 80
-				},
-				{
-					"_": {
-						"c": "Gate",
-						"a": [
-							550,
-							350,
-							"nand",
-							2
-						]
-					},
-					"rotation": 0,
-					"width": 40,
-					"height": 80
-				},
-				{
-					"_": {
-						"c": "Wire",
-						"a": [
-							510,
-							370,
 							40,
 							"h",
-							4
-						]
-					}
-				},
-				{
-					"_": {
-						"c": "Wire",
-						"a": [
-							450,
-							390,
-							20,
-							"h",
-							5
-						]
-					}
-				},
-				{
-					"_": {
-						"c": "Wire",
-						"a": [
-							450,
-							450,
-							160,
-							"h",
-							5
-						]
-					}
-				},
-				{
-					"_": {
-						"c": "Wire",
-						"a": [
-							450,
-							390,
-							60,
-							"v",
-							5
-						]
-					}
-				},
-				{
-					"_": {
-						"c": "Wire",
-						"a": [
-							590,
-							390,
-							60,
-							"h",
-							5
-						]
-					}
-				},
-				{
-					"_": {
-						"c": "Wire",
-						"a": [
-							610,
-							390,
-							60,
-							"v",
-							5
-						]
-					}
-				},
-				{
-					"_": {
-						"c": "Port",
-						"a": [
-							650,
-							370,
-							"left"
-						]
-					},
-					"rotation": 3,
-					"width": 80,
-					"height": 40,
-					"name": ""
-				},
-				{
-					"_": {
-						"c": "Port",
-						"a": [
-							310,
-							330,
-							"right"
-						]
-					},
-					"rotation": 1,
-					"width": 80,
-					"height": 40,
-					"name": "R"
-				},
-				{
-					"_": {
-						"c": "Wire",
-						"a": [
-							390,
-							350,
-							80,
-							"h",
-							6
-						]
-					}
-				},
-				{
-					"_": {
-						"c": "Port",
-						"a": [
-							310,
-							390,
-							"right"
-						]
-					},
-					"rotation": 1,
-					"width": 80,
-					"height": 40,
-					"name": "S"
-				},
-				{
-					"_": {
-						"c": "Wire",
-						"a": [
-							390,
-							410,
-							160,
-							"h",
-							7
-						]
-					}
-				},
-				{
-					"_": {
-						"c": "Port",
-						"a": [
-							650,
-							330,
-							"left"
-						]
-					},
-					"rotation": 3,
-					"width": 80,
-					"height": 40,
-					"name": ""
-				},
-				{
-					"_": {
-						"c": "Wire",
-						"a": [
-							530,
-							350,
-							120,
-							"h",
-							4
-						]
-					}
-				},
-				{
-					"_": {
-						"c": "Wire",
-						"a": [
-							530,
-							350,
-							20,
-							"v",
-							4
-						]
-					}
-				},
-				{
-					"_": {
-						"c": "Gate",
-						"a": [
-							990,
-							290,
-							"or",
-							2
-						]
-					},
-					"rotation": 0,
-					"width": 40,
-					"height": 80
-				},
-				{
-					"_": {
-						"c": "Gate",
-						"a": [
-							1130,
-							310,
-							"and",
-							2
-						]
-					},
-					"rotation": 0,
-					"width": 40,
-					"height": 80
-				},
-				{
-					"_": {
-						"c": "Wire",
-						"a": [
-							1030,
-							330,
-							100,
-							"h",
-							8
-						]
-					}
-				},
-				{
-					"_": {
-						"c": "Wire",
-						"a": [
-							1170,
-							350,
-							60,
-							"h",
-							9
-						]
-					}
-				},
-				{
-					"_": {
-						"c": "Wire",
-						"a": [
-							1190,
-							270,
-							80,
-							"v",
-							9
-						]
-					}
-				},
-				{
-					"_": {
-						"c": "Wire",
-						"a": [
-							970,
-							270,
-							220,
-							"h",
-							9
-						]
-					}
-				},
-				{
-					"_": {
-						"c": "Wire",
-						"a": [
-							970,
-							270,
-							40,
-							"v",
-							9
-						]
-					}
-				},
-				{
-					"_": {
-						"c": "Wire",
-						"a": [
-							970,
-							310,
-							20,
-							"h",
-							9
-						]
-					}
-				},
-				{
-					"_": {
-						"c": "Port",
-						"a": [
-							850,
-							330,
-							"right"
-						]
-					},
-					"rotation": 1,
-					"width": 80,
-					"height": 40,
-					"name": "S"
-				},
-				{
-					"_": {
-						"c": "Wire",
-						"a": [
-							930,
-							350,
-							60,
-							"h",
-							2
-						]
-					}
-				},
-				{
-					"_": {
-						"c": "Gate",
-						"a": [
-							1070,
-							350,
-							"not",
 							1
 						]
 					},
-					"rotation": 0,
 					"width": 40,
+					"height": 0
+				},
+				{
+					"_": {
+						"c": "Wire",
+						"a": [
+							330,
+							270,
+							60,
+							"h",
+							1
+						]
+					},
+					"width": 60,
+					"height": 0
+				},
+				{
+					"_": {
+						"c": "Wire",
+						"a": [
+							330,
+							290,
+							40,
+							"h",
+							1
+						]
+					},
+					"width": 40,
+					"height": 0
+				},
+				{
+					"_": {
+						"c": "Wire",
+						"a": [
+							250,
+							290,
+							20,
+							"v",
+							1
+						]
+					},
+					"width": 0,
+					"height": 20
+				},
+				{
+					"_": {
+						"c": "Wire",
+						"a": [
+							250,
+							230,
+							20,
+							"v",
+							1
+						]
+					},
+					"width": 0,
+					"height": 20
+				},
+				{
+					"_": {
+						"c": "Wire",
+						"a": [
+							370,
+							230,
+							20,
+							"v",
+							1
+						]
+					},
+					"width": 0,
+					"height": 20
+				},
+				{
+					"_": {
+						"c": "Wire",
+						"a": [
+							370,
+							290,
+							20,
+							"v",
+							1
+						]
+					},
+					"width": 0,
+					"height": 20
+				},
+				{
+					"_": {
+						"c": "Wire",
+						"a": [
+							270,
+							190,
+							40,
+							"v",
+							1
+						]
+					},
+					"width": 0,
 					"height": 40
 				},
 				{
 					"_": {
 						"c": "Wire",
 						"a": [
-							1110,
-							370,
-							20,
-							"h",
-							0
-						]
-					}
-				},
-				{
-					"_": {
-						"c": "Port",
-						"a": [
-							850,
-							370,
-							"right"
-						]
-					},
-					"rotation": 1,
-					"width": 80,
-					"height": 40,
-					"name": "R"
-				},
-				{
-					"_": {
-						"c": "Wire",
-						"a": [
-							930,
-							390,
-							120,
-							"h",
-							1
-						]
-					}
-				},
-				{
-					"_": {
-						"c": "Wire",
-						"a": [
-							1050,
-							370,
-							20,
+							270,
+							310,
+							40,
 							"v",
 							1
 						]
-					}
+					},
+					"width": 0,
+					"height": 40
 				},
 				{
 					"_": {
 						"c": "Wire",
 						"a": [
-							1050,
-							370,
-							20,
-							"h",
+							350,
+							190,
+							40,
+							"v",
 							1
 						]
-					}
+					},
+					"width": 0,
+					"height": 40
 				},
 				{
 					"_": {
 						"c": "Port",
 						"a": [
-							1230,
+							390,
 							330,
 							"left"
 						]
 					},
-					"rotation": 3,
 					"width": 80,
 					"height": 40,
+					"rotation": 3,
 					"name": ""
+				},
+				{
+					"_": {
+						"c": "Wire",
+						"a": [
+							350,
+							350,
+							40,
+							"h",
+							1
+						]
+					},
+					"width": 40,
+					"height": 0
+				},
+				{
+					"_": {
+						"c": "Wire",
+						"a": [
+							350,
+							310,
+							40,
+							"v",
+							1
+						]
+					},
+					"width": 0,
+					"height": 40
+				},
+				{
+					"_": {
+						"c": "Wire",
+						"a": [
+							330,
+							310,
+							20,
+							"h",
+							1
+						]
+					},
+					"width": 20,
+					"height": 0
+				},
+				{
+					"_": {
+						"c": "Builtin",
+						"a": [
+							630,
+							150,
+							"adder"
+						]
+					},
+					"width": 40,
+					"height": 80,
+					"rotation": 0
+				},
+				{
+					"_": {
+						"c": "Builtin",
+						"a": [
+							710,
+							150,
+							"mux"
+						]
+					},
+					"width": 40,
+					"height": 80,
+					"rotation": 0
+				},
+				{
+					"_": {
+						"c": "Builtin",
+						"a": [
+							790,
+							150,
+							"demux"
+						]
+					},
+					"width": 40,
+					"height": 80,
+					"rotation": 0
+				},
+				{
+					"_": {
+						"c": "Builtin",
+						"a": [
+							630,
+							250,
+							"latch"
+						]
+					},
+					"width": 40,
+					"height": 80,
+					"rotation": 0
+				},
+				{
+					"_": {
+						"c": "Builtin",
+						"a": [
+							710,
+							250,
+							"flipflop"
+						]
+					},
+					"width": 40,
+					"height": 80,
+					"rotation": 0
 				}
 			],
-			"ports": {},
+			"ports": {
+				"left": [
+					"",
+					"",
+					"",
+					"",
+					""
+				],
+				"right": [
+					"",
+					"",
+					"",
+					"",
+					""
+				],
+				"top": [
+					null
+				],
+				"bottom": [
+					null
+				]
+			},
 			"gridConfig": {
 				"zoom": 1.25,
-				"offsetX": -111,
-				"offsetY": -36
-			}
+				"offsetX": 0,
+				"offsetY": 0
+			},
+			"portConfig": {}
 		}
 	]
 }

@@ -13,7 +13,7 @@
     --wire-colorD: oklch(var(--wire-color-lightness) 0 0); /* disconnected */
     --wire-colorT: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 105); /* manual toggle */
     --wire-colorE1: oklch(80% 0.5 45); /* conflict/error */
-    --wire-colorE2: oklch(80% 0.5 90); /* conflict/error */
+    --wire-colorE2: oklch(50% 0.5 90); /* conflict/error */
     --wire-color0: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 180);
     --wire-color1: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 145);
     --wire-color2: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 115);
@@ -903,9 +903,9 @@ div[data-net-color][data-net-state="-1"] {
     background: repeating-linear-gradient(
         -45deg,
         var(--wire-colorE1),
-        var(--wire-colorE1) 10px,
-        var(--wire-colorE2) 10px,
-        var(--wire-colorE2) 20px
+        var(--wire-colorE1) 5px,
+        var(--wire-colorE2) 5px,
+        var(--wire-colorE2) 10px
     );
 }
 /* wire/port colors null */
