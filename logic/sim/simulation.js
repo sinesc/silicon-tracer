@@ -24,8 +24,12 @@ class Simulation {
         'flipflop'  : { outputs: { q: '(+clock & data) | (~+clock & q)' }, inputs: [ 'clock', 'data' ], statsGates: 6 },
         'buffer3'   : { outputs: { q: 'data' }, signals: { q: 'enable' }, inputs: [ 'enable', 'data' ], statsGates: 1 },
         'not3'      : { outputs: { q: '~data' }, signals: { q: 'enable' }, inputs: [ 'enable', 'data' ], statsGates: 1 },
-        'adder'     : { outputs: { q: '(a ^ b) ^ cIn', cOut: '((a ^ b) & cIn) | (a & b)' }, inputs: [ 'a', 'b', 'cIn' ], statsGates: 5  },
-    }
+        'adder'     : { outputs: { cOut: '((a ^ b) & cIn) | (a & b)', q: '(a ^ b) ^ cIn' }, inputs: [ 'a', 'b', 'cIn' ], statsGates: 5  },
+        'mux'       : { outputs: { q: '(~select & a) | (select & b)' }, inputs: [ 'select', 'a', 'b' ], statsGates: 5 }, // stats: 2 and, 1 or, 1 not, 1 buffer to balance not
+        'mux3'       : { outputs: { q: '(~select & a) | (select & b)' }, signals: { q: 'enable' }, inputs: [ 'select', 'enable', 'a', 'b' ], statsGates: 5 },
+        'demux'     : { outputs: { qa: '(~select & data)', qb: '(select & data)' }, inputs: [ 'select', 'data' ], statsGates: 4 }, // stats: 2 and, 1 not, 1 buffer to balance not
+        'demux3'    : { outputs: { qa: '(~select & data)', qb: '(select & data)' }, signals: { qa: 'enable & ~select', qb: 'enable & select' }, inputs: [ 'select', 'enable', 'data' ], statsGates: 4 },
+    };
 
     #debug;
     #checkConflict;
