@@ -132,7 +132,7 @@ class GridItem {
     // Implement to apply/remove grid item selection effect.
     set selected(status) { }
 
-    // Extend to handle drag events.
+    // Extend to handle drag events. Return true to prevent parent action.
     onDrag(x, y, status, what) {
         const selection = this.grid.selection;
         if (selection.length > 0 && this.selected) {
@@ -141,12 +141,16 @@ class GridItem {
                 item.onMove(x, y, status, what.items[index]);
             }
             return true;
-        } else {
-            return false;
         }
+        return false;
     }
 
-    // Implement to handle hover hotkey events. Return true to prevent default action.
+    // Implement to handle click events. Return true to prevent parent action.
+    onClick(modifier, ...args) {
+        return false;
+    }
+
+    // Implement to handle hover hotkey events. Return true to prevent parent/default action.
     onHotkey(key, ...args) {
         return false;
     }
@@ -234,24 +238,24 @@ class GridItem {
         this.y = y;
     }
 
+    // Sets a status message to be displayed while mouse-hovering the visual element. Additional arguments will be passed to the
+    // onHotkey() handler that may be triggered while an element with a hover-message is being hovered.
+    setHoverMessage(element, message, ...args) {
+        this.registerMouseHover(element, ...args);
+        this.#hoverMessages.set(element, message);
+    }
+
     // Registers a visual element for hover events. Required for hover messages or hover hotkeys.
     // Note: setHoverMessage() automatically registers the element.
     // TODO: some sort of error/result if already registered because this causes new args to be ignored
-    registerHoverWatch(element, ...args) {
+    registerMouseHover(element, ...args) {
         element.addEventListener('mouseenter', this.#handleHover.bind(this, element, 'start', args));
         element.addEventListener('mouseleave', this.#handleHover.bind(this, element, 'stop', args));
     }
 
-    // Sets a status message to be displayed while mouse-hovering the visual element. Additional arguments will be passed to the
-    // onHotkey() handler that may be triggered while an element with a hover-message is being hovered.
-    setHoverMessage(element, message, ...args) {
-        this.registerHoverWatch(element, ...args);
-        this.#hoverMessages.set(element, message);
-    }
-
     // Registers a drag event source with optional additional arguments to pass with each event to onDrag().
-    registerDrag(element, ...args) {
-        element.onmousedown = this.#handleDragStart.bind(this, args);
+    registerMouseAction(element, ...args) {
+        element.onmousedown = this.#handleMouseDown.bind(this, args);
     }
 
     // Trigger item drag (e.g. when dragging from template into the grid).
@@ -270,18 +274,33 @@ class GridItem {
         this.onDrag(x, y, 'stop', ...args);
     }
 
-    // Called when mouse drag starts, invokes onDrag().
-    #handleDragStart(args, e) {
+    // Called when mouse drag or click starts.
+    #handleMouseDown(args, e) {
         e.preventDefault();
         if (e.which !== 1) { // don't stop propagation for other buttons so we can drag the grid while hovering over a wire/component
             return;
         }
         e.stopPropagation();
         let [ dragStartX, dragStartY ] = this.grid.screenToGrid(e.clientX, e.clientY);
-        document.onmousemove = this.#handleDragMove.bind(this, args);
-        document.onmouseup = this.#handleDragStop.bind(this, args);
-        document.body.classList.add('dragging');
-        this.onDrag(dragStartX, dragStartY, 'start', ...args);
+        document.onmouseup = this.#handleClick.bind(this, args);
+        document.onmousemove = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            document.onmousemove = this.#handleDragMove.bind(this, args);
+            document.onmouseup = this.#handleDragStop.bind(this, args);
+            document.body.classList.add('dragging');
+            this.onDrag(dragStartX, dragStartY, 'start', ...args);
+        };
+    }
+
+    // Called on mouse click (mouse down and mouse up without movement inbetween)
+    #handleClick(args, e) {
+        e.preventDefault();
+        e.stopPropagation();
+        document.onmouseup = null;
+        document.onmousemove = null;
+        const modifier = { shift: e.shiftKey, ctrl: e.ctrlKey, alt: e.altKey };
+        this.onClick(modifier, ...args);
     }
 
     // Called during mouse drag, invokes onDrag().
@@ -294,6 +313,8 @@ class GridItem {
 
     // Called when mouse drag ends, invokes onDrag().
     #handleDragStop(args, e) {
+        e.preventDefault();
+        e.stopPropagation();
         document.onmouseup = null;
         document.onmousemove = null;
         document.body.classList.remove('dragging');

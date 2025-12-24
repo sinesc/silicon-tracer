@@ -128,7 +128,7 @@ class Component extends GridItem {
         this.#inner = document.createElement('div');
         this.#inner.innerHTML = '<span>' + this.label + '</span>';
         this.#inner.classList.add('component-inner');
-        this.registerDrag(this.#inner, { type: "component", grabOffsetX: null, grabOffsetY: null });
+        this.registerMouseAction(this.#inner, { type: "component", grabOffsetX: null, grabOffsetY: null });
         this.#element.appendChild(this.#inner);
 
         // ports
@@ -146,7 +146,7 @@ class Component extends GridItem {
             item.element = port;
             item.labelElement = labelElement;
             // register a drag event for the port, will trigger onDrag with the port name
-            this.registerDrag(port, { type: "port", name: item.name });
+            this.registerMouseAction(port, { type: "port", name: item.name });
         });
 
         grid.addVisual(this.#element);
@@ -348,8 +348,10 @@ class Component extends GridItem {
             return true;
         } else if (what.type === 'component') {
             this.onMove(x, y, status, what);
+            return true;
         } else if (what.type === 'port' && status === 'start') {
             this.onConnect(x, y, status, what);
+            return true;
         }
     }
 

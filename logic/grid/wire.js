@@ -42,7 +42,7 @@ class Wire extends GridItem {
         super.link(grid);
         this.#element = document.createElement('div');
         this.#element.classList.add('wire', 'wire-' + this.direction);
-        this.registerDrag(this.#element, { type: 'connect', ordering: this.direction === 'h' ? 'vh' : 'hv' });
+        this.registerMouseAction(this.#element, { type: 'connect', ordering: this.direction === 'h' ? 'vh' : 'hv' });
         this.setHoverMessage(this.#element, Wire.HOVER_MESSAGE, { type: 'hover' });
         this.grid.addVisual(this.#element);
     }
@@ -105,6 +105,7 @@ class Wire extends GridItem {
             return true;
         } else if (status === 'start') {
             this.onConnect(x, y, status, what);
+            return true;
         }
     }
 
