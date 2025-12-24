@@ -400,6 +400,7 @@ class Grid {
                     for (const item of this.#selection) {
                         this.removeItem(item, false);
                     }
+                    this.#selection = [];
                     this.#app.simulations.markDirty(this.#circuit);
                 }
             }
