@@ -46,7 +46,7 @@ class Gate extends Component {
         const left = [];
         const inputs = [];
         for (let i = 0; i < numInputs; ++i) {
-            let letter = String.fromCharCode(Gate.START_LETTER + i);
+            const letter = String.fromCharCode(Gate.START_LETTER + i);
             inputs.push(letter);
             left.push(letter);
             if (i === blankAfter) {

@@ -17,7 +17,7 @@ class CustomComponent extends Component {
     constructor(app, x, y, rotation, uid) {
         assert.integer(rotation);
         assert.string(uid);
-        let circuit = app.circuits.byUID(uid) ?? {};
+        const circuit = app.circuits.byUID(uid) ?? {};
         super(app, x, y, circuit.ports ?? {}, circuit.label ?? '');
         this.rotation = rotation;
         this.uid = uid;
@@ -33,7 +33,7 @@ class CustomComponent extends Component {
 
     // Link custom component to a grid, enabling it to be rendered.
     link(grid) {
-        let circuit = this.app.circuits.byUID(this.uid) ?? {};
+        const circuit = this.app.circuits.byUID(this.uid) ?? {};
         this.setPortsFromNames(circuit.ports);
         this.type = circuit.label;
         super.link(grid);
@@ -82,7 +82,7 @@ class CustomComponent extends Component {
 
     // Handle edit hotkey.
     async onEdit() {
-        let circuit = this.app.circuits.byUID(this.uid) ?? {};
+        const circuit = this.app.circuits.byUID(this.uid) ?? {};
         const result = await dialog("Configure custom component", CustomComponent.EDIT_DIALOG, { /*label: this.label || circuit.label,*/ rotation: this.rotation });
         if (result) {
             //const grid = this.grid;

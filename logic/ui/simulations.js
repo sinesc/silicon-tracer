@@ -14,7 +14,7 @@ class Simulations {
 
     // Returns list of simulations
     list() {
-        let simulations = Object.keys(this.#simulations).map((uid) => [ uid, this.#app.circuits.byUID(uid).label ]);
+        const simulations = Object.keys(this.#simulations).map((uid) => [ uid, this.#app.circuits.byUID(uid).label ]);
         simulations.sort((a, b) => a[1].toLowerCase() < b[1].toLowerCase() ? -1 : (a[1].toLowerCase() > b[1].toLowerCase() ? 1 : 0));
         return simulations;
     }
@@ -76,7 +76,7 @@ class Simulations {
     // Marks the given circuit (or all circuits if null) as modified causing simulations that include it to be recompiled.
     markDirty(circuit) {
         assert.class(Circuits.Circuit, circuit, true);
-        for (let simulation of values(this.#simulations)) {
+        for (const simulation of values(this.#simulations)) {
             if (circuit === null || simulation.includes(circuit)) {
                 simulation.markDirty();
             }
@@ -86,7 +86,7 @@ class Simulations {
     // Update clock ticks/cycle value. Required when simulation tickrate is changed.
     updateClocks(targetTPS) {
         assert.integer(targetTPS);
-        for (let simulation of values(this.#simulations)) {
+        for (const simulation of values(this.#simulations)) {
             simulation.engine.updateClocks(targetTPS);
         }
     }
@@ -186,7 +186,7 @@ Simulations.Simulation = class {
     tick(ticks) {
         assert.integer(ticks);
         // apply manual simulation states each tick
-        for (let { portName, component } of this.tickListener) {
+        for (const { portName, component } of this.tickListener) {
             component.applyState(portName, this.#engine);
         }
         this.#engine.simulate(ticks);

@@ -166,7 +166,7 @@ class Application {
 
         // Add file operations to toolbar
         let updateFileMenu;
-        let [ , fileMenuState, fileMenu ] = this.toolbar.createMenuButton('File', 'File operations menu. <i>LMB</i> Open menu.', () => updateFileMenu());
+        const [ , fileMenuState, fileMenu ] = this.toolbar.createMenuButton('File', 'File operations menu. <i>LMB</i> Open menu.', () => updateFileMenu());
 
         fileMenu.createActionButton('Open...', 'Close all circuits and load new circuits from a file.', async () => {
             fileMenuState(false);
@@ -176,7 +176,7 @@ class Application {
             updateFileMenu();
             updateCircuitMenu();
         });
-        let [ addButton ] = fileMenu.createActionButton('Open additional...', 'Load additional circuits from a file, keeping open circuits.', async () => {
+        const [ addButton ] = fileMenu.createActionButton('Open additional...', 'Load additional circuits from a file, keeping open circuits.', async () => {
             fileMenuState(false);
             await this.circuits.loadFile(false); // TODO don't switch to new circuit
             this.simulations.select(this.circuits.current, this.config.autoCompile);
@@ -184,7 +184,7 @@ class Application {
             updateCircuitMenu();
         });
         fileMenu.createSeparator();
-        let [ saveButton ] = fileMenu.createActionButton('Save', 'Save circuits to file.', async () => {
+        const [ saveButton ] = fileMenu.createActionButton('Save', 'Save circuits to file.', async () => {
             fileMenuState(false);
             await this.circuits.saveFile();
         });
@@ -219,7 +219,7 @@ class Application {
         // Circuit selection menu
 
         let updateCircuitMenu;
-        let [ , circuitMenuState, circuitMenu ] = this.toolbar.createMenuButton('Circuit', 'Circuit management menu. <i>LMB</i> Open menu.', () => updateCircuitMenu());
+        const [ , circuitMenuState, circuitMenu ] = this.toolbar.createMenuButton('Circuit', 'Circuit management menu. <i>LMB</i> Open menu.', () => updateCircuitMenu());
 
         updateCircuitMenu = () => {
             circuitMenu.clear();
@@ -232,16 +232,16 @@ class Application {
                 updateCircuitMenu();
             });
             circuitMenu.createSeparator();
-            for (let [ uid, label ] of this.circuits.list()) {
-                let isCurrentGrid = uid === this.grid.circuit.uid; // grid circuit may be different from current circuit when navigating through simulation subcomponents
-                let isCurrentCircuit = uid === this.circuits.current.uid;
+            for (const [ uid, label ] of this.circuits.list()) {
+                const isCurrentGrid = uid === this.grid.circuit.uid; // grid circuit may be different from current circuit when navigating through simulation subcomponents
+                const isCurrentCircuit = uid === this.circuits.current.uid;
                 // place circuit as component
                 if (!isCurrentGrid) {
-                    let [ componentButton ] = circuitMenu.createComponentButton('&#9094;', label + '. <i>LMB</i> Drag to move onto grid.', (grid, x, y) => grid.addItem(new CustomComponent(this, x, y, 0, uid, label)));
+                    const [ componentButton ] = circuitMenu.createComponentButton('&#9094;', label + '. <i>LMB</i> Drag to move onto grid.', (grid, x, y) => grid.addItem(new CustomComponent(this, x, y, 0, uid, label)));
                     componentButton.classList.add('toolbar-circuit-place');
                 }
                 // circuit select
-                let [ switchButton ] = circuitMenu.createActionButton(label, isCurrentCircuit ? 'This is the current circuit' : 'Switch grid to circuit "' + label + '".', () => {
+                const [ switchButton ] = circuitMenu.createActionButton(label, isCurrentCircuit ? 'This is the current circuit' : 'Switch grid to circuit "' + label + '".', () => {
                     circuitMenuState(false);
                     this.circuits.select(uid);
                     this.simulations.select(this.circuits.current, this.config.autoCompile);
@@ -254,16 +254,16 @@ class Application {
         // Simulation menu
 
         let updateSimulationMenu;
-        let [ , simulationMenuState, simulationMenu ] = this.toolbar.createMenuButton('Simulation', 'Simulation management menu. <i>LMB</i> Open menu.', () => updateSimulationMenu());
+        const [ , simulationMenuState, simulationMenu ] = this.toolbar.createMenuButton('Simulation', 'Simulation management menu. <i>LMB</i> Open menu.', () => updateSimulationMenu());
 
         updateSimulationMenu = () => {
             simulationMenu.clear();
-            let toggleAction = () => {
+            const toggleAction = () => {
                 const sim = this.simulations.current;
                 const isCurrent = this.circuits.current.uid === sim?.uid;
                 return isCurrent && sim ? 'stop' : 'start';
             };
-            let toggleButtonText = (action) => {
+            const toggleButtonText = (action) => {
                 if (action === 'start') {
                     return `Start at "${this.circuits.current.label}"`;
                 } else if (action === 'stop') {
@@ -290,7 +290,7 @@ class Application {
             // Simulate current grid
             simulationMenu.createActionButton(toggleButtonText(toggleAction()), 'Toggle simulation on/off.', () => {
                 simulationMenuState(false);
-                let action = toggleAction();
+                const action = toggleAction();
                 if (action === 'stop') {
                     this.config.autoCompile = false;
                     if (this.simulations.current) {
@@ -311,7 +311,7 @@ class Application {
             // Simulate current grid
             simulationMenu.createActionButton(`Set ticks/s (${Number.formatSI(this.config.targetTPS)})...`, 'Configure simulation speed', async () => {
                 simulationMenuState(false);
-                let result = await dialog('Simulation speed', [ { label: "Ticks per second", name: "targetTPS", type: "int", check: (v, f) => { const p = Number.parseSI(v); return Number.isInteger(p) && p >= 1; } } ], { targetTPS: Number.formatSI(this.config.targetTPS, true) });
+                const result = await dialog('Simulation speed', [ { label: "Ticks per second", name: "targetTPS", type: "int", check: (v, f) => { const p = Number.parseSI(v); return Number.isInteger(p) && p >= 1; } } ], { targetTPS: Number.formatSI(this.config.targetTPS, true) });
                 if (result) {
                     this.config.targetTPS = result.targetTPS;
                     this.simulations.updateClocks(this.config.targetTPS);
@@ -320,9 +320,9 @@ class Application {
             if (this.simulations.list().length > 0) {
                 simulationMenu.createSeparator();
             }
-            for (let [ uid, label ] of this.simulations.list()) {
-                let isCurrent = uid === this.simulations.current?.uid;
-                let [ button ] = simulationMenu.createActionButton(label, isCurrent ? 'This is the current simulation' : 'Switch to/resume simulation "' + label + '".', () => {
+            for (const [ uid, label ] of this.simulations.list()) {
+                const isCurrent = uid === this.simulations.current?.uid;
+                const [ button ] = simulationMenu.createActionButton(label, isCurrent ? 'This is the current simulation' : 'Switch to/resume simulation "' + label + '".', () => {
                     simulationMenuState(false);
                     this.circuits.select(uid);
                     this.config.singleStep = false;
@@ -353,8 +353,8 @@ class Application {
         });
 
         // add gates
-        for (let [ gateType, { joinOp } ] of Object.entries(Simulation.GATE_MAP)) {
-            let gateLabel = gateType.toUpperFirst();
+        for (const [ gateType, { joinOp } ] of Object.entries(Simulation.GATE_MAP)) {
+            const gateLabel = gateType.toUpperFirst();
             this.toolbar.createComponentButton(gateLabel, `<b>${gateLabel} gate</b>. ${DRAG_MSG}`, (grid, x, y) => {
                 let numInputs = 2; // TODO: configurable somewhere
                 return grid.addItem(new Gate(this, x, y, gateType, joinOp !== null ? numInputs : 1));
@@ -363,7 +363,7 @@ class Application {
 
         // add extra gate-like builtins
         for (const builtinType of keys(Simulation.BUILTIN_MAP)) {
-            let builtinLabel = builtinType.toUpperFirst();
+            const builtinLabel = builtinType.toUpperFirst();
             this.toolbar.createComponentButton(builtinLabel, `<b>${builtinLabel}</b> builtin. ${DRAG_MSG}`, (grid, x, y) => {
                 return grid.addItem(new Builtin(this, x, y, builtinType));
             });

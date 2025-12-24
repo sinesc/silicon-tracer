@@ -144,8 +144,8 @@ class Grid {
     screenInBounds(x, y) {
         assert.number(x);
         assert.number(y);
-        let ex1 = this.#element.offsetLeft;
-        let ey1 = this.#element.offsetTop;
+        const ex1 = this.#element.offsetLeft;
+        const ey1 = this.#element.offsetTop;
         return x >= ex1 && y >= ey1 && x <= ex1 + this.#element.offsetWidth && y <= ey1 + this.#element.offsetHeight;
     }
 
@@ -154,11 +154,11 @@ class Grid {
         assert.number(x);
         assert.number(y);
         // mouse pixel coordinates within grid view element
-        let mouseX = x - this.#element.offsetLeft;
-        let mouseY = y - this.#element.offsetTop;
+        const mouseX = x - this.#element.offsetLeft;
+        const mouseY = y - this.#element.offsetTop;
         // compute mouse on-grid coordinates
-        let mouseGridX = -this.offsetX + mouseX / this.zoom;
-        let mouseGridY = -this.offsetY + mouseY / this.zoom;
+        const mouseGridX = -this.offsetX + mouseX / this.zoom;
+        const mouseGridY = -this.offsetY + mouseY / this.zoom;
         return [ mouseGridX, mouseGridY ];
     }
 
@@ -176,8 +176,8 @@ class Grid {
 
             // add below/above/current zoom level classes to grid to enable zoom based styling
             if (!this.#element.classList.contains('grid-zoom-' + (this.zoom * 100))) {
-                for (let zoom of Grid.ZOOM_LEVELS) {
-                    let name = zoom * 100;
+                for (const zoom of Grid.ZOOM_LEVELS) {
+                    const name = zoom * 100;
                     this.#element.classList.remove('grid-zoom-above-' + name);
                     this.#element.classList.remove('grid-zoom-' + name);
                     this.#element.classList.remove('grid-zoom-below-' + name);
@@ -194,9 +194,9 @@ class Grid {
             this.#element.setAttribute('data-zoom', this.zoom * 100);
 
             // create background grid pattern
-            let spacing = Grid.SPACING * this.zoom;
-            let offsetX = this.offsetX * this.zoom;
-            let offsetY = this.offsetY * this.zoom;
+            const spacing = Grid.SPACING * this.zoom;
+            const offsetX = this.offsetX * this.zoom;
+            const offsetY = this.offsetY * this.zoom;
             this.#element.style.backgroundSize = spacing + 'px ' + spacing + 'px';
             this.#element.style.backgroundPositionX = (offsetX % spacing) + 'px';
             this.#element.style.backgroundPositionY = (offsetY % spacing) + 'px';
@@ -212,7 +212,7 @@ class Grid {
             }
 
             // render components
-            for (let item of this.#circuit.data) {
+            for (const item of this.#circuit.data) {
                 if (dirtyGrid || item.dirty) {
                     // optionally require full redraw from the item
                     if (this.#dirty & Grid.DIRTY_INNER) {
@@ -333,30 +333,30 @@ class Grid {
 
     // Applies net colors to component ports on the grid.
     #applyNetColors() {
-        let netList = NetList.identify(this.#circuit);
+        const netList = NetList.identify(this.#circuit);
         // match port colors with attached wire colors, ensure consistent color across entire net
-        for (let net of netList.nets) {
+        for (const net of netList.nets) {
             // find net color (when dragging from unconnected wire to connected wire the new wire will have color null)
-            let applyColor = net.wires.values().map((nw) => this.#circuit.itemByGID(nw.gid)).find((w) => w.color !== null)?.color ?? this.#netColor;
-            for (let { gid } of net.wires) {
-                let wire = this.#circuit.itemByGID(gid);
+            const applyColor = net.wires.values().map((nw) => this.#circuit.itemByGID(nw.gid)).find((w) => w.color !== null)?.color ?? this.#netColor;
+            for (const { gid } of net.wires) {
+                const wire = this.#circuit.itemByGID(gid);
                 wire.color = applyColor;
             }
-            for (let port of net.ports) {
-                let component = this.#circuit.itemByGID(port.gid);
-                let portName = port.name;
+            for (const port of net.ports) {
+                const component = this.#circuit.itemByGID(port.gid);
+                const portName = port.name;
                 component.portByName(portName).color = applyColor;
             }
         }
         // clear color of unconnected wires
-        for (let netWire of netList.unconnected.wires) {
-            let wire = this.#circuit.itemByGID(netWire.gid);
+        for (const netWire of netList.unconnected.wires) {
+            const wire = this.#circuit.itemByGID(netWire.gid);
             wire.color = null;
         }
         // clear color of unconnected ports
-        for (let port of netList.unconnected.ports) {
-            let component = this.#circuit.itemByGID(port.gid);
-            let portName = port.name;
+        for (const port of netList.unconnected.ports) {
+            const component = this.#circuit.itemByGID(port.gid);
+            const portName = port.name;
             component.portByName(portName).color = null;
         }
     }
@@ -368,7 +368,7 @@ class Grid {
             // check paste hotkey before item hotkeys
             const serialized = JSON.parse(await navigator.clipboard.readText());
             const items = serialized.map((item) => GridItem.unserialize(this.#app, item));
-            for (let item of items) {
+            for (const item of items) {
                 this.addItem(item);
                 item.selected = true;
             }
@@ -392,7 +392,7 @@ class Grid {
             }
         } else if (this.#hotkeyTarget) {
             // handle target specific hotkeys
-            let { gridItem, args } = this.#hotkeyTarget;
+            const { gridItem, args } = this.#hotkeyTarget;
             if (gridItem.onHotkey(e.key, ...args)) {
                 e.preventDefault();
             }
@@ -419,11 +419,11 @@ class Grid {
         e.preventDefault();
         e.stopPropagation();
         // compute mouse on-grid coordinates
-        let [ mouseGridX, mouseGridY ] = this.screenToGrid(e.clientX, e.clientY);
+        const [ mouseGridX, mouseGridY ] = this.screenToGrid(e.clientX, e.clientY);
         // pick next zoom level
         this.zoomLevel = this.zoomLevel + (e.deltaY > 0 ? -1 : 1);
         // compute new mouse on-grid coordinates after the zoom
-        let [ mouseGridXAfter, mouseGridYAfter ] = this.screenToGrid(e.clientX, e.clientY);
+        const [ mouseGridXAfter, mouseGridYAfter ] = this.screenToGrid(e.clientX, e.clientY);
         // move grid to compensate so that the point we zoomed into is still at the cursor
         this.offsetX -= mouseGridX - mouseGridXAfter;
         this.offsetY -= mouseGridY - mouseGridYAfter;
@@ -513,10 +513,10 @@ class Grid {
     // Called on mouse move, updates mouse coordinates and tooltip.
     #debugHandleMouse(e) {
         if (this.#app.config.debugShowCoords) {
-            let mouseX = e.clientX;
-            let mouseY = e.clientY;
+            const mouseX = e.clientX;
+            const mouseY = e.clientY;
             if (this.screenInBounds(mouseX, mouseY)) {
-                let [ x, y ] = this.screenToGrid(mouseX, mouseY);
+                const [ x, y ] = this.screenToGrid(mouseX, mouseY);
                 this.#debugElement.innerHTML = 'x: ' + Math.round(x) + ' y: ' + Math.round(y) + ' zoom: ' + this.zoom;
             }
         }
@@ -524,12 +524,12 @@ class Grid {
 
     // adds a debug marker at the given location
     debugPoint(point, i = 0, existingElement = null) {
-        let element = existingElement ?? document.createElement('div');
+        const element = existingElement ?? document.createElement('div');
         if (point === null) {
             element.style.display = 'none';
         } else {
-            let vx = (point.x + this.offsetX) * this.zoom;
-            let vy = (point.y + this.offsetY) * this.zoom;
+            const vx = (point.x + this.offsetX) * this.zoom;
+            const vy = (point.y + this.offsetY) * this.zoom;
             element.style.display = 'block';
             element.style.left = (vx - 6) + 'px';
             element.style.top = (vy - 6) + 'px';

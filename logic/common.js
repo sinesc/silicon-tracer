@@ -2,8 +2,8 @@
 
 Object.defineProperty(Object.prototype, "map", {
     value: function(c) {
-        let result = Object.create(this);
-        for (let [ k, v ] of Object.entries(this)) {
+        const result = Object.create(this);
+        for (const [ k, v ] of Object.entries(this)) {
             result[k] = c(k, v);
         }
         return result;
@@ -12,8 +12,8 @@ Object.defineProperty(Object.prototype, "map", {
 
 Object.defineProperty(Object.prototype, "filter", {
     value: function(c) {
-        let result = Object.create(this);
-        for (let [ k, v ] of Object.entries(this)) {
+        const result = Object.create(this);
+        for (const [ k, v ] of Object.entries(this)) {
             if (c(k, v)) {
                 result[k] = v;
             }
@@ -300,7 +300,7 @@ class Point {
     }
     // Returns whether the point lies on the given horizontal/vertical line // TODO generalize using colinearity/distance
     onLine(line) {
-        let p = this;
+        const p = this;
         let [ w1, w2 ] = line;
         if (w1.x === w2.x && w1.x === p.x) {
             if (w1.y > w2.y) {
@@ -335,7 +335,7 @@ class WeakUnorderedSet {
     }
     forEach(fn) {
         for (let i = 0; i < this.#items.length; ++i) {
-            let item = this.#items[i].deref();
+            const item = this.#items[i].deref();
             if (item) {
                 fn(item)
             } else {
@@ -377,7 +377,7 @@ class File {
     }
 
     static async saveAs(suggestedName) {
-        let name = File.makeName(suggestedName);
+        const name = File.makeName(suggestedName);
         return await window.showSaveFilePicker({
             ...File.OPTIONS,
             suggestedName: name,
@@ -385,7 +385,7 @@ class File {
     }
 
     static async openFile(existingHandle) {
-        let options = existingHandle ? { ...File.OPTIONS, startIn: existingHandle } : File.OPTIONS;
+        const options = existingHandle ? { ...File.OPTIONS, startIn: existingHandle } : File.OPTIONS;
         return await window.showOpenFilePicker(options);
     }
 

@@ -64,7 +64,7 @@ class Simulation {
         assert.integer(delay, true);
         const rules = Simulation.BUILTIN_MAP[type];
         const replacer = (_, mode, ident) => {
-            let name = ident + suffix;
+            const name = ident + suffix;
             if (mode === '+') {
                 // shortcuts for rising edge detection: prefix name with +
                 // 00 => 0
@@ -166,7 +166,7 @@ class Simulation {
     // Updates all clocks in the circuit for the given TPS and recompiles the simulation without resetting it.
     updateClocks(tps) {
         assert.integer(tps);
-        for (let clock of values(this.#clocks)) {
+        for (const clock of values(this.#clocks)) {
             const previousMaxTicks = Simulation.#computeClockTicks(clock.tps, clock.frequency);
             // set new tps to compute ticks/cycle
             clock.tps = tps;
@@ -302,7 +302,7 @@ class Simulation {
     // Compiles a gate reading from one or more inputs and writing to an output.
     #compileGate(gateIndex, ioReplacements) {
         const gate = this.#gates[gateIndex];
-        let result = [];
+        const result = [];
         for (const name of keys(gate.outputs)) {
             const outputDelay = this.#getIO(name).delay;
             const dataOp = gate.outputs[name].replace(/\b[a-z_][a-z0-9_@]*\b/gi, (match) => ioReplacements[match] ?? 'error');
@@ -423,7 +423,7 @@ class Simulation {
             }
             // write resistor output to nets (these only write if the net has no signal)
             for (const name of values(net.io)) {
-                let pull = this.#getIO(name).pull;
+                const pull = this.#getIO(name).pull;
                 if (pull !== null) {
                     result += this.#compileResistorToNet(netIndex, name) + this.#endl('pull net ' + netIndex + (pull ? 'up' : 'down') + ' from ' + name);
                 }

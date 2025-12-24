@@ -70,7 +70,7 @@ class GridItem {
         } else {
             throw new Error('Invalid component type "' + cname + '"');
         }
-        for (let [ k, v ] of Object.entries(item)) {
+        for (const [ k, v ] of Object.entries(item)) {
             if (k !== '_') {
                 instance[k] = v;
             }
@@ -293,7 +293,7 @@ class GridItem {
             return;
         }
         e.stopPropagation();
-        let [ dragStartX, dragStartY ] = this.grid.screenToGrid(e.clientX, e.clientY);
+        const [ dragStartX, dragStartY ] = this.grid.screenToGrid(e.clientX, e.clientY);
         document.onmouseup = this.#handleClick.bind(this, args);
         document.onmousemove = (e) => {
             e.preventDefault();
@@ -319,7 +319,7 @@ class GridItem {
     #handleDragMove(args, e) {
         e.preventDefault();
         e.stopPropagation();
-        let [ dragCurrentX, dragCurrentY ] = this.grid.screenToGrid(e.clientX, e.clientY);
+        const [ dragCurrentX, dragCurrentY ] = this.grid.screenToGrid(e.clientX, e.clientY);
         this.onDrag(dragCurrentX, dragCurrentY, 'drag', ...args);
     }
 
@@ -330,7 +330,7 @@ class GridItem {
         document.onmouseup = null;
         document.onmousemove = null;
         document.body.classList.remove('dragging');
-        let [ dragCurrentX, dragCurrentY ] = this.grid.screenToGrid(e.clientX, e.clientY);
+        const [ dragCurrentX, dragCurrentY ] = this.grid.screenToGrid(e.clientX, e.clientY);
         this.onDrag(dragCurrentX, dragCurrentY, 'stop', ...args);
     }
 
@@ -343,7 +343,7 @@ class GridItem {
             this.grid.releaseHotkeyTarget(this);
         }
         // set the status message, if any
-        let message = !this.selected ? this.#hoverMessages.get(element) : '<b>Multiple items.</b> <i>LMB</i> Drag to move, <i>R</i> Rotate, <i>DEL</i> Delete, <i>CTRL+C</i> Copy, <i>CTRL+X</i> Cut';
+        const message = !this.selected ? this.#hoverMessages.get(element) : '<b>Multiple items.</b> <i>LMB</i> Drag to move, <i>R</i> Rotate, <i>DEL</i> Delete, <i>CTRL+C</i> Copy, <i>CTRL+X</i> Cut';
         if (message) {
             if (status === 'start') {
                 this.#app.setStatus(message, false, this);

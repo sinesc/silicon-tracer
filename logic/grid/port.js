@@ -54,7 +54,7 @@ class Port extends Interactive {
         if (super.onHotkey(key, what)) {
             return true;
         } else if (key >= '0' && key <= '3' && what.type === 'hover') {
-            let prevState = this.#state;
+            const prevState = this.#state;
             if (key === '1') {
                 this.#state = 1;
             } else if (key === '2') {
@@ -100,8 +100,8 @@ class Port extends Interactive {
         }
 
         // render permanently visible label
-        let side = ComponentPort.portSide(this.rotation, 'bottom');
-        let labelCoords = ComponentPort.portCoords(this.width, this.height, side, 0, true);
+        const side = ComponentPort.portSide(this.rotation, 'bottom');
+        const labelCoords = ComponentPort.portCoords(this.width, this.height, side, 0, true);
         this.renderLabel(this.#labelElement, side, labelCoords.x * this.grid.zoom, labelCoords.y * this.grid.zoom, this.name, false, true);
 
         // render user-set state (lightbulb/circle thing)

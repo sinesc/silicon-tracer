@@ -56,10 +56,10 @@ class NetList {
             }
         }
         // declare nets
-        for (let net of this.nets) {
+        for (const net of this.nets) {
             // create new net from connected gate i/o-ports
-            let interactiveComponents = net.ports.filter((p) => this.instances[p.instance].circuit.itemByGID(p.gid) instanceof Interactive);
-            let attachedPorts = net.ports.filter((p) => { const c = this.instances[p.instance].circuit.itemByGID(p.gid); return c instanceof Gate || c instanceof Builtin || c instanceof Clock || c instanceof PullResistor; }).map((p) => p.uniqueName);
+            const interactiveComponents = net.ports.filter((p) => this.instances[p.instance].circuit.itemByGID(p.gid) instanceof Interactive);
+            const attachedPorts = net.ports.filter((p) => { const c = this.instances[p.instance].circuit.itemByGID(p.gid); return c instanceof Gate || c instanceof Builtin || c instanceof Clock || c instanceof PullResistor; }).map((p) => p.uniqueName);
             net.netId = sim.declareNet(attachedPorts, interactiveComponents.map((p) => p.uniqueName));
         }
         // compile
@@ -77,8 +77,8 @@ class NetList {
     // Returns the netId of the given wire.
     findWire(wire) {
         assert.class(Wire, wire);
-        for (let [ index, net ] of this.nets.entries()) {
-            for (let netWire of net.wires) {
+        for (const [ index, net ] of this.nets.entries()) {
+            for (const netWire of net.wires) {
                 if (netWire.gid === wire.gid) {
                     return index;
                 }
@@ -89,8 +89,8 @@ class NetList {
     // Returns the netId of the given port or null.
     findPort(port) {
         assert.class(Port, port);
-        for (let [ index, net ] of this.nets.entries()) {
-            for (let netPort of net.ports) {
+        for (const [ index, net ] of this.nets.entries()) {
+            for (const netPort of net.ports) {
                 if (netPort.gid === port.gid) {
                     return index;
                 }
@@ -192,7 +192,7 @@ class NetList {
                 prevFoundWires = foundWires;
             } while (foundWires.length > 0);
             // find ports on net
-            let foundPorts = [];
+            const foundPorts = [];
             for (let w = 0; w < netWires.length; ++w) {
                 for (let p = ports.length - 1; p >= 0; --p) {
                     if (ports[p].point.onLine(netWires[w].points)) {

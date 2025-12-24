@@ -88,7 +88,7 @@ class Circuits {
 
     // Returns true while all existing circuits are empty.
     get allEmpty() {
-        for (let circuit of this.#circuits) {
+        for (const circuit of this.#circuits) {
             if (circuit.data.length > 0) {
                 return false;
             }
@@ -112,7 +112,7 @@ class Circuits {
 
     // Returns a list of loaded circuits.
     list() {
-        let circuits = this.#circuits.map((c) => [ c.uid, c.label ]);
+        const circuits = this.#circuits.map((c) => [ c.uid, c.label ]);
         circuits.sort((a, b) => a[1].toLowerCase() < b[1].toLowerCase() ? -1 : (a[1].toLowerCase() > b[1].toLowerCase() ? 1 : 0));
         return circuits;
     }
@@ -231,7 +231,7 @@ Circuits.Circuit = class {
     // Removes an item from the circuit.
     removeItem(item) {
         assert.class(GridItem, item);
-        let index = this.data.indexOf(item);
+        const index = this.data.indexOf(item);
         if (index > -1) {
             this.data.splice(index, 1);
         } else {
@@ -248,7 +248,7 @@ Circuits.Circuit = class {
 
     // Serializes a circuit for saving to file.
     serialize() {
-        let data = this.data.map((item) => item.serialize());
+        const data = this.data.map((item) => item.serialize());
         return { label: this.label, uid: this.uid, data, ports: this.ports, gridConfig: this.gridConfig, portConfig: this.portConfig };
     }
 
@@ -264,7 +264,7 @@ Circuits.Circuit = class {
     // Link circuit to the grid, creating DOM elements for the circuit's components. Ensures the item is detached.
     link(grid) {
         assert.class(Grid, grid);
-        for (let item of this.data) {
+        for (const item of this.data) {
             item.detachSimulation();
             item.link(grid);
         }
@@ -272,7 +272,7 @@ Circuits.Circuit = class {
 
     // Unlink circuit from the grid, deleting DOM elements of the circuit's components.
     unlink() {
-        for (let item of this.data) {
+        for (const item of this.data) {
             item.unlink();
         }
     }
@@ -285,7 +285,7 @@ Circuits.Circuit = class {
         const tickListener = [];
         for (const net of netList.nets) {
             // collect list of interactive components in circuit
-            let interactiveComponents = net.ports.map((p) => ({ portName: p.name, component: this.itemByGID(p.gid) })).filter((p) => p.component instanceof Interactive);
+            const interactiveComponents = net.ports.map((p) => ({ portName: p.name, component: this.itemByGID(p.gid) })).filter((p) => p.component instanceof Interactive);
             tickListener.push(...interactiveComponents);
             // link ports on components
             for (const { name, gid, instance } of net.ports) {
@@ -319,7 +319,7 @@ Circuits.Circuit = class {
 
     // Detaches all items from the simulation by unsetting the item's netId.
     detachSimulation() {
-        for (let item of this.data) {
+        for (const item of this.data) {
             item.detachSimulation();
         };
     }
@@ -327,13 +327,13 @@ Circuits.Circuit = class {
     // Generates port outline for the circuit's component representation.
     generateOutline() {
         // get ports from circuit
-        let ports = this.data.filter((i) => i instanceof Port);
-        let outline = { 'left': [], 'right': [], 'top': [], 'bottom': [] };
-        for (let item of ports) {
+        const ports = this.data.filter((i) => i instanceof Port);
+        const outline = { 'left': [], 'right': [], 'top': [], 'bottom': [] };
+        for (const item of ports) {
             // side of the component-port on port-components is opposite of where the port-component is facing
-            let side = Component.SIDES[(item.rotation + 2) % 4];
+            const side = Component.SIDES[(item.rotation + 2) % 4];
             // keep track of position so we can arrange ports on component by position in schematic
-            let sort = side === 'left' || side === 'right' ? item.y : item.x;
+            const sort = side === 'left' || side === 'right' ? item.y : item.x;
             outline[side].push([ sort, item.name ]);
         }
         // determine if edges need to be even or odd length (for rotation to work properly, edges need to be either all odd or all even length)
@@ -348,19 +348,19 @@ Circuits.Circuit = class {
         height = Math.max(even ? 2 : 1, height);
         width = Math.max(even ? 2 : 1, width);
         // arrange ports as specified
-        for (let side of Object.keys(outline)) {
+        for (const side of Object.keys(outline)) {
             // sort by position
             outline[side].sort(([a,], [b,]) => a - b);
             outline[side] = outline[side].map(([sort, label]) => label);
             // determine expected length of side (number of required ports) and actual number of ports
-            let length = side === 'left' || side === 'right' ? height : width;
-            let available = length - outline[side].length;
+            const length = side === 'left' || side === 'right' ? height : width;
+            const available = length - outline[side].length;
             // prepare additional ports to insert on the outside and/or center (or wherever configured) of the side
-            let edgePorts = (new Array(Math.floor(available / 2))).fill(null);
-            let centerPorts = available % 2 === 1 ? [ null ] : [];
+            const edgePorts = (new Array(Math.floor(available / 2))).fill(null);
+            const centerPorts = available % 2 === 1 ? [ null ] : [];
             // insert ports according to configured position
             outline[side] = [ ...edgePorts, ...outline[side], ...edgePorts ];
-            let position = this.portConfig.gap === 'middle' ? outline[side].length / 2 : (this.portConfig.gap === 'start' ? 0 : outline[side].length);
+            const position = this.portConfig.gap === 'middle' ? outline[side].length / 2 : (this.portConfig.gap === 'start' ? 0 : outline[side].length);
             outline[side].splice(position, 0, ...centerPorts);
         }
         // reverse left/bottom due to the way we enumerate ports for easier rotation

@@ -28,11 +28,11 @@ app.debug = () => {
     app.toolbar.createActionButton('Dump ASM', 'Outputs simulation code to console.', () => {
         const sim = app.simulations.current;
         if (sim) {
-            let portInfo = [];
-            for (let { offset, meta } of sim.engine.nets) {
-                for (let port of meta) {
-                    let gid = port.match(/@(g[a-f0-9]+)@/)[1] ?? null;
-                    let item = app.circuits.current.itemByGID(gid);
+            const portInfo = [];
+            for (const { offset, meta } of sim.engine.nets) {
+                for (const port of meta) {
+                    const gid = port.match(/@(g[a-f0-9]+)@/)[1] ?? null;
+                    const item = app.circuits.current.itemByGID(gid);
                     if (item) {
                         portInfo.push('// port ' + item.name + ' @ mem[' + offset + ']');
                     }
@@ -50,22 +50,22 @@ app.debug = () => {
         app.simulations.current.tick(1);
         console.clear();
         console.log('tick ' + (tick++));
-        let mem = app.simulations.current.engine.mem();
-        for (let [ k, v ] of Object.entries(mem.io)) {
-            let abbrev = k.replace(/@(g[a-f0-9]+)@/g, (m, h) => ':' + h.substr(1, 6) + ':');
+        const mem = app.simulations.current.engine.mem();
+        for (const [ k, v ] of Object.entries(mem.io)) {
+            const abbrev = k.replace(/@(g[a-f0-9]+)@/g, (m, h) => ':' + h.substr(1, 6) + ':');
             console.log(abbrev + ': ' + bin(v));
         }
-        for (let [ k, v ] of Object.entries(mem.net)) {
+        for (const [ k, v ] of Object.entries(mem.net)) {
             console.log(k + ': ' + bin(v));
         }
-        for (let [ k, v ] of Object.entries(mem.clock)) {
+        for (const [ k, v ] of Object.entries(mem.clock)) {
             console.log(k + ': ' + v);
         }
     });
 
     window.bin = function(value) {
         let result = '';
-        for (let i of [ 5, 4, 1, 0 ]) {
+        for (const i of [ 5, 4, 1, 0 ]) {
             result += ((value & (1 << i)) > 0 ? '1' : '.');
             if (i === Simulation.ARRAY_BITS / 2) {
                 result += ' ';

@@ -29,7 +29,7 @@ class Wire extends GridItem {
 
     // Serializes the object for writing to disk.
     serialize() {
-        let direction = this.width > 0 ? 'h' : 'v';
+        const direction = this.width > 0 ? 'h' : 'v';
         return {
             ...super.serialize(),
             _: { c: this.constructor.name, a: [ this.x, this.y, direction === 'h' ? this.width : this.height, direction, this.color ]},
@@ -79,21 +79,21 @@ class Wire extends GridItem {
         this.grid.releaseHotkeyTarget(this, true);
 
         // check if we're dragging from either end of the wire and change ordering to extend from there first, then go perpendicular
-        let [ mx, my ] = Grid.align(x, y);
+        const [ mx, my ] = Grid.align(x, y);
         let fliptest;
         if ((mx === this.x && my === this.y) || (mx === this.x + this.width && my === this.y + this.height)) {
             if (this.direction === 'h') {
-                let xLeft = Math.min(this.x, this.x + this.width);
+                const xLeft = Math.min(this.x, this.x + this.width);
                 fliptest = mx === xLeft ? (x, y) => x < mx : (x, y) => x > mx;
             } else {
-                let yTop = Math.min(this.y, this.y + this.height);
+                const yTop = Math.min(this.y, this.y + this.height);
                 fliptest = my === yTop ? (x, y) => y < my : (x, y) => y > my;
             }
         } else {
             fliptest = () => false;
         }
 
-        let wireBuilder = new WireBuilder(this.app, this.grid, x, y, x, y, what.ordering, this.color, fliptest);
+        const wireBuilder = new WireBuilder(this.app, this.grid, x, y, x, y, what.ordering, this.color, fliptest);
         wireBuilder.dragStart(x, y, what);
     }
 
@@ -127,10 +127,10 @@ class Wire extends GridItem {
     // Hover hotkey actions
     onHotkey(key, what) {
         if (key >= '0' && key <= '9' && what.type === 'hover') {
-            let netList = NetList.identify(this.grid.circuit)
-            let myNetId = netList.findWire(this);
-            let color = parseInt(key);
-            for (let netWire of netList.nets[myNetId].wires) {
+            const netList = NetList.identify(this.grid.circuit)
+            const myNetId = netList.findWire(this);
+            const color = parseInt(key);
+            for (const netWire of netList.nets[myNetId].wires) {
                 this.grid.circuit.itemByGID(netWire.gid).color = color;
             }
             this.grid.markDirty();
@@ -184,23 +184,23 @@ class Wire extends GridItem {
             return false;
         }
 
-        let thickness = Wire.THICKNESS * this.grid.zoom;
-        let v = this.visual;
-        let t = thickness / 2;
+        const thickness = Wire.THICKNESS * this.grid.zoom;
+        const v = this.visual;
+        const t = thickness / 2;
 
         this.#element.setAttribute('data-net-color', this.color ?? '');
 
         if (v.width !== 0) {
-            let hx = v.width < 0 ? v.x + v.width : v.x;
-            let hw = Math.abs(v.width);
+            const hx = v.width < 0 ? v.x + v.width : v.x;
+            const hw = Math.abs(v.width);
             this.#element.style.left = (hx - t) + "px";
             this.#element.style.top = (v.y - t) + "px";
             this.#element.style.width = (hw + thickness) + "px";
             this.#element.style.height = thickness + "px";
             this.#element.style.display = '';
         } else if (v.height !== 0) {
-            let vy = v.height < 0 ? v.y + v.height : v.y;
-            let vh = Math.abs(v.height);
+            const vy = v.height < 0 ? v.y + v.height : v.y;
+            const vh = Math.abs(v.height);
             this.#element.style.left = (v.x + v.width - t) + "px";
             this.#element.style.top = (vy - t) + "px";
             this.#element.style.width = thickness + "px";
@@ -229,7 +229,7 @@ class Wire extends GridItem {
         const intersections = Wire.#findIntersections(preMergedWires);
         let merged = false;
 
-        for (let direction of [ 'h', 'v' ]) {
+        for (const direction of [ 'h', 'v' ]) {
             merged ||=  Wire.#mergeWires(container, preMergedWires, direction);
         }
 
@@ -240,11 +240,11 @@ class Wire extends GridItem {
 
     // compact() support. Find intentional intersection points (one wire ending on another).
     static #findIntersections(allWires) {
-        let intersections = new Map();
-        for (let direction of [ 'h', 'v' ]) {
+        const intersections = new Map();
+        for (const direction of [ 'h', 'v' ]) {
             const otherDirection = direction === 'h' ? 'v' : 'h';
-            for (let wire of allWires[direction]) {
-                for (let otherWire of allWires[otherDirection]) {
+            for (const wire of allWires[direction]) {
+                for (const otherWire of allWires[otherDirection]) {
                     for (let i = 0; i < 2; ++i) {
                         // check if endpoint intersects other wire but is not on that wire's end points (we use these intersections to add back points to merged
                         // wires but that's not necessary if we are already intersecting an endpoint)
@@ -261,8 +261,8 @@ class Wire extends GridItem {
     // compact() support. Restore intentional intersection points after merging unintentional endpoints.
     static #restoreIntersections(container, intersections) {
 
-        let isIntersected = (w, d) => {
-            for (let i of intersections) {
+        const isIntersected = (w, d) => {
+            for (const i of intersections) {
                 if (i.direction === d && !i.done && i.point.onLine(w)) {
                     i.done = true;
                     return i.point;
@@ -279,18 +279,18 @@ class Wire extends GridItem {
         do {
             created = false;
             const postMergedWires = Wire.#getAllWires(container);
-            for (let direction of [ 'h', 'v' ]) {
-                let axis = direction === 'h' ? 'x' : 'y';
-                for (let w of postMergedWires[direction]) {
-                    let intersection = isIntersected(w.points, w.wire.direction);
+            for (const direction of [ 'h', 'v' ]) {
+                const axis = direction === 'h' ? 'x' : 'y';
+                for (const w of postMergedWires[direction]) {
+                    const intersection = isIntersected(w.points, w.wire.direction);
                     if (intersection !== null) {
                         const app = w.wire.app;
-                        let length1 = intersection[axis] - w.points[0][axis];
+                        const length1 = intersection[axis] - w.points[0][axis];
                         if (length1 !== 0) {
                             container.addItem(new Wire(app, w.points[0].x, w.points[0].y, length1, direction, w.wire.color));
                             created = true;
                         }
-                        let length2 = w.points[1][axis] - intersection[axis];
+                        const length2 = w.points[1][axis] - intersection[axis];
                         if (length2 !== 0) {
                             container.addItem(new Wire(app, intersection.x, intersection.y, length2, direction, w.wire.color));
                             created = true;
@@ -305,14 +305,14 @@ class Wire extends GridItem {
     // compact() support. Merge overlapping wires.
     static #mergeWires(container, allWires, direction) {
 
-        let axis = direction === 'h' ? 'x' : 'y';
-        let wires = allWires[direction];
+        const axis = direction === 'h' ? 'x' : 'y';
+        const wires = allWires[direction];
 
-        for (let wp of wires) {
+        for (const wp of wires) {
             if (!wp.active) {
                 continue;
             }
-            for (let wq of wires) {
+            for (const wq of wires) {
                 if (!wq.active || wq.wire === wp.wire) {
                     continue;
                 }
@@ -322,8 +322,8 @@ class Wire extends GridItem {
                         wp.active = false;
                     } else {
                         // partially outside, enlarge wq, disable wp
-                        let min = Math.min(wp.points[0][axis], wp.points[1][axis], wq.points[0][axis], wq.points[1][axis]);
-                        let max = Math.max(wp.points[0][axis], wp.points[1][axis], wq.points[0][axis], wq.points[1][axis]);
+                        const min = Math.min(wp.points[0][axis], wp.points[1][axis], wq.points[0][axis], wq.points[1][axis]);
+                        const max = Math.max(wp.points[0][axis], wp.points[1][axis], wq.points[0][axis], wq.points[1][axis]);
                         wq.points[0][axis] = min;
                         wq.points[1][axis] = max;
                         wp.active = false;
@@ -334,12 +334,12 @@ class Wire extends GridItem {
 
         let merged = false;
 
-        for (let w of wires) {
+        for (const w of wires) {
             if (!w.active) {
                 container.removeItem(w.wire);
                 merged = true;
             } else {
-                let length = w.points[1][axis] - w.points[0][axis];
+                const length = w.points[1][axis] - w.points[0][axis];
                 w.wire.setEndpoints(w.points[0].x, w.points[0].y, length, direction, false);
             }
         }

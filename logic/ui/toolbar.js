@@ -41,8 +41,8 @@ class Toolbar {
             e.preventDefault();
             e.stopPropagation();
             if (!button.classList.contains('toolbar-menu-button-disabled')) {
-                let [ x, y ] = this.#app.grid.screenToGrid(e.clientX, e.clientY);
-                let component = create(this.#app.grid, x, y);
+                const [ x, y ] = this.#app.grid.screenToGrid(e.clientX, e.clientY);
+                const component = create(this.#app.grid, x, y);
                 component.dragStart(x, y, { type: "component", grabOffsetX: component.width / 2, grabOffsetY: component.height / 2 });
             }
         };
@@ -75,7 +75,7 @@ class Toolbar {
         assert.string(hoverMessage);
         assert.bool(defaultState);
         assert.function(action);
-        let [ button, stateFn ] = this.#createToggleButton(label, hoverMessage, defaultState, action);
+        const [ button, stateFn ] = this.#createToggleButton(label, hoverMessage, defaultState, action);
         this.#element.appendChild(button);
         return [ button, stateFn ];
     }
@@ -86,7 +86,7 @@ class Toolbar {
         assert.string(label);
         assert.string(hoverMessage);
         assert.function(openAction);
-        let [ button, stateFn ] = this.#createToggleButton(label, hoverMessage, false, (open) => {
+        const [ button, stateFn ] = this.#createToggleButton(label, hoverMessage, false, (open) => {
             if (open) {
                 if (openAction) {
                     openAction();
@@ -128,7 +128,7 @@ class Toolbar {
             return stateFn(state);
         };
         this.#element.appendChild(button);
-        let subToolbar = new Toolbar(this.#app, subToolbarContainer);
+        const subToolbar = new Toolbar(this.#app, subToolbarContainer);
         return [ button, menuStateFn, subToolbar ];
     }
 
@@ -142,7 +142,7 @@ class Toolbar {
     #createToggleButton(label, hoverMessage, defaultState, action) {
         let state = defaultState;
         const button = element(null, 'div', `toolbar-button toolbar-toggle-button toolbar-toggle-button-${state ? 'on' : 'off'}`, label);
-        let stateFn = (newState) => {
+        const stateFn = (newState) => {
             if (newState !== undefined) {
                 button.classList.remove(state ? 'toolbar-toggle-button-on' : 'toolbar-toggle-button-off');
                 state = newState;

@@ -45,14 +45,14 @@ class ComponentPort {
             'bottom': { x: width - Grid.SPACING,    y: height,                  stepX: -Grid.SPACING },
             'left'  : { x: 0,                       y: height - Grid.SPACING,   stepY: -Grid.SPACING },
         };
-        let x = map[side].x + (map[side].stepX ?? 0) * index - (offsetCenter ? Component.PORT_SIZE / 2 : 0);
-        let y = map[side].y + (map[side].stepY ?? 0) * index - (offsetCenter ? Component.PORT_SIZE / 2 : 0);
+        const x = map[side].x + (map[side].stepX ?? 0) * index - (offsetCenter ? Component.PORT_SIZE / 2 : 0);
+        const y = map[side].y + (map[side].stepY ?? 0) * index - (offsetCenter ? Component.PORT_SIZE / 2 : 0);
         return new Point(x, y);
     }
 
     // Returns the port side name after given component rotation is considered.
     static portSide(rotation, originalSide) {
-        let index = Component.SIDES.indexOf(originalSide);
+        const index = Component.SIDES.indexOf(originalSide);
         return Component.SIDES[(index + rotation) % 4];
     }
 
@@ -63,7 +63,7 @@ class ComponentPort {
 
     // Returns the port side name after component rotation is considered.
     side(rotation) {
-        let index = Component.SIDES.indexOf(this.originalSide);
+        const index = Component.SIDES.indexOf(this.originalSide);
         return Component.SIDES[(index + rotation) % 4];
     }
 }
@@ -108,7 +108,7 @@ class Component extends GridItem {
     setPortsFromNames(ports) {
         assert.object(ports, false);
         this.#ports = { left: [], right: [], top: [], bottom: [], ...ports };
-        for (let [ side, other ] of Object.entries({ 'left': 'right', 'right': 'left', 'top': 'bottom', 'bottom': 'top' })) {
+        for (const [ side, other ] of Object.entries({ 'left': 'right', 'right': 'left', 'top': 'bottom', 'bottom': 'top' })) {
             while (this.#ports[side].length < this.#ports[other].length) {
                 this.#ports[side].push(null);
             }
@@ -187,8 +187,8 @@ class Component extends GridItem {
         value = value & 3; // clamp to 0-3
         this.dirty ||= this.#rotation !== value;
         if (this.grid && (value & 1) !== (this.#rotation & 1)) {
-            let x = this.x + (this.width - this.height) / 2;
-            let y = this.y - (this.width - this.height) / 2;
+            const x = this.x + (this.width - this.height) / 2;
+            const y = this.y - (this.width - this.height) / 2;
             [ this.x, this.y ] = Grid.align(x, y);
             this.#rotation = value;
             this.updateDimensions();
@@ -298,8 +298,8 @@ class Component extends GridItem {
                 this.#dropPreview = element(null, 'div', 'component-drop-preview');
                 this.grid.addVisual(this.#dropPreview);
             }
-            let [ alignedX, alignedY ] = Grid.align(this.x, this.y);
-            let [ visualX, visualY ] = this.gridToVisual(alignedX, alignedY);
+            const [ alignedX, alignedY ] = Grid.align(this.x, this.y);
+            const [ visualX, visualY ] = this.gridToVisual(alignedX, alignedY);
             this.#dropPreview.style.left = visualX + "px";
             this.#dropPreview.style.top = visualY + "px";
             this.#dropPreview.style.width = this.visual.width + "px";
@@ -317,19 +317,19 @@ class Component extends GridItem {
     onConnect(x, y, status, what) {
         this.dragStop(x, y, what);
         this.grid.releaseHotkeyTarget(this, true);
-        let port = this.portByName(what.name);
-        let portCoords = port.coords(this.width, this.height, this.rotation);
-        let portSide = port.side(this.rotation);
-        let ordering = portSide === 'top' || portSide === 'bottom' ? 'vh' : 'hv';
-        let px = this.x + portCoords.x;
-        let py = this.y + portCoords.y;
+        const port = this.portByName(what.name);
+        const portCoords = port.coords(this.width, this.height, this.rotation);
+        const portSide = port.side(this.rotation);
+        const ordering = portSide === 'top' || portSide === 'bottom' ? 'vh' : 'hv';
+        const px = this.x + portCoords.x;
+        const py = this.y + portCoords.y;
         const MINIMA = {
             left: (x, y) => x > px,
             right: (x, y) => x < px,
             top: (x, y) => y > py,
             bottom: (x, y) => y < py,
         };
-        let wireBuilder = new WireBuilder(this.app, this.grid, px, py, x, y, ordering, port.color, MINIMA[portSide]);
+        const wireBuilder = new WireBuilder(this.app, this.grid, px, py, x, y, ordering, port.color, MINIMA[portSide]);
         wireBuilder.dragStart(x, y, what);
     }
 
@@ -348,7 +348,7 @@ class Component extends GridItem {
 
     // Returns flat list of ports.
     getPorts() {
-        let ports = [  ];
+        const ports = [  ];
         for (const items of Object.values(this.#ports)) {
             for (const item of items) {
                 if (item.name !== null) {

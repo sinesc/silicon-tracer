@@ -61,15 +61,15 @@ class WireBuilder extends GridItem { // Note: Not actually a grid item, but uses
     onHotkey(key, what) {
         if (key === 'r' && what.type === 'connect') {
             // add new corner when pressing R while dragging a wire
-            let x = this.x + this.width;
-            let y = this.y + this.height;
-            let color = this.color;
+            const x = this.x + this.width;
+            const y = this.y + this.height;
+            const color = this.color;
             // pass handling off to the previously created wirebuilder
-            let flippedOrdering = this.#ordering !== what.ordering;
-            let dragConnectionWhat = { ...what, ordering: flippedOrdering ? what.ordering == 'hv' ? 'vh' : 'hv' : what.ordering, x, y, color };
+            const flippedOrdering = this.#ordering !== what.ordering;
+            const dragConnectionWhat = { ...what, ordering: flippedOrdering ? what.ordering == 'hv' ? 'vh' : 'hv' : what.ordering, x, y, color };
             this.dragStop(x, y, what);
             this.grid.releaseHotkeyTarget(this, true);
-            let wireBuilder = new WireBuilder(this.app, this.grid, what.startX, what.startY, x, y, what.ordering, this.color);
+            const wireBuilder = new WireBuilder(this.app, this.grid, what.startX, what.startY, x, y, what.ordering, this.color);
             wireBuilder.dragStart(x, y, dragConnectionWhat);
             return true;
         }
@@ -129,7 +129,7 @@ class WireBuilder extends GridItem { // Note: Not actually a grid item, but uses
         if (this.app.config.debugShowWireBox) {
             this.#debugRenderBox();
         }
-    };
+    }
 
     // Updates wire positions from endpoints.
     #updateWires() {
@@ -139,29 +139,29 @@ class WireBuilder extends GridItem { // Note: Not actually a grid item, but uses
         const height = this.height;
         if (this.ordering === 'hv') {
             // horizontal first, then vertical
-            let hx = width < 0 ? x + width : x;
-            let hw = Math.abs(width);
+            const hx = width < 0 ? x + width : x;
+            const hw = Math.abs(width);
             this.#wireH.setEndpoints(hx, y, hw, 'h');
 
-            let vy = height < 0 ? y + height : y;
-            let vh = Math.abs(height);
+            const vy = height < 0 ? y + height : y;
+            const vh = Math.abs(height);
             this.#wireV.setEndpoints(x + width, vy, vh, 'v');
         } else {
             // vertical first, then horizontal
-            let vy = height < 0 ? y + height : y;
-            let vh = Math.abs(height);
+            const vy = height < 0 ? y + height : y;
+            const vh = Math.abs(height);
             this.#wireV.setEndpoints(x, vy, vh, 'v');
 
-            let hx = width < 0 ? x + width : x;
-            let hw = Math.abs(width);
+            const hx = width < 0 ? x + width : x;
+            const hw = Math.abs(width);
             this.#wireH.setEndpoints(hx, y + height, hw, 'h');
         }
     }
 
     // Returns the 2 or 3 distinct endpoint coordinates of this wire corner.
     #points() {
-        let mk = (x, y) => new Point(x, y);
-        let points = [ mk(this.x, this.y) ];
+        const mk = (x, y) => new Point(x, y);
+        const points = [ mk(this.x, this.y) ];
         if (this.width !== 0) {
             points.push(this.ordering === 'hv' ? mk(this.x + this.width, this.y) : mk(this.x + (this.height === 0 ? this.width : 0), this.y + this.height));
         }
@@ -173,14 +173,14 @@ class WireBuilder extends GridItem { // Note: Not actually a grid item, but uses
 
     // Renders a debug bounding box around for the wire corner.
     #debugRenderBox() {
-        let v = this.visual;
-        let hx = v.width < 0 ? v.x + v.width : v.x;
-        let hy = v.height < 0 ? v.y + v.height : v.y;
+        const v = this.visual;
+        const hx = v.width < 0 ? v.x + v.width : v.x;
+        const hy = v.height < 0 ? v.y + v.height : v.y;
         this.#debugElement.style.left = hx + "px";
         this.#debugElement.style.top = hy + "px";
         this.#debugElement.style.width = Math.abs(v.width) + "px";
         this.#debugElement.style.height = Math.abs(v.height) + "px";
-        let points = this.#points();
+        const points = this.#points();
         for (let i = 0; i < 3; ++i) {
             this['debug' + i] = this.grid.debugPoint(i < points.length ? points[i] : null, i, this['debug' + i] ?? null);
         }
