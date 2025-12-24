@@ -14,11 +14,11 @@ class CustomComponent extends Component {
     // Simulation instance of the represented sub-circuit.
     #instance = null;
 
-    constructor(x, y, rotation, uid) {
+    constructor(app, x, y, rotation, uid) {
         assert.integer(rotation);
         assert.string(uid);
         let circuit = app.circuits.byUID(uid) ?? {};
-        super(x, y, circuit.ports ?? {}, circuit.label ?? '');
+        super(app, x, y, circuit.ports ?? {}, circuit.label ?? '');
         this.rotation = rotation;
         this.uid = uid;
     }
@@ -33,12 +33,12 @@ class CustomComponent extends Component {
 
     // Link custom component to a grid, enabling it to be rendered.
     link(grid) {
-        let circuit = app.circuits.byUID(this.uid) ?? {};
+        let circuit = this.app.circuits.byUID(this.uid) ?? {};
         this.setPortsFromNames(circuit.ports);
         this.type = circuit.label;
         super.link(grid);
         this.element.classList.add('custom');
-        this.setHoverMessage(this.inner, () => '<b>' + this.label + '</b>. <i>LMB</i>: Drag to move, <i>R</i>: Rotate, <i>DEL</i>: Delete, <i>E</i>: Edit, <i>W</i>:Switch to sub-circuit' + (app.simulations.current ? ' simulation' : ''), { type: 'hover' });
+        this.setHoverMessage(this.inner, () => '<b>' + this.label + '</b>. <i>LMB</i>: Drag to move, <i>R</i>: Rotate, <i>DEL</i>: Delete, <i>E</i>: Edit, <i>W</i>:Switch to sub-circuit' + (this.app.simulations.current ? ' simulation' : ''), { type: 'hover' });
     }
 
     // Set the simulation instance of the represented sub-circuit.
@@ -66,15 +66,15 @@ class CustomComponent extends Component {
         if (super.onHotkey(key, what)) {
             return true;
         } else if (key === 'w' && what.type === 'hover') {
-            const sim = app.simulations.current;
+            const sim = this.app.simulations.current;
             if (sim && this.instance !== null) {
                 // switch to subcomponent simulation instance
                 sim.reattach(this.instance);
             } else {
                 // switch to another component, optionally start simulation for that one
-                app.circuits.select(this.uid);
-                const circuit = app.circuits.byUID(this.uid);
-                app.simulations.select(circuit, app.config.autoCompile);
+                this.app.circuits.select(this.uid);
+                const circuit = this.app.circuits.byUID(this.uid);
+                this.app.simulations.select(circuit, this.app.config.autoCompile);
             }
             return true;
         }
@@ -82,7 +82,7 @@ class CustomComponent extends Component {
 
     // Handle edit hotkey.
     async onEdit() {
-        let circuit = app.circuits.byUID(this.uid) ?? {};
+        let circuit = this.app.circuits.byUID(this.uid) ?? {};
         const result = await dialog("Configure custom component", CustomComponent.EDIT_DIALOG, { /*label: this.label || circuit.label,*/ rotation: this.rotation });
         if (result) {
             //const grid = this.grid;

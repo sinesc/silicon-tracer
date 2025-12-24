@@ -347,7 +347,7 @@ class Grid {
 
     // Applies net colors to component ports on the grid.
     #applyNetColors() {
-        let netList = NetList.identify(this.#circuit, false);
+        let netList = NetList.identify(this.#circuit);
         // match port colors with attached wire colors, ensure consistent color across entire net
         for (let net of netList.nets) {
             // find net color (when dragging from unconnected wire to connected wire the new wire will have color null)
@@ -381,7 +381,7 @@ class Grid {
         if (e.ctrlKey && e.key === 'v') {
             // check paste hotkey before item hotkeys
             const serialized = JSON.parse(await navigator.clipboard.readText());
-            const items = serialized.map((item) => GridItem.unserialize(item));
+            const items = serialized.map((item) => GridItem.unserialize(this.#app, item));
             for (let item of items) {
                 this.addItem(item);
                 item.selected = true;
@@ -525,7 +525,7 @@ class Grid {
 
     // Called on mouse move, updates mouse coordinates and tooltip.
     #debugHandleMouse(e) {
-        if (app.config.debugShowCoords) {
+        if (this.#app.config.debugShowCoords) {
             let mouseX = e.clientX;
             let mouseY = e.clientY;
             if (this.screenInBounds(mouseX, mouseY)) {

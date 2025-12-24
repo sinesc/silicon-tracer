@@ -17,11 +17,11 @@ class Wire extends GridItem {
     // Whether the wire is actually on the grid yet. false during wire-drag.
     limbo = false;
 
-    constructor(x, y, length, direction, color = null) {
+    constructor(app, x, y, length, direction, color = null) {
         assert.number(length);
         assert.string(direction);
         assert.integer(color, true);
-        super(x, y);
+        super(app, x, y);
         this.width = direction === 'h' ? length : 0;
         this.height = direction === 'v' ? length : 0;
         this.color = color ?? null;
@@ -95,7 +95,7 @@ class Wire extends GridItem {
             fliptest = () => false;
         }
 
-        let wireBuilder = new WireBuilder(x, y, x, y, what.ordering, this.color, fliptest);
+        let wireBuilder = new WireBuilder(this.app, this.grid, x, y, x, y, what.ordering, this.color, fliptest);
         wireBuilder.dragStart(x, y, what);
     }
 
@@ -128,7 +128,7 @@ class Wire extends GridItem {
     // Hover hotkey actions
     onHotkey(key, what) {
         if (key >= '0' && key <= '9' && what.type === 'hover') {
-            let netList = NetList.identify(this.grid.circuit, false)
+            let netList = NetList.identify(this.grid.circuit)
             let myNetId = netList.findWire(this);
             let color = parseInt(key);
             for (let netWire of netList.nets[myNetId].wires) {
@@ -285,14 +285,15 @@ class Wire extends GridItem {
                 for (let w of postMergedWires[direction]) {
                     let intersection = isIntersected(w.points, w.wire.direction);
                     if (intersection !== null) {
+                        const app = w.wire.app;
                         let length1 = intersection[axis] - w.points[0][axis];
                         if (length1 !== 0) {
-                            container.addItem(new Wire(w.points[0].x, w.points[0].y, length1, direction, w.wire.color));
+                            container.addItem(new Wire(app, w.points[0].x, w.points[0].y, length1, direction, w.wire.color));
                             created = true;
                         }
                         let length2 = w.points[1][axis] - intersection[axis];
                         if (length2 !== 0) {
-                            container.addItem(new Wire(intersection.x, intersection.y, length2, direction, w.wire.color));
+                            container.addItem(new Wire(app, intersection.x, intersection.y, length2, direction, w.wire.color));
                             created = true;
                         }
                         container.removeItem(w.wire);

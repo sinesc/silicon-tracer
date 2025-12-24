@@ -17,24 +17,24 @@ class NetList {
         this.instances = instances;
     }
 
-    // Identifies nets in the given circuit and returns a netlist.
-    static identify(circuit, recurse) {
+    // Identifies nets in the given circuit and returns a netlist, recursively if a uid=>circuit map of circuits is provided
+    static identify(circuit, circuits = null) {
         assert.class(Circuits.Circuit, circuit);
-        assert.bool(recurse);
-        const netList = NetList.#identifyNets(circuit, recurse, []);
+        assert.object(circuits, true);
+        const netList = NetList.#identifyNets(circuit, circuits, []);
         NetList.#joinNetsBySharedPort(netList.nets);
         return netList;
     }
 
     // Compiles a simulation and returns it.
-    compileSimulation(rawMem, debug, checkNetConflicts) {
+    compileSimulation(rawMem, config) {
         assert.object(rawMem, true);
         if (rawMem) {
             assert.class(Uint8Array, rawMem.mem8);
             assert.class(Int32Array, rawMem.mem32);
         }
-        assert.bool(debug);
-        const sim = new Simulation(debug, checkNetConflicts);
+        assert.object(config);
+        const sim = new Simulation(config.debugCompileComments, config.checkNetConflicts);
         // declare gates from component map
         for (const [instance, { circuit }] of this.instances.entries()) {
             for (const component of circuit.data.filter((i) => !(i instanceof Wire))) {
@@ -45,7 +45,7 @@ class NetList {
                     } else if (component instanceof Builtin) {
                         sim.declareBuiltin(component.type, suffix);
                     } else if (component instanceof Clock) {
-                        sim.declareClock(component.frequency, app.config.targetTPS, true, suffix);
+                        sim.declareClock(component.frequency, config.targetTPS, true, suffix);
                     } else if (component instanceof PullResistor) {
                         sim.declarePullResistor(component.direction, suffix);
                     }
@@ -110,15 +110,15 @@ class NetList {
     }
 
     // Identifies nets on the grid and returns a NetList.
-    static #identifyNets(circuit, recurse, instances = [], parentInstance = null) {
-        const { wires, ports, subcomponentNets } = NetList.#circuitToNetItems(circuit, recurse, instances, parentInstance); // TODO: include unconnected subcomponent items in final result
+    static #identifyNets(circuit, circuits, instances = [], parentInstance = null) {
+        const { wires, ports, subcomponentNets } = NetList.#circuitToNetItems(circuit, circuits, instances, parentInstance); // TODO: include unconnected subcomponent items in final result
         const { nets, unconnectedWires, unconnectedPorts } = NetList.#netItemsToNets(wires, ports);
         nets.push(...subcomponentNets);
         return new NetList(nets, unconnectedWires, unconnectedPorts, instances);
     }
 
     // Assemble lists of net-ports and net-wires to simplify access to relevant grid item properties (coordinates, gids, ...)
-    static #circuitToNetItems(circuit, recurse, instances = [], parentInstance = null) {
+    static #circuitToNetItems(circuit, circuits, instances = [], parentInstance = null) {
         const instance = instances.length;
         const subInstances = { }; // maps CustomComponent gids in each instance to their sub-instance
         instances.push({ circuit, subInstances, parentInstance });
@@ -133,8 +133,9 @@ class NetList {
         for (const component of components) {
             const mergeNets = { }; // nets that connect to external ports and need to be merged with parent component nets
             // get custom component inner nets and identify which need to be merged with the parent component nets
-            if (recurse && component instanceof CustomComponent) {
-                const subCircuit = app.circuits.byUID(component.uid);
+            if (circuits && component instanceof CustomComponent) {
+                const subCircuit = circuits[component.uid];
+                assert.class(Circuits.Circuit, subCircuit);
                 subInstances[component.gid] = instances.length; // the id of the upcoming recursion, clunky
                 if (component.getPorts().length === 0) {
                     // TODO: ports are currenly only available after a grid link because we can't immediately set during unserialize (subcircuit might not have been unserialized yet)
@@ -142,7 +143,7 @@ class NetList {
                     component.setPortsFromNames(subCircuit.ports);
                 }
                 const subPorts = subCircuit.data.filter((i) => i instanceof Port);
-                const subNetlist = NetList.#identifyNets(subCircuit, recurse, instances, instance);
+                const subNetlist = NetList.#identifyNets(subCircuit, circuits, instances, instance);
                 const mergedIds = [];
                 for (const componentExternalPort of subPorts) {
                     const netId = subNetlist.findPort(componentExternalPort);

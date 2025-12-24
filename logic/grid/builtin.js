@@ -11,7 +11,7 @@ class Builtin extends Component {
     outputs;
     gates;
 
-    constructor(x, y, type) {
+    constructor(app, x, y, type) {
 
         // override inputs if gate requires it
         const inputs = Simulation.BUILTIN_MAP[type].inputs;
@@ -53,7 +53,7 @@ class Builtin extends Component {
             }
         }
 
-        super(x, y, { 'left': left, 'right': right }, type);
+        super(app, x, y, { 'left': left, 'right': right }, type);
 
         this.inputs = inputs;
         this.outputs = outputs;

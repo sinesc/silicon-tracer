@@ -86,9 +86,9 @@ class Component extends GridItem {
     #type;
     #rotation = 0;
 
-    constructor(x, y, ports, type) {
+    constructor(app, x, y, ports, type) {
         assert.string(type);
-        super(x, y);
+        super(app, x, y);
         this.setPortsFromNames(ports);
         this.#type = type;
     }
@@ -338,7 +338,7 @@ class Component extends GridItem {
             top: (x, y) => y > py,
             bottom: (x, y) => y < py,
         };
-        let wireBuilder = new WireBuilder(px, py, x, y, ordering, port.color, MINIMA[portSide]);
+        let wireBuilder = new WireBuilder(this.app, this.grid, px, py, x, y, ordering, port.color, MINIMA[portSide]);
         wireBuilder.dragStart(x, y, what);
     }
 

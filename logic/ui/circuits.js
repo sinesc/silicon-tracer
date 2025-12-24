@@ -96,6 +96,15 @@ class Circuits {
         return true;
     }
 
+    // Returns map of all contained circuits.
+    get all() {
+        const map = { }; // TODO: change this.#circuits to an object so we can just return that.
+        for (const circuit of values(this.#circuits)) {
+            map[circuit.uid] = circuit;
+        }
+        return map;
+    }
+
     // Returns circuit by UID. // TODO: use map/object instead of array
     byUID(uid) {
         return this.#circuits.find((c) => c.uid === uid) ?? null;
@@ -164,7 +173,7 @@ class Circuits {
     // Unserializes circuits from file.
     unserialize(content) {
         let selectedUID = null;
-        const unserialized = content.circuits.map((c) => Circuits.Circuit.unserialize(c));
+        const unserialized = content.circuits.map((c) => Circuits.Circuit.unserialize(this.#app, c));
         this.#circuits.push(...unserialized);
         for (const [ index, circuit ] of pairs(this.#circuits)) {
             circuit.generateOutline();
@@ -244,9 +253,10 @@ Circuits.Circuit = class {
     }
 
     // Unserializes circuit from decoded JSON-object.
-    static unserialize(circuit) {
+    static unserialize(app, circuit) {
+        assert.class(Application, app);
         assert.object(circuit);
-        const components = circuit.data.map((i) => GridItem.unserialize(i));
+        const components = circuit.data.map((item) => GridItem.unserialize(app, item));
         const uid = circuit.uid.includes('-') ? 'u' + circuit.uid.replaceAll('-', '') : circuit.uid; // LEGACY: convert legacy uid
         return new Circuits.Circuit(circuit.label, uid, components, circuit.ports, circuit.gridConfig, circuit.portConfig);
     }

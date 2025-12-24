@@ -3,13 +3,16 @@
 // Base class for grid items.
 class GridItem {
 
-    // Reference to linked grid.
+    // Reference to linked grid, if linked.
     grid = null;
 
-    // Whether the grid item needs to be rendered.
+    // Whether the item needs to be rendered.
     dirty = true;
 
-    // Grid ID used to link simulation items with grid items
+    // Reference to the application
+    #app;
+
+    // Ephemeral grid ID used to link simulation items with grid items
     #gid;
 
     // Position/size on grid
@@ -22,9 +25,11 @@ class GridItem {
     // List of functions to call once before the next render.
     #beforeRender = [];
 
-    constructor(x, y) {
+    constructor(app, x, y) {
+        assert.class(Application, app);
         assert.number(x);
         assert.number(y);
+        this.#app = app;
         this.#gid = Grid.generateGID();
         this.#position = new Point(...Grid.align(x, y));
         this.#size = new Point(0, 0);
@@ -40,25 +45,26 @@ class GridItem {
     }
 
     // Unserializes a circuit item to a grid idem.
-    static unserialize(item) {
+    static unserialize(app, item) {
+        assert.class(Application, app);
         assert.object(item);
         const cname = item._.c;
         const cargs = item._.a;
         let instance;
         if (cname === 'Port') { // TODO: meh to have cases here
-            instance = new Port(...cargs);
+            instance = new Port(app, ...cargs);
         } else if (cname === 'Gate') {
-            instance = new Gate(...cargs);
+            instance = new Gate(app, ...cargs);
         } else if (cname === 'Clock') {
-            instance = new Clock(...cargs);
+            instance = new Clock(app, ...cargs);
         } else if (cname === 'PullResistor') {
-            instance = new PullResistor(...cargs);
+            instance = new PullResistor(app, ...cargs);
         } else if (cname === 'Builtin') {
-            instance = new Builtin(...cargs);
+            instance = new Builtin(app, ...cargs);
         } else if (cname === 'Wire') {
-            instance = new Wire(...cargs);
+            instance = new Wire(app, ...cargs);
         } else if (cname === 'CustomComponent') {
-            instance = new CustomComponent(...cargs);
+            instance = new CustomComponent(app, ...cargs);
         } else {
             throw new Error('Invalid component type "' + cname + '"');
         }
@@ -73,7 +79,7 @@ class GridItem {
     // Gets the net-state attribute string for the given netId.
     getNetState(netId) {
         assert.integer(netId, true);
-        const sim = app.simulations.current;
+        const sim = this.#app.simulations.current;
         return !sim || !sim.engine ? '' : (netId === null ? 'null' : '' + sim.engine.getNetValue(netId));
     }
 
@@ -113,9 +119,12 @@ class GridItem {
         if (beforeRender) {
             this.#beforeRender.push(beforeRender);
         }
-        app.simulations.markDirty(this.grid.circuit);
+        this.#app.simulations.markDirty(this.grid.circuit);
         this.dirty = true;
     }
+
+    // Returns the app reference.
+    get app() { return this.#app; };
 
     // Implement to return whether the grid item is selected.
     get selected() { return false; }
@@ -304,9 +313,9 @@ class GridItem {
         let message = !this.selected ? this.#hoverMessages.get(element) : '<b>Multiple items.</b> <i>LMB</i>: Drag to move, <i>R</i>: Rotate, <i>DEL</i>: Delete, <i>CTRL+C</i>: Copy, <i>CTRL+X</i>: Cut';
         if (message) {
             if (status === 'start') {
-                app.setStatus(message, false, this);
+                this.#app.setStatus(message, false, this);
             } else {
-                app.clearStatus();
+                this.#app.clearStatus();
             }
         }
     }

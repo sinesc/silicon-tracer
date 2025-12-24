@@ -20,10 +20,10 @@ class Gate extends Component {
     inputs;
     output;
 
-    constructor(x, y, type, numInputs) {
+    constructor(app, x, y, type, numInputs) {
         assert.integer(numInputs);
         const { left, right, inputs, output } = Gate.#generatePorts(numInputs);
-        super(x, y, { 'left': left, 'right': right }, type);
+        super(app, x, y, { 'left': left, 'right': right }, type);
         this.inputs = inputs;
         this.output = output;
     }

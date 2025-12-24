@@ -239,7 +239,7 @@ class Application {
                 let isCurrentCircuit = uid === this.circuits.current.uid;
                 // place circuit as component
                 if (!isCurrentGrid) {
-                    let [ componentButton ] = circuitMenu.createComponentButton('&#9094;', label + '. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => grid.addItem(new CustomComponent(x, y, 0, uid, label)));
+                    let [ componentButton ] = circuitMenu.createComponentButton('&#9094;', label + '. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => grid.addItem(new CustomComponent(this, x, y, 0, uid, label)));
                     componentButton.classList.add('toolbar-circuit-place');
                 }
                 // circuit select
@@ -303,7 +303,7 @@ class Application {
                     }
                     this.simulations.select(null);
                     // switch to whatever circuit was being viewed when the simulation ended
-                    app.circuits.select(app.grid.circuit.uid);
+                    this.circuits.select(this.grid.circuit.uid);
                 } else if (action === 'resume' || action === 'start') {
                     // start will just resume if the simulation already exists
                     this.config.singleStep = false;
@@ -326,7 +326,7 @@ class Application {
                 let isCurrent = uid === this.simulations.current?.uid;
                 let [ button ] = simulationMenu.createActionButton(label, isCurrent ? 'This is the current simulation' : 'Switch to/resume simulation "' + label + '".', () => {
                     simulationMenuState(false);
-                    app.circuits.select(uid);
+                    this.circuits.select(uid);
                     this.config.singleStep = false;
                     this.simulations.select(this.circuits.current, this.config.autoCompile);
                 });
@@ -337,16 +337,27 @@ class Application {
 
     // Initialize tool bar entries.
     #initToolbar() {
-        // add conveniently pre-rotated ports
-        this.toolbar.createComponentButton('Port ·', 'Component IO pin. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => grid.addItem(new Port(x, y, 'right')));
-        this.toolbar.createComponentButton('· Port', 'Component IO pin. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => grid.addItem(new Port(x, y, 'left')));
+        // add ports
+        this.toolbar.createComponentButton('Port ·', 'Component IO pin. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => {
+            return grid.addItem(new Port(this, x, y, 'right'))
+        });
+
+        // add a clock component
+        this.toolbar.createComponentButton('Clock', '<b>Clock</b>. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => {
+            return grid.addItem(new Clock(this, x, y));
+        });
+
+        // add a pull resistor component
+        this.toolbar.createComponentButton('Pull', '<b>Pull up/down resistor</b>. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => {
+            return grid.addItem(new PullResistor(this, x, y));
+        });
 
         // add gates
         for (let [ gateType, { joinOp } ] of Object.entries(Simulation.GATE_MAP)) {
             let gateLabel = gateType.toUpperFirst();
             this.toolbar.createComponentButton(gateLabel, '<b>' + gateLabel + '</b> gate. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => {
                 let numInputs = 2; // TODO: configurable somewhere
-                return grid.addItem(new Gate(x, y, gateType, joinOp !== null ? numInputs : 1));
+                return grid.addItem(new Gate(this, x, y, gateType, joinOp !== null ? numInputs : 1));
             });
         }
 
@@ -354,19 +365,9 @@ class Application {
         for (const builtinType of keys(Simulation.BUILTIN_MAP)) {
             let builtinLabel = builtinType.toUpperFirst();
             this.toolbar.createComponentButton(builtinLabel, '<b>' + builtinLabel + '</b> builtin. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => {
-                return grid.addItem(new Builtin(x, y, builtinType));
+                return grid.addItem(new Builtin(this, x, y, builtinType));
             });
         }
-
-        // add a clock component
-        this.toolbar.createComponentButton('Clock', '<b>Clock</b>. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => {
-            return grid.addItem(new Clock(x, y));
-        });
-
-        // add a pull resistor component
-        this.toolbar.createComponentButton('Pull', '<b>Pull up/down resistor</b>. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => {
-            return grid.addItem(new PullResistor(x, y));
-        });
     }
 
     // Show warning when not focussed to avoid confusion. In this state mouse wheel events still register but hotkeys don't.

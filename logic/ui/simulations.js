@@ -14,7 +14,7 @@ class Simulations {
 
     // Returns list of simulations
     list() {
-        let simulations = Object.keys(this.#simulations).map((uid) => [ uid, app.circuits.byUID(uid).label ]);
+        let simulations = Object.keys(this.#simulations).map((uid) => [ uid, this.#app.circuits.byUID(uid).label ]);
         simulations.sort((a, b) => a[1].toLowerCase() < b[1].toLowerCase() ? -1 : (a[1].toLowerCase() > b[1].toLowerCase() ? 1 : 0));
         return simulations;
     }
@@ -217,13 +217,13 @@ Simulations.Simulation = class {
 
     // Compiles the simulation.
     #compile() {
-        this.#netList = NetList.identify(this.#circuit, true);
+        this.#netList = NetList.identify(this.#circuit, this.#app.circuits.all);
         const newHash = this.#netList.hash();
         const retainMemory = this.#engine && this.#netListHash === newHash;
         if (!retainMemory) {
             this.#computeCircuitStats()
         }
-        this.#engine = this.#netList.compileSimulation(retainMemory ? this.#engine.rawMem() : null, this.#app.config.debugCompileComments, this.#app.config.checkNetConflicts);
+        this.#engine = this.#netList.compileSimulation(retainMemory ? this.#engine.rawMem() : null, this.#app.config);
         this.#netListHash = newHash;
         this.#dirty = false;
     }

@@ -12,7 +12,9 @@ class WireBuilder extends GridItem { // Note: Not actually a grid item, but uses
     #debugElement;
     color;
 
-    constructor(x1, y1, x2, y2, ordering = null, color = null, fliptest = null) {
+    constructor(app, grid, x1, y1, x2, y2, ordering = null, color = null, fliptest = null) {
+        assert.class(Application, app);
+        assert.class(Grid, grid);
         assert.number(x1);
         assert.number(y1);
         assert.number(x2);
@@ -21,8 +23,8 @@ class WireBuilder extends GridItem { // Note: Not actually a grid item, but uses
         assert.integer(color, true);
         assert.function(fliptest, true);
 
-        super(0, 0);
-        this.grid = app.grid;
+        super(app, 0, 0);
+        this.grid = grid;
 
         [ x1, y1 ] = Grid.align(x1, y1);
         [ x2, y2 ] = Grid.align(x2, y2);
@@ -34,19 +36,19 @@ class WireBuilder extends GridItem { // Note: Not actually a grid item, but uses
         this.color = color;
         this.#fliptest = fliptest ?? ( (x, y) => false );
 
-        this.#wireH = new Wire(x1, y1, this.width, 'h', this.color);
+        this.#wireH = new Wire(this.app, x1, y1, this.width, 'h', this.color);
         this.#wireH.limbo = true;
         this.grid.addItem(this.#wireH, false);
         this.#wireH.element.classList.add('wire-building');
 
-        this.#wireV = new Wire(x1, y1, this.height, 'v', this.color);
+        this.#wireV = new Wire(this.app, x1, y1, this.height, 'v', this.color);
         this.#wireV.limbo = true;
         this.grid.addItem(this.#wireV, false);
         this.#wireV.element.classList.add('wire-building');
 
         this.#updateWires();
 
-        if (app.config.debugShowWireBox) {
+        if (this.app.config.debugShowWireBox) {
             this.#debugElement = document.createElement('div');
             this.#debugElement.classList.add('wirebuilder-debug');
             this.grid.addVisual(this.#debugElement);
@@ -70,7 +72,7 @@ class WireBuilder extends GridItem { // Note: Not actually a grid item, but uses
             let dragConnectionWhat = { ...what, ordering: flippedOrdering ? what.ordering == 'hv' ? 'vh' : 'hv' : what.ordering, x, y, color };
             this.dragStop(x, y, what);
             this.grid.releaseHotkeyTarget(this, true);
-            let wireBuilder = new WireBuilder(what.startX, what.startY, x, y, what.ordering, this.color);
+            let wireBuilder = new WireBuilder(this.app, this.grid, what.startX, what.startY, x, y, what.ordering, this.color);
             wireBuilder.dragStart(x, y, dragConnectionWhat);
             return true;
         }
@@ -81,12 +83,12 @@ class WireBuilder extends GridItem { // Note: Not actually a grid item, but uses
         if (status === 'start') {
             what.startX = x;
             what.startY = y;
-            app.setStatus(WireBuilder.DRAWING_CONNECTION_MESSAGE, true);
+            this.app.setStatus(WireBuilder.DRAWING_CONNECTION_MESSAGE, true);
             this.grid.requestHotkeyTarget(this, true, { ...what, type: 'connect' }); // pass 'what' to onHotkey()
         } else if (status !== 'stop') {
             this.#setBounding(what.startX, what.startY, x, y);
         } else {
-            app.clearStatus(true);
+            this.app.clearStatus(true);
             this.grid.releaseHotkeyTarget(this, true);
             this.#remove();
         }
@@ -104,7 +106,7 @@ class WireBuilder extends GridItem { // Note: Not actually a grid item, but uses
         if (this.height === 0) {
             this.grid.removeItem(this.#wireV, false);
         }
-        if (app.config.debugShowWireBox) {
+        if (this.app.config.debugShowWireBox) {
             this.grid.removeVisual(this.#debugElement);
             for (let i = 0; i < 3; ++i) {
                 this.grid.removeVisual(this['debug' + i]);
@@ -112,7 +114,7 @@ class WireBuilder extends GridItem { // Note: Not actually a grid item, but uses
         }
         Wire.compact(this.grid);
         this.grid.markDirty();
-        app.simulations.markDirty(this.grid.circuit);
+        this.app.simulations.markDirty(this.grid.circuit);
     }
 
     // Sets wire corner bounding box.
@@ -124,7 +126,7 @@ class WireBuilder extends GridItem { // Note: Not actually a grid item, but uses
         this.width = x2 - x1;
         this.height = y2 - y1;
         this.#updateWires();
-        if (app.config.debugShowWireBox) {
+        if (this.app.config.debugShowWireBox) {
             this.#debugRenderBox();
         }
     };

@@ -14,9 +14,9 @@ class Port extends Interactive {
     #state = null;
     name = '';
 
-    constructor(x, y, side) {
+    constructor(app, x, y, side) {
         assert.string(side);
-        super(x, y, { 'top': [ '' ], 'left': [ null, null, null ] }, 'port');
+        super(app, x, y, { 'top': [ '' ], 'left': [ null, null, null ] }, 'port');
         this.rotation = Component.SIDES.indexOf(side);
         this.updateDimensions();
         this.#side = side;
@@ -65,7 +65,7 @@ class Port extends Interactive {
                 this.#state = null;
             }
             if (prevState !== this.#state) {
-                const sim = app.simulations.current;
+                const sim = this.app.simulations.current;
                 if (this.#port.netId !== null && sim) {
                     sim.engine.setNetValue(this.#port.netId, this.#state);
                 }
