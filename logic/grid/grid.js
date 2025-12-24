@@ -35,27 +35,13 @@ class Grid {
         assert.class(Application, app);
         assert.class(Node, parent);
         this.#app = app;
-        this.#element = document.createElement('div');
-        this.#element.classList.add('grid');
+        this.#element = element(parent, 'div', 'grid');
         this.#element.onmousedown = this.#handleDragStart.bind(this);
         this.#element.onwheel = this.#handleZoom.bind(this);
-
-        this.#infoBox.element = document.createElement('div');
-        this.#infoBox.element.classList.add('grid-info');
-        this.#element.appendChild(this.#infoBox.element);
-        this.#infoBox.element.innerHTML = '';
-
-        this.#selectionElement = document.createElement('div');
-        this.#selectionElement.classList.add('grid-selection', 'hidden');
-        this.#element.appendChild(this.#selectionElement);
-
-        parent.appendChild(this.#element);
-
-        this.#debugElement = document.createElement('div');
-        this.#debugElement.classList.add('debug-info');
-        this.#element.appendChild(this.#debugElement);
+        this.#infoBox.element = element(this.#element, 'div', 'grid-info', '');
+        this.#selectionElement = element(this.#element, 'div', 'grid-selection hidden');
+        this.#debugElement = element(this.#element, 'div', 'debug-info');
         document.addEventListener('mousemove', this.#debugHandleMouse.bind(this));
-
         // TODO: may have to go to parent UI
         // TODO: GridItems currently register document.onmouse* temporarily. those should probably follow the same logic: register onmouse* here and then pass on to whichever element wants to have them
         document.addEventListener('keydown', this.#handleKeyDown.bind(this));

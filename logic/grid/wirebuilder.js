@@ -47,8 +47,7 @@ class WireBuilder extends GridItem { // Note: Not actually a grid item, but uses
         this.#updateWires();
 
         if (this.app.config.debugShowWireBox) {
-            this.#debugElement = document.createElement('div');
-            this.#debugElement.classList.add('wirebuilder-debug');
+            this.#debugElement = element(null, 'div', 'wirebuilder-debug');
             this.grid.addVisual(this.#debugElement);
         }
     }

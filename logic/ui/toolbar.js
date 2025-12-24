@@ -13,9 +13,7 @@ class Toolbar {
         assert.class(Node, parent);
         this.#app = app;
         this.#menuStates = new WeakUnorderedSet();
-        this.#element = document.createElement('div');
-        this.#element.classList.add('toolbar');
-        parent.appendChild(this.#element);
+        this.#element = element(parent, 'div', 'toolbar');
     }
 
     // Returns the DOM Node.
@@ -38,9 +36,7 @@ class Toolbar {
         assert.string(label);
         assert.string(hoverMessage);
         assert.function(create);
-        let button = document.createElement('div');
-        button.innerHTML = label;
-        button.classList.add('toolbar-button', 'toolbar-component-button');
+        const button = element(this.#element, 'div', 'toolbar-button toolbar-component-button', label);
         button.onmousedown = (e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -50,7 +46,6 @@ class Toolbar {
                 component.dragStart(x, y, { type: "component", grabOffsetX: component.width / 2, grabOffsetY: component.height / 2 });
             }
         };
-        this.#element.appendChild(button);
         button.onmouseenter = () => this.#app.setStatus(hoverMessage);
         button.onmouseleave = () => this.#app.clearStatus();
         return [ button ];
@@ -61,9 +56,7 @@ class Toolbar {
         assert.string(label);
         assert.string(hoverMessage);
         assert.function(action);
-        let button = document.createElement('div');
-        button.innerHTML = label;
-        button.classList.add('toolbar-button', 'toolbar-action-button');
+        const button = element(this.#element, 'div', 'toolbar-button toolbar-action-button', label);
         button.onclick= (e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -71,7 +64,6 @@ class Toolbar {
                 action();
             }
         };
-        this.#element.appendChild(button);
         button.onmouseenter = () => this.#app.setStatus(hoverMessage);
         button.onmouseleave = () => this.#app.clearStatus();
         return [ button ];
@@ -94,8 +86,6 @@ class Toolbar {
         assert.string(label);
         assert.string(hoverMessage);
         assert.function(openAction);
-        let subToolbarContainer = document.createElement('div');
-        subToolbarContainer.classList.add('toolbar-menu-container');
         let [ button, stateFn ] = this.#createToggleButton(label, hoverMessage, false, (open) => {
             if (open) {
                 if (openAction) {
@@ -122,7 +112,7 @@ class Toolbar {
         });
         this.#menuStates.add(stateFn);
         button.classList.add('toolbar-menu-button');
-        button.appendChild(subToolbarContainer);
+        const subToolbarContainer = element(button, 'div', 'toolbar-menu-container');
         // hover-open: modify mouse-enter to open another menu if one is already open, modify stateFn to disable hover-open when a menu is intentionally closed
         const originalMouseEnter = button.onmouseenter;
         button.onmouseenter = (e) => {
@@ -144,18 +134,14 @@ class Toolbar {
 
     // Creates a separator
     createSeparator() {
-        let separator = document.createElement('div');
-        separator.classList.add('toolbar-separator');
-        this.#element.appendChild(separator);
+        const separator = element(this.#element, 'div', 'toolbar-separator');
         return [ separator ];
     }
 
     // Creates a toggle button and returns the button element as well as a function that sets/returns the current button state.
     #createToggleButton(label, hoverMessage, defaultState, action) {
-        let button = document.createElement('div');
-        button.innerHTML = label;
         let state = defaultState;
-        button.classList.add('toolbar-button', 'toolbar-toggle-button', state ? 'toolbar-toggle-button-on' : 'toolbar-toggle-button-off');
+        const button = element(null, 'div', `toolbar-button toolbar-toggle-button toolbar-toggle-button-${state ? 'on' : 'off'}`, label);
         let stateFn = (newState) => {
             if (newState !== undefined) {
                 button.classList.remove(state ? 'toolbar-toggle-button-on' : 'toolbar-toggle-button-off');

@@ -121,29 +121,19 @@ class Component extends GridItem {
     link(grid) {
         super.link(grid);
 
-        // container
-        this.#element = document.createElement('div');
-        this.#element.classList.add('component');
+        // container and inner area with name
+        this.#element = element(null, 'div', 'component');
         this.#element.setAttribute('data-component-type', this.#type);
-
-        // inner area with name
-        this.#inner = document.createElement('div');
-        this.#inner.innerHTML = '<span>' + this.label + '</span>';
-        this.#inner.classList.add('component-inner');
+        this.#inner = element(this.#element, 'div', 'component-inner', `<span>${this.label}</span>`);
         this.registerMouseAction(this.#inner, { type: "component", grabOffsetX: null, grabOffsetY: null });
-        this.#element.appendChild(this.#inner);
 
         // ports
         this.getPorts().forEach((item) => {
             // TODO: add and call link() method on ComponentPort instead?
-            let port = document.createElement('div');
-            port.classList.add('component-port');
-            this.#element.appendChild(port);
-            this.setHoverMessage(port, () => 'Port <b>' + item.name + '</b> of <b>' + this.#type + '</b>. <i>LMB</i> Drag to connect.', { type: 'hover-port' });
+            const port = element(this.#element, 'div', 'component-port');
+            this.setHoverMessage(port, () => `Port <b>${item.name}</b> of <b>${this.#type}</b>. <i>LMB</i> Drag to connect.`, { type: 'hover-port' });
             // port hover label
-            let labelElement = document.createElement('div');
-            labelElement.classList.add('component-port-label');
-            this.#element.appendChild(labelElement);
+            const labelElement = element(this.#element, 'div', 'component-port-label');
             // update component port with linked dom nodes
             item.element = port;
             item.labelElement = labelElement;
@@ -305,8 +295,7 @@ class Component extends GridItem {
         // draw grid-aligned drop-preview outline
         if (status !== 'stop') {
             if (!this.#dropPreview) {
-                this.#dropPreview = document.createElement('div');
-                this.#dropPreview.classList.add('component-drop-preview');
+                this.#dropPreview = element(null, 'div', 'component-drop-preview');
                 this.grid.addVisual(this.#dropPreview);
             }
             let [ alignedX, alignedY ] = Grid.align(this.x, this.y);

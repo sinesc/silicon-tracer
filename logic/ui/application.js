@@ -47,9 +47,7 @@ class Application {
         this.circuits = new Circuits(this);
         this.simulations = new Simulations(this);
 
-        this.#status = document.createElement('div');
-        this.#status.classList.add('app-status');
-        gridParent.appendChild(this.#status);
+        this.#status = element(gridParent, 'div', 'app-status');
         this.#logo = logo;
     }
 

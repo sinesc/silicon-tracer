@@ -27,10 +27,8 @@ class Port extends Interactive {
     link(grid) {
         super.link(grid);
         this.setHoverMessage(this.inner, () => `Port <b>${this.name}</b>. <i>1</i> Set high, <i>2</i> Set low, <i>3</i> Unset, <i>E</i> Edit, ${Component.HOTKEYS}.`, { type: 'hover' });
-        this.#labelElement = document.createElement('div');
-        this.#labelElement.classList.add('port-name');
+        this.#labelElement = element(this.element, 'div', 'port-name');
         this.element.classList.add('port');
-        this.element.appendChild(this.#labelElement);
     }
 
     // Serializes the object for writing to disk.

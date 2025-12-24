@@ -39,8 +39,7 @@ class Wire extends GridItem {
     // Link wire to a grid, enabling it to be rendered.
     link(grid) {
         super.link(grid);
-        this.#element = document.createElement('div');
-        this.#element.classList.add('wire', 'wire-' + this.direction);
+        this.#element = element(null, 'div', 'wire wire-' + this.direction);
         this.registerMouseAction(this.#element, { type: 'connect', ordering: this.direction === 'h' ? 'vh' : 'hv' });
         this.setHoverMessage(this.#element, `Wire. <i>LMB</i> Drag to branch off new wire. <i>DEL</i> Delete, <i>0</i> - <i>9</i> Set net color, ${GridItem.HOTKEYS}.`, { type: 'hover' });
         this.grid.addVisual(this.#element);
