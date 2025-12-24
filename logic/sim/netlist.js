@@ -28,12 +28,15 @@ class NetList {
 
     // Compiles a simulation and returns it.
     compileSimulation(rawMem, config) {
-        assert.object(rawMem, true);
-        if (rawMem) {
-            assert.class(Uint8Array, rawMem.mem8);
-            assert.class(Int32Array, rawMem.mem32);
-        }
-        assert.object(config);
+        assert.object(rawMem, true, (o) => {
+            assert.class(Uint8Array, o.mem8);
+            assert.class(Int32Array, o.mem32);
+        });
+        assert.object(config, false, (o) => {
+            assert.bool(o.checkNetConflicts);
+            assert.integer(o.targetTPS);
+            assert.bool(o.debugCompileComments);
+        });
         const sim = new Simulation(config.debugCompileComments, config.checkNetConflicts);
         // declare gates from component map
         for (const [instance, { circuit }] of this.instances.entries()) {

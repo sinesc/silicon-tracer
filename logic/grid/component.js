@@ -18,8 +18,8 @@ class ComponentPort {
         assert.string(originalSide);
         assert.integer(index);
         assert.integer(color, true);
-        assert.object(element, true);
-        assert.object(labelElement, true);
+        assert.class(Node, element, true);
+        assert.class(Node, labelElement, true);
         this.name = name;
         this.originalSide = originalSide;
         this.index = index;

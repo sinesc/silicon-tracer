@@ -5,7 +5,6 @@ function dialog(title, fields, data, context = null) {
     assert.string(title),
     assert.array(fields);
     assert.object(data);
-    assert.object(context, true);
 
     // predefine some validations
     const validations = {

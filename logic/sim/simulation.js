@@ -146,13 +146,12 @@ class Simulation {
 
     // Compiles the circuit and initializes memory, making it ready for simulate().
     compile(rawMem = null) {
-        assert.object(rawMem, true);
-        if (rawMem) {
-            assert.class(Uint8Array, rawMem.mem8);
-            assert.class(Int32Array, rawMem.mem32);
-            assert(rawMem.mem8.length === this.#alloc8Base, 'incompatible u8 memory size');
-            assert(rawMem.mem32.length === this.#alloc32Base, 'incompatible i32 memory size');
-        }
+        assert.object(rawMem, true, (o) => {
+            assert.class(Uint8Array, o.mem8);
+            assert.class(Int32Array, o.mem32);
+            assert(o.mem8.length === this.#alloc8Base, 'incompatible u8 memory size');
+            assert(o.mem32.length === this.#alloc32Base, 'incompatible i32 memory size');
+        });
         this.#compileFunction();
         this.#mem8 = rawMem?.mem8 ?? new Uint8Array(this.#alloc8Base);
         this.#mem32 = rawMem?.mem32 ?? new Int32Array(this.#alloc32Base);

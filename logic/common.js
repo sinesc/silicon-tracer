@@ -96,17 +96,17 @@ function *pairs(iterable) {
         for (const [ k, v ] of iterable.entries()) {
             yield [ k, v ];
         }
-    } else if (iterable instanceof Map) {
-        for (const [ k, v ] of iterable) {
-            yield [ k, v ];
-        }
     } else if (iterable instanceof Set) {
         let i = 0;
         for (const v of iterable) {
             yield [ i++, v ];
         }
-    } else if (typeof iterable === 'object') {
+    } else if (iterable?.constructor === Object) {
         for (const [ k, v ] of Object.entries(iterable)) {
+            yield [ k, v ];
+        }
+    } else if (iterable?.[Symbol.iterator]) {
+        for (const [ k, v ] of iterable) {
             yield [ k, v ];
         }
     } else {
@@ -151,60 +151,72 @@ assert.ty = function(val) {
     }
 }
 
+// Asserts given value is a string.
 assert.string = function(val, allow_null = false, message = null) {
-    let ty = assert.ty(val);
-    if (ty !== 'string' && !(allow_null && ty === 'null')) {
+    if (typeof val !== 'string' && !(allow_null && val === null)) {
+        const ty = assert.ty(val);
         throw new Error(message?.replace('%', ty) ?? 'Assertion failed: Expected string, got ' + ty);
     }
 }
 
+// Asserts given value is a bool.
 assert.bool = function(val, allow_null = false, message = null) {
-    let ty = assert.ty(val);
-    if (ty !== 'boolean' && !(allow_null && ty === 'null')) {
+    if (typeof val !== 'boolean' && !(allow_null && val === 'null')) {
+        const ty = assert.ty(val);
         throw new Error(message?.replace('%', ty) ?? 'Assertion failed: Expected boolean, got ' + ty);
     }
 }
 
+// Asserts given value is a finite number.
 assert.number = function(val, allow_null = false, message = null) {
-    let ty = assert.ty(val);
-    if (ty !== 'number' && !(allow_null && ty === 'null')) {
+    if (!Number.isFinite(val) && !(allow_null && val === null)) {
+        const ty = assert.ty(val);
         throw new Error(message?.replace('%', ty) ?? 'Assertion failed: Expected number, got ' + ty);
     }
 }
 
+// Asserts given value is an integer number.
 assert.integer = function(val, allow_null = false, message = null) {
     if (!Number.isInteger(val) && !(allow_null && val === null)) {
-        let ty = assert.ty(val);
+        const ty = assert.ty(val);
         throw new Error(message?.replace('%', ty) ?? 'Assertion failed: Expected integer, got ' + ty);
     }
 }
 
+// Asserts given value is an array.
 assert.array = function(val, allow_null = false, itemTester = null, message = null) {
-    let ty = assert.ty(val);
-    if (ty !== 'array' && !(allow_null && ty === 'null')) {
+    if (!Array.isArray(val) && !(allow_null && val === null)) {
+        const ty = assert.ty(val);
         throw new Error(message?.replace('%', ty) ?? 'Assertion failed: Expected array, got ' + ty);
     }
-    if (typeof itemTester === 'function') {
+    if (val !== null && typeof itemTester === 'function') {
         for (const item of val) {
             itemTester(item);
         }
     }
 }
 
-assert.object = function(val, allow_null = false, message = null) {
-    let ty = assert.ty(val);
-    if (ty !== 'object' && !(allow_null && ty === 'null')) {
+// Asserts given value is a plain object.
+assert.object = function(val, allow_null = false, objectTester = null, message = null) {
+    if (!(allow_null && val === null) && val?.constructor !== Object) {
+        let ty = assert.ty(val);
+        ty = ty === 'object' ? 'instance of ' + val.constructor.name : ty;
         throw new Error(message?.replace('%', ty) ?? 'Assertion failed: Expected object, got ' + ty);
+    }
+    if (val !== null && typeof objectTester === 'function') {
+        objectTester(val);
     }
 }
 
+// Asserts given value is a function.
 assert.function = function(val, allow_null = false, message = null) {
-    let ty = assert.ty(val);
-    if (ty !== 'function' && !(allow_null && ty === 'null')) {
+    if (typeof val !== 'function' && !(allow_null && val === null)) {
+        const ty = assert.ty(val);
         throw new Error(message?.replace('%', ty) ?? 'Assertion failed: Expected function, got ' + ty);
     }
 }
 
+// Asserts given value is an instance of the given class.
 assert.class = function(constructor, val, allow_null = false, message = null) {
     if (!(val instanceof constructor) && !(allow_null && val === null)) {
         let ty = assert.ty(val);
@@ -213,9 +225,26 @@ assert.class = function(constructor, val, allow_null = false, message = null) {
     }
 }
 
+// Asserts given value is one of the allowed values.
 assert.enum = function(allowed, val, allow_null = false, message = null) {
     if (!(allow_null && val === null) && !allowed.includes(val)) {
         throw new Error(message ?? 'Assertion failed: Value is not among the allowed values');
+    }
+}
+
+// Asserts given value is a string or a finite number.
+assert.stringable = function(val, allow_null = false, message = null) {
+    if (typeof val !== 'string' && !Number.isFinite(val) && !(allow_null && val === null)) {
+        const ty = assert.ty(val);
+        throw new Error(message?.replace('%', ty) ?? 'Assertion failed: Expected string or number, got ' + ty);
+    }
+}
+
+// Asserts given value is not a string and iterable using `for .. of pairs()/keys()/values()`.
+assert.iterable = function(val, allow_null = false, message = null) {
+    if (typeof val === 'string' || (!allow_null && val === null) || (val !== null && val.constructor !== Object && !val[Symbol.iterator])) {
+        const ty = assert.ty(val);
+        throw new Error(message?.replace('%', ty) ?? 'Assertion failed: Expected iterable, got ' + ty);
     }
 }
 
@@ -233,12 +262,19 @@ function element(parent = null, type = 'div', classNames = null, contents = null
             assert.string(contents);
             element.innerHTML = contents;
         } else if (type === 'input') {
-            assert.object(contents);
+            assert.object(contents, false, (o) => {
+                assert.string(o.name);
+                assert.stringable(o.value);
+            });
             element.type = 'text';
             element.name = contents.name;
             element.value = contents.value;
         } else if (type === 'select') {
-            assert.object(contents);
+            assert.object(contents, false, (o) => {
+                assert.string(o.name);
+                assert.stringable(o.value);
+                assert.iterable(o.options);
+            });
             element.name = contents.name;
             for (const [ k, v ] of pairs(contents.options)) {
                 const option = document.createElement("option");
@@ -254,7 +290,6 @@ function element(parent = null, type = 'div', classNames = null, contents = null
     }
     return element;
 }
-
 
 class Point {
     x;
