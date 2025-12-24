@@ -3,8 +3,6 @@
 // Used to build wire corners.
 class WireBuilder extends GridItem { // Note: Not actually a grid item, but uses a lot of grid item functionality.
 
-    static DRAWING_CONNECTION_MESSAGE = 'Drawing connection. <i>R</i>: Add point, continue drawing from here.';
-
     #wireH;
     #wireV;
     #ordering;
@@ -83,7 +81,7 @@ class WireBuilder extends GridItem { // Note: Not actually a grid item, but uses
         if (status === 'start') {
             what.startX = x;
             what.startY = y;
-            this.app.setStatus(WireBuilder.DRAWING_CONNECTION_MESSAGE, true);
+            this.app.setStatus('Drawing connection. <i>R</i> Add point, continue drawing from here.', true);
             this.grid.requestHotkeyTarget(this, true, { ...what, type: 'connect' }); // pass 'what' to onHotkey()
             return true;
         } else if (status !== 'stop') {

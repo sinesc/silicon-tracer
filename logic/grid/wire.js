@@ -3,7 +3,6 @@
 // Single wire on the grid.
 class Wire extends GridItem {
 
-    static HOVER_MESSAGE = 'Wire. <i>LMB</i>: Drag to branch off new wire. <i>DEL</i>: Delete, <i>0</i> - <i>9</i>: Set net color, <i>SHIFT/CTRL+LMB</i>: Click to select/deselect.';// TODO: <i>Shift+LMB</i>: Drag along the normal.
     static THICKNESS = 3;
 
     #element;
@@ -43,7 +42,7 @@ class Wire extends GridItem {
         this.#element = document.createElement('div');
         this.#element.classList.add('wire', 'wire-' + this.direction);
         this.registerMouseAction(this.#element, { type: 'connect', ordering: this.direction === 'h' ? 'vh' : 'hv' });
-        this.setHoverMessage(this.#element, Wire.HOVER_MESSAGE, { type: 'hover' });
+        this.setHoverMessage(this.#element, `Wire. <i>LMB</i> Drag to branch off new wire. <i>DEL</i> Delete, <i>0</i> - <i>9</i> Set net color, ${GridItem.HOTKEYS}.`, { type: 'hover' });
         this.grid.addVisual(this.#element);
     }
 

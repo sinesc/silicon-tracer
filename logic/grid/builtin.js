@@ -72,7 +72,7 @@ class Builtin extends Component {
     link(grid) {
         super.link(grid);
         this.element.classList.add('builtin');
-        this.setHoverMessage(this.inner, '<b>' + this.label + '</b>. <i>LMB</i>: Drag to move, <i>R</i>: Rotate, <i>DEL</i>: Delete, <i>E</i>: Edit, <i>SHIFT/CTRL+LMB</i>: Click to select/deselect', { type: 'hover' });
+        this.setHoverMessage(this.inner, `<b>${this.label}</b>. <i>E</i> Edit, ${Component.HOTKEYS}.`, { type: 'hover' });
     }
 
     // Handle edit hotkey.

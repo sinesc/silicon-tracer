@@ -3,6 +3,8 @@
 // Base class for grid items.
 class GridItem {
 
+    static HOTKEYS = '<i>SHIFT/CTRL+LMB</i> Click to select/deselect';
+
     // Reference to linked grid, if linked.
     grid = null;
 
@@ -341,7 +343,7 @@ class GridItem {
             this.grid.releaseHotkeyTarget(this);
         }
         // set the status message, if any
-        let message = !this.selected ? this.#hoverMessages.get(element) : '<b>Multiple items.</b> <i>LMB</i>: Drag to move, <i>R</i>: Rotate, <i>DEL</i>: Delete, <i>CTRL+C</i>: Copy, <i>CTRL+X</i>: Cut';
+        let message = !this.selected ? this.#hoverMessages.get(element) : '<b>Multiple items.</b> <i>LMB</i> Drag to move, <i>R</i> Rotate, <i>DEL</i> Delete, <i>CTRL+C</i> Copy, <i>CTRL+X</i> Cut';
         if (message) {
             if (status === 'start') {
                 this.#app.setStatus(message, false, this);

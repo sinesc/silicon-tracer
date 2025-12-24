@@ -239,7 +239,7 @@ class Application {
                 let isCurrentCircuit = uid === this.circuits.current.uid;
                 // place circuit as component
                 if (!isCurrentGrid) {
-                    let [ componentButton ] = circuitMenu.createComponentButton('&#9094;', label + '. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => grid.addItem(new CustomComponent(this, x, y, 0, uid, label)));
+                    let [ componentButton ] = circuitMenu.createComponentButton('&#9094;', label + '. <i>LMB</i> Drag to move onto grid.', (grid, x, y) => grid.addItem(new CustomComponent(this, x, y, 0, uid, label)));
                     componentButton.classList.add('toolbar-circuit-place');
                 }
                 // circuit select
@@ -337,25 +337,27 @@ class Application {
 
     // Initialize tool bar entries.
     #initToolbar() {
+        const DRAG_MSG = '<i>LMB</i> Drag to move onto grid.';
+
         // add ports
-        this.toolbar.createComponentButton('Port ·', 'Component IO pin. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => {
+        this.toolbar.createComponentButton('Port ·', `<b>Component IO pin</b>. ${DRAG_MSG}`, (grid, x, y) => {
             return grid.addItem(new Port(this, x, y, 'right'))
         });
 
         // add a clock component
-        this.toolbar.createComponentButton('Clock', '<b>Clock</b>. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => {
+        this.toolbar.createComponentButton('Clock', `<b>Clock</b>. ${DRAG_MSG}`, (grid, x, y) => {
             return grid.addItem(new Clock(this, x, y));
         });
 
         // add a pull resistor component
-        this.toolbar.createComponentButton('Pull', '<b>Pull up/down resistor</b>. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => {
+        this.toolbar.createComponentButton('Pull', `<b>Pull up/down resistor</b>. ${DRAG_MSG}`, (grid, x, y) => {
             return grid.addItem(new PullResistor(this, x, y));
         });
 
         // add gates
         for (let [ gateType, { joinOp } ] of Object.entries(Simulation.GATE_MAP)) {
             let gateLabel = gateType.toUpperFirst();
-            this.toolbar.createComponentButton(gateLabel, '<b>' + gateLabel + '</b> gate. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => {
+            this.toolbar.createComponentButton(gateLabel, `<b>${gateLabel} gate</b>. ${DRAG_MSG}`, (grid, x, y) => {
                 let numInputs = 2; // TODO: configurable somewhere
                 return grid.addItem(new Gate(this, x, y, gateType, joinOp !== null ? numInputs : 1));
             });
@@ -364,7 +366,7 @@ class Application {
         // add extra gate-like builtins
         for (const builtinType of keys(Simulation.BUILTIN_MAP)) {
             let builtinLabel = builtinType.toUpperFirst();
-            this.toolbar.createComponentButton(builtinLabel, '<b>' + builtinLabel + '</b> builtin. <i>LMB</i>: Drag to move onto grid.', (grid, x, y) => {
+            this.toolbar.createComponentButton(builtinLabel, `<b>${builtinLabel}</b> builtin. ${DRAG_MSG}`, (grid, x, y) => {
                 return grid.addItem(new Builtin(this, x, y, builtinType));
             });
         }

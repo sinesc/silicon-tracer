@@ -26,7 +26,7 @@ class Clock extends Component {
     // Link clock to a grid, enabling it to be rendered.
     link(grid) {
         super.link(grid);
-        this.setHoverMessage(this.inner, () => `<b>${Number.formatSI(this.frequency, true)}Hz Clock</b>. <i>LMB</i>: Drag to move, <i>R</i>: Rotate, <i>DEL</i>: Delete, <i>E</i>: Edit, <i>SHIFT/CTRL+LMB</i>: Click to select/deselect`, { type: 'hover' });
+        this.setHoverMessage(this.inner, () => `<b>${Number.formatSI(this.frequency, true)}Hz Clock</b>. <i>E</i> Edit, ${Component.HOTKEYS}.`, { type: 'hover' });
     }
 
     // Handle edit hotkey.

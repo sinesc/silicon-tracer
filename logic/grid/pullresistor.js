@@ -26,8 +26,7 @@ class PullResistor extends Component {
     // Link pull resistor to a grid, enabling it to be rendered.
     link(grid) {
         super.link(grid);
-        const type = this.direction === 1 ? 'Pull-up' : 'Pull-down';
-        this.setHoverMessage(this.inner, () => `<b>${type} resistor</b>. <i>LMB</i>: Drag to move, <i>R</i>: Rotate, <i>DEL</i>: Delete, <i>E</i>: Edit, <i>SHIFT/CTRL+LMB</i>: Click to select/deselect`, { type: 'hover' });
+        this.setHoverMessage(this.inner, () => `<b>Pull-${this.direction === 1 ? 'up' : 'down'} resistor</b>. <i>E</i> Edit, ${Component.HOTKEYS}.`, { type: 'hover' });
     }
 
     // Handle edit hotkey.

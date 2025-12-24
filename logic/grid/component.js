@@ -71,6 +71,8 @@ class ComponentPort {
 // General component used as a base class for Gates/Builtins or user defined circuits when represented within other circuits.
 class Component extends GridItem {
 
+    static HOTKEYS = '<i>LMB</i> Drag to move, <i>R</i> Rotate, <i>DEL</i> Delete, ' + GridItem.HOTKEYS;
+
     static EDIT_DIALOG = [
         { name: 'rotation', label: 'Rotation', type: 'select', options: { 0: "Default", 1: "90°", 2: "180°", 3: "270°" }, apply: (v, f) => parseInt(v) },
     ];
@@ -137,7 +139,7 @@ class Component extends GridItem {
             let port = document.createElement('div');
             port.classList.add('component-port');
             this.#element.appendChild(port);
-            this.setHoverMessage(port, () => 'Port <b>' + item.name + '</b> of <b>' + this.#type + '</b>. <i>LMB</i>: Drag to connect.', { type: 'hover-port' });
+            this.setHoverMessage(port, () => 'Port <b>' + item.name + '</b> of <b>' + this.#type + '</b>. <i>LMB</i> Drag to connect.', { type: 'hover-port' });
             // port hover label
             let labelElement = document.createElement('div');
             labelElement.classList.add('component-port-label');
