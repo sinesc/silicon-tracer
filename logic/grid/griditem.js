@@ -147,6 +147,16 @@ class GridItem {
 
     // Implement to handle click events. Return true to prevent parent action.
     onClick(modifier, ...args) {
+        if (modifier.shift && !this.selected) {
+            this.grid.selection.push(this);
+            this.selected = true;
+            return true;
+        } else if (modifier.ctrl && this.selected) {
+            const index = this.grid.selection.indexOf(this);
+            this.grid.selection.swapRemove(index);
+            this.selected = false;
+            return true;
+        }
         return false;
     }
 

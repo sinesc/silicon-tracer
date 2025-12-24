@@ -38,7 +38,7 @@ class CustomComponent extends Component {
         this.type = circuit.label;
         super.link(grid);
         this.element.classList.add('custom');
-        this.setHoverMessage(this.inner, () => '<b>' + this.label + '</b>. <i>LMB</i>: Drag to move, <i>R</i>: Rotate, <i>DEL</i>: Delete, <i>E</i>: Edit, <i>W</i>:Switch to sub-circuit' + (this.app.simulations.current ? ' simulation' : ''), { type: 'hover' });
+        this.setHoverMessage(this.inner, () => '<b>' + this.label + '</b>. <i>LMB</i>: Drag to move, <i>R</i>: Rotate, <i>DEL</i>: Delete, <i>E</i>: Edit, <i>SHIFT/CTRL+LMB</i>: Click to select/deselect, <i>W</i>:Switch to sub-circuit' + (this.app.simulations.current ? ' simulation' : ''), { type: 'hover' });
     }
 
     // Set the simulation instance of the represented sub-circuit.

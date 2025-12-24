@@ -3,7 +3,7 @@
 // Single wire on the grid.
 class Wire extends GridItem {
 
-    static HOVER_MESSAGE = 'Wire. <i>LMB</i>: Branch off new wire. <i>DEL</i> Delete, <i>0</i> - <i>9</i>: Set net color.';// TODO: <i>Shift+LMB</i>: Drag along the normal.
+    static HOVER_MESSAGE = 'Wire. <i>LMB</i>: Drag to branch off new wire. <i>DEL</i>: Delete, <i>0</i> - <i>9</i>: Set net color, <i>SHIFT/CTRL+LMB</i>: Click to select/deselect.';// TODO: <i>Shift+LMB</i>: Drag along the normal.
     static THICKNESS = 3;
 
     #element;
