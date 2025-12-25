@@ -100,15 +100,14 @@ class Simulation {
         return this.#gates.length - 1;
     }
 
-    // Declares a clock with the given frequency at the given tps. Suffix is appended to the builtin's pre-defined IO-names.
-    declareClock(frequency, tps, tristate, suffix, delay = null) {
+    // Declares a clock with the given frequency at the given tps. Suffix is appended to the clock's `enable` input and `c` output.
+    declareClock(frequency, tps, suffix, delay = null) {
         assert.number(frequency);
         assert.integer(tps);
-        assert.bool(tristate);
         assert.string(suffix);
         const input = 'enable' + suffix;
         const output = 'c' + suffix
-        this.#clocks.push({ frequency, tps, tristate, input, output, offset: this.#alloc32() });
+        this.#clocks.push({ frequency, tps, input, output, offset: this.#alloc32() });
         this.#declareIO(input, 'i', delay ?? Simulation.DEFAULT_DELAY);
         this.#declareIO(output, 'o', 0);
         return this.#clocks.length - 1;
@@ -343,7 +342,7 @@ class Simulation {
     }
 
     // Compiles a clock reading from one input and writing to an output.
-    #compileClock(clockIndex, ioReplacements) { // TODO: tristate
+    #compileClock(clockIndex, ioReplacements) {
         const clock = this.#clocks[clockIndex];
         const inputMem = ioReplacements[clock.input];
         const outputMem = this.#compileIOAccess(clock.output);

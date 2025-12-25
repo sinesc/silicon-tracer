@@ -48,7 +48,7 @@ class NetList {
                     } else if (component instanceof Builtin) {
                         sim.declareBuiltin(component.type, suffix);
                     } else if (component instanceof Clock) {
-                        sim.declareClock(component.frequency, config.targetTPS, true, suffix);
+                        sim.declareClock(component.frequency, config.targetTPS, suffix);
                     } else if (component instanceof PullResistor) {
                         sim.declarePullResistor(component.direction, suffix);
                     }
