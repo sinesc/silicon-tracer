@@ -271,7 +271,7 @@ class Application {
                 }
                 updateSimulationMenu();
             });
-            simulationMenu.createToggleButton('Check net conflicts', 'Networks with multiple active gate outputs will be highlighted.', this.config.checkNetConflicts, (enabled) => {
+            simulationMenu.createToggleButton('Show net conflicts', 'Networks with multiple active gate outputs will be highlighted.', this.config.checkNetConflicts, (enabled) => {
                 this.config.checkNetConflicts = enabled;
                 this.simulations.markDirty(null)
                 if (enabled) {

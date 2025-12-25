@@ -219,19 +219,19 @@ class Simulation {
         return (value & (1 << (Simulation.MAX_DELAY + 1))) ? -1 : (value & (1 << Simulation.MAX_DELAY) ? value & 1 : null);
     }
 
-    // Returns raw simulation memory. // TODO: rename to mem, rename code&mem to debugCode/Mem
+    // Returns raw simulation memory.
     rawMem() {
         return { mem8: this.#mem8, mem32: this.#mem32 };
     }
 
     // Returns code of the simulation for debugging purposes.
-    code() {
+    debugCode() {
         const compiled = this.#compileTick();
         return "// alloc mem[" + this.#alloc8Base + "]\n" + compiled;
     }
 
     // Returns current memory contents for debugging purposes.
-    mem() {
+    debugMem() {
         const result = { net: {}, io: {}, clock: {} };
         for (const [ name, io ] of this.#ioMap) {
             result.io[name] = this.#mem8[io.offset];

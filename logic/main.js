@@ -37,7 +37,7 @@ app.debug = () => {
                     }
                 }
             }
-            console.log(sim.engine.code() + portInfo.join("\n"));
+            console.log(sim.engine.debugCode() + portInfo.join("\n"));
         } else {
             console.log('No simulation running');
         }
@@ -49,7 +49,7 @@ app.debug = () => {
         app.simulations.current.tick(1);
         console.clear();
         console.log('tick ' + (tick++));
-        const mem = app.simulations.current.engine.mem();
+        const mem = app.simulations.current.engine.debugMem();
         for (const [ k, v ] of Object.entries(mem.io)) {
             const abbrev = k.replace(/@(g[a-f0-9]+)@/g, (m, h) => ':' + h.substr(1, 6) + ':');
             console.log(abbrev + ': ' + bin(v));
@@ -82,7 +82,7 @@ app.debug = () => {
 };
 
 {
-    // a blast from when we still owned our stuff
+    // a blast from a past where we still owned our stuff
     const logo = document.querySelector('#header h1');
     logo.onmouseenter = () => app.setStatus('Cheesy 80s logo. It is ticklish.');
     logo.onmouseleave = () => app.clearStatus();
