@@ -19,11 +19,12 @@ class Application {
     circuits;
     simulations;
 
-    // move all into single object, e.g. #status = { ..
-    #status;
-    #statusMessage = null;
-    #statusTimer = null;
-    #statusLocked = false;
+    #status = {
+        element: null,
+        message: null,
+        timer: null,
+        locked: false,
+    }
 
     #renderLoop = {
         renderLast: 0,
@@ -43,7 +44,7 @@ class Application {
         this.toolbar = new Toolbar(this, toolbarParent);
         this.circuits = new Circuits(this);
         this.simulations = new Simulations(this);
-        this.#status = element(gridParent, 'div', 'app-status');
+        this.#status.element = element(gridParent, 'div', 'app-status');
         this.#initMenu();
         this.#initToolbar();
         this.#initFocusMonitor();
@@ -61,24 +62,24 @@ class Application {
     setStatus(message, lock = false, item = null) {
         assert.bool(lock);
         assert.class(GridItem, item, true);
-        if (this.#statusLocked && !lock) {
+        if (this.#status.locked && !lock) {
             return;
         }
-        this.#statusLocked = lock ?? false;
-        if (this.#statusTimer) {
-            clearTimeout(this.#statusTimer);
+        this.#status.locked = lock ?? false;
+        if (this.#status.timer) {
+            clearTimeout(this.#status.timer);
         }
-        this.#statusMessage = message;
+        this.#status.message = message;
         const messageText = String.isString(message) ? message : (Function.isFunction(message) ? message() : null);
-        this.#status.innerHTML = messageText !== null ? (this.config.debugShowGid && item ? item.gid.slice(0, 6) + ': ' : '') + messageText : '';
+        this.#status.element.innerHTML = messageText !== null ? (this.config.debugShowGid && item ? item.gid.slice(0, 6) + ': ' : '') + messageText : '';
         if (messageText) {
-            this.#status.classList.remove('app-status-faded');
+            this.#status.element.classList.remove('app-status-faded');
         } else if (!messageText) {
             // set default help text when no status message has been set for a while
-            this.#statusTimer = setTimeout(() => {
+            this.#status.timer = setTimeout(() => {
                 if (!messageText) {
-                    this.#status.classList.remove('app-status-faded');
-                    this.#status.innerHTML = this.grid.defaultStatusMessage();
+                    this.#status.element.classList.remove('app-status-faded');
+                    this.#status.element.innerHTML = this.grid.defaultStatusMessage();
                 }
             }, 500);
         }
@@ -86,26 +87,26 @@ class Application {
 
     // Immediately update status with previously set message(-function).
     updateStatus() {
-        if (this.#statusTimer) {
-            clearTimeout(this.#statusTimer);
+        if (this.#status.timer) {
+            clearTimeout(this.#status.timer);
         }
-        const message = this.#statusMessage;
+        const message = this.#status.message;
         const messageText = String.isString(message) ? message : (Function.isFunction(message) ? message() : null);
-        this.#status.classList.remove('app-status-faded');
-        this.#status.innerHTML = messageText ?? this.grid.defaultStatusMessage();
+        this.#status.element.classList.remove('app-status-faded');
+        this.#status.element.innerHTML = messageText ?? this.grid.defaultStatusMessage();
     }
 
     // Clears the current status message.
     clearStatus(unlock) {
-        if (this.#statusLocked && !unlock) {
+        if (this.#status.locked && !unlock) {
             return;
         }
-        this.#statusLocked = false;
-        if (this.#statusTimer) {
-            clearTimeout(this.#statusTimer);
+        this.#status.locked = false;
+        if (this.#status.timer) {
+            clearTimeout(this.#status.timer);
         }
-        this.#status.classList.add('app-status-faded');
-        this.#statusTimer = setTimeout(() => this.setStatus(), Grid.STATUS_DELAY);
+        this.#status.element.classList.add('app-status-faded');
+        this.#status.timer = setTimeout(() => this.setStatus(), Grid.STATUS_DELAY);
     }
 
     // Called periodically to update stats overlay.
