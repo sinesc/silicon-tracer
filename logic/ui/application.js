@@ -24,7 +24,6 @@ class Application {
     #statusMessage = null;
     #statusTimer = null;
     #statusLocked = false;
-    #logo;
 
     #renderLoop = {
         renderLast: 0,
@@ -37,33 +36,25 @@ class Application {
         framesCounted: 0,
     };
 
-    constructor(gridParent, toolbarParent, logo = null) {
+    constructor(gridParent, toolbarParent) {
         assert.class(Node, gridParent);
         assert.class(Node, toolbarParent);
-        assert.class(Node, logo, true);
-
         this.grid = new Grid(this, gridParent);
         this.toolbar = new Toolbar(this, toolbarParent);
         this.circuits = new Circuits(this);
         this.simulations = new Simulations(this);
-
         this.#status = element(gridParent, 'div', 'app-status');
-        this.#logo = logo;
-    }
-
-    start() {
-        // finish init
         this.#initMenu();
         this.#initToolbar();
-        this.#startFocusMonitor();
-        this.#startLogoMonitor();
+        this.#initFocusMonitor();
+        this.#initRenderLoop();
         this.circuits.clear();
         this.simulations.select(this.circuits.current, this.config.autoCompile);
-        // start simulation/render loop
-        this.#renderLoop.renderLast = performance.now();
-        requestAnimationFrame(() => this.#render());
-        // update stats overlay once a second
-        setInterval(() => this.#renderStats(), 1000);
+    }
+
+    // Creates a new application and returns it.
+    static create(gridParent, toolbarParent) {
+        return new Application(gridParent, toolbarParent);
     }
 
     // Sets a status message. Pass null to unset and revert back to default status.
@@ -370,8 +361,17 @@ class Application {
         }
     }
 
+    // Initialize render loop and other periodic events.
+    #initRenderLoop() {
+        // start simulation/render loop
+        this.#renderLoop.renderLast = performance.now();
+        requestAnimationFrame(() => this.#render());
+        // update stats overlay once a second
+        setInterval(() => this.#renderStats(), 1000);
+    }
+
     // Show warning when not focussed to avoid confusion. In this state mouse wheel events still register but hotkeys don't.
-    #startFocusMonitor() {
+    #initFocusMonitor() {
         let hadFocus = null;
         let focusTimer = null;
         setInterval(() => {
@@ -387,15 +387,5 @@ class Application {
                 focusTimer = setTimeout(() => document.body.classList.remove('focus-changing'), 750);
             }
         }, 100);
-    }
-
-    // Monitor logo for clicks.
-    #startLogoMonitor() {
-        if (this.#logo) {
-            // A blast from when we still owned our stuff.
-            this.#logo.onmouseenter = () => this.setStatus('Cheesy 80s logo. It is ticklish.');
-            this.#logo.onmouseleave = () => this.clearStatus();
-            this.#logo.onclick = () => this.#logo.setAttribute('data-c', ((parseInt(this.#logo.getAttribute('data-c') ?? 0) + 1) % 6));
-        }
     }
 }

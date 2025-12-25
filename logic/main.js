@@ -1,7 +1,6 @@
 "use strict";
 
-const app = new Application(document.querySelector('#content'), document.querySelector('#toolbar'), document.querySelector('#header h1'));
-app.start();
+const app = Application.create(document.querySelector('#content'), document.querySelector('#toolbar'));
 
 // add 'Open example' button on github demo
 if (location.hostname === 'sinesc.github.io' && location.pathname === '/silicon-tracer/') {
@@ -81,3 +80,11 @@ app.debug = () => {
     };
 
 };
+
+{
+    // a blast from when we still owned our stuff
+    const logo = document.querySelector('#header h1');
+    logo.onmouseenter = () => app.setStatus('Cheesy 80s logo. It is ticklish.');
+    logo.onmouseleave = () => app.clearStatus();
+    logo.onclick = () => logo.setAttribute('data-c', ((parseInt(logo.getAttribute('data-c') ?? 0) + 1) % 6));
+}
