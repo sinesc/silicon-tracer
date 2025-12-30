@@ -282,11 +282,12 @@ Circuits.Circuit = class {
         assert.class(NetList, netList);
         assert.integer(subCircuitInstance);
         this.detachSimulation();
-        const tickListener = [];
+        // link components to their simulation id (e.g. a clock id)
+        const simIds = netList.instances[subCircuitInstance].simIds;
+        for (const component of this.data) {
+            component.simId = simIds[component.gid];
+        }
         for (const net of netList.nets) {
-            // collect list of interactive components in circuit
-            const interactiveComponents = net.ports.map((p) => ({ portName: p.name, component: this.itemByGID(p.gid) })).filter((p) => p.component instanceof Interactive);
-            tickListener.push(...interactiveComponents);
             // link ports on components
             for (const { name, gid, instance } of net.ports) {
                 if (subCircuitInstance === instance) {
@@ -314,7 +315,6 @@ Circuits.Circuit = class {
                 component.instance = instance;
             }
         }
-        return tickListener;
     }
 
     // Detaches all items from the simulation by unsetting the item's netId.

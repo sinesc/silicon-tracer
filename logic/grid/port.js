@@ -1,7 +1,7 @@
 "use strict";
 
 // An IO port to interface with other circuits.
-class Port extends Interactive {
+class Port extends Component {
 
     static EDIT_DIALOG = [
         { name: 'name', label: 'Name', type: 'string', check: function(v, f) { return v === '' || this.checkNameIsUnique(v, this.grid.circuit) } },
@@ -40,13 +40,9 @@ class Port extends Interactive {
         };
     }
 
-    // Apply component state to simulation.
-    applyState(port, sim) {
-        if (this.#port.netId !== null) {
-            if (this.#state !== null) {
-                sim.setNetValue(this.#port.netId, this.#state);
-            }
-        }
+    // Returns user-set component state.
+    get state() {
+        return this.#state;
     }
 
     // Hover hotkey actions
@@ -64,8 +60,8 @@ class Port extends Interactive {
             }
             if (prevState !== this.#state) {
                 const sim = this.app.simulations.current;
-                if (this.#port.netId !== null && sim) {
-                    sim.engine.setNetValue(this.#port.netId, this.#state);
+                if (this.simId !== null && sim) {
+                    sim.engine.setConstValue(this.simId, this.#state);
                 }
                 this.dirty = true;
             }

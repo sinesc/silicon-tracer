@@ -88,6 +88,9 @@ class Component extends GridItem {
     #type;
     #rotation = 0;
 
+    // An id for the simulated component. This could be a constId, clockId, ....
+    simId = null;
+
     constructor(app, x, y, ports, type) {
         assert.string(type);
         super(app, x, y);

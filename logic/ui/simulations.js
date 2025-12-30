@@ -97,7 +97,6 @@ Simulations.Simulation = class {
     #circuit;
     #netList;
     #engine;
-    #tickListener = [];
     #instance = 0;
     #dirty = true;
     #attached = false;
@@ -132,12 +131,6 @@ Simulations.Simulation = class {
         return this.#netList.instances[this.instance].parentInstance;
     }
 
-    // Returns a list of components that requested to have their applyState() function called prior to ticking.
-    // These are interactive components that may have to apply user input to the simulation.
-    get tickListener() {
-        return this.#tickListener;
-    }
-
     // Returns the simulation engine used to compile this simulation.
     get engine() {
         return this.#engine;
@@ -163,7 +156,7 @@ Simulations.Simulation = class {
             this.#compile();
             const circuit = this.#netList.instances[this.#instance].circuit
             if (this.#attached) {
-                this.#tickListener = circuit.attachSimulation(this.#netList, this.#instance);
+                circuit.attachSimulation(this.#netList, this.#instance);
             }
             this.#app.grid.markDirty();
             return true;
@@ -179,16 +172,12 @@ Simulations.Simulation = class {
             this.#app.grid.setCircuit(circuit);
         }
         this.#instance = instance;
-        this.#tickListener = circuit.attachSimulation(this.#netList, instance);
+        circuit.attachSimulation(this.#netList, instance);
     }
 
     // Ticks the current simulation for the given amount of ticks.
     tick(ticks) {
         assert.integer(ticks);
-        // apply manual simulation states each tick
-        for (const { portName, component } of this.tickListener) {
-            component.applyState(portName, this.#engine);
-        }
         this.#engine.simulate(ticks);
     }
 
@@ -200,7 +189,7 @@ Simulations.Simulation = class {
 
     // Attach simulation to its root circuit.
     attach() {
-        this.#tickListener = this.#circuit.attachSimulation(this.#netList, 0);
+        this.#circuit.attachSimulation(this.#netList, 0);
         this.#instance = 0;
         this.#app.grid.setSimulationLabel(this.#circuit.label);
         this.#app.grid.markDirty();

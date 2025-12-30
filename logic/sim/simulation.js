@@ -37,6 +37,7 @@ class Simulation {
     #nets = [];
     #gates = [];
     #clocks = [];
+    #consts = [];
     #compiled;
     #alloc8Base = 0;
     #alloc32Base = 0;
@@ -136,11 +137,22 @@ class Simulation {
         return this.#gates.length - 1;
     }
 
-    // Declares a push/pull resistor.
+    // Declares a push/pull resistor. Suffix is appended to the resistory's `q` output.
     declarePullResistor(type, suffix) {
         assert.enum([ 'up', 'down' ], type);
         assert.string(suffix);
         this.#declareIO('q' + suffix, type === 'up' ? 'u' : 'd', 0);
+    }
+
+    // Declares a constant. Constants can be updated using setConst without recompiling the simulation. Suffix is appended to the constant's `q` output.
+    declareConst(initialValue, outputName, suffix) {
+        assert.integer(initialValue, true);
+        assert.string(outputName);
+        assert.string(suffix);
+        const output = outputName + suffix
+        this.#consts.push({ initialValue, output, offset: this.#alloc8() });
+        this.#declareIO(output, 'o', 0);
+        return this.#consts.length - 1;
     }
 
     // Compiles the circuit and initializes memory, making it ready for simulate().
@@ -159,8 +171,29 @@ class Simulation {
                 const ticks = Simulation.#computeClockTicks(clock.tps, clock.frequency);
                 this.#mem32[clock.offset] = ticks + 2; // clean up first clock cycle (clock triggers on 0 but counter resets at -1)
             }
+            for (const constant of this.#consts) {
+                this.#mem8[constant.offset] = (constant.initialValue !== null) << Simulation.MAX_DELAY | (constant.initialValue & 1);
+            }
         }
     }
+
+    // Sets the value of a defined constant.
+    setConstValue(index, value) {
+        assert.integer(index);
+        assert.integer(value, true);
+        const offset = this.#getConst(index).offset;
+        this.#mem8[offset] = (value !== null) << Simulation.MAX_DELAY | (value & 1);
+    }
+
+    // Gets the value of a defined constant.
+    getConstValue(index) {
+        assert.integer(index);
+        const offset = this.#getConst(index).offset;
+        const value = this.#mem8[offset];
+        return value & (1 << Simulation.MAX_DELAY) ? value & 1 : null;
+    }
+
+    // TODO: add setClock function to change frequency
 
     // Updates all clocks in the circuit for the given TPS and recompiles the simulation without resetting it.
     updateClocks(tps) {
@@ -259,7 +292,7 @@ class Simulation {
         assert.string(name);
         assert.string(type);
         assert.integer(delay, true);
-        if (!/^[a-z_][a-z0-9_@]*$/i.test(name)) {
+        if (!/^[a-z_@][a-z0-9_@]*$/i.test(name)) {
             throw new Error('Invalid io name "' + name + '"');
         }
         this.#ioMap.set(name, {
@@ -290,8 +323,8 @@ class Simulation {
     #compileResistorToNet(netIndex, ioName) {
         const output = this.#getIO(ioName);
         const netMem = this.#compileNetAccess(netIndex);
-        const signalMask = this.#compileConst(1 << Simulation.MAX_DELAY);
-        const pullConst = this.#compileConst(1 << Simulation.MAX_DELAY | output.pull);
+        const signalMask = this.#compileValue(1 << Simulation.MAX_DELAY);
+        const pullConst = this.#compileValue(1 << Simulation.MAX_DELAY | output.pull);
         let code = `signal = ${netMem} & ${signalMask}; `;                      // select only the signal bit of the NET
         code += `mask = signal | (signal >> ${Simulation.MAX_DELAY}); `;        // duplicate signal bit into data bit to build a mask
         code += `${netMem} = (${netMem} & mask) | (${pullConst} & ~mask)`;      // apply pull-value to net if NET signal is not set
@@ -304,14 +337,14 @@ class Simulation {
         const result = [];
         for (const name of keys(gate.outputs)) {
             const outputDelay = this.#getIO(name).delay;
-            const dataOp = gate.outputs[name].replace(/\b[a-z_][a-z0-9_@]*\b/gi, (match) => ioReplacements[match] ?? 'error');
-            const signalOp = gate.signals[name].replace(/\b[a-z_][a-z0-9_@]*\b/gi, (match) => ioReplacements[match] ?? 'error');
+            const dataOp = gate.outputs[name].replace(/\b[a-z_@][a-z0-9_@]*\b/gi, (match) => ioReplacements[match] ?? 'error');
+            const signalOp = gate.signals[name].replace(/\b[a-z_@][a-z0-9_@]*\b/gi, (match) => ioReplacements[match] ?? 'error');
             const outputMem = this.#compileIOAccess(name);
             let computeSignal;
             if (outputDelay > 0) {
                 // perform signal computation, if required, otherwise just set the newest signal bit slot
                 const signalShift = Simulation.MAX_DELAY + outputDelay;
-                const signalBit = this.#compileConst(1 << signalShift);
+                const signalBit = this.#compileValue(1 << signalShift);
                 if (signalOp !== '') {
                     // perform signal computation, then shift result into newest signal bit slot
                     computeSignal = `((${signalOp}) << ${signalShift}) & ${signalBit}`;
@@ -320,7 +353,7 @@ class Simulation {
                 }
                 // perform data computation, then shift result into newest data bit slot and join both result parts
                 const dataShift = outputDelay;
-                const dataBit = this.#compileConst(1 << dataShift);
+                const dataBit = this.#compileValue(1 << dataShift);
                 const computeData = `((${dataOp}) << ${dataShift}) & ${dataBit}`;
                 // unset previously newest signal and data bits and replace with newly computed ones, write back
                 const clearMask = this.#compileDelayMask(outputDelay);
@@ -328,8 +361,8 @@ class Simulation {
             } else {
                 // optimized path for 0 delay outputs
                 const signalShift = Simulation.MAX_DELAY;
-                const signalBit = this.#compileConst(1 << signalShift);
-                const dataBit = this.#compileConst(1);
+                const signalBit = this.#compileValue(1 << signalShift);
+                const dataBit = this.#compileValue(1);
                 if (signalOp !== '') {
                     computeSignal = `((${signalOp}) << ${signalShift})`; // skipping masking with signalBit here since the shift ensures it can't leak into data
                 } else {
@@ -346,8 +379,8 @@ class Simulation {
         const clock = this.#clocks[clockIndex];
         const inputMem = ioReplacements[clock.input];
         const outputMem = this.#compileIOAccess(clock.output);
-        const clockMem = this.#compileClockAccess(clock.offset);
-        const signalBit = this.#compileConst(1 << Simulation.MAX_DELAY);
+        const clockMem = this.#compileClockAccess(clock.offset); // FIXME: this seems wrong, shouldn't it be clockIndex?
+        const signalBit = this.#compileValue(1 << Simulation.MAX_DELAY);
         const ticks = Simulation.#computeClockTicks(clock.tps, clock.frequency);
         let code = `${clockMem} -= 1; `                                                         // decrement clock
         code += `cmask = ${clockMem} >> 31; `                                                   // copy sign bit into entire mask
@@ -356,11 +389,19 @@ class Simulation {
         return code;
     }
 
+    // Compiles a const writing to an output.
+    #compileConst(constIndex) {
+        const constant = this.#consts[constIndex];
+        const outputMem = this.#compileIOAccess(constant.output);
+        const constMem = this.#compileConstAccess(constIndex);
+        return `${outputMem} = ${constMem}`; // TODO optimize, skip output mem
+    }
+
     // Compiles an output to net assertion.
     #compileOutputToNet(netIndex, ioName, reset) {
         const netMem = this.#compileNetAccess(netIndex);
         const outputMem = this.#compileIOAccess(ioName);
-        const signalMask = this.#compileConst(1 << Simulation.MAX_DELAY);
+        const signalMask = this.#compileValue(1 << Simulation.MAX_DELAY);
         let code = `signal = ${outputMem} & ${signalMask}; `;                       // select only the signal bit of the OUTPUT
         const maskCode = `signal | (signal >> ${Simulation.MAX_DELAY})`;            // duplicate signal bit into data bit to build a mask
         if (reset) {
@@ -403,6 +444,9 @@ class Simulation {
             } else {
                 ioReplacements[name] = this.#compileIOAccess(name);
             }
+        }
+        for (const [ constIndex, constant ] of pairs(this.#consts)) {
+            result += this.#compileConst(constIndex) + this.#endl('const ' + constant.output, true);
         }
         for (const [ clockIndex, clock ] of pairs(this.#clocks)) {
             result += this.#compileClock(clockIndex, ioReplacements) + this.#endl('clock ' + clock.output, true);
@@ -454,19 +498,24 @@ class Simulation {
     }
 
     // Returns code to refer to the state of a clock.
-    #compileClockAccess(index) {
+    #compileClockAccess(index) { // TODO remove, used only once
         return 'mem32[' + this.#getClock(index).offset + ']';
+    }
+
+    // Returns code to refer to the state of a constant.
+    #compileConstAccess(index) { // TODO remove, used only once
+        return 'mem[' + this.#getConst(index).offset + ']';
     }
 
     // Returns code for a bitmask with the signal and data bits for the given delay being unset.
     #compileDelayMask(delay) {
         const clearDataMask = ((1 << Simulation.ARRAY_BITS) - 1) & ~(1 << delay);
         const clearSignalMask = ((1 << Simulation.ARRAY_BITS) - 1) & ~(1 << (Simulation.MAX_DELAY + delay));
-        return this.#compileConst(clearSignalMask & clearDataMask);
+        return this.#compileValue(clearSignalMask & clearDataMask);
     }
 
     // Returns code for a constant (written in binary notation for better readability of compiled code).
-    #compileConst(value) {
+    #compileValue(value) {
         if (this.#debug) {
             let result = '0b';
             for (let i = Simulation.ARRAY_BITS - 1; i >= 0; --i) {
@@ -513,6 +562,16 @@ class Simulation {
             return clock;
         } else {
             throw new Error('Undefined clock ' + index);
+        }
+    }
+
+    // Returns a const declaration.
+    #getConst(index) {
+        let constant;
+        if ((constant = this.#consts[index]) !== undefined) {
+            return constant;
+        } else {
+            throw new Error('Undefined constant ' + index);
         }
     }
 

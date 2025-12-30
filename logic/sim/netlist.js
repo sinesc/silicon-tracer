@@ -26,6 +26,11 @@ class NetList {
         return netList;
     }
 
+    // Returns a port suffix for the given gid and instance.
+    static suffix(gid, instance) {
+        return '@' + gid + '@' + instance;
+    }
+
     // Compiles a simulation and returns it.
     compileSimulation(rawMem, config) {
         assert.object(rawMem, true, (o) => {
@@ -38,29 +43,31 @@ class NetList {
             assert.bool(o.debugCompileComments);
         });
         const sim = new Simulation(config.debugCompileComments, config.checkNetConflicts);
-        // declare gates from component map
-        for (const [instance, { circuit }] of this.instances.entries()) {
+        // declare items
+        for (const [instance, { circuit, simIds }] of this.instances.entries()) {
             for (const component of circuit.data.filter((i) => !(i instanceof Wire))) {
-                const suffix = '@' + component.gid + '@' + instance;
-                if (this.#isConnected(component, suffix)) {
+                const suffix = NetList.suffix(component.gid, instance);
+                if (this.#isConnected(component, suffix)) { // TODO: add declare() function on component to handle this
                     if (component instanceof Gate) {
-                        sim.declareGate(component.type, component.inputs, component.output, suffix);
+                        simIds[component.gid] = sim.declareGate(component.type, component.inputs, component.output, suffix);
                     } else if (component instanceof Builtin) {
-                        sim.declareBuiltin(component.type, suffix);
+                        simIds[component.gid] = sim.declareBuiltin(component.type, suffix);
                     } else if (component instanceof Clock) {
-                        sim.declareClock(component.frequency, config.targetTPS, suffix);
+                        simIds[component.gid] = sim.declareClock(component.frequency, config.targetTPS, suffix);
                     } else if (component instanceof PullResistor) {
-                        sim.declarePullResistor(component.direction, suffix);
+                        simIds[component.gid] = sim.declarePullResistor(component.direction, suffix);
+                    } else if (component instanceof Port) {
+                        simIds[component.gid] = sim.declareConst(component.state, '', suffix);
                     }
                 }
             }
         }
         // declare nets
         for (const net of this.nets) {
-            // create new net from connected gate i/o-ports
-            const interactiveComponents = net.ports.filter((p) => this.instances[p.instance].circuit.itemByGID(p.gid) instanceof Interactive);
-            const attachedPorts = net.ports.filter((p) => { const c = this.instances[p.instance].circuit.itemByGID(p.gid); return c instanceof Gate || c instanceof Builtin || c instanceof Clock || c instanceof PullResistor; }).map((p) => p.uniqueName);
-            net.netId = sim.declareNet(attachedPorts, interactiveComponents.map((p) => p.uniqueName));
+            // create new net from connected gate i/o-ports // TODO: check for declare function instead of instanceof
+            const debugPortComponents = net.ports.filter((p) => this.instances[p.instance].circuit.itemByGID(p.gid) instanceof Port).map((p) => p.uniqueName);
+            const attachedPorts = net.ports.filter((p) => { const c = this.instances[p.instance].circuit.itemByGID(p.gid); return (c instanceof Component) && !(c instanceof CustomComponent); }).map((p) => p.uniqueName);
+            net.netId = sim.declareNet(attachedPorts, debugPortComponents);
         }
         // compile
         sim.compile(rawMem);
@@ -124,7 +131,7 @@ class NetList {
     static #circuitToNetItems(circuit, circuits, instances = [], parentInstance = null) {
         const instance = instances.length;
         const subInstances = { }; // maps CustomComponent gids in each instance to their sub-instance
-        instances.push({ circuit, subInstances, parentInstance });
+        instances.push({ circuit, subInstances, parentInstance, simIds: {} });
         // get all individual wires
         const wires = circuit.data.filter((i) => i instanceof Wire && !i.limbo).map((w) => {
             return new NetList.NetWire([ new Point(w.x, w.y), new Point(w.x + w.width, w.y + w.height) ], w.gid, instance);
@@ -289,7 +296,7 @@ NetList.NetPort = class {
         this.subnet = subnet;
     }
     get uniqueName() {
-        return this.name + '@' + this.gid + '@' + this.instance;
+        return this.name + NetList.suffix(this.gid, this.instance);
     }
 }
 
