@@ -35,6 +35,12 @@ class Clock extends Component {
         if (config) {
             this.frequency = config.frequency;
             this.rotation = config.rotation;
+
+            /*const sim = this.app.simulations.current;
+            if (this.simId !== null && sim) {
+                sim.engine.setClockFrequency(this.simId, this.frequency);
+            }*/
+
             this.redraw();
         }
     }

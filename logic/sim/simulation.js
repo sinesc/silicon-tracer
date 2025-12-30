@@ -193,21 +193,36 @@ class Simulation {
         return value & (1 << Simulation.MAX_DELAY) ? value & 1 : null;
     }
 
-    // TODO: add setClock function to change frequency
+    // Sets the frequency of a defined clock.
+    setClockFrequency(index, frequency = null, tps = null, recompile = true) {
+        assert.integer(index);
+        assert.number(frequency, true);
+        assert.integer(tps, true);
+        const clock = this.#getClock(index);
+        const previousMaxTicks = Simulation.#computeClockTicks(clock.tps, clock.frequency);
+        // set new frequency/tps to compute ticks/cycle
+        if (tps !== null) {
+            clock.tps = tps;
+        }
+        if (frequency !== null) {
+            clock.frequency = frequency;
+        }
+        // new tps will not change the tick counter for the current cycle, so we have to fix that as well
+        const newMaxTicks = Simulation.#computeClockTicks(clock.tps, clock.frequency);
+        const remainingTicks = this.#mem32[clock.offset];
+        this.#mem32[clock.offset] = 0 | (remainingTicks * newMaxTicks / previousMaxTicks);
+        if (recompile) {
+            this.#compileFunction(); // TODO: remove once todo in compileClock is done
+        }
+    }
 
     // Updates all clocks in the circuit for the given TPS and recompiles the simulation without resetting it.
     updateClocks(tps) {
         assert.integer(tps);
-        for (const clock of values(this.#clocks)) {
-            const previousMaxTicks = Simulation.#computeClockTicks(clock.tps, clock.frequency);
-            // set new tps to compute ticks/cycle
-            clock.tps = tps;
-            // new tps will not change the tick counter for the current cycle, so we have to fix that as well
-            const newMaxTicks = Simulation.#computeClockTicks(clock.tps, clock.frequency);
-            const remainingTicks = this.#mem32[clock.offset];
-            this.#mem32[clock.offset] = 0 | (remainingTicks * newMaxTicks / previousMaxTicks);
+        for (let index = 0; index < this.#clocks.length; ++index) {
+            this.setClockFrequency(index, null, tps, false);
         }
-        this.#compileFunction();
+        this.#compileFunction(); // TODO: remove once todo in compileClock is done
     }
 
     // Runs the simulation for the given number of ticks.
@@ -379,9 +394,9 @@ class Simulation {
         const clock = this.#clocks[clockIndex];
         const inputMem = ioReplacements[clock.input];
         const outputMem = this.#compileIOAccess(clock.output);
-        const clockMem = this.#compileClockAccess(clock.offset); // FIXME: this seems wrong, shouldn't it be clockIndex?
+        const clockMem = 'mem32[' + clock.offset + ']'
         const signalBit = this.#compileValue(1 << Simulation.MAX_DELAY);
-        const ticks = Simulation.#computeClockTicks(clock.tps, clock.frequency);
+        const ticks = Simulation.#computeClockTicks(clock.tps, clock.frequency); // TODO move to mem32 so it can be updated without recompilation
         let code = `${clockMem} -= 1; `                                                         // decrement clock
         code += `cmask = ${clockMem} >> 31; `                                                   // copy sign bit into entire mask
         code += `${clockMem} = ((${clockMem} & ~cmask) | (${ticks} & cmask)); `;                // either retain current clock value or reset it to ticks on reaching -1
@@ -393,7 +408,7 @@ class Simulation {
     #compileConst(constIndex) {
         const constant = this.#consts[constIndex];
         const outputMem = this.#compileIOAccess(constant.output);
-        const constMem = this.#compileConstAccess(constIndex);
+        const constMem = 'mem[' + constant.offset + ']';
         return `${outputMem} = ${constMem}`; // TODO optimize, skip output mem
     }
 
@@ -495,16 +510,6 @@ class Simulation {
     // Returns code to refer to the state of a net.
     #compileNetAccess(index) {
         return 'mem[' + this.#getNet(index).offset + ']';
-    }
-
-    // Returns code to refer to the state of a clock.
-    #compileClockAccess(index) { // TODO remove, used only once
-        return 'mem32[' + this.#getClock(index).offset + ']';
-    }
-
-    // Returns code to refer to the state of a constant.
-    #compileConstAccess(index) { // TODO remove, used only once
-        return 'mem[' + this.#getConst(index).offset + ']';
     }
 
     // Returns code for a bitmask with the signal and data bits for the given delay being unset.
