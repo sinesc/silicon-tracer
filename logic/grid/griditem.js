@@ -305,7 +305,7 @@ class GridItem {
         };
     }
 
-    // Called on mouse click (mouse down and mouse up without movement inbetween)
+    // Called on mouse click (left mouse down and up without movement inbetween)
     #handleClick(args, e) {
         e.preventDefault();
         e.stopPropagation();
