@@ -141,20 +141,20 @@ class WireBuilder extends GridItem { // Note: Not actually a grid item, but uses
             // horizontal first, then vertical
             const hx = width < 0 ? x + width : x;
             const hw = Math.abs(width);
-            this.#wireH.setEndpoints(hx, y, hw, 'h');
+            this.#wireH.setDimensions(hx, y, hw, 'h');
 
             const vy = height < 0 ? y + height : y;
             const vh = Math.abs(height);
-            this.#wireV.setEndpoints(x + width, vy, vh, 'v');
+            this.#wireV.setDimensions(x + width, vy, vh, 'v');
         } else {
             // vertical first, then horizontal
             const vy = height < 0 ? y + height : y;
             const vh = Math.abs(height);
-            this.#wireV.setEndpoints(x, vy, vh, 'v');
+            this.#wireV.setDimensions(x, vy, vh, 'v');
 
             const hx = width < 0 ? x + width : x;
             const hw = Math.abs(width);
-            this.#wireH.setEndpoints(hx, y + height, hw, 'h');
+            this.#wireH.setDimensions(hx, y + height, hw, 'h');
         }
     }
 

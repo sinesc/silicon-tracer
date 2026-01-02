@@ -160,16 +160,30 @@ class Wire extends GridItem {
         this.#color = value;
     }
 
-    // Sets connection endpoints, optionally aligned to the grid.
-    setEndpoints(x1, y1, length, direction, aligned) {
+    // Sets wire dimensions, optionally aligned to the grid.
+    setDimensions(x, y, length, direction, aligned = false) {
         if (aligned) {
-            [ x1, y1 ] = Grid.align(x1, y1);
+            [ x, y ] = Grid.align(x, y);
             length = Math.ceil(length / Grid.SPACING) * Grid.SPACING;
         }
-        this.x = x1;
-        this.y = y1;
-        this.width = direction === 'h' ? length : 0;
-        this.height = direction === 'v' ? length : 0;
+        this.direction = direction;
+        this.x = x;
+        this.y = y;
+        this.width = this.direction === 'h' ? length : 0;
+        this.height = this.direction === 'v' ? length : 0;
+    }
+
+    // Sets wire endpoints, optionally aligned to the grid.
+    setEndpoints(x1, y1, x2, y2, aligned = false) {
+        if (aligned) {
+            [ x1, y1 ] = Grid.align(x1, y1);
+            [ x2, y2 ] = Grid.align(x2, y2);
+        }
+        this.direction = y1 === y2 ? 'h' : 'v';
+        this.x = Math.min(x1, x2);
+        this.y = Math.min(y1, y2);
+        this.width = this.direction === 'h' ? Math.max(x1, x2) - this.x : 0;
+        this.height = this.direction === 'v' ? Math.max(y1, y2) - this.y : 0;
     }
 
     // Returns the 2 endpoint coordinates of this connection.
@@ -340,7 +354,7 @@ class Wire extends GridItem {
                 merged = true;
             } else {
                 const length = w.points[1][axis] - w.points[0][axis];
-                w.wire.setEndpoints(w.points[0].x, w.points[0].y, length, direction, false);
+                w.wire.setDimensions(w.points[0].x, w.points[0].y, length, direction);
             }
         }
 

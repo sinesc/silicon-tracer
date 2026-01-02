@@ -3,6 +3,7 @@
 // The circuit drawing grid.
 class Grid {
 
+    static #RAD90 = Math.PI / 2; // 90°
     static ZOOM_LEVELS = [ 0.5, 0.65, 0.85, 1.0, 1.25, 1.50, 1.75, 2.0, 2.5, 3.0 ];
     static DEFAULT_ZOOM_LEVEL = 4;
     static SPACING = 20;
@@ -17,6 +18,7 @@ class Grid {
     #element;
     #selectionElement;
     #selection = [];
+    #selectionCenter = null;
     #hotkeyTarget = null;
     #circuit;
     #netColor = 1;
@@ -373,6 +375,7 @@ class Grid {
                 item.selected = true;
             }
             this.#selection = items;
+            this.invalidateSelection();
             this.#app.simulations.markDirty(this.#circuit);
         } else if (this.#selection.length > 0) {
             // check selection hotkeys before item hotkeys
@@ -387,8 +390,12 @@ class Grid {
                         this.removeItem(item, false);
                     }
                     this.#selection = [];
+                    this.invalidateSelection();
                     this.#app.simulations.markDirty(this.#circuit);
                 }
+            } else if (e.key === 'r') {
+                this.#rotateSelection();
+                this.#app.simulations.markDirty(this.#circuit);
             }
         } else if (this.#hotkeyTarget) {
             // handle target specific hotkeys
@@ -427,6 +434,51 @@ class Grid {
         // move grid to compensate so that the point we zoomed into is still at the cursor
         this.offsetX -= mouseGridX - mouseGridXAfter;
         this.offsetY -= mouseGridY - mouseGridYAfter;
+    }
+
+    invalidateSelection() {
+        this.#selectionCenter = null;
+    }
+
+    #computeSelectionCenter() {
+        // find bounding box
+        let bounds = { x1: Number.MAX_SAFE_INTEGER, y1: Number.MAX_SAFE_INTEGER, x2: Number.MIN_SAFE_INTEGER, y2: Number.MIN_SAFE_INTEGER };
+        for (const item of this.#selection) {
+            bounds.x1 = Math.min(item.x, bounds.x1);
+            bounds.y1 = Math.min(item.y, bounds.y1);
+            bounds.x2 = Math.max(item.x + item.width, bounds.x2);
+            bounds.y2 = Math.max(item.y + item.height, bounds.y2);
+        }
+        // compute a rotation center, ensure exact grid snapping
+        const width = bounds.x2 - bounds.x1;
+        const height = bounds.y2 - bounds.y1;
+        const centerX = bounds.x1 + (width / 2);
+        const centerY = bounds.y1 + (height / 2);
+        const roundX = Math.round(centerX / Grid.SPACING) * Grid.SPACING;
+        const roundY = Math.round(centerY / Grid.SPACING) * Grid.SPACING;
+        return point(roundX, roundY);
+    }
+
+    // Rotates the current selection 90° around its center.
+    #rotateSelection() {
+        const center = this.#selectionCenter ??= this.#computeSelectionCenter();
+        // rotate items around center
+        for (const item of this.#selection) {
+            if (item instanceof Component) {
+                // component.rotation causes a rotation around the component center, so we have to use that as our basis
+                const xc = item.x + (item.width / 2);
+                const yc = item.y + (item.height / 2);
+                const offset = point(xc, yc).rotateAround(center, Grid.#RAD90).round();
+                // offset item by difference so we don't have to compute with center again
+                item.x += offset.x - xc;
+                item.y += offset.y - yc;
+                item.rotation += 1;
+            } else if (item instanceof Wire) {
+                const start = point(item.x, item.y).rotateAround(center, Grid.#RAD90).round();
+                const end = point(item.x + item.width, item.y + item.height).rotateAround(center, Grid.#RAD90).round();
+                item.setEndpoints(start.x, start.y, end.x, end.y);
+            }
+        }
     }
 
     // Renders a selection box in grid-div-relative coordinates and sets 'selected' property on components
@@ -474,6 +526,7 @@ class Grid {
             this.#selectionElement.classList.remove('hidden');
             if (!shiftDown && !ctrlDown) {
                 this.#selection = [];
+                this.invalidateSelection();
             }
             this.#renderSelection(dragStartX, dragStartY, 0, 0, shiftDown);
         } else if (e.which > 2) {
@@ -505,6 +558,7 @@ class Grid {
             // remove selection box, set selected items
             this.#selectionElement.classList.add('hidden');
             this.#selection = this.filterItems((c) => c.selected);
+            this.invalidateSelection();
         }
         document.onmouseup = null;
         document.onmousemove = null;

@@ -318,10 +318,31 @@ class Point {
             return false;
         }
     }
+    // Rotate point around center and return as new point.
+    rotateAround(center, angle) {
+        // move to origin
+        const xt = this.x - center.x;
+        const yt = this.y - center.y;
+        // rotate around oring
+        const xr = xt * Math.cos(angle) - yt * Math.sin(angle);
+        const yr = xt * Math.sin(angle) - yt * Math.cos(angle);
+        // move back to position
+        const xcr = xr + center.x;
+        const ycr = yr + center.y;
+        return new Point(xcr, ycr);
+    }
+    // Round to integer coordinates and return as new point.
+    round() {
+        return new Point(Math.round(this.x), Math.round(this.y));
+    }
     // Returns a comparable representation of the object as comparing points directly always results in false due to JS sucking
     get c() {
         return this.x + ':' + this.y;
     }
+}
+
+function point(x, y) {
+    return new Point(x, y);
 }
 
 class WeakUnorderedSet {

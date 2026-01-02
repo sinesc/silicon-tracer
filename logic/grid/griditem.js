@@ -142,6 +142,7 @@ class GridItem {
             for (const [ index, item ] of pairs(this.grid.selection)) {
                 item.onMove(x, y, status, what.items[index]);
             }
+            this.grid.invalidateSelection();
             return true;
         }
         return false;
@@ -151,11 +152,13 @@ class GridItem {
     onClick(modifier, ...args) {
         if (modifier.shift && !this.selected) {
             this.grid.selection.push(this);
+            this.grid.invalidateSelection();
             this.selected = true;
             return true;
         } else if (modifier.ctrl && this.selected) {
             const index = this.grid.selection.indexOf(this);
             this.grid.selection.swapRemove(index);
+            this.grid.invalidateSelection();
             this.selected = false;
             return true;
         }
