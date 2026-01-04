@@ -2,19 +2,20 @@
 
 // The circuit drawing grid.
 class Grid {
-
-    static #RAD90 = Math.PI / 2; // 90°
-    static ZOOM_LEVELS = [ 0.5, 0.65, 0.85, 1.0, 1.25, 1.50, 1.75, 2.0, 2.5, 3.0 ];
-    static DEFAULT_ZOOM_LEVEL = 4;
+    
     static SPACING = 20;
     static STATUS_DELAY = 500;
-    static DIRTY_NONE       = 0b0000;
-    static DIRTY_OUTER      = 0b0001;
-    static DIRTY_INNER      = 0b0010;
-    static DIRTY_OVERLAY    = 0b0100;
+
+    static #RAD90 = Math.PI / 2; // 90°
+    static #ZOOM_LEVELS = [ 0.5, 0.65, 0.85, 1.0, 1.25, 1.50, 1.75, 2.0, 2.5, 3.0 ];
+    static #DEFAULT_ZOOM_LEVEL = 4;
+    static #DIRTY_NONE      = 0b0000;
+    static #DIRTY_OUTER     = 0b0001;
+    static #DIRTY_INNER     = 0b0010;
+    static #DIRTY_OVERLAY   = 0b0100;
 
     #app;
-    #dirty = Grid.DIRTY_INNER | Grid.DIRTY_OUTER | Grid.DIRTY_OVERLAY;
+    #dirty = Grid.#DIRTY_INNER | Grid.#DIRTY_OUTER | Grid.#DIRTY_OVERLAY;
     #element;
     #selectionElement;
     #selection = [];
@@ -63,7 +64,7 @@ class Grid {
         this.#circuit.generateOutline();
         this.#circuit = null;
         this.#infoBox.circuitLabel = '';
-        this.#dirty |= Grid.DIRTY_OVERLAY;
+        this.#dirty |= Grid.#DIRTY_OVERLAY;
         this.#hotkeyTarget = null;
         this.#app.clearStatus(true);
     }
@@ -72,30 +73,30 @@ class Grid {
     setCircuit(circuit) {
         assert.class(Circuits.Circuit, circuit);
         this.unsetCircuit();
-        circuit.gridConfig.zoom ??= Grid.ZOOM_LEVELS[Grid.DEFAULT_ZOOM_LEVEL];
+        circuit.gridConfig.zoom ??= Grid.#ZOOM_LEVELS[Grid.#DEFAULT_ZOOM_LEVEL];
         circuit.gridConfig.offsetX ??= 0;
         circuit.gridConfig.offsetY ??= 0;
         this.#circuit = circuit;
         this.#circuit.link(this);
         this.#infoBox.circuitLabel = circuit.label;
-        this.#dirty |= Grid.DIRTY_INNER | Grid.DIRTY_OUTER | Grid.DIRTY_OVERLAY;
+        this.#dirty |= Grid.#DIRTY_INNER | Grid.#DIRTY_OUTER | Grid.#DIRTY_OVERLAY;
     }
 
     // Update circuit details in infobox.
     setCircuitDetails(details) {
-        this.#dirty |= this.#infoBox.circuitDetails !== details ? Grid.DIRTY_OVERLAY : 0;
+        this.#dirty |= this.#infoBox.circuitDetails !== details ? Grid.#DIRTY_OVERLAY : 0;
         this.#infoBox.circuitDetails = details;
     }
 
     // Sets the simulation label displayed on the grid.
     setSimulationLabel(label) {
-        this.#dirty |= this.#infoBox.simulationLabel !== label ? Grid.DIRTY_OVERLAY : 0;
+        this.#dirty |= this.#infoBox.simulationLabel !== label ? Grid.#DIRTY_OVERLAY : 0;
         this.#infoBox.simulationLabel = label;
     }
 
     // Sets the simulation details displayed on the grid.
     setSimulationDetails(details) {
-        this.#dirty |= this.#infoBox.simulationDetails !== details ? Grid.DIRTY_OVERLAY : 0;
+        this.#dirty |= this.#infoBox.simulationDetails !== details ? Grid.#DIRTY_OVERLAY : 0;
         this.#infoBox.simulationDetails = details;
     }
 
@@ -167,18 +168,18 @@ class Grid {
     // Renders the grid and its components.
     render() {
 
-        if (this.#dirty & Grid.DIRTY_OVERLAY) {
+        if (this.#dirty & Grid.#DIRTY_OVERLAY) {
             this.#infoBox.element.innerHTML = '<div class="info-section">Circuit</div><div class="info-title">' + this.#infoBox.circuitLabel + '</div>' +
                 (!this.#infoBox.circuitDetails ? '' : '<div class="info-details">' + this.#infoBox.circuitDetails + '</div>') +
                 (!this.#infoBox.simulationLabel ? '' : '<div class="info-section">Simulation</div><div class="info-title">' + this.#infoBox.simulationLabel + '</div>') +
                 (!this.#infoBox.simulationDetails ? '' : '<div class="info-details">' + this.#infoBox.simulationDetails + '</div>');
         }
 
-        if (this.#dirty & (Grid.DIRTY_OUTER | Grid.DIRTY_INNER)) {
+        if (this.#dirty & (Grid.#DIRTY_OUTER | Grid.#DIRTY_INNER)) {
 
             // add below/above/current zoom level classes to grid to enable zoom based styling
             if (!this.#element.classList.contains('grid-zoom-' + (this.zoom * 100))) {
-                for (const zoom of Grid.ZOOM_LEVELS) {
+                for (const zoom of Grid.#ZOOM_LEVELS) {
                     const name = zoom * 100;
                     this.#element.classList.remove('grid-zoom-above-' + name);
                     this.#element.classList.remove('grid-zoom-' + name);
@@ -206,7 +207,7 @@ class Grid {
 
         if (this.#circuit) {
 
-            const dirtyGrid = this.#dirty & (Grid.DIRTY_OUTER | Grid.DIRTY_INNER);
+            const dirtyGrid = this.#dirty & (Grid.#DIRTY_OUTER | Grid.#DIRTY_INNER);
 
             // apply wire net colors to attached ports
             if (dirtyGrid || this.#circuit.data.findIndex((item) => item.dirty) !== -1) {
@@ -217,7 +218,7 @@ class Grid {
             for (const item of this.#circuit.data) {
                 if (dirtyGrid || item.dirty) {
                     // optionally require full redraw from the item
-                    if (this.#dirty & Grid.DIRTY_INNER) {
+                    if (this.#dirty & Grid.#DIRTY_INNER) {
                         item.dirty = true;
                     }
                     item.render();
@@ -229,7 +230,7 @@ class Grid {
         }
 
         this.#infoBox.FPSCount.current += 1;
-        this.#dirty = Grid.DIRTY_NONE;
+        this.#dirty = Grid.#DIRTY_NONE;
     }
 
     // Makes given grid item become the hotkey-target and when locked also prevents hover events from stealing hotkey focus until released.
@@ -254,7 +255,7 @@ class Grid {
 
     // Mark grid as dirty (require redraw).
     markDirty() {
-        this.#dirty |= Grid.DIRTY_INNER | Grid.DIRTY_OUTER;
+        this.#dirty |= Grid.#DIRTY_INNER | Grid.#DIRTY_OUTER;
     }
 
     // Returns the grids default status message.
@@ -273,7 +274,7 @@ class Grid {
     // Sets the zoom factor.
     set zoom(value) {
         assert.number(value);
-        this.#dirty |= this.#circuit.gridConfig.zoom !== value ? Grid.DIRTY_INNER : 0;
+        this.#dirty |= this.#circuit.gridConfig.zoom !== value ? Grid.#DIRTY_INNER : 0;
         this.#circuit.gridConfig.zoom = value;
     }
 
@@ -285,7 +286,7 @@ class Grid {
     // Gets grid x-offset.
     set offsetX(value) {
         assert.number(value);
-        this.#dirty |= this.#circuit.gridConfig.offsetX !== value ? Grid.DIRTY_OUTER : 0;
+        this.#dirty |= this.#circuit.gridConfig.offsetX !== value ? Grid.#DIRTY_OUTER : 0;
         this.#circuit.gridConfig.offsetX = value;
     }
 
@@ -297,20 +298,20 @@ class Grid {
     // Gets grid y-offset.
     set offsetY(value) {
         assert.number(value);
-        this.#dirty |= this.#circuit.gridConfig.offsetY !== value ? Grid.DIRTY_OUTER : 0;
+        this.#dirty |= this.#circuit.gridConfig.offsetY !== value ? Grid.#DIRTY_OUTER : 0;
         this.#circuit.gridConfig.offsetY = value;
     }
 
     // Gets the current zoom level index.
     get zoomLevel() {
-        return Grid.ZOOM_LEVELS.findIndex((z) => z === this.zoom) ?? 0;
+        return Grid.#ZOOM_LEVELS.findIndex((z) => z === this.zoom) ?? 0;
     }
 
     // Sets a new zoom level index.
     set zoomLevel(level) {
         assert.integer(level);
-        level = level < 0 ? 0 : (level >= Grid.ZOOM_LEVELS.length ? Grid.ZOOM_LEVELS.length - 1 : level);
-        this.zoom = Grid.ZOOM_LEVELS[level];
+        level = level < 0 ? 0 : (level >= Grid.#ZOOM_LEVELS.length ? Grid.#ZOOM_LEVELS.length - 1 : level);
+        this.zoom = Grid.#ZOOM_LEVELS[level];
     }
 
     // Returns the currently selected grid items, if any.
@@ -405,7 +406,7 @@ class Grid {
             }
         } else if (e.key === 'e') {
             this.#app.circuits.edit(this.#circuit.uid);
-            this.#dirty |= Grid.DIRTY_OVERLAY;
+            this.#dirty |= Grid.#DIRTY_OVERLAY;
             e.preventDefault();
         } else if (e.key === 'w' && sim) {
             // switch to parent simulation instance // TODO: when not simulating this should switch to the previous circuit. this requires adding a navigation history

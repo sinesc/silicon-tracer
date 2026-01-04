@@ -3,28 +3,27 @@
 // Single wire on the grid.
 class Wire extends GridItem {
 
-    static THICKNESS = 3;
+    static #THICKNESS = 3;
 
-    #element;
-    #color;
-
-    // Net-id for this item. Directly set by Circuit.attachSimulation()
+    // Net-id for this wire. Directly set by Circuit.attachSimulation()
     netId = null;
-
-    direction;
 
     // Whether the wire is actually on the grid yet. false during wire-drag.
     limbo = false;
 
+    #element;
+    #color;
+    #direction;
+
     constructor(app, x, y, length, direction, color = null) {
         assert.number(length);
-        assert.string(direction);
+        assert.enum([ 'h', 'v' ], direction);
         assert.integer(color, true);
         super(app, x, y);
         this.width = direction === 'h' ? length : 0;
         this.height = direction === 'v' ? length : 0;
         this.color = color ?? null;
-        this.direction = direction;
+        this.#direction = direction;
     }
 
     // Serializes the object for writing to disk.
@@ -39,8 +38,8 @@ class Wire extends GridItem {
     // Link wire to a grid, enabling it to be rendered.
     link(grid) {
         super.link(grid);
-        this.#element = element(null, 'div', 'wire wire-' + this.direction);
-        this.registerMouseAction(this.#element, { type: 'connect', ordering: this.direction === 'h' ? 'vh' : 'hv' });
+        this.#element = element(null, 'div', 'wire wire-' + this.#direction);
+        this.registerMouseAction(this.#element, { type: 'connect', ordering: this.#direction === 'h' ? 'vh' : 'hv' });
         this.setHoverMessage(this.#element, `Wire. <i>LMB</i> Drag to branch off new wire. <i>DEL</i> Delete, <i>0</i> - <i>9</i> Set net color, ${GridItem.HOTKEYS}.`, { type: 'hover' });
         this.grid.addVisual(this.#element);
     }
@@ -82,7 +81,7 @@ class Wire extends GridItem {
         const [ mx, my ] = Grid.align(x, y);
         let fliptest;
         if ((mx === this.x && my === this.y) || (mx === this.x + this.width && my === this.y + this.height)) {
-            if (this.direction === 'h') {
+            if (this.#direction === 'h') {
                 const xLeft = Math.min(this.x, this.x + this.width);
                 fliptest = mx === xLeft ? (x, y) => x < mx : (x, y) => x > mx;
             } else {
@@ -166,11 +165,11 @@ class Wire extends GridItem {
             [ x, y ] = Grid.align(x, y);
             length = Math.ceil(length / Grid.SPACING) * Grid.SPACING;
         }
-        this.direction = direction;
+        this.#direction = direction;
         this.x = x;
         this.y = y;
-        this.width = this.direction === 'h' ? length : 0;
-        this.height = this.direction === 'v' ? length : 0;
+        this.width = this.#direction === 'h' ? length : 0;
+        this.height = this.#direction === 'v' ? length : 0;
     }
 
     // Sets wire endpoints, optionally aligned to the grid.
@@ -179,11 +178,11 @@ class Wire extends GridItem {
             [ x1, y1 ] = Grid.align(x1, y1);
             [ x2, y2 ] = Grid.align(x2, y2);
         }
-        this.direction = y1 === y2 ? 'h' : 'v';
+        this.#direction = y1 === y2 ? 'h' : 'v';
         this.x = Math.min(x1, x2);
         this.y = Math.min(y1, y2);
-        this.width = this.direction === 'h' ? Math.max(x1, x2) - this.x : 0;
-        this.height = this.direction === 'v' ? Math.max(y1, y2) - this.y : 0;
+        this.width = this.#direction === 'h' ? Math.max(x1, x2) - this.x : 0;
+        this.height = this.#direction === 'v' ? Math.max(y1, y2) - this.y : 0;
     }
 
     // Returns the 2 endpoint coordinates of this connection.
@@ -198,7 +197,7 @@ class Wire extends GridItem {
             return false;
         }
 
-        const thickness = Wire.THICKNESS * this.grid.zoom;
+        const thickness = Wire.#THICKNESS * this.grid.zoom;
         const v = this.visual;
         const t = thickness / 2;
 
@@ -364,9 +363,9 @@ class Wire extends GridItem {
     // compact() support. Returns all wires grouped by direction
     static #getAllWires(container) {
         return {
-            h: container.filterItems((w) => w instanceof Wire && w.direction === 'h')
+            h: container.filterItems((w) => w instanceof Wire && w.#direction === 'h')
                 .map((w) => ({ active: true, points: w.points(), wire: w })),
-            v: container.filterItems((w) => w instanceof Wire && w.direction === 'v')
+            v: container.filterItems((w) => w instanceof Wire && w.#direction === 'v')
                 .map((w) => ({ active: true, points: w.points(), wire: w })),
         };
     }

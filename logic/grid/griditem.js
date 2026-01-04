@@ -117,7 +117,8 @@ class GridItem {
     renderNetState() { }
 
     // Call after the grid item is modified to ensure the component is fully redrawn and the simulation is updated.
-    redraw(beforeRender) {
+    redraw(beforeRender = null) {
+        assert.function(beforeRender, true);
         if (beforeRender) {
             this.#beforeRender.push(beforeRender);
         }
@@ -235,6 +236,8 @@ class GridItem {
 
     // Converts in-simulation/on-grid to visual coordinates (for rendering).
     gridToVisual(x, y) {
+        assert.number(x);
+        assert.number(y);
         return [
             (x + this.grid.offsetX) * this.grid.zoom,
             (y + this.grid.offsetY) * this.grid.zoom
@@ -256,6 +259,7 @@ class GridItem {
     // Sets a status message to be displayed while mouse-hovering the visual element. Additional arguments will be passed to the
     // onHotkey() handler that may be triggered while an element with a hover-message is being hovered.
     setHoverMessage(element, message, ...args) {
+        assert.class(Node, element);
         this.registerMouseHover(element, ...args);
         this.#hoverMessages.set(element, message);
     }

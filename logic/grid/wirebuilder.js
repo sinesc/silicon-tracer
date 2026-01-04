@@ -8,7 +8,7 @@ class WireBuilder extends GridItem { // Note: Not actually a grid item, but uses
     #ordering;
     #fliptest;
     #debugElement;
-    color;
+    #color;
 
     constructor(app, grid, x1, y1, x2, y2, ordering = null, color = null, fliptest = null) {
         assert.class(Application, app);
@@ -31,15 +31,15 @@ class WireBuilder extends GridItem { // Note: Not actually a grid item, but uses
         this.width = x2 - x1;
         this.height = y2 - y1;
         this.#ordering = ordering ?? 'hv';
-        this.color = color;
+        this.#color = color;
         this.#fliptest = fliptest ?? ( (x, y) => false );
 
-        this.#wireH = new Wire(this.app, x1, y1, this.width, 'h', this.color);
+        this.#wireH = new Wire(this.app, x1, y1, this.width, 'h', this.#color);
         this.#wireH.limbo = true;
         this.grid.addItem(this.#wireH, false);
         this.#wireH.element.classList.add('wire-building');
 
-        this.#wireV = new Wire(this.app, x1, y1, this.height, 'v', this.color);
+        this.#wireV = new Wire(this.app, x1, y1, this.height, 'v', this.#color);
         this.#wireV.limbo = true;
         this.grid.addItem(this.#wireV, false);
         this.#wireV.element.classList.add('wire-building');
@@ -63,13 +63,12 @@ class WireBuilder extends GridItem { // Note: Not actually a grid item, but uses
             // add new corner when pressing R while dragging a wire
             const x = this.x + this.width;
             const y = this.y + this.height;
-            const color = this.color;
             // pass handling off to the previously created wirebuilder
             const flippedOrdering = this.#ordering !== what.ordering;
-            const dragConnectionWhat = { ...what, ordering: flippedOrdering ? what.ordering == 'hv' ? 'vh' : 'hv' : what.ordering, x, y, color };
+            const dragConnectionWhat = { ...what, ordering: flippedOrdering ? what.ordering == 'hv' ? 'vh' : 'hv' : what.ordering, x, y, color: this.#color };
             this.dragStop(x, y, what);
             this.grid.releaseHotkeyTarget(this, true);
-            const wireBuilder = new WireBuilder(this.app, this.grid, what.startX, what.startY, x, y, what.ordering, this.color);
+            const wireBuilder = new WireBuilder(this.app, this.grid, what.startX, what.startY, x, y, what.ordering, this.#color);
             wireBuilder.dragStart(x, y, dragConnectionWhat);
             return true;
         }
