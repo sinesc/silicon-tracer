@@ -92,11 +92,11 @@ class Toolbar {
                     openAction();
                 }
                 // close other menus
-                this.#menuStates.forEach((otherstateFn) => {
+                for (const otherstateFn of this.#menuStates) {
                     if (otherstateFn !== stateFn) {
                         otherstateFn(false);
                     }
-                });
+                }
                 this.#menuOpen = button;
                 // close menu on click outside of menu
                 document.onclick = (e) => {

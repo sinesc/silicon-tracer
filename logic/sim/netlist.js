@@ -109,7 +109,7 @@ class NetList {
     // Returns whether the given component is connected to a net with at least one port.
     #isConnected(component, suffix) {
         let connected = false;
-        for (const port of component.getPorts()) {
+        for (const port of component.iterPorts()) {
             const uniqueName = port.name + suffix;
             if (!this.unconnected.ports.find((p) => p.uniqueName === uniqueName)) {
                 connected = true;
@@ -147,7 +147,7 @@ class NetList {
                 const subCircuit = circuits[component.uid];
                 assert.class(Circuits.Circuit, subCircuit);
                 subInstances[component.gid] = instances.length; // the id of the upcoming recursion, clunky
-                if (component.getPorts().length === 0) {
+                if (count(component.iterPorts()) === 0) {
                     // TODO: ports are currenly only available after a grid link because we can't immediately set during unserialize (subcircuit might not have been unserialized yet)
                     //  instead of this, run second pass after unserialize to set all customcomponent ports
                     component.setPortsFromNames(subCircuit.ports);
@@ -168,7 +168,7 @@ class NetList {
                     }
                 }
             }
-            for (const port of component.getPorts()) {
+            for (const port of component.iterPorts()) {
                 const { x, y } = port.coords(component.width, component.height, component.rotation);
                 ports.push(new NetList.NetPort(new Point(x + component.x, y + component.y), port.name, component.gid, instance, mergeNets[port.name] ?? null));
             }

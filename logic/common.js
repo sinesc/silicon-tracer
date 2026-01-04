@@ -128,6 +128,25 @@ function *values(iterable) {
     }
 }
 
+// Normalizes javascript iteration mess. Counts items in an iterable.
+function count(iterable) {
+    if (Array.isArray(iterable)) {
+        return iterable.length;
+    } else if (iterable instanceof Map || iterable instanceof Set) {
+        return iterable.size; // NO EFFING COMMENT
+    } else if (iterable?.constructor === Object) {
+        return Object.keys(iterable).length;
+    } else if (iterable?.[Symbol.iterator]) {
+        let i = 0;
+        for (const v of iterable) {
+            i++;
+        }
+        return i;
+    } else {
+        throw new Error('Unsupported iterable');
+    }
+}
+
 function assert(condition, message = null) {
     if (!condition) {
         throw new Error(message ?? 'Assertion failed');
@@ -356,11 +375,11 @@ class WeakUnorderedSet {
     add(item) {
         this.#items.push(new WeakRef(item));
     }
-    forEach(fn) {
+    *[Symbol.iterator]() {
         for (let i = 0; i < this.#items.length; ++i) {
             const item = this.#items[i].deref();
             if (item) {
-                fn(item)
+                yield item;
             } else {
                 // remove from array by replacing with last entry. afterwards next iteration has to repeat this index.
                 if (i < this.#items.length - 1) {

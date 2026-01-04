@@ -29,7 +29,7 @@ class Circuits {
         const file = await handle.getFile();
         const content = JSON.parse(await file.text());
         if (clear) {
-            this.#circuits = [ ];
+            this.#circuits = [];
         }
         const newCircuitUID = this.unserialize(content);
         this.select(newCircuitUID);
@@ -119,7 +119,7 @@ class Circuits {
 
     // Clear all circuits and create a new empty circuit (always need one for the grid).
     clear() {
-        this.#circuits = [ ];
+        this.#circuits = [];
         const label = this.#generateName();
         this.#circuits.push(new Circuits.Circuit(label));
         this.#currentCircuit = 0;
