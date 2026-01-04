@@ -24,12 +24,13 @@ class Circuits {
 
     // Loads circuits from file, returning the filename if circuits was previously empty.
     async loadFile(clear) {
+        assert.bool(clear);
         const haveCircuits = !this.allEmpty;
         const [ handle ] = await File.openFile(this.#fileHandle);
         const file = await handle.getFile();
         const content = JSON.parse(await file.text());
         if (clear) {
-            this.#circuits = [];
+            this.#circuits = {};
         }
         const newCircuitUID = this.unserialize(content);
         this.select(newCircuitUID);
@@ -88,7 +89,7 @@ class Circuits {
 
     // Returns true while all existing circuits are empty.
     get allEmpty() {
-        for (const circuit of this.#circuits) {
+        for (const circuit of values(this.#circuits)) {
             if (circuit.data.length > 0) {
                 return false;
             }
@@ -98,41 +99,38 @@ class Circuits {
 
     // Returns map of all contained circuits.
     get all() {
-        const map = { }; // TODO: change this.#circuits to an object so we can just return that.
-        for (const circuit of values(this.#circuits)) {
-            map[circuit.uid] = circuit;
-        }
-        return map;
+        return this.#circuits;
     }
 
-    // Returns circuit by UID. // TODO: use map/object instead of array
+    // Returns circuit by UID.
     byUID(uid) {
-        return this.#circuits.find((c) => c.uid === uid) ?? null;
+        assert.string(uid);
+        return this.#circuits[uid] ?? null;
     }
 
     // Returns a list of loaded circuits.
     list() {
-        const circuits = this.#circuits.map((c) => [ c.uid, c.label ]);
+        const circuits = Object.values(this.#circuits).map((c) => [ c.uid, c.label ]);
         circuits.sort((a, b) => a[1].toLowerCase() < b[1].toLowerCase() ? -1 : (a[1].toLowerCase() > b[1].toLowerCase() ? 1 : 0));
         return circuits;
     }
 
     // Clear all circuits and create a new empty circuit (always need one for the grid).
     clear() {
-        this.#circuits = [];
+        this.#circuits = {};
         const label = this.#generateName();
-        this.#circuits.push(new Circuits.Circuit(label));
-        this.#currentCircuit = 0;
-        this.select(this.current.uid);
+        const circuit = new Circuits.Circuit(label);
+        this.#circuits[circuit.uid] = circuit;
+        this.#currentCircuit = circuit.uid;
+        this.select(circuit.uid);
     }
 
     // Selects a circuit by UID.
     select(uid) {
-        const index = this.#circuits.findIndex((c) => c.uid === uid);
-        if (index > -1) {
-            this.#currentCircuit = index;
-            const circuit = this.#circuits[index];
-            this.#app.grid.setCircuit(circuit);
+        assert.string(uid);
+        if (this.#circuits[uid]) {
+            this.#currentCircuit = uid;
+            this.#app.grid.setCircuit(this.#circuits[uid]);
             return;
         }
         throw new Error('Could not find circuit ' + uid);
@@ -142,9 +140,8 @@ class Circuits {
     async create() {
         const config = await dialog("Create circuit", Circuits.EDIT_DIALOG, { label: this.#generateName(), gap: 'middle', parity: 'automatic' });
         if (config) {
-            this.#currentCircuit = this.#circuits.length;
             const circuit = new Circuits.Circuit(config.label);
-            this.#circuits.push(circuit);
+            this.#circuits[circuit.uid] = circuit;
             this.select(circuit.uid);
             return true;
         }
@@ -167,23 +164,19 @@ class Circuits {
 
     // Serializes loaded circuits for saving to file.
     #serialize() {
-        return { version: 1, currentUID: this.current.uid, circuits: this.#circuits.map((c) => c.serialize()) };
+        return { version: 1, currentUID: this.#currentCircuit, circuits: Object.values(this.#circuits).map((c) => c.serialize()) };
     }
 
     // Unserializes circuits from file.
     unserialize(content) {
-        let selectedUID = null;
-        const unserialized = content.circuits.map((c) => Circuits.Circuit.unserialize(this.#app, c));
-        this.#circuits.push(...unserialized);
-        for (const [ index, circuit ] of pairs(this.#circuits)) {
+        for (const serialized of content.circuits) {
+            const circuit = Circuits.Circuit.unserialize(this.#app, serialized);
             circuit.generateOutline();
             Wire.compact(circuit);
-            if (selectedUID === null || circuit.uid === content.currentUID) {
-                selectedUID = circuit.uid;
-            }
+            this.#circuits[circuit.uid] = circuit; // TODO: check uid conflict
         }
         // Generate ports for CustomComponents. Needs to separate loop because components might refer to circuits not yet unserialized/outline-generated.
-        for (const circuit of this.#circuits) {
+        for (const circuit of values(this.#circuits)) {
             for (const component of circuit.data) {
                 if (component instanceof CustomComponent) {
                     const subCircuit = this.byUID(component.uid);
@@ -191,12 +184,12 @@ class Circuits {
                 }
             }
         }
-        return selectedUID;
+        return content.currentUID;
     }
 
     // Returns a generated name if the given name is empty.
     #generateName(name) {
-        return name || 'New circuit #' + (this.#circuits.length + 1);
+        return name || 'New circuit #' + (count(this.#circuits) + 1);
     }
 }
 
