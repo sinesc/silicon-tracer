@@ -137,11 +137,6 @@ class NetList {
                 const subCircuit = circuits[component.uid];
                 assert.class(Circuits.Circuit, subCircuit);
                 subInstances[component.gid] = instances.length; // the id of the upcoming recursion, clunky
-                if (count(component.iterPorts()) === 0) {
-                    // TODO: ports are currenly only available after a grid link because we can't immediately set during unserialize (subcircuit might not have been unserialized yet)
-                    //  instead of this, run second pass after unserialize to set all customcomponent ports
-                    component.setPortsFromNames(subCircuit.ports);
-                }
                 const subPorts = subCircuit.data.filter((i) => i instanceof Port);
                 const subNetlist = NetList.#identifyNets(subCircuit, circuits, instances, instance);
                 const mergedIds = [];

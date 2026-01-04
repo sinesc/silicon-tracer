@@ -182,6 +182,15 @@ class Circuits {
                 selectedUID = circuit.uid;
             }
         }
+        // Generate ports for CustomComponents. Needs to separate loop because components might refer to circuits not yet unserialized/outline-generated.
+        for (const circuit of this.#circuits) {
+            for (const component of circuit.data) {
+                if (component instanceof CustomComponent) {
+                    const subCircuit = this.byUID(component.uid);
+                    component.setPortsFromNames(subCircuit.ports);
+                }
+            }
+        }
         return selectedUID;
     }
 
