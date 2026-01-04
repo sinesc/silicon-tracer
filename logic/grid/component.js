@@ -169,6 +169,10 @@ class Component extends GridItem {
         }
     }
 
+    // Implement to declare component simulation item.
+    declare(sim, config, suffix) {
+    }
+
     // Return whether the element is selected.
     get selected() {
         return this.#element.classList.contains('selected');

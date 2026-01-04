@@ -29,6 +29,11 @@ class Clock extends Component {
         this.setHoverMessage(this.inner, () => `<b>${Number.formatSI(this.frequency, true)}Hz Clock</b>. <i>E</i> Edit, ${Component.HOTKEYS}.`, { type: 'hover' });
     }
 
+    // Declare component simulation item.
+    declare(sim, config, suffix) {
+        return sim.declareClock(this.frequency, config.targetTPS, suffix);
+    }
+
     // Handle edit hotkey.
     async onEdit() {
         const config = await dialog("Configure clock", Clock.EDIT_DIALOG, { frequency: Number.formatSI(this.frequency, true), rotation: this.rotation });

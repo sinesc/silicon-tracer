@@ -40,6 +40,11 @@ class Port extends Component {
         };
     }
 
+    // Declare component simulation item.
+    declare(sim, config, suffix) {
+        return sim.declareConst(this.state, '', suffix);
+    }
+
     // Returns user-set component state.
     get state() {
         return this.#state;

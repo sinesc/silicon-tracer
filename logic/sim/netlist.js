@@ -47,24 +47,14 @@ class NetList {
         for (const [instance, { circuit, simIds }] of this.instances.entries()) {
             for (const component of circuit.data.filter((i) => !(i instanceof Wire))) {
                 const suffix = NetList.suffix(component.gid, instance);
-                if (this.#isConnected(component, suffix)) { // TODO: add declare() function on component to handle this
-                    if (component instanceof Gate) {
-                        simIds[component.gid] = sim.declareGate(component.type, component.inputs, component.output, suffix);
-                    } else if (component instanceof Builtin) {
-                        simIds[component.gid] = sim.declareBuiltin(component.type, suffix);
-                    } else if (component instanceof Clock) {
-                        simIds[component.gid] = sim.declareClock(component.frequency, config.targetTPS, suffix);
-                    } else if (component instanceof PullResistor) {
-                        simIds[component.gid] = sim.declarePullResistor(component.direction, suffix);
-                    } else if (component instanceof Port) {
-                        simIds[component.gid] = sim.declareConst(component.state, '', suffix);
-                    }
+                if (this.#isConnected(component, suffix)) {
+                    simIds[component.gid] = component.declare(sim, config, suffix);
                 }
             }
         }
         // declare nets
         for (const net of this.nets) {
-            // create new net from connected gate i/o-ports // TODO: check for declare function instead of instanceof
+            // create new net from connected gate i/o-ports
             const debugPortComponents = net.ports.filter((p) => this.instances[p.instance].circuit.itemByGID(p.gid) instanceof Port).map((p) => p.uniqueName);
             const attachedPorts = net.ports.filter((p) => { const c = this.instances[p.instance].circuit.itemByGID(p.gid); return (c instanceof Component) && !(c instanceof CustomComponent); }).map((p) => p.uniqueName);
             net.netId = sim.declareNet(attachedPorts, debugPortComponents);

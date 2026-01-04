@@ -29,6 +29,11 @@ class PullResistor extends Component {
         this.setHoverMessage(this.inner, () => `<b>Pull-${this.direction === 1 ? 'up' : 'down'} resistor</b>. <i>E</i> Edit, ${Component.HOTKEYS}.`, { type: 'hover' });
     }
 
+    // Declare component simulation item.
+    declare(sim, config, suffix) {
+        return sim.declarePullResistor(this.direction, suffix);
+    }
+
     // Handle edit hotkey.
     async onEdit() {
         const config = await dialog("Configure pull resistor", PullResistor.EDIT_DIALOG, { direction: this.direction, rotation: this.rotation });

@@ -28,6 +28,44 @@ class Gate extends Component {
         this.output = output;
     }
 
+    // Serializes the object for writing to disk.
+    serialize() {
+        return {
+            ...super.serialize(),
+            _: { c: this.constructor.name, a: [ this.x, this.y, this.type, this.inputs.length ]},
+        };
+    }
+
+    // Link gate to a grid, enabling it to be rendered.
+    link(grid) {
+        super.link(grid);
+        this.element.classList.add('gate');
+        this.setHoverMessage(this.inner, `<b>${this.label}-Gate</b>. <i>E</i> Edit, ${Component.HOTKEYS}.`, { type: 'hover' });
+    }
+
+    // Declare component simulation item.
+    declare(sim, config, suffix) {
+        return sim.declareGate(this.type, this.inputs, this.output, suffix);
+    }
+
+    // Handle edit hotkey.
+    async onEdit() {
+        const unary = Gate.UNARY.includes(this.type);
+        const config = await dialog("Configure gate", unary ? Gate.UNARY_DIALOG : Gate.XARY_DIALOG, { numInputs: this.inputs.length, type: this.type, rotation: this.rotation });
+        if (config) {
+            const { left, right, inputs, output } = Gate.#generatePorts(config.numInputs ?? this.inputs.length);
+            const grid = this.grid;
+            this.unlink();
+            this.setPortsFromNames({ 'left': left, 'right': right });
+            this.type = config.type;
+            this.inputs = inputs;
+            this.output = output;
+            this.link(grid);
+            this.rotation = config.rotation; // needs to be on grid for rotation to properly update x/y/width/height
+            this.redraw();
+        }
+    }
+
     // Generates gate port layout based on number of inputs.
     static #generatePorts(numInputs) {
 
@@ -62,38 +100,5 @@ class Gate extends Component {
         }
 
         return { left, right, inputs, output };
-    }
-
-    // Serializes the object for writing to disk.
-    serialize() {
-        return {
-            ...super.serialize(),
-            _: { c: this.constructor.name, a: [ this.x, this.y, this.type, this.inputs.length ]},
-        };
-    }
-
-    // Link gate to a grid, enabling it to be rendered.
-    link(grid) {
-        super.link(grid);
-        this.element.classList.add('gate');
-        this.setHoverMessage(this.inner, `<b>${this.label}-Gate</b>. <i>E</i> Edit, ${Component.HOTKEYS}.`, { type: 'hover' });
-    }
-
-    // Handle edit hotkey.
-    async onEdit() {
-        const unary = Gate.UNARY.includes(this.type);
-        const config = await dialog("Configure gate", unary ? Gate.UNARY_DIALOG : Gate.XARY_DIALOG, { numInputs: this.inputs.length, type: this.type, rotation: this.rotation });
-        if (config) {
-            const { left, right, inputs, output } = Gate.#generatePorts(config.numInputs ?? this.inputs.length);
-            const grid = this.grid;
-            this.unlink();
-            this.setPortsFromNames({ 'left': left, 'right': right });
-            this.type = config.type;
-            this.inputs = inputs;
-            this.output = output;
-            this.link(grid);
-            this.rotation = config.rotation; // needs to be on grid for rotation to properly update x/y/width/height
-            this.redraw();
-        }
     }
 }

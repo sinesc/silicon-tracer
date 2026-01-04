@@ -75,6 +75,11 @@ class Builtin extends Component {
         this.setHoverMessage(this.inner, `<b>${this.label}</b>. <i>E</i> Edit, ${Component.HOTKEYS}.`, { type: 'hover' });
     }
 
+    // Declare component simulation item.
+    declare(sim, config, suffix) {
+        return sim.declareBuiltin(this.type, suffix);
+    }
+
     // Handle edit hotkey.
     async onEdit() {
         const config = await dialog(`Configure ${this.label}`, Builtin.EDIT_DIALOG, { rotation: this.rotation });
