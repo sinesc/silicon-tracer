@@ -149,6 +149,7 @@ class Component extends GridItem {
 
     // Removes the component from the grid.
     unlink() {
+        this.simId = null;
         for (const item of this.iterPorts()) {
             item.unlink();
         }
