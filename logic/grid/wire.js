@@ -295,7 +295,7 @@ class Wire extends GridItem {
             for (const direction of [ 'h', 'v' ]) {
                 const axis = direction === 'h' ? 'x' : 'y';
                 for (const w of postMergedWires[direction]) {
-                    const intersection = isIntersected(w.points, w.wire.direction);
+                    const intersection = isIntersected(w.points, w.wire.#direction);
                     if (intersection !== null) {
                         const app = w.wire.app;
                         const length1 = intersection[axis] - w.points[0][axis];
