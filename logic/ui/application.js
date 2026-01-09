@@ -205,7 +205,7 @@ class Application {
                 document.title = 'Silicon Tracer';
                 saveButton.classList.add('toolbar-menu-button-disabled');
             }
-            addButton.classList.toggle('toolbar-menu-button-disabled', this.circuits.allEmpty);
+            addButton.classList.toggle('toolbar-menu-button-disabled', this.circuits.allEmpty());
         }
 
         // Circuit selection menu

@@ -25,7 +25,7 @@ class Circuits {
     // Loads circuits from file, returning the filename if circuits was previously empty.
     async loadFile(clear) {
         assert.bool(clear);
-        const haveCircuits = !this.allEmpty;
+        const haveCircuits = !this.allEmpty();
         const [ handle ] = await File.openFile(this.#fileHandle);
         const file = await handle.getFile();
         const content = JSON.parse(await file.text());
@@ -88,9 +88,9 @@ class Circuits {
     }
 
     // Returns true while all existing circuits are empty.
-    get allEmpty() {
+    allEmpty() {
         for (const circuit of values(this.#circuits)) {
-            if (circuit.data.length > 0) {
+            if (!circuit.empty) {
                 return false;
             }
         }
@@ -177,7 +177,7 @@ class Circuits {
         }
         // Generate ports for CustomComponents. Needs to separate loop because components might refer to circuits not yet unserialized/outline-generated.
         for (const circuit of values(this.#circuits)) {
-            for (const component of circuit.data) {
+            for (const component of circuit.items) {
                 if (component instanceof CustomComponent) {
                     const subCircuit = this.byUID(component.uid);
                     component.setPortsFromNames(subCircuit.ports);
@@ -197,10 +197,12 @@ class Circuits {
 Circuits.Circuit = class {
     label;
     uid;
-    data;
     ports;
     gridConfig;
     portConfig;
+
+    #data;
+    #gidLookup;
 
     constructor(label, uid = null, data = [], ports = {}, gridConfig = {}, portConfig = {}) {
         assert.string(label),
@@ -211,46 +213,65 @@ Circuits.Circuit = class {
         assert.object(portConfig);
         this.label = label;
         this.uid = uid ?? Circuits.Circuit.generateUID();
-        this.data = data;
+        this.#data = data;
         this.ports = ports;
         this.gridConfig = Object.assign({}, { zoom: 1.25, offsetX: 0, offsetY: 0 }, gridConfig);
         this.portConfig = Object.assign({}, { gap: "middle", parity: "odd" }, portConfig);
+        this.#gidLookup = new Map(data.map((v) => [ v.gid, new WeakRef(v) ]));
     }
 
     // Returns item by GID.
     itemByGID(gid) {
         assert.string(gid);
-        return this.data.find((c) => c.gid === gid) ?? null;
+        const ref = this.#gidLookup.get(gid);
+        return ref?.deref() ?? null;
     }
 
     // Adds an item to the circuit.
     addItem(item) {
         assert.class(GridItem, item);
-        this.data.push(item);
+        this.#data.push(item);
+        this.#gidLookup.set(item.gid, new WeakRef(item));
         return item;
     }
 
     // Removes an item from the circuit.
     removeItem(item) {
         assert.class(GridItem, item);
-        const index = this.data.indexOf(item);
+        this.#gidLookup.delete(item.gid);
+        const index = this.#data.indexOf(item);
         if (index > -1) {
-            this.data.splice(index, 1);
+            this.#data.splice(index, 1);
         } else {
             throw new Error('Failed to find item');
         }
         return item;
     }
 
+    // Returns whether at least one item in the circuit passes the filter function.
+    hasItem(filter) {
+        return this.#data.some(filter);
+    }
+
+    // Returns an iterable generator over the circuit items.
+    get items() {
+        return values(this.#data);
+    }
+
+    // Returns whether the circuit is empty.
+    get empty() {
+        return this.#data.length === 0;
+    }
+
     // Returns items that passed the given filter (c) => bool.
     filterItems(filter) {
         assert.function(filter);
-        return this.data.filter((c) => c !== null && filter(c));
+        return this.#data.filter((c) => c !== null && filter(c));
     }
 
     // Serializes a circuit for saving to file.
     serialize() {
-        const data = this.data.map((item) => item.serialize());
+        const data = this.#data.map((item) => item.serialize());
         return { label: this.label, uid: this.uid, data, ports: this.ports, gridConfig: this.gridConfig, portConfig: this.portConfig };
     }
 
@@ -258,15 +279,15 @@ Circuits.Circuit = class {
     static unserialize(app, circuit) {
         assert.class(Application, app);
         assert.object(circuit);
-        const components = circuit.data.map((item) => GridItem.unserialize(app, item));
+        const items = circuit.data.map((item) => GridItem.unserialize(app, item));
         const uid = circuit.uid.includes('-') ? 'u' + circuit.uid.replaceAll('-', '') : circuit.uid; // LEGACY: convert legacy uid
-        return new Circuits.Circuit(circuit.label, uid, components, circuit.ports, circuit.gridConfig, circuit.portConfig);
+        return new Circuits.Circuit(circuit.label, uid, items, circuit.ports, circuit.gridConfig, circuit.portConfig);
     }
 
     // Link circuit to the grid, creating DOM elements for the circuit's components. Ensures the item is detached.
     link(grid) {
         assert.class(Grid, grid);
-        for (const item of this.data) {
+        for (const item of this.#data) {
             item.detachSimulation();
             item.link(grid);
         }
@@ -274,7 +295,7 @@ Circuits.Circuit = class {
 
     // Unlink circuit from the grid, deleting DOM elements of the circuit's components.
     unlink() {
-        for (const item of this.data) {
+        for (const item of this.#data) {
             item.unlink();
         }
     }
@@ -286,7 +307,7 @@ Circuits.Circuit = class {
         this.detachSimulation();
         // link components to their simulation id (e.g. a clock id)
         const simIds = netList.instances[subCircuitInstance].simIds;
-        for (const component of this.data) {
+        for (const component of this.#data) {
             component.simId = simIds[component.gid];
         }
         for (const net of netList.nets) {
@@ -321,7 +342,7 @@ Circuits.Circuit = class {
 
     // Detaches all items from the simulation by unsetting the item's netId.
     detachSimulation() {
-        for (const item of this.data) {
+        for (const item of this.#data) {
             item.detachSimulation();
         };
     }
@@ -329,7 +350,7 @@ Circuits.Circuit = class {
     // Generates port outline for the circuit's component representation.
     generateOutline() {
         // get ports from circuit
-        const ports = this.data.filter((i) => i instanceof Port);
+        const ports = this.#data.filter((i) => i instanceof Port);
         const outline = { 'left': [], 'right': [], 'top': [], 'bottom': [] };
         for (const item of ports) {
             // side of the component-port on port-components is opposite of where the port-component is facing

@@ -86,7 +86,7 @@ class Port extends Component {
 
     // Checks whether the given name is unique among ports in the circuit.
     checkNameIsUnique(name, circuit = null) {
-        for (const port of values(circuit.data.filter((i) => i instanceof Port))) {
+        for (const port of values(circuit.filterItems((i) => i instanceof Port))) {
             if (port !== this && port.name === name) {
                 return false;
             }

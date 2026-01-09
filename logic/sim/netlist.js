@@ -45,7 +45,7 @@ class NetList {
         const sim = new Simulation(config.debugCompileComments, config.checkNetConflicts);
         // declare items
         for (const [instance, { circuit, simIds }] of this.instances.entries()) {
-            for (const component of circuit.data.filter((i) => !(i instanceof Wire))) {
+            for (const component of circuit.filterItems((i) => !(i instanceof Wire))) {
                 const suffix = NetList.suffix(component.gid, instance);
                 if (this.#isConnected(component, suffix)) {
                     simIds[component.gid] = component.declare(sim, config, suffix);
@@ -123,11 +123,11 @@ class NetList {
         const subInstances = { }; // maps CustomComponent gids in each instance to their sub-instance
         instances.push({ circuit, subInstances, parentInstance, simIds: {} });
         // get all individual wires
-        const wires = circuit.data.filter((i) => i instanceof Wire && !i.limbo).map((w) => {
+        const wires = circuit.filterItems((i) => i instanceof Wire && !i.limbo).map((w) => {
             return new NetList.NetWire([ new Point(w.x, w.y), new Point(w.x + w.width, w.y + w.height) ], w.gid, instance);
         });
         // get all component ports
-        const components = circuit.data.filter((i) => !(i instanceof Wire));
+        const components = circuit.filterItems((i) => !(i instanceof Wire));
         const ports = [];
         const subcomponentNets = []; // nets that are internal to custom components and just need to be added to the overall list of nets
         for (const component of components) {
@@ -137,7 +137,7 @@ class NetList {
                 const subCircuit = circuits[component.uid];
                 assert.class(Circuits.Circuit, subCircuit);
                 subInstances[component.gid] = instances.length; // the id of the upcoming recursion, clunky
-                const subPorts = subCircuit.data.filter((i) => i instanceof Port);
+                const subPorts = subCircuit.filterItems((i) => i instanceof Port);
                 const subNetlist = NetList.#identifyNets(subCircuit, circuits, instances, instance);
                 const mergedIds = [];
                 for (const componentExternalPort of subPorts) {

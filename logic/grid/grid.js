@@ -206,12 +206,12 @@ class Grid {
             const dirtyGrid = this.#dirty & (Grid.#DIRTY_OUTER | Grid.#DIRTY_INNER);
 
             // apply wire net colors to attached ports
-            if (dirtyGrid || this.#circuit.data.findIndex((item) => item.dirty) !== -1) {
+            if (dirtyGrid || this.#circuit.hasItem((item) => item.dirty)) {
                 this.#applyNetColors();
             }
 
             // render components
-            for (const item of this.#circuit.data) {
+            for (const item of this.#circuit.items) {
                 if (dirtyGrid || item.dirty) {
                     // optionally require full redraw from the item
                     if (this.#dirty & Grid.#DIRTY_INNER) {
@@ -500,7 +500,7 @@ class Grid {
         const sHeight = height / this.zoom;
         const m = 5; // component margin, subtracted during selection to more accurately select the component
         // update selection status on components
-        for (const c of this.#circuit.data) {
+        for (const c of this.#circuit.items) {
             const currentlySelected = this.#selection.indexOf(c) > -1;
             if (c.x + m >= sX && c.y + m >= sY && c.x + c.width - m <= sX + sWidth && c.y + c.height - m <= sY + sHeight) {
                 c.selected = addSelection;

@@ -221,7 +221,7 @@ Simulations.Simulation = class {
     #computeCircuitStats() {
         let gates = 0;
         for (const instance of values(this.#netList.instances)) {
-            for (const item of values(instance.circuit.data)) {
+            for (const item of instance.circuit.items) {
                 if (item instanceof Gate) {
                     gates += 1;
                 } else if (item instanceof Builtin) {
