@@ -17,15 +17,11 @@ class Builtin extends Component {
         adder: 'Full adder',
     };
 
-    inputs;
-    outputs;
     gates;
 
     constructor(app, x, y, type) {
-        const { left, right, inputs, outputs } = Builtin.#generatePorts(type);
+        const { left, right } = Builtin.#generatePorts(type);
         super(app, x, y, { 'left': left, 'right': right }, type);
-        this.inputs = inputs;
-        this.outputs = outputs;
         this.gates = Simulation.BUILTIN_MAP[type].statsGates;
     }
 
@@ -105,6 +101,6 @@ class Builtin extends Component {
             }
         }
 
-        return { left, right, inputs, outputs };
+        return { left, right };
     }
 }
