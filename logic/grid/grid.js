@@ -2,13 +2,12 @@
 
 // The circuit drawing grid.
 class Grid {
-    
+
     static SPACING = 20;
     static STATUS_DELAY = 500;
 
     static #RAD90 = Math.PI / 2; // 90°
     static #ZOOM_LEVELS = [ 0.5, 0.65, 0.85, 1.0, 1.25, 1.50, 1.75, 2.0, 2.5, 3.0 ];
-    static #DEFAULT_ZOOM_LEVEL = 4;
     static #DIRTY_NONE      = 0b0000;
     static #DIRTY_OUTER     = 0b0001;
     static #DIRTY_INNER     = 0b0010;
@@ -73,9 +72,6 @@ class Grid {
     setCircuit(circuit) {
         assert.class(Circuits.Circuit, circuit);
         this.unsetCircuit();
-        circuit.gridConfig.zoom ??= Grid.#ZOOM_LEVELS[Grid.#DEFAULT_ZOOM_LEVEL];
-        circuit.gridConfig.offsetX ??= 0;
-        circuit.gridConfig.offsetY ??= 0;
         this.#circuit = circuit;
         this.#circuit.link(this);
         this.#infoBox.circuitLabel = circuit.label;

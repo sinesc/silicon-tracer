@@ -213,8 +213,8 @@ Circuits.Circuit = class {
         this.uid = uid ?? Circuits.Circuit.generateUID();
         this.data = data;
         this.ports = ports;
-        this.gridConfig = gridConfig;
-        this.portConfig = portConfig;
+        this.gridConfig = Object.assign({}, { zoom: 1.25, offsetX: 0, offsetY: 0 }, gridConfig);
+        this.portConfig = Object.assign({}, { gap: "middle", parity: "odd" }, portConfig);
     }
 
     // Returns item by GID.
