@@ -7,6 +7,16 @@ class Builtin extends Component {
         ...Component.EDIT_DIALOG,
     ];
 
+    static LABELS = {
+        latch: 'D latch',
+        flipflop: 'D flip-flip',
+        buffer3: 'Tri-state buffer',
+        not3: 'Tri-state not',
+        mux3: 'Tri-state mux',
+        demux3: 'Tri-state demux',
+        adder: 'Full adder',
+    };
+
     inputs;
     outputs;
     gates;
@@ -58,6 +68,11 @@ class Builtin extends Component {
         this.inputs = inputs;
         this.outputs = outputs;
         this.gates = Simulation.BUILTIN_MAP[type].statsGates;
+    }
+
+    // Returns the builtin's label string.
+    get label() {
+        return Builtin.LABELS[this.type] ?? this.type.toUpperFirst();
     }
 
     // Serializes the object for writing to disk.
