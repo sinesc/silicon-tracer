@@ -22,7 +22,49 @@ class Builtin extends Component {
     gates;
 
     constructor(app, x, y, type) {
+        const { left, right, inputs, outputs } = Builtin.#generatePorts(type);
+        super(app, x, y, { 'left': left, 'right': right }, type);
+        this.inputs = inputs;
+        this.outputs = outputs;
+        this.gates = Simulation.BUILTIN_MAP[type].statsGates;
+    }
 
+    // Returns the builtin's label string.
+    get label() {
+        return Builtin.LABELS[this.type] ?? this.type.toUpperFirst();
+    }
+
+    // Serializes the object for writing to disk.
+    serialize() {
+        return {
+            ...super.serialize(),
+            _: { c: this.constructor.name, a: [ this.x, this.y, this.type ]},
+        };
+    }
+
+    // Link component to a grid, enabling it to be rendered.
+    link(grid) {
+        super.link(grid);
+        this.element.classList.add('builtin');
+        this.setHoverMessage(this.inner, `<b>${this.label}</b>. <i>E</i> Edit, ${Component.HOTKEYS}.`, { type: 'hover' });
+    }
+
+    // Declare component simulation item.
+    declare(sim, config, suffix) {
+        return sim.declareBuiltin(this.type, suffix);
+    }
+
+    // Handle edit hotkey.
+    async onEdit() {
+        const config = await dialog(`Configure ${this.label}`, Builtin.EDIT_DIALOG, { rotation: this.rotation });
+        if (config) {
+            this.rotation = config.rotation;
+            this.redraw();
+        }
+    }
+
+    // Generates builtin port layout based on number of inputs.
+    static #generatePorts(type) {
         // override inputs if gate requires it
         const inputs = Simulation.BUILTIN_MAP[type].inputs;
         const numInputs = inputs.length;
@@ -63,44 +105,6 @@ class Builtin extends Component {
             }
         }
 
-        super(app, x, y, { 'left': left, 'right': right }, type);
-
-        this.inputs = inputs;
-        this.outputs = outputs;
-        this.gates = Simulation.BUILTIN_MAP[type].statsGates;
-    }
-
-    // Returns the builtin's label string.
-    get label() {
-        return Builtin.LABELS[this.type] ?? this.type.toUpperFirst();
-    }
-
-    // Serializes the object for writing to disk.
-    serialize() {
-        return {
-            ...super.serialize(),
-            _: { c: this.constructor.name, a: [ this.x, this.y, this.type ]},
-        };
-    }
-
-    // Link component to a grid, enabling it to be rendered.
-    link(grid) {
-        super.link(grid);
-        this.element.classList.add('builtin');
-        this.setHoverMessage(this.inner, `<b>${this.label}</b>. <i>E</i> Edit, ${Component.HOTKEYS}.`, { type: 'hover' });
-    }
-
-    // Declare component simulation item.
-    declare(sim, config, suffix) {
-        return sim.declareBuiltin(this.type, suffix);
-    }
-
-    // Handle edit hotkey.
-    async onEdit() {
-        const config = await dialog(`Configure ${this.label}`, Builtin.EDIT_DIALOG, { rotation: this.rotation });
-        if (config) {
-            this.rotation = config.rotation;
-            this.redraw();
-        }
+        return { left, right, inputs, outputs };
     }
 }
