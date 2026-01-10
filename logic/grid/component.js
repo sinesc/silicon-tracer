@@ -66,6 +66,87 @@ class ComponentPort {
         const index = Component.SIDES.indexOf(this.originalSide);
         return Component.SIDES[(index + rotation) % 4];
     }
+
+    // Renders the port onto the given component
+    render(component) {
+        const visualPortSize = Component.PORT_SIZE * component.grid.zoom;
+        const visualPortInset = visualPortSize / 4;
+        const side = this.side(component.rotation);
+        let { x, y } = this.coords(component.width, component.height, component.rotation, true);
+        // minor inset to move ports inward into the component just a little
+        const visualPortInsetX = side === 'left' ? visualPortInset : (side === 'right' ? -visualPortInset : 0);
+        const visualPortInsetY = side === 'top' ? visualPortInset : (side === 'bottom' ? -visualPortInset : 0);
+        // apply port center offset and grid zoom
+        x *= component.grid.zoom;
+        y *= component.grid.zoom;
+        // set visual coordinates
+        this.element.style.left = (x + visualPortInsetX) + "px";
+        this.element.style.top = (y + visualPortInsetY) + "px";
+        this.element.style.width = visualPortSize + "px";
+        this.element.style.height = visualPortSize + "px";
+        this.element.style.lineHeight = visualPortSize + 'px';
+        this.element.innerHTML = '<span>' + this.name.slice(0, 1) + '</span>';
+        this.element.setAttribute('data-net-color', this.color ?? '');
+        ComponentPort.renderLabel(component, this.labelElement, side, x, y, this.name);
+    }
+
+    // Renders a label next to a port.
+    static renderLabel(component, element, side, x, y, label, containPort = true, force = false) {
+        if (label.length <= 1 && !force) {
+            element.style.display = 'none';
+        } else {
+            const visualPortSize = Component.PORT_SIZE * component.grid.zoom;
+            const visualPortInset = visualPortSize / 4 + (visualPortSize * (containPort ? 0 : (side === 'left' || side === 'top' ? 1.1 : -1.1)));
+            const visualLabelPadding = 1 * component.grid.zoom;
+            const visualLabelLineHeight = visualPortSize + 2 * visualLabelPadding;
+            const visualPortPadding = containPort ? visualLabelLineHeight : 0;
+            const properties = [ 'writingMode', 'left', 'top', 'right', 'bottom','paddingLeft', 'paddingTop', 'paddingRight', 'paddingBottom', 'width', 'height', ];
+            element.style.display = 'block';
+            element.innerHTML = label;
+            element.style.lineHeight = visualLabelLineHeight + 'px';
+            let style;
+            if (side === 'bottom') {
+                style = {
+                    writingMode: 'vertical-rl',
+                    left: (x - visualLabelPadding) + "px",
+                    top: (y - visualLabelPadding - visualPortInset) + "px",
+                    paddingTop: visualPortPadding + "px",
+                    paddingBottom: visualLabelPadding + "px",
+                    width: visualLabelLineHeight + "px",
+                };
+            } else if (side === 'top') {
+                style = {
+                    writingMode: 'sideways-lr',
+                    left: (x - visualLabelPadding) + "px",
+                    bottom: (component.visual.height - visualPortSize - visualLabelPadding + visualPortInset) + "px",
+                    paddingTop: visualLabelPadding + "px",
+                    paddingBottom: visualPortPadding + "px",
+                    width: visualLabelLineHeight + "px",
+                };
+            } else if (side === 'left') {
+                style = {
+                    writingMode: 'horizontal-tb',
+                    top: (y - visualLabelPadding) + "px",
+                    right: (component.visual.width - visualPortSize - visualLabelPadding + visualPortInset) + "px",
+                    paddingLeft: visualLabelPadding + "px",
+                    paddingRight: visualPortPadding + "px",
+                    height: visualLabelLineHeight + "px",
+                };
+            } else if (side === 'right') {
+                style = {
+                    writingMode: 'horizontal-tb',
+                    left: (x - visualLabelPadding - visualPortInset) + "px",
+                    top: (y - visualLabelPadding) + "px",
+                    paddingLeft: visualPortPadding + "px",
+                    paddingRight: visualLabelPadding + "px",
+                    height: visualLabelLineHeight + "px",
+                };
+            }
+            for (const property of properties) {
+                element.style[property] = style[property] ?? '';
+            }
+        }
+    }
 }
 
 // General component used as a base class for Gates/Builtins or user defined circuits when represented within other circuits.
@@ -150,7 +231,7 @@ class Component extends GridItem {
 
     // Removes the component from the grid.
     unlink() {
-        this.simId = null;
+        this.simId = null; // FIXME: shouldn't this be in detachSimulation?
         for (const item of this.iterPorts()) {
             item.unlink();
         }
@@ -397,7 +478,9 @@ class Component extends GridItem {
 
         // don't need to update ports when only moving
         if (this.dirty) {
-            this.#renderPorts();
+            for (const port of this.iterPorts()) {
+                port.render(this);
+            }
         }
 
         const v = this.visual;
@@ -416,89 +499,6 @@ class Component extends GridItem {
         }
 
         return true;
-    }
-
-    // Renders a label next to a port.
-    renderLabel(element, side, x, y, label, containPort = true, force = false) {
-        if (label.length <= 1 && !force) {
-            element.style.display = 'none';
-        } else {
-            const visualPortSize = Component.PORT_SIZE * this.grid.zoom;
-            const visualPortInset = visualPortSize / 4 + (visualPortSize * (containPort ? 0 : (side === 'left' || side === 'top' ? 1.1 : -1.1)));
-            const visualLabelPadding = 1 * this.grid.zoom;
-            const visualLabelLineHeight = visualPortSize + 2 * visualLabelPadding;
-            const visualPortPadding = containPort ? visualLabelLineHeight : 0;
-            const properties = [ 'writingMode', 'left', 'top', 'right', 'bottom','paddingLeft', 'paddingTop', 'paddingRight', 'paddingBottom', 'width', 'height', ];
-            element.style.display = 'block';
-            element.innerHTML = label;
-            element.style.lineHeight = visualLabelLineHeight + 'px';
-            let style;
-            if (side === 'bottom') {
-                style = {
-                    writingMode: 'vertical-rl',
-                    left: (x - visualLabelPadding) + "px",
-                    top: (y - visualLabelPadding - visualPortInset) + "px",
-                    paddingTop: visualPortPadding + "px",
-                    paddingBottom: visualLabelPadding + "px",
-                    width: visualLabelLineHeight + "px",
-                };
-            } else if (side === 'top') {
-                style = {
-                    writingMode: 'sideways-lr',
-                    left: (x - visualLabelPadding) + "px",
-                    bottom: (this.visual.height - visualPortSize - visualLabelPadding + visualPortInset) + "px",
-                    paddingTop: visualLabelPadding + "px",
-                    paddingBottom: visualPortPadding + "px",
-                    width: visualLabelLineHeight + "px",
-                };
-            } else if (side === 'left') {
-                style = {
-                    writingMode: 'horizontal-tb',
-                    top: (y - visualLabelPadding) + "px",
-                    right: (this.visual.width - visualPortSize - visualLabelPadding + visualPortInset) + "px",
-                    paddingLeft: visualLabelPadding + "px",
-                    paddingRight: visualPortPadding + "px",
-                    height: visualLabelLineHeight + "px",
-                };
-            } else if (side === 'right') {
-                style = {
-                    writingMode: 'horizontal-tb',
-                    left: (x - visualLabelPadding - visualPortInset) + "px",
-                    top: (y - visualLabelPadding) + "px",
-                    paddingLeft: visualPortPadding + "px",
-                    paddingRight: visualLabelPadding + "px",
-                    height: visualLabelLineHeight + "px",
-                };
-            }
-            for (const property of properties) {
-                element.style[property] = style[property] ?? '';
-            }
-        }
-    }
-
-    // Renders component ports. Only required during scaling/rotation.
-    #renderPorts() {
-        const visualPortSize = Component.PORT_SIZE * this.grid.zoom;
-        const visualPortInset = visualPortSize / 4;
-        for (const item of this.iterPorts()) {
-            const side = item.side(this.rotation);
-            let { x, y } = item.coords(this.width, this.height, this.rotation, true);
-            // minor inset to move ports inward into the component just a little
-            const visualPortInsetX = side === 'left' ? visualPortInset : (side === 'right' ? -visualPortInset : 0);
-            const visualPortInsetY = side === 'top' ? visualPortInset : (side === 'bottom' ? -visualPortInset : 0);
-            // apply port center offset and grid zoom
-            x *= this.grid.zoom;
-            y *= this.grid.zoom;
-            // set visual coordinates
-            item.element.style.left = (x + visualPortInsetX) + "px";
-            item.element.style.top = (y + visualPortInsetY) + "px";
-            item.element.style.width = visualPortSize + "px";
-            item.element.style.height = visualPortSize + "px";
-            item.element.style.lineHeight = visualPortSize + 'px';
-            item.element.innerHTML = '<span>' + item.name.slice(0, 1) + '</span>';
-            item.element.setAttribute('data-net-color', item.color ?? '');
-            this.renderLabel(item.labelElement, side, x, y, item.name);
-        }
     }
 
     // Renders/updates the current net state of the component ports to the grid.

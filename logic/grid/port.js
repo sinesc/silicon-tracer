@@ -103,7 +103,7 @@ class Port extends Component {
         // render permanently visible label
         const side = ComponentPort.portSide(this.rotation, 'bottom');
         const labelCoords = ComponentPort.portCoords(this.width, this.height, side, 0, true);
-        this.renderLabel(this.#labelElement, side, labelCoords.x * this.grid.zoom, labelCoords.y * this.grid.zoom, this.name, false, true);
+        ComponentPort.renderLabel(this, this.#labelElement, side, labelCoords.x * this.grid.zoom, labelCoords.y * this.grid.zoom, this.name, false, true);
 
         // render user-set state (lightbulb/circle thing)
         this.element.setAttribute('data-port-state', this.#state ?? '');
