@@ -68,7 +68,7 @@ class ComponentPort {
     }
 
     // Renders the port onto the given component
-    render(component) {
+    render(component, labelCharPos = 0) {
         const visualPortSize = Component.PORT_SIZE * component.grid.zoom;
         const visualPortInset = visualPortSize / 4;
         const side = this.side(component.rotation);
@@ -85,7 +85,7 @@ class ComponentPort {
         this.element.style.width = visualPortSize + "px";
         this.element.style.height = visualPortSize + "px";
         this.element.style.lineHeight = visualPortSize + 'px';
-        this.element.innerHTML = '<span>' + this.name.slice(0, 1) + '</span>';
+        this.element.innerHTML = '<span>' + this.name.slice(labelCharPos, labelCharPos + 1) + '</span>';
         this.element.setAttribute('data-net-color', this.color ?? '');
         ComponentPort.renderLabel(component, this.labelElement, side, x, y, this.name);
     }
@@ -169,6 +169,7 @@ class Component extends GridItem {
     #ports;
     #type;
     #rotation = 0;
+    #portLabelCharPos;
 
     // An id for the simulated component. This could be a constId, clockId, ....
     simId = null;
@@ -200,6 +201,7 @@ class Component extends GridItem {
         }
         this.#ports = this.#ports.map((side, sidePorts) => sidePorts.map((name, index) => new ComponentPort(name, side, index)));
         this.updateDimensions();
+        this.#findPortLabelCharPos();
     }
 
     // Link component to a grid, enabling it to be rendered.
@@ -479,7 +481,7 @@ class Component extends GridItem {
         // don't need to update ports when only moving
         if (this.dirty) {
             for (const port of this.iterPorts()) {
-                port.render(this);
+                port.render(this, this.#portLabelCharPos[port.originalSide]);
             }
         }
 
@@ -509,5 +511,32 @@ class Component extends GridItem {
                 item.element.setAttribute('data-net-state', state);
             }
         }
+    }
+
+    // Finds first distinct character in port labels per component-side.
+    #findPortLabelCharPos() {
+        const abbrev = { };
+        for (const [ key, rawPorts ] of Object.entries(this.#ports)) {
+            const ports = rawPorts.filter((p) => p.name !== null);
+            let pos = 0;
+            seeker: do {
+                let known = [];
+                for (const port of ports) {
+                    if (pos > port.name.length) {
+                        pos = 0;
+                        break;
+                    }
+                    const char = port.name.slice(pos, pos + 1);
+                    if (known.includes(char)) {
+                        ++pos;
+                        continue seeker;
+                    }
+                    known.push(char);
+                }
+                break;
+            } while (true);
+            abbrev[key] = pos;
+        }
+        this.#portLabelCharPos = abbrev;
     }
 }
