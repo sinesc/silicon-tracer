@@ -263,12 +263,6 @@ Circuits.Circuit = class {
         return this.#data.length === 0;
     }
 
-    // Returns items that passed the given filter (c) => bool.
-    filterItems(filter) {
-        assert.function(filter);
-        return this.#data.filter((c) => c !== null && filter(c));
-    }
-
     // Serializes a circuit for saving to file.
     serialize() {
         const data = this.#data.map((item) => item.serialize());
@@ -308,7 +302,7 @@ Circuits.Circuit = class {
         // link components to their simulation id (e.g. a clock id)
         const simIds = netList.instances[subCircuitInstance].simIds;
         for (const component of this.#data) {
-            component.simId = simIds[component.gid];
+            component.simId = simIds[component.gid] ?? null; // TODO: throw error here
         }
         for (const net of netList.nets) {
             // link ports on components

@@ -363,10 +363,14 @@ class Wire extends GridItem {
     // compact() support. Returns all wires grouped by direction
     static #getAllWires(container) {
         return {
-            h: container.filterItems((w) => w instanceof Wire && w.#direction === 'h')
-                .map((w) => ({ active: true, points: w.points(), wire: w })),
-            v: container.filterItems((w) => w instanceof Wire && w.#direction === 'v')
-                .map((w) => ({ active: true, points: w.points(), wire: w })),
+            h: container.items
+                .filter((w) => w instanceof Wire && w.#direction === 'h')
+                .map((w) => ({ active: true, points: w.points(), wire: w }))
+                .toArray(),
+            v: container.items
+                .filter((w) => w instanceof Wire && w.#direction === 'v')
+                .map((w) => ({ active: true, points: w.points(), wire: w }))
+                .toArray(),
         };
     }
 }

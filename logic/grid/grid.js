@@ -122,9 +122,9 @@ class Grid {
         return item;
     }
 
-    // Returns items that passed the given filter (c) => bool.
-    filterItems(filter) {
-        return this.#circuit.filterItems(filter);
+    // Returns iterator over current circuit items.
+    get items() {
+        return this.#circuit.items;
     }
 
     // Adds a visual element for a grid item to the grid.
@@ -554,7 +554,7 @@ class Grid {
         if (e.which === 1) {
             // remove selection box, set selected items
             this.#selectionElement.classList.add('hidden');
-            this.#selection = this.filterItems((c) => c.selected);
+            this.#selection = this.items.filter((c) => c.selected).toArray();
             this.invalidateSelection();
         }
         document.onmouseup = null;
