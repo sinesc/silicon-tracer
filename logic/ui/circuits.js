@@ -171,7 +171,7 @@ class Circuits {
     unserialize(content) {
         for (const serialized of content.circuits) {
             const circuit = Circuits.Circuit.unserialize(this.#app, serialized);
-            circuit.generateOutline();
+            circuit.generatePorts();
             Wire.compact(circuit);
             this.#circuits[circuit.uid] = circuit; // TODO: check uid conflict
         }
@@ -342,7 +342,7 @@ Circuits.Circuit = class {
     }
 
     // Generates port outline for the circuit's component representation.
-    generateOutline() {
+    generatePorts() {
         // get ports from circuit
         const ports = this.#data.filter((i) => i instanceof Port);
         const outline = { 'left': [], 'right': [], 'top': [], 'bottom': [] };

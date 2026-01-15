@@ -89,7 +89,7 @@ class CustomComponent extends Component {
             //this.unlink();
             //circuit.gapPosition = result.gapPosition;
             //circuit.label = result.label;
-            //circuit.generateOutline();
+            //circuit.generatePorts();
             //this.link(grid);
             this.rotation = result.rotation;
             //this.type = result.label;
