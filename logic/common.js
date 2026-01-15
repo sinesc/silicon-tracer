@@ -2,6 +2,7 @@
 
 Object.defineProperty(Object.prototype, "map", {
     value: function(c) {
+        assert.function(c);
         const result = Object.create(this);
         for (const [ k, v ] of Object.entries(this)) {
             result[k] = c(k, v);
@@ -12,6 +13,7 @@ Object.defineProperty(Object.prototype, "map", {
 
 Object.defineProperty(Object.prototype, "filter", {
     value: function(c) {
+        assert.function(c);
         const result = Object.create(this);
         for (const [ k, v ] of Object.entries(this)) {
             if (c(k, v)) {
@@ -22,13 +24,29 @@ Object.defineProperty(Object.prototype, "filter", {
     }
 });
 
+// Removes an element from an array by swapping it with the last array element and popping the array. Returns the removed element.
 Object.defineProperty(Array.prototype, "swapRemove", {
     value: function(i) {
+        assert.integer(i);
+        const item = this[i];
         if (i < this.length - 1) {
             this[i] = this.pop();
         } else {
             this.pop();
         }
+        return item;
+    }
+});
+
+// Removes an element from an array by swapping it with the last array element and popping the array. Returns the removed element.
+Object.defineProperty(Array.prototype, "swapRemoveWith", {
+    value: function(fn) {
+        assert.function(fn);
+        const index = this.findIndex(fn);
+        if (index > -1) {
+            return this.swapRemove(index);
+        }
+        return null;
     }
 });
 

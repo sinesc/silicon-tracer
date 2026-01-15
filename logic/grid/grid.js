@@ -258,7 +258,7 @@ class Grid {
     defaultStatusMessage() {
         const netColor = `<span data-net-color="${this.#netColor}">default net color</span>`;
         const sim = this.#app.simulations.current;
-        const hasParent = sim && sim.instance > 0;
+        const hasParent = sim && sim.instanceId > 0;
         return 'Grid. <i>LMB</i> Drag to select area, <i>SHIFT/CTRL+LMB</i> Drag to add/subtract selection, <i>MMB</i> Drag grid, <i>MW</i> Zoom grid, <i>E</i> Rename circuit, <i>0</i> - <i>9</i> Set ' + netColor + ', ' + (hasParent ? '' : '<u>') + '<i>W</i> Switch to parent simulation' + (hasParent ? '' : '</u>');
     }
 
@@ -406,9 +406,9 @@ class Grid {
             e.preventDefault();
         } else if (e.key === 'w' && sim) {
             // switch to parent simulation instance // TODO: when not simulating this should switch to the previous circuit. this requires adding a navigation history
-            const parentInstance = sim.parentInstance;
-            if (parentInstance !== null) {
-                sim.reattach(parentInstance);
+            const parentInstanceId = sim.parentInstanceId;
+            if (parentInstanceId !== null) {
+                sim.reattach(parentInstanceId);
             }
             e.preventDefault();
         } else if (e.key >= '0' && e.key <= '9') {

@@ -306,8 +306,8 @@ Circuits.Circuit = class {
         }
         for (const net of netList.nets) {
             // link ports on components
-            for (const { name, gid, instance } of net.ports) {
-                if (subCircuitInstance === instance) {
+            for (const { name, gid, instanceId } of net.ports) {
+                if (subCircuitInstance === instanceId) {
                     const component = this.itemByGID(gid);
                     if (component) {
                         const port = component.portByName(name);
@@ -316,8 +316,8 @@ Circuits.Circuit = class {
                 }
             }
             // link wires
-            for (const { gid, instance } of net.wires) {
-                if (subCircuitInstance === instance) {
+            for (const { gid, instanceId } of net.wires) {
+                if (subCircuitInstance === instanceId) {
                     const component = this.itemByGID(gid);
                     if (component) {
                         component.netId = net.netId;
@@ -326,10 +326,10 @@ Circuits.Circuit = class {
             }
         }
         // set simulation instance on custom components to allow for "zooming"/navigating into the correct instance of the circuit they represent
-        for (const [ gid, instance ] of Object.entries(netList.instances[subCircuitInstance].subInstances)) {
+        for (const [ gid, instanceId ] of Object.entries(netList.instances[subCircuitInstance].subInstances)) {
             const component = this.itemByGID(gid);
             if (component) {
-                component.instance = instance;
+                component.instanceId = instanceId;
             }
         }
     }
@@ -389,5 +389,26 @@ Circuits.Circuit = class {
     // Generate a circuit id.
     static generateUID() {
         return 'u' + crypto.randomUUID().replaceAll('-', '');
+    }
+
+    // Returns the circuit as lists of NetWires and Netports.
+    netItems(instanceId) {
+        assert.integer(instanceId);
+        // get all individual wires
+        const wires = this.#data
+            .filter((i) => i instanceof Wire && !i.limbo)
+            .map((w) => new NetList.NetWire([ new Point(w.x, w.y), new Point(w.x + w.width, w.y + w.height) ], w.gid, instanceId));
+        // get all component ports
+        const ports = [];
+        for (const component of this.#data.filter((i) => !(i instanceof Wire))) {
+            const uid = component instanceof CustomComponent ? component.uid : null;
+            const type = component instanceof CustomComponent ? 'descend' : (component instanceof Port ? 'ascend' : null);
+            for (const port of component.ports) {
+                const { x, y } = port.coords(component.width, component.height, component.rotation);
+                const compareName = component instanceof Port ? component.name : port.name;
+                ports.push(new NetList.NetPort(new Point(x + component.x, y + component.y), port.name, compareName, component.gid, instanceId, type, uid));
+            }
+        }
+        return { wires, ports };
     }
 }

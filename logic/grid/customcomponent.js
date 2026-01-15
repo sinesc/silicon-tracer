@@ -12,7 +12,7 @@ class CustomComponent extends Component {
     uid;
 
     // Simulation instance of the represented sub-circuit.
-    #instance = null;
+    #instanceId = null;
 
     constructor(app, x, y, rotation, uid) {
         assert.integer(rotation);
@@ -42,23 +42,23 @@ class CustomComponent extends Component {
     }
 
     // Set the simulation instance of the represented sub-circuit.
-    set instance(value) {
+    set instanceId(value) {
         assert.integer(value, true);
         if (this.element) {
             this.element.classList.toggle('simulated', value !== null);
         }
-        this.#instance = value;
+        this.#instanceId = value;
     }
 
     // Get the simulation instance of the represented sub-circuit.
-    get instance() {
-        return this.#instance;
+    get instanceId() {
+        return this.#instanceId;
     }
 
     // Detach custom component from simulation.
     detachSimulation() {
         super.detachSimulation();
-        this.instance = null;
+        this.instanceId = null;
     }
 
     // Hover hotkey actions
@@ -67,9 +67,9 @@ class CustomComponent extends Component {
             return true;
         } else if (key === 'w' && what.type === 'hover') {
             const sim = this.app.simulations.current;
-            if (sim && this.instance !== null) {
+            if (sim && this.instanceId !== null) {
                 // switch to subcomponent simulation instance
-                sim.reattach(this.instance);
+                sim.reattach(this.instanceId);
             } else {
                 // switch to another component, optionally start simulation for that one
                 this.app.circuits.select(this.uid);

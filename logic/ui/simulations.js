@@ -97,7 +97,7 @@ Simulations.Simulation = class {
     #circuit;
     #netList;
     #engine;
-    #instance = 0;
+    #instanceId = 0;
     #dirty = true;
     #attached = false;
     #netListHash;
@@ -122,13 +122,13 @@ Simulations.Simulation = class {
     }
 
     // Returns the currently attached simulation subcomponent instance id.
-    get instance() {
-        return this.#instance;
+    get instanceId() {
+        return this.#instanceId;
     }
 
     // Returns the parent instance id of the currently attached simulation subcomponent.
-    get parentInstance() {
-        return this.#netList.instances[this.instance].parentInstance;
+    get parentInstanceId() {
+        return this.#netList.instances[this.instanceId].parentInstanceId;
     }
 
     // Returns the simulation engine used to compile this simulation.
@@ -154,9 +154,9 @@ Simulations.Simulation = class {
     checkDirty() {
         if (this.#dirty) {
             this.#compile();
-            const circuit = this.#netList.instances[this.#instance].circuit
+            const circuit = this.#netList.instances[this.#instanceId].circuit
             if (this.#attached) {
-                circuit.attachSimulation(this.#netList, this.#instance);
+                circuit.attachSimulation(this.#netList, this.#instanceId);
             }
             this.#app.grid.markDirty();
             return true;
@@ -165,14 +165,14 @@ Simulations.Simulation = class {
     }
 
     // Re-attach simulation to a subcircuit.
-    reattach(instance) {
-        assert.integer(instance);
-        const circuit = this.#netList.instances[instance].circuit;
+    reattach(instanceId) {
+        assert.integer(instanceId);
+        const circuit = this.#netList.instances[instanceId].circuit;
         if (this.#app.grid.circuit !== circuit) {
             this.#app.grid.setCircuit(circuit);
         }
-        this.#instance = instance;
-        circuit.attachSimulation(this.#netList, instance);
+        this.#instanceId = instanceId;
+        circuit.attachSimulation(this.#netList, instanceId);
     }
 
     // Ticks the current simulation for the given amount of ticks.
@@ -190,7 +190,7 @@ Simulations.Simulation = class {
     // Attach simulation to its root circuit.
     attach() {
         this.#circuit.attachSimulation(this.#netList, 0);
-        this.#instance = 0;
+        this.#instanceId = 0;
         this.#app.grid.setSimulationLabel(this.#circuit.label);
         this.#app.grid.markDirty();
         this.#attached = true;

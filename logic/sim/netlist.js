@@ -21,14 +21,88 @@ class NetList {
     static identify(circuit, circuits = null) {
         assert.class(Circuits.Circuit, circuit);
         assert.object(circuits, true);
-        const netList = NetList.#identifyNets(circuit, circuits, []);
-        NetList.#joinNetsBySharedPort(netList.nets);
-        return netList;
+
+        const instances = NetList.#buildInstanceTree(circuit, circuits);
+        const nets = [];
+
+        for (const instance of instances) {
+            let port;
+            while (port = instance.netItems.ports.pop()) {
+                const net = NetList.#findPortNetwork(port, instance.netItems.wires, instance.netItems.ports);
+                if (circuits) {
+                    for (const netPort of net.ports) {
+                        if (netPort.type !== null) {
+                            const subNet = NetList.#subcomponentTraverse(netPort, instances);
+                            net.ports.push(...subNet.ports);
+                            net.wires.push(...subNet.wires);
+                        }
+                    }
+                }
+                nets.push(net);
+            }
+        }
+
+        let unconnectedWires = []; // TODO
+        let unconnectedPorts = [];
+        return new NetList(nets, unconnectedWires, unconnectedPorts, instances);
+    }
+
+    // Follow wires attached to port in/out of subcomponents to trace out the entire net.
+    static #subcomponentTraverse(port, instances) {
+
+        let matchingPort;
+        let instance;
+
+        if (port.type === 'descend') {
+            // this is a port on the outside of a component, descend into the component
+            const instanceId = instances[port.instanceId].subInstances[port.gid];
+            instance = instances[instanceId];
+            matchingPort = instance.netItems.ports.swapRemoveWith((p) => p.type === 'ascend' && p.compareName === port.compareName);
+        } else if (port.type === 'ascend') {
+            // this is a port inside a component, ascend to parent component
+            const gid = instances[port.instanceId].gid;
+            const instanceId = instances[port.instanceId].parentInstanceId;
+            if (instanceId === null) {
+                // we reached the root, ports here lead nowhere
+                return { wires: [], ports: [] };
+            }
+            instance = instances[instanceId];
+            matchingPort = instance.netItems.ports.swapRemoveWith((p) => p.type === 'descend' && p.gid === gid && p.compareName === port.compareName);
+        }
+
+        if (matchingPort === null) {
+            // port already visited
+            return { wires: [], ports: [] };
+        }
+
+        const { wires, ports } = NetList.#findPortNetwork(matchingPort, instance.netItems.wires, instance.netItems.ports);
+
+        for (const subPort of ports) {
+            if (subPort.type !== null) {
+                const subItems = NetList.#subcomponentTraverse(subPort, instances);
+                wires.push(...subItems.wires);
+                ports.push(...subItems.ports);
+            }
+        }
+
+        return { wires, ports };
+    }
+
+    // Finds wires and ports attached to given port. Removes found ports/wires from remainingPorts/Wires
+    static #findPortNetwork(port, remainingWires, remainingPorts) {
+        // find single wire attached to port
+        const wire = NetList.#findWireOnPort(port, remainingWires);
+        // find more wires connected to initially found wire (result includes initial wire)
+        const wires = wire === null ? [] : NetList.#findConnectedWires(wire, remainingWires);
+        // find all ports on the wires and return along with initial port
+        const ports = wire === null ? [] : NetList.#findPortsOnWires(wires, remainingPorts);
+        ports.push(port);
+        return { wires, ports };
     }
 
     // Returns a port suffix for the given gid and instance.
-    static suffix(gid, instance) {
-        return '@' + gid + '@' + instance;
+    static suffix(gid, instanceId) {
+        return '@' + gid + '@' + instanceId;
     }
 
     // Compiles a simulation and returns it.
@@ -44,9 +118,9 @@ class NetList {
         });
         const sim = new Simulation(config.debugCompileComments, config.checkNetConflicts);
         // declare items
-        for (const [instance, { circuit, simIds }] of this.instances.entries()) {
+        for (const [instanceId, { circuit, simIds }] of this.instances.entries()) {
             for (const component of circuit.items.filter((i) => !(i instanceof Wire))) {
-                const suffix = NetList.suffix(component.gid, instance);
+                const suffix = NetList.suffix(component.gid, instanceId);
                 if (this.#isConnected(component, suffix)) {
                     simIds[component.gid] = component.declare(sim, config, suffix);
                 }
@@ -55,8 +129,8 @@ class NetList {
         // declare nets
         for (const net of this.nets) {
             // create new net from connected gate i/o-ports
-            const debugPortComponents = net.ports.filter((p) => this.instances[p.instance].circuit.itemByGID(p.gid) instanceof Port).map((p) => p.uniqueName);
-            const attachedPorts = net.ports.filter((p) => { const c = this.instances[p.instance].circuit.itemByGID(p.gid); return (c instanceof Component) && !(c instanceof CustomComponent); }).map((p) => p.uniqueName);
+            const debugPortComponents = net.ports.filter((p) => this.instances[p.instanceId].circuit.itemByGID(p.gid) instanceof Port).map((p) => p.uniqueName);
+            const attachedPorts = net.ports.filter((p) => { const c = this.instances[p.instanceId].circuit.itemByGID(p.gid); return (c instanceof Component) && !(c instanceof CustomComponent); }).map((p) => p.uniqueName);
             net.netId = sim.declareNet(attachedPorts, debugPortComponents);
         }
         // compile
@@ -109,151 +183,69 @@ class NetList {
         return connected;
     }
 
-    // Identifies nets on the grid and returns a NetList.
-    static #identifyNets(circuit, circuits, instances = [], parentInstance = null) {
-        const { wires, ports, subcomponentNets } = NetList.#circuitToNetItems(circuit, circuits, instances, parentInstance); // TODO: include unconnected subcomponent items in final result
-        const { nets, unconnectedWires, unconnectedPorts } = NetList.#netItemsToNets(wires, ports);
-        nets.push(...subcomponentNets);
-        return new NetList(nets, unconnectedWires, unconnectedPorts, instances);
-    }
-
-    // Assemble lists of net-ports and net-wires to simplify access to relevant grid item properties (coordinates, gids, ...)
-    static #circuitToNetItems(circuit, circuits, instances = [], parentInstance = null) {
-        const instance = instances.length;
+    // Creates a tree of nested component instances within the given circuit.
+    static #buildInstanceTree(circuit, circuits, gid, instances = [], parentInstanceId = null) {
+        const instanceId = instances.length;
         const subInstances = { }; // maps CustomComponent gids in each instance to their sub-instance
-        instances.push({ circuit, subInstances, parentInstance, simIds: {} });
-        // get all individual wires
-        const wires = circuit.items
-            .filter((i) => i instanceof Wire && !i.limbo)
-            .map((w) => new NetList.NetWire([ new Point(w.x, w.y), new Point(w.x + w.width, w.y + w.height) ], w.gid, instance))
-            .toArray();
-        // get all component ports
-        const components = circuit.items.filter((i) => !(i instanceof Wire));
-        const ports = [];
-        const subcomponentNets = []; // nets that are internal to custom components and just need to be added to the overall list of nets
-        for (const component of components) {
-            const mergeNets = { }; // nets that connect to external ports and need to be merged with parent component nets
-            // get custom component inner nets and identify which need to be merged with the parent component nets
-            if (circuits && component instanceof CustomComponent) {
+        const netItems = circuit.netItems(instanceId);
+        instances.push({ circuit, netItems, gid, subInstances, parentInstanceId, simIds: {} });
+        if (circuits) {
+            for (const component of circuit.items.filter((i) => i instanceof CustomComponent)) {
                 const subCircuit = circuits[component.uid];
                 assert.class(Circuits.Circuit, subCircuit);
                 subInstances[component.gid] = instances.length; // the id of the upcoming recursion, clunky
-                const subPorts = subCircuit.items.filter((i) => i instanceof Port);
-                const subNetlist = NetList.#identifyNets(subCircuit, circuits, instances, instance);
-                const mergedIds = [];
-                for (const componentExternalPort of subPorts) {
-                    const netId = subNetlist.findPort(componentExternalPort);
-                    if (netId !== null) {
-                        mergeNets[componentExternalPort.name] = subNetlist.nets[netId];
-                        mergedIds.push(netId);
-                    }
-                }
-                for (const [ id, net ] of pairs(subNetlist.nets)) {
-                    if (!mergedIds.includes(id)) {
-                        subcomponentNets.push(net);
-                    }
-                }
-            }
-            for (const port of component.ports) {
-                const { x, y } = port.coords(component.width, component.height, component.rotation);
-                ports.push(new NetList.NetPort(new Point(x + component.x, y + component.y), port.name, component.gid, instance, mergeNets[port.name] ?? null));
+                NetList.#buildInstanceTree(subCircuit, circuits, component.gid, instances, instanceId);
             }
         }
-        return { wires, ports, subcomponentNets };
+        return instances;
     }
 
-    // Creates a netlist from NetWires and NetPorts. Both wires and ports will be emptied during this process.
-    static #netItemsToNets(wires, ports) {
-        const nets = [];
-        const unconnectedWires = [];
-        while (wires.length > 0) {
-            let prevFoundWires = [ wires.pop() ];
-            const netWires = [];
-            let foundWires;
-            // each do-while iteration, check only the wires found in the previous iteration for more intersections (essentially flattened recursion)
-            do {
-                foundWires = [];
-                for (let p = 0; p < prevFoundWires.length; ++p) {
-                    for (let w = wires.length - 1; w >= 0; --w) {
-                        if (NetList.#endsIntersect(prevFoundWires[p].points, wires[w].points)) {
-                            foundWires.push(wires[w]);
-                            wires.swapRemove(w);
-                        }
-                    }
-                }
-                netWires.push(...prevFoundWires);
-                prevFoundWires = foundWires;
-            } while (foundWires.length > 0);
-            // find ports on net
-            const foundPorts = [];
-            for (let w = 0; w < netWires.length; ++w) {
-                for (let p = ports.length - 1; p >= 0; --p) {
-                    if (ports[p].point.onLine(netWires[w].points)) {
-                        foundPorts.push(ports[p]);
-                        ports.swapRemove(p);
-                    }
-                }
-            }
-            if (foundPorts.length > 0) {
-                for (const foundPort of foundPorts) {
-                    if (foundPort.subnet) {
-                        // merge subnets
-                        netWires.push(...foundPort.subnet.wires);
-                        foundPorts.push(...foundPort.subnet.ports);
-                    }
-                }
-                nets.push({ wires: netWires, ports: foundPorts });
-            } else {
-                unconnectedWires.push(...netWires);
-            }
-        }
-        return { nets, unconnectedWires, unconnectedPorts: ports };
-    }
-
-    // merge nets that have been directly connected inside a subnet (custom-component with two+ ports of its circuit directly connected)
-    static #joinNetsBySharedPort(nets) {
-        let haveChanges;
-        let remaining = 10;
+    // Find wires connected to the given wire and returns them and the initial wire. Removes found wires from remainingWires.
+    static #findConnectedWires(wire, remainingWires) {
+        const netWires = [];
+        let prevFoundWires = [ wire ];
+        let foundWires;
+        // each do-while iteration, check only the wires found in the previous iteration for more intersections (essentially flattened recursion)
         do {
-            haveChanges = false;
-            // TODO if ports were an object mapping uniqueName => port it would be a lot easier to do this, likewise gid => wire
-            current: for (let c = nets.length - 1; c >= 1; --c) { // current: backwards from last to 1
-                target: for (let t = 0; t < c; ++t) { // target: forwards from 0 to current - 1
-                    const currentPorts = nets[c].ports;
-                    const targetPorts = nets[t].ports;
-                    let haveCommonPorts = false;
-                    // check if current and target share at least one port
-                    for (const port of currentPorts) {
-                        if (targetPorts.some((p) => p.uniqueName === port.uniqueName)) {
-                            haveCommonPorts = true;
-                            break;
-                        }
-                    }
-                    // merge ports that aren't already in the target
-                    if (haveCommonPorts) {
-                        const currentWires = nets[c].wires;
-                        const targetWires = nets[t].wires;
-                        for (const port of currentPorts) {
-                            if (!targetPorts.some((p) => p.uniqueName === port.uniqueName)) {
-                                targetPorts.push(port);
-                            }
-                        }
-                        for (const wire of currentWires) {
-                            if (!targetWires.some((w) => w.gid === wire.gid)) {
-                                targetWires.push(wire);
-                            }
-                        }
-                        // dissolve current net
-                        nets.pop();
-                        haveChanges = true;
-                        break current;
+            foundWires = [];
+            for (let p = 0; p < prevFoundWires.length; ++p) {
+                for (let w = remainingWires.length - 1; w >= 0; --w) {
+                    if (NetList.#endsIntersect(prevFoundWires[p].points, remainingWires[w].points)) {
+                        foundWires.push(remainingWires[w]);
+                        remainingWires.swapRemove(w);
+                         // TODO should be more efficient to now retry this index again after swap because the swapped in wire might also be connected
                     }
                 }
             }
-        } while (haveChanges && --remaining > 0);
-        if (remaining <= 0) {
-            throw new Error('Failed to merge all subnets within retry limit');
+            netWires.push(...prevFoundWires);
+            prevFoundWires = foundWires;
+        } while (foundWires.length > 0);
+        return netWires;
+    }
+
+    // Finds a wire attached to a port. Removes found wire from remainingWires. (Further wires can be found using findConnectedWires on the wire).
+    static #findWireOnPort(port, remainingWires) {
+        for (let w = 0; w < remainingWires.length; ++w) {
+            if (port.point.onLine(remainingWires[w].points)) {
+                return remainingWires.swapRemove(w);
+            }
         }
+        return null;
+    }
+
+    // Find ports connected to the given list of wires. Removes found ports from remainingPorts.
+    static #findPortsOnWires(wires, remainingPorts) {
+        const netPorts = [];
+        for (let w = 0; w < wires.length; ++w) {
+            for (let p = remainingPorts.length - 1; p >= 0; --p) {
+                if (remainingPorts[p].point.onLine(wires[w].points)) {
+                    netPorts.push(remainingPorts[p]);
+                    remainingPorts.swapRemove(p);
+                    // TODO should be more efficient to now retry this index again after swap because the swapped in port might also be connected
+                }
+            }
+        }
+        return netPorts;
     }
 
     // Returns whether line-endpoints of one line intersect any point on the other line.
@@ -266,23 +258,28 @@ class NetList {
 NetList.NetPort = class {
     point;
     name;
+    compareName;
     gid;
-    instance;
-    subnet;
-    constructor(point, name, gid, instance, subnet) {
+    instanceId;
+    type;
+    uid;
+    constructor(point, name, compareName, gid, instanceId, type, uid) {
         assert.class(Point, point);
         assert.string(name);
         assert.string(gid);
-        assert.integer(instance);
-        assert.object(subnet, true);
+        assert.integer(instanceId);
+        assert.enum([ 'ascend', 'descend' ], type, true);
+        assert.string(uid, true);
         this.point = point;
         this.name = name;
+        this.compareName = compareName;
         this.gid = gid;
-        this.instance = instance;
-        this.subnet = subnet;
+        this.instanceId = instanceId;
+        this.type = type;
+        this.uid = uid;
     }
     get uniqueName() {
-        return this.name + NetList.suffix(this.gid, this.instance);
+        return this.name + NetList.suffix(this.gid, this.instanceId);
     }
 }
 
@@ -290,13 +287,13 @@ NetList.NetPort = class {
 NetList.NetWire = class {
     points;
     gid;
-    instance;
-    constructor(points, gid, instance) {
+    instanceId;
+    constructor(points, gid, instanceId) {
         assert.array(points, false, (i) => assert.class(Point, i));
         assert.string(gid);
-        assert.integer(instance);
+        assert.integer(instanceId);
         this.points = points;
         this.gid = gid;
-        this.instance = instance;
+        this.instanceId = instanceId;
     }
 }
