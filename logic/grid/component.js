@@ -215,7 +215,7 @@ class Component extends GridItem {
         this.registerMouseAction(this.#inner, { type: "component", grabOffsetX: null, grabOffsetY: null });
 
         // ports
-        for (const item of this.iterPorts()) {
+        for (const item of this.ports) {
             // TODO: add and call link() method on ComponentPort instead?
             const port = element(this.#element, 'div', 'component-port');
             this.setHoverMessage(port, () => `Port <b>${item.name}</b> of <b>${this.#type}</b>. <i>LMB</i> Drag to connect.`, { type: 'hover-port' });
@@ -234,7 +234,7 @@ class Component extends GridItem {
     // Removes the component from the grid.
     unlink() {
         this.simId = null; // FIXME: shouldn't this be in detachSimulation?
-        for (const item of this.iterPorts()) {
+        for (const item of this.ports) {
             item.unlink();
         }
         this.#inner?.remove();
@@ -248,7 +248,7 @@ class Component extends GridItem {
 
     // Detach component ports from simulation.
     detachSimulation() {
-        for (const item of this.iterPorts()) {
+        for (const item of this.ports) {
             item.netId = null;
         }
     }
@@ -438,15 +438,9 @@ class Component extends GridItem {
         }
     }
 
-    // Returns flat list of ports.
-    *iterPorts() {
-        for (const items of Object.values(this.#ports)) {
-            for (const item of items) {
-                if (item.name !== null) {
-                    yield item;
-                }
-            }
-        }
+    // Returns iterator over flat list of ports.
+    get ports() {
+        return values(Object.values(this.#ports).flat()).filter((i) => i.name !== null);
     }
 
     // Gets a port by its name.
@@ -480,7 +474,7 @@ class Component extends GridItem {
 
         // don't need to update ports when only moving
         if (this.dirty) {
-            for (const port of this.iterPorts()) {
+            for (const port of this.ports) {
                 port.render(this, this.#portLabelCharPos[port.originalSide]);
             }
         }
@@ -505,7 +499,7 @@ class Component extends GridItem {
 
     // Renders/updates the current net state of the component ports to the grid.
     renderNetState() {
-        for (const item of this.iterPorts()) {
+        for (const item of this.ports) {
             const state = this.getNetState(item.netId);
             if (item.element.getAttribute('data-net-state') !== state) {
                 item.element.setAttribute('data-net-state', state);

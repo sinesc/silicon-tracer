@@ -99,7 +99,7 @@ class NetList {
     // Returns whether the given component is connected to a net with at least one port.
     #isConnected(component, suffix) {
         let connected = false;
-        for (const port of component.iterPorts()) {
+        for (const port of component.ports) {
             const uniqueName = port.name + suffix;
             if (!this.unconnected.ports.find((p) => p.uniqueName === uniqueName)) {
                 connected = true;
@@ -154,7 +154,7 @@ class NetList {
                     }
                 }
             }
-            for (const port of component.iterPorts()) {
+            for (const port of component.ports) {
                 const { x, y } = port.coords(component.width, component.height, component.rotation);
                 ports.push(new NetList.NetPort(new Point(x + component.x, y + component.y), port.name, component.gid, instance, mergeNets[port.name] ?? null));
             }
