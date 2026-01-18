@@ -21,83 +21,18 @@ class NetList {
     static identify(circuit, circuits = null) {
         assert.class(Circuits.Circuit, circuit);
         assert.object(circuits, true);
-
         const instances = NetList.#buildInstanceTree(circuit, circuits);
         const nets = [];
-
         for (const instance of instances) {
             let port;
             while (port = instance.netItems.ports.pop()) {
-                const net = NetList.#findPortNetwork(port, instance.netItems.wires, instance.netItems.ports);
-                if (circuits) {
-                    for (const netPort of net.ports) {
-                        if (netPort.type !== null) {
-                            const subNet = NetList.#subcomponentTraverse(netPort, instances);
-                            net.ports.push(...subNet.ports);
-                            net.wires.push(...subNet.wires);
-                        }
-                    }
-                }
+                const net = NetList.#assembleNet(port, instance.netItems.wires, instance.netItems.ports, instances, circuits !== null);
                 nets.push(net);
             }
         }
-
-        let unconnectedWires = []; // TODO
+        let unconnectedWires = []; // TODO possibly move out of here to keep this code simple
         let unconnectedPorts = [];
         return new NetList(nets, unconnectedWires, unconnectedPorts, instances);
-    }
-
-    // Follow wires attached to port in/out of subcomponents to trace out the entire net.
-    static #subcomponentTraverse(port, instances) {
-
-        let matchingPort;
-        let instance;
-
-        if (port.type === 'descend') {
-            // this is a port on the outside of a component, descend into the component
-            const instanceId = instances[port.instanceId].subInstances[port.gid];
-            instance = instances[instanceId];
-            matchingPort = instance.netItems.ports.swapRemoveWith((p) => p.type === 'ascend' && p.compareName === port.compareName);
-        } else if (port.type === 'ascend') {
-            // this is a port inside a component, ascend to parent component
-            const gid = instances[port.instanceId].gid;
-            const instanceId = instances[port.instanceId].parentInstanceId;
-            if (instanceId === null) {
-                // we reached the root, ports here lead nowhere
-                return { wires: [], ports: [] };
-            }
-            instance = instances[instanceId];
-            matchingPort = instance.netItems.ports.swapRemoveWith((p) => p.type === 'descend' && p.gid === gid && p.compareName === port.compareName);
-        }
-
-        if (matchingPort === null) {
-            // port already visited
-            return { wires: [], ports: [] };
-        }
-
-        const { wires, ports } = NetList.#findPortNetwork(matchingPort, instance.netItems.wires, instance.netItems.ports);
-
-        for (const subPort of ports) {
-            if (subPort.type !== null) {
-                const subItems = NetList.#subcomponentTraverse(subPort, instances);
-                wires.push(...subItems.wires);
-                ports.push(...subItems.ports);
-            }
-        }
-
-        return { wires, ports };
-    }
-
-    // Finds wires and ports attached to given port. Removes found ports/wires from remainingPorts/Wires
-    static #findPortNetwork(port, remainingWires, remainingPorts) {
-        // find single wire attached to port
-        const wire = NetList.#findWireOnPort(port, remainingWires);
-        // find more wires connected to initially found wire (result includes initial wire)
-        const wires = wire === null ? [] : NetList.#findConnectedWires(wire, remainingWires);
-        // find all ports on the wires and return along with initial port
-        const ports = wire === null ? [] : NetList.#findPortsOnWires(wires, remainingPorts);
-        ports.push(port);
-        return { wires, ports };
     }
 
     // Returns a port suffix for the given gid and instance.
@@ -198,6 +133,55 @@ class NetList {
             }
         }
         return instances;
+    }
+
+    // Finds wires and ports attached to given port. Removes found ports/wires from remainingPorts/Wires
+    static #assembleNet(port, remainingWires, remainingPorts, instances, recurse) {
+        // find single wire attached to port
+        const wire = NetList.#findWireOnPort(port, remainingWires);
+        // find more wires connected to initially found wire (result includes initial wire)
+        const wires = wire === null ? [] : NetList.#findConnectedWires(wire, remainingWires);
+        // find all ports on the wires and return along with initial port
+        const ports = wire === null ? [] : NetList.#findPortsOnWires(wires, remainingPorts);
+        ports.push(port);
+        // traverse subcomponents
+        if (recurse) {
+            for (const netPort of ports) {
+                if (netPort.type !== null) {
+                    const subNet = NetList.#recurseNet(netPort, instances);
+                    ports.push(...subNet.ports);
+                    wires.push(...subNet.wires);
+                }
+            }
+        }
+        return { wires, ports };
+    }
+
+    // Follow wires attached to port in and out of subcomponents to trace out the entire net.
+    static #recurseNet(port, instances) {
+        let matchingPort;
+        let instance;
+        if (port.type === 'descend') {
+            // this is a port on the outside of a component, descend into the component
+            const instanceId = instances[port.instanceId].subInstances[port.gid];
+            instance = instances[instanceId];
+            matchingPort = instance.netItems.ports.swapRemoveWith((p) => p.type === 'ascend' && p.compareName === port.compareName);
+        } else if (port.type === 'ascend') {
+            // this is a port inside a component, ascend to parent component
+            const gid = instances[port.instanceId].gid;
+            const instanceId = instances[port.instanceId].parentInstanceId;
+            if (instanceId === null) {
+                // we reached the root, ports here lead nowhere
+                return { wires: [], ports: [] };
+            }
+            instance = instances[instanceId];
+            matchingPort = instance.netItems.ports.swapRemoveWith((p) => p.type === 'descend' && p.gid === gid && p.compareName === port.compareName);
+        }
+        if (matchingPort === null) {
+            // port already visited
+            return { wires: [], ports: [] };
+        }
+        return NetList.#assembleNet(matchingPort, instance.netItems.wires, instance.netItems.ports, instances, true);
     }
 
     // Find wires connected to the given wire and returns them and the initial wire. Removes found wires from remainingWires.
