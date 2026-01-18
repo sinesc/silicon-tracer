@@ -9,9 +9,11 @@ class PullResistor extends Component {
     ];
 
     #direction = 'down';
+    #numChannels;
 
-    constructor(app, x, y) {
-        super(app, x, y, { right: [ 'q' ] }, 'pull');
+    constructor(app, x, y, numChannels = 1) {
+        super(app, x, y, { right: [ 'q' ] }, 'pull', numChannels);
+        this.#numChannels = numChannels;
     }
 
     // Serializes the object for writing to disk.

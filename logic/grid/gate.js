@@ -18,13 +18,15 @@ class Gate extends Component {
 
     inputs;
     output;
+    #numChannels;
 
-    constructor(app, x, y, type, numInputs) {
+    constructor(app, x, y, type, numInputs, numChannels = 1) {
         assert.integer(numInputs);
         const { left, right, inputs, output } = Gate.#generatePorts(numInputs);
-        super(app, x, y, { 'left': left, 'right': right }, type);
+        super(app, x, y, { 'left': left, 'right': right }, type, numChannels);
         this.inputs = inputs;
         this.output = output;
+        this.#numChannels = numChannels;
     }
 
     // Serializes the object for writing to disk.
@@ -55,7 +57,7 @@ class Gate extends Component {
             const { left, right, inputs, output } = Gate.#generatePorts(config.numInputs ?? this.inputs.length);
             const grid = this.grid;
             this.unlink();
-            this.setPortsFromNames({ 'left': left, 'right': right });
+            this.setPortsFromNames({ 'left': left, 'right': right }, this.#numChannels);
             this.type = config.type;
             this.inputs = inputs;
             this.output = output;

@@ -18,10 +18,12 @@ class Builtin extends Component {
     };
 
     gates;
+    #numChannels;
 
-    constructor(app, x, y, type) {
+    constructor(app, x, y, type, numChannels = 1) {
         const { left, right } = Builtin.#generatePorts(type);
-        super(app, x, y, { 'left': left, 'right': right }, type);
+        super(app, x, y, { 'left': left, 'right': right }, type, numChannels);
+        this.#numChannels = numChannels;
         this.gates = Simulation.BUILTIN_MAP[type].statsGates;
     }
 

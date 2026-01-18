@@ -334,6 +334,12 @@ class Application {
             return grid.addItem(new Port(this, x, y, 'right'))
         });
 
+        // add a splitter component
+        this.toolbar.createComponentButton('Splitter', `<b>Wire splitter/joiner</b>. ${DRAG_MSG}`, (grid, x, y) => {
+            let numChannels = 8; // TODO: configurable somewhere
+            return grid.addItem(new Splitter(this, x, y, numChannels));
+        });
+
         // add a clock component
         this.toolbar.createComponentButton('Clock', `<b>Clock</b>. ${DRAG_MSG}`, (grid, x, y) => {
             return grid.addItem(new Clock(this, x, y));

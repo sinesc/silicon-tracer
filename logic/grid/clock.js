@@ -11,7 +11,7 @@ class Clock extends Component {
     frequency = 1;
 
     constructor(app, x, y) {
-        super(app, x, y, { left: [ 'enable' ], right: [ 'c' ] }, 'clock');
+        super(app, x, y, { left: [ 'enable' ], right: [ 'c' ] }, 'clock', 1);
     }
 
     // Serializes the object for writing to disk.

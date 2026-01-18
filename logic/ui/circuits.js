@@ -406,7 +406,8 @@ Circuits.Circuit = class {
             for (const port of component.ports) {
                 const { x, y } = port.coords(component.width, component.height, component.rotation);
                 const compareName = component instanceof Port ? component.name : port.name;
-                ports.push(new NetList.NetPort(new Point(x + component.x, y + component.y), port.name, compareName, component.gid, instanceId, type, uid));
+                const portType = type ?? (component instanceof Splitter ? (port.name === '1' ? '1-to-n' : 'n-to-1') : null);
+                ports.push(new NetList.NetPort(new Point(x + component.x, y + component.y), portType, port.name, compareName, component.gid, instanceId, uid));
             }
         }
         return { wires, ports };

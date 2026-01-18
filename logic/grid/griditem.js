@@ -67,6 +67,8 @@ class GridItem {
             instance = new Wire(app, ...cargs);
         } else if (cname === 'CustomComponent') {
             instance = new CustomComponent(app, ...cargs);
+        } else if (cname === 'Splitter') {
+            instance = new Splitter(app, ...cargs);
         } else {
             throw new Error('Invalid component type "' + cname + '"');
         }

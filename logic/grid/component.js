@@ -6,26 +6,24 @@ class ComponentPort {
     name;
     originalSide;
     index;
-    color;
-    element;
-    labelElement;
+    color = null;
+    element = null;
+    labelElement = null;
 
     // Net-id for this item. Directly set by Circuit.attachSimulation()
     netId = null;
 
-    constructor(name, originalSide, index, color = null, element = null, labelElement = null) {
+    numChannels = null;
+
+    constructor(name, originalSide, index, numChannels) {
         assert.string(name, true);
         assert.string(originalSide);
         assert.integer(index);
-        assert.integer(color, true);
-        assert.class(Node, element, true);
-        assert.class(Node, labelElement, true);
+        assert.integer(numChannels, true);
         this.name = name;
         this.originalSide = originalSide;
         this.index = index;
-        this.color = color;
-        this.element = element;
-        this.labelElement = labelElement;
+        this.numChannels = numChannels;
     }
 
     // Removes port dom elements from grid.
@@ -174,10 +172,10 @@ class Component extends GridItem {
     // An id for the simulated component. This could be a constId, clockId, ....
     simId = null;
 
-    constructor(app, x, y, ports, type) {
+    constructor(app, x, y, ports, type, numChannels = null) {
         assert.string(type);
         super(app, x, y);
-        this.setPortsFromNames(ports);
+        this.setPortsFromNames(ports, numChannels);
         this.#type = type;
     }
 
@@ -190,16 +188,19 @@ class Component extends GridItem {
         };
     }
 
-    // Sets port names/locations
-    setPortsFromNames(ports) {
-        assert.object(ports, false);
+    // Sets port names/locations and optionally channels per port or for all ports.
+    setPortsFromNames(ports, portChannels = null) {
+        assert.object(ports);
+        if (!Number.isInteger(portChannels)) {
+            assert.object(portChannels, true);
+        }
         this.#ports = { left: [], right: [], top: [], bottom: [], ...ports };
         for (const [ side, other ] of Object.entries({ 'left': 'right', 'right': 'left', 'top': 'bottom', 'bottom': 'top' })) {
             while (this.#ports[side].length < this.#ports[other].length) {
                 this.#ports[side].push(null);
             }
         }
-        this.#ports = this.#ports.map((side, sidePorts) => sidePorts.map((name, index) => new ComponentPort(name, side, index)));
+        this.#ports = this.#ports.map((side, sidePorts) => sidePorts.map((name, index) => new ComponentPort(name, side, index, Number.isInteger(portChannels) ? portChannels : (portChannels?.[name] ?? null))));
         this.updateDimensions();
         this.#findPortLabelCharPos();
     }

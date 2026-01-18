@@ -65,7 +65,7 @@ class NetList {
         for (const net of this.nets) {
             // create new net from connected gate i/o-ports
             const debugPortComponents = net.ports.filter((p) => this.instances[p.instanceId].circuit.itemByGID(p.gid) instanceof Port).map((p) => p.uniqueName);
-            const attachedPorts = net.ports.filter((p) => { const c = this.instances[p.instanceId].circuit.itemByGID(p.gid); return (c instanceof Component) && !(c instanceof CustomComponent); }).map((p) => p.uniqueName);
+            const attachedPorts = net.ports.filter((p) => { const c = this.instances[p.instanceId].circuit.itemByGID(p.gid); return (c instanceof Component) && !(c instanceof CustomComponent) && !(c instanceof Splitter); }).map((p) => p.uniqueName);
             net.netId = sim.declareNet(attachedPorts, debugPortComponents);
         }
         // compile
@@ -147,7 +147,7 @@ class NetList {
         // traverse subcomponents
         if (recurse) {
             for (const netPort of ports) {
-                if (netPort.type !== null) {
+                if (netPort.type === 'descend' || netPort.type === 'ascend') {
                     const subNet = NetList.#recurseNet(netPort, instances);
                     ports.push(...subNet.ports);
                     wires.push(...subNet.wires);
@@ -247,12 +247,13 @@ NetList.NetPort = class {
     instanceId;
     type;
     uid;
-    constructor(point, name, compareName, gid, instanceId, type, uid) {
+    constructor(point, type, name, compareName, gid, instanceId, uid) {
         assert.class(Point, point);
+        assert.enum([ 'ascend', 'descend', 'n-to-1', '1-to-n' ], type, true);
         assert.string(name);
+        assert.string(compareName); // TODO: add a port id (like a gid)
         assert.string(gid);
         assert.integer(instanceId);
-        assert.enum([ 'ascend', 'descend' ], type, true);
         assert.string(uid, true);
         this.point = point;
         this.name = name;
