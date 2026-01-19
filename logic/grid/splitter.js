@@ -3,20 +3,36 @@
 // Wire splitter/joiner.
 class Splitter extends Component {
 
-    #numSplits;
+    static MULTI_PORT_TEMPLATE = 'n{i}';
+    static SINGLE_PORT_NAME = 'm';
 
-    constructor(app, x, y, numSplits) {
+    static #EDIT_DIALOG = [
+        { name: 'numSplits', label: 'Number of n-ports', type: 'int', check: (v, f) => { const p = Number.parseSI(v, true); return isFinite(p) && p >= 2 && p <= 64; } },
+        { name: 'gapPosition', label: 'Pin gap (when n-ports is even)', type: 'select', options: { start: "Next to n0", middle: "Middle", end: "Next to nMax", none: "None (rotation moves splitter)" } },
+        { name: 'orientation', label: 'Position of 1-port', type: 'select', options: { start: "Opposite of n0", middle: "Middle", end: "Opposite of nMax" } },
+        ...Component.EDIT_DIALOG,
+    ];
+
+    #numSplits;
+    #gapPosition = 'middle';
+    #orientation = 'start';
+
+    constructor(app, x, y, numSplits, gapPosition = 'middle', orientation = 'start') {
         assert.number(numSplits);
-        const { left, right/*, channelMap*/ } = Splitter.#generatePorts(numSplits);
+        assert.enum([ 'start', 'middle', 'end', 'none' ], gapPosition);
+        assert.enum([ 'start', 'middle', 'end' ], orientation);
+        const { left, right/*, channelMap*/ } = Splitter.#generatePorts(numSplits, gapPosition, orientation);
         super(app, x, y, { 'left': left, 'right': right }, 'splitter', null);
         this.#numSplits = numSplits;
+        this.#gapPosition = gapPosition;
+        this.#orientation = orientation;
     }
 
     // Serializes the object for writing to disk.
     serialize() {
         return {
             ...super.serialize(),
-            _: { c: this.constructor.name, a: [ this.x, this.y, this.#numSplits ]},
+            _: { c: this.constructor.name, a: [ this.x, this.y, this.#numSplits, this.#gapPosition, this.#orientation ]},
         };
     }
 
@@ -32,23 +48,63 @@ class Splitter extends Component {
         return null;
     }
 
+    // Handle edit hotkey.
+    async onEdit() {
+        const config = await dialog("Configure splitter", Splitter.#EDIT_DIALOG, { numSplits: this.#numSplits, gapPosition: this.#gapPosition, orientation: this.#orientation, rotation: this.rotation });
+        if (config) {
+            const grid = this.grid;
+            this.unlink();
+            const { left, right } = Splitter.#generatePorts(config.numSplits, config.gapPosition, config.orientation);
+            this.setPortsFromNames({ 'left': left, 'right': right });
+            this.#numSplits = config.numSplits;
+            this.#gapPosition = config.gapPosition;
+            this.#orientation = config.orientation;
+            this.link(grid);
+            this.rotation = config.rotation; // needs to be on grid for rotation to properly update x/y/width/height
+            this.redraw();
+        }
+    }
+
     // Generates splitter port layout based on number of inputs.
-    static #generatePorts(numSplits) {
+    static #generatePorts(numSplits, gapPosition, orientation) {
+
+        // compute blank spot if n-port count is even
+        let blankAt = -1;
+        let numSlots = numSplits;
+
+        if (numSplits % 2 === 0 && gapPosition !== 'none') {
+            numSlots += 1;
+            blankAt = gapPosition === 'middle' ? (numSlots - 1) / 2 : (gapPosition === 'end' ? numSlots - 1 : 0);
+        }
+
+        const outputAt = orientation === 'middle' ? Math.round((numSlots - 1) / 2) : (orientation === 'start' ? numSlots - 1 : 0);
 
         //const channelMap = { };
 
-        // n side
         const left = [];
-        for (let i = 0; i < numSplits; ++i) {
-            const name = `n${i}`;
-            left.push(name);
-            //channelMap[name] = 1;
-        }
-
-        // 1 side
         const right = [];
-        right.push('1');
-        //channelMap['1'] = 1;
+        let split = 0;
+
+        for (let i = 0; i < numSlots; ++i) {
+
+            // n side (left)
+            if (i === blankAt) {
+                left.push(null);
+            } else {
+                const name = Splitter.MULTI_PORT_TEMPLATE.replace('{i}', '' + split);
+                left.push(name);
+                //channelMap[name] = 1;
+                split += 1;
+            }
+
+            // 1 side
+            if (i === outputAt) {
+                right.push(Splitter.SINGLE_PORT_NAME);
+                //channelMap['1'] = 1;
+            } else if (right.length === 0 || right[right.length -1] !== '1') {
+                right.push(null);
+            }
+        }
 
         return { left, right/*, channelMap*/ };
     }
