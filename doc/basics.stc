@@ -217,24 +217,6 @@
 					"height": 80
 				}
 			],
-			"ports": {
-				"left": [
-					"#reset",
-					null,
-					"#set"
-				],
-				"right": [
-					null,
-					"q",
-					null
-				],
-				"top": [
-					null
-				],
-				"bottom": [
-					null
-				]
-			},
 			"gridConfig": {
 				"zoom": 1.25,
 				"offsetX": 0,
@@ -586,24 +568,6 @@
 					"height": 160
 				}
 			],
-			"ports": {
-				"left": [
-					"load",
-					null,
-					"data"
-				],
-				"right": [
-					null,
-					"q",
-					null
-				],
-				"top": [
-					null
-				],
-				"bottom": [
-					null
-				]
-			},
 			"gridConfig": {
 				"zoom": 1.25,
 				"offsetX": 0,
@@ -1207,24 +1171,6 @@
 					"height": 120
 				}
 			],
-			"ports": {
-				"left": [
-					"clock",
-					null,
-					"data"
-				],
-				"right": [
-					null,
-					"q",
-					null
-				],
-				"top": [
-					null
-				],
-				"bottom": [
-					null
-				]
-			},
 			"gridConfig": {
 				"zoom": 1.25,
 				"offsetX": 0,
@@ -1716,24 +1662,6 @@
 					"height": 40
 				}
 			],
-			"ports": {
-				"left": [
-					"b",
-					null,
-					"a"
-				],
-				"right": [
-					null,
-					"q",
-					null
-				],
-				"top": [
-					"cIn"
-				],
-				"bottom": [
-					"cOut"
-				]
-			},
 			"gridConfig": {
 				"zoom": 1.25,
 				"offsetX": 0,
@@ -2337,28 +2265,6 @@
 					"height": 0
 				}
 			],
-			"ports": {
-				"left": [
-					null,
-					"a0",
-					"a1",
-					null
-				],
-				"right": [
-					"q3",
-					"q2",
-					"q1",
-					"q0"
-				],
-				"top": [
-					null,
-					null
-				],
-				"bottom": [
-					null,
-					null
-				]
-			},
 			"gridConfig": {
 				"zoom": 1.25,
 				"offsetX": 0,
@@ -2380,7 +2286,9 @@
 							230,
 							110,
 							0,
-							"u70cba73a55ed4e0abe5b974e691a5d6b"
+							"u70cba73a55ed4e0abe5b974e691a5d6b",
+							"even",
+							"middle"
 						]
 					},
 					"width": 60,
@@ -3360,34 +3268,15 @@
 					"height": 0
 				}
 			],
-			"ports": {
-				"left": [
-					"a0",
-					"a1",
-					"load",
-					"data"
-				],
-				"right": [
-					null,
-					"q",
-					null,
-					null
-				],
-				"top": [
-					null,
-					null
-				],
-				"bottom": [
-					null,
-					null
-				]
-			},
 			"gridConfig": {
 				"zoom": 1.25,
 				"offsetX": 0,
 				"offsetY": 0
 			},
-			"portConfig": {}
+			"portConfig": {
+				"gap": "middle",
+				"parity": "auto"
+			}
 		},
 		{
 			"label": "4 bit adder",
@@ -3400,7 +3289,9 @@
 							290,
 							230,
 							3,
-							"u517e856bee09464eaed3bf33b1e9e14d"
+							"u517e856bee09464eaed3bf33b1e9e14d",
+							"odd",
+							"middle"
 						]
 					},
 					"width": 80,
@@ -3414,7 +3305,9 @@
 							190,
 							230,
 							3,
-							"u517e856bee09464eaed3bf33b1e9e14d"
+							"u517e856bee09464eaed3bf33b1e9e14d",
+							"odd",
+							"middle"
 						]
 					},
 					"width": 80,
@@ -3428,7 +3321,9 @@
 							390,
 							230,
 							3,
-							"u517e856bee09464eaed3bf33b1e9e14d"
+							"u517e856bee09464eaed3bf33b1e9e14d",
+							"odd",
+							"middle"
 						]
 					},
 					"width": 80,
@@ -3442,7 +3337,9 @@
 							490,
 							230,
 							3,
-							"u517e856bee09464eaed3bf33b1e9e14d"
+							"u517e856bee09464eaed3bf33b1e9e14d",
+							"odd",
+							"middle"
 						]
 					},
 					"width": 80,
@@ -4080,42 +3977,15 @@
 					"height": 160
 				}
 			],
-			"ports": {
-				"left": [
-					"b3",
-					"b2",
-					"b1",
-					"b0",
-					"a3",
-					"a2",
-					"a1",
-					"a0"
-				],
-				"right": [
-					null,
-					null,
-					"q0",
-					"q1",
-					"q2",
-					"q3",
-					null,
-					null
-				],
-				"top": [
-					"cIn",
-					null
-				],
-				"bottom": [
-					null,
-					"cOut"
-				]
-			},
 			"gridConfig": {
 				"zoom": 1.25,
 				"offsetX": 0,
 				"offsetY": 0
 			},
-			"portConfig": {}
+			"portConfig": {
+				"gap": "middle",
+				"parity": "auto"
+			}
 		},
 		{
 			"label": "4 bit counter",
@@ -4180,7 +4050,9 @@
 							390,
 							230,
 							0,
-							"u517e856bee09464eaed3bf33b1e9e14d"
+							"u517e856bee09464eaed3bf33b1e9e14d",
+							"odd",
+							"middle"
 						]
 					},
 					"width": 40,
@@ -4194,7 +4066,9 @@
 							390,
 							650,
 							0,
-							"u517e856bee09464eaed3bf33b1e9e14d"
+							"u517e856bee09464eaed3bf33b1e9e14d",
+							"odd",
+							"middle"
 						]
 					},
 					"width": 40,
@@ -4208,7 +4082,9 @@
 							390,
 							510,
 							0,
-							"u517e856bee09464eaed3bf33b1e9e14d"
+							"u517e856bee09464eaed3bf33b1e9e14d",
+							"odd",
+							"middle"
 						]
 					},
 					"width": 40,
@@ -4222,7 +4098,9 @@
 							390,
 							370,
 							0,
-							"u517e856bee09464eaed3bf33b1e9e14d"
+							"u517e856bee09464eaed3bf33b1e9e14d",
+							"odd",
+							"middle"
 						]
 					},
 					"width": 40,
@@ -5139,28 +5017,6 @@
 					"height": 580
 				}
 			],
-			"ports": {
-				"left": [
-					null,
-					null,
-					null,
-					null
-				],
-				"right": [
-					"q0",
-					"q1",
-					"q2",
-					"q3"
-				],
-				"top": [
-					"cIn",
-					"direction"
-				],
-				"bottom": [
-					null,
-					"cOut"
-				]
-			},
 			"gridConfig": {
 				"zoom": 1.25,
 				"offsetX": 0,
@@ -5414,24 +5270,6 @@
 					"height": 20
 				}
 			],
-			"ports": {
-				"left": [
-					"reset",
-					"set"
-				],
-				"right": [
-					null,
-					""
-				],
-				"top": [
-					null,
-					null
-				],
-				"bottom": [
-					null,
-					null
-				]
-			},
 			"gridConfig": {
 				"zoom": 1.25,
 				"offsetX": 0,
@@ -5699,30 +5537,15 @@
 					"height": 0
 				}
 			],
-			"ports": {
-				"left": [
-					"select",
-					"data"
-				],
-				"right": [
-					"qa",
-					"qb"
-				],
-				"top": [
-					null,
-					null
-				],
-				"bottom": [
-					null,
-					null
-				]
-			},
 			"gridConfig": {
 				"zoom": 1.25,
 				"offsetX": 0,
 				"offsetY": 0
 			},
-			"portConfig": {}
+			"portConfig": {
+				"gap": "middle",
+				"parity": "auto"
+			}
 		},
 		{
 			"label": "Multiplexer",
@@ -6093,30 +5916,15 @@
 					"height": 0
 				}
 			],
-			"ports": {
-				"left": [
-					"select",
-					"b",
-					"a"
-				],
-				"right": [
-					null,
-					"q",
-					null
-				],
-				"top": [
-					null
-				],
-				"bottom": [
-					null
-				]
-			},
 			"gridConfig": {
 				"zoom": 1.25,
 				"offsetX": 0,
 				"offsetY": 0
 			},
-			"portConfig": {}
+			"portConfig": {
+				"gap": "middle",
+				"parity": "auto"
+			}
 		}
 	]
 }

@@ -171,18 +171,8 @@ class Circuits {
     unserialize(content) {
         for (const serialized of content.circuits) {
             const circuit = Circuits.Circuit.unserialize(this.#app, serialized);
-            circuit.generatePorts();
             Wire.compact(circuit);
             this.#circuits[circuit.uid] = circuit; // TODO: check uid conflict
-        }
-        // Generate ports for CustomComponents. Needs to separate loop because components might refer to circuits not yet unserialized/outline-generated.
-        for (const circuit of values(this.#circuits)) {
-            for (const component of circuit.items) {
-                if (component instanceof CustomComponent) {
-                    const subCircuit = this.byUID(component.uid);
-                    component.setPortsFromNames(subCircuit.ports);
-                }
-            }
         }
         return content.currentUID;
     }
@@ -204,19 +194,17 @@ Circuits.Circuit = class {
     #data;
     #gidLookup;
 
-    constructor(label, uid = null, data = [], ports = {}, gridConfig = {}, portConfig = {}) {
+    constructor(label, uid = null, data = [], gridConfig = {}, portConfig = {}) {
         assert.string(label),
         assert.string(uid, true);
         assert.array(data, false, (i) => assert.class(GridItem, i));
-        assert.object(ports);
         assert.object(gridConfig);
         assert.object(portConfig);
         this.label = label;
         this.uid = uid ?? Circuits.Circuit.generateUID();
         this.#data = data;
-        this.ports = ports;
         this.gridConfig = Object.assign({}, { zoom: 1.25, offsetX: 0, offsetY: 0 }, gridConfig);
-        this.portConfig = Object.assign({}, { gap: "middle", parity: "odd" }, portConfig);
+        this.portConfig = Object.assign({}, { gap: "middle", parity: "auto" }, portConfig);
         this.#gidLookup = new Map(data.map((v) => [ v.gid, new WeakRef(v) ]));
     }
 
@@ -266,7 +254,7 @@ Circuits.Circuit = class {
     // Serializes a circuit for saving to file.
     serialize() {
         const data = this.#data.map((item) => item.serialize());
-        return { label: this.label, uid: this.uid, data, ports: this.ports, gridConfig: this.gridConfig, portConfig: this.portConfig };
+        return { label: this.label, uid: this.uid, data, gridConfig: this.gridConfig, portConfig: this.portConfig };
     }
 
     // Unserializes circuit from decoded JSON-object.
@@ -275,7 +263,7 @@ Circuits.Circuit = class {
         assert.object(circuit);
         const items = circuit.data.map((item) => GridItem.unserialize(app, item));
         const uid = circuit.uid.includes('-') ? 'u' + circuit.uid.replaceAll('-', '') : circuit.uid; // LEGACY: convert legacy uid
-        return new Circuits.Circuit(circuit.label, uid, items, circuit.ports, circuit.gridConfig, circuit.portConfig);
+        return new Circuits.Circuit(circuit.label, uid, items, circuit.gridConfig, circuit.portConfig);
     }
 
     // Link circuit to the grid, creating DOM elements for the circuit's components. Ensures the item is detached.
@@ -339,53 +327,6 @@ Circuits.Circuit = class {
         for (const item of this.#data) {
             item.detachSimulation();
         };
-    }
-
-    // Generates port outline for the circuit's component representation.
-    generatePorts() {
-        // get ports from circuit
-        const ports = this.#data.filter((i) => i instanceof Port);
-        const outline = { 'left': [], 'right': [], 'top': [], 'bottom': [] };
-        for (const item of ports) {
-            // side of the component-port on port-components is opposite of where the port-component is facing
-            const side = Component.SIDES[(item.rotation + 2) % 4];
-            // keep track of position so we can arrange ports on component by position in schematic
-            const sort = side === 'left' || side === 'right' ? item.y : item.x;
-            outline[side].push([ sort, item.name ]);
-        }
-        // determine if edges need to be even or odd length (for rotation to work properly, edges need to be either all odd or all even length)
-        let height = Math.max(1, outline.left.length, outline.right.length);
-        let width = Math.max(1, outline.top.length, outline.bottom.length);
-        const parity = this.portConfig.parity ?? 'auto';
-        const even = parity === 'auto' ? Math.max(width, height) % 2 === 0 : parity === 'even';
-        // adjust width and height to both be either even or odd
-        if (parity !== 'none') {
-            height += even !== (height % 2 === 0) ? 1 : 0;
-            width += even !== (width % 2 === 0) ? 1 : 0;
-        }
-        // also ensure minimum allowed component size is met
-        height = Math.max(even ? 2 : 1, height);
-        width = Math.max(even ? 2 : 1, width);
-        // arrange ports as specified
-        for (const side of Object.keys(outline)) {
-            // sort by position
-            outline[side].sort(([a,], [b,]) => a - b);
-            outline[side] = outline[side].map(([sort, label]) => label);
-            // determine expected length of side (number of required ports) and actual number of ports
-            const length = side === 'left' || side === 'right' ? height : width;
-            const available = length - outline[side].length;
-            // prepare additional ports to insert on the outside and/or center (or wherever configured) of the side
-            const edgePorts = (new Array(Math.floor(available / 2))).fill(null);
-            const centerPorts = available % 2 === 1 ? [ null ] : [];
-            // insert ports according to configured position
-            outline[side] = [ ...edgePorts, ...outline[side], ...edgePorts ];
-            const position = this.portConfig.gap === 'middle' ? outline[side].length / 2 : (this.portConfig.gap === 'start' ? 0 : outline[side].length);
-            outline[side].splice(position, 0, ...centerPorts);
-        }
-        // reverse left/bottom due to the way we enumerate ports for easier rotation
-        outline['left'].reverse();
-        outline['bottom'].reverse();
-        this.ports = outline;
     }
 
     // Generate a circuit id.

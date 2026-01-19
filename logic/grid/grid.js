@@ -60,7 +60,6 @@ class Grid {
             return;
         }
         this.#circuit.unlink();
-        this.#circuit.generatePorts();
         this.#circuit = null;
         this.#infoBox.circuitLabel = '';
         this.#dirty |= Grid.#DIRTY_OVERLAY;

@@ -229,7 +229,7 @@ class Application {
                 const isCurrentCircuit = uid === this.circuits.current.uid;
                 // place circuit as component
                 if (!isCurrentGrid) {
-                    const [ componentButton ] = circuitMenu.createComponentButton('&#9094;', label + '. <i>LMB</i> Drag to move onto grid.', (grid, x, y) => grid.addItem(new CustomComponent(this, x, y, 0, uid, label)));
+                    const [ componentButton ] = circuitMenu.createComponentButton('&#9094;', label + '. <i>LMB</i> Drag to move onto grid.', (grid, x, y) => grid.addItem(new CustomComponent(this, x, y, 0, uid)));
                     componentButton.classList.add('toolbar-circuit-place');
                 }
                 // circuit select
