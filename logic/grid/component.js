@@ -280,8 +280,20 @@ class Component extends GridItem {
         value = value & 3; // clamp to 0-3
         this.dirty ||= this.#rotation !== value;
         if (this.grid && (value & 1) !== (this.#rotation & 1)) {
-            const x = this.x + (this.width - this.height) / 2;
-            const y = this.y - (this.width - this.height) / 2;
+            let x = this.x + (this.width - this.height) / 2;
+            let y = this.y - (this.width - this.height) / 2;
+            // Rotating a rectangle with differing side length parity on a grid causes the sides to become unaligned with the grid.
+            // This is because for an odd length side the center must be between two grid points but for an even length it must be
+            // on a grid point if the edges of the rectangle are supposed to align with the grid. Therefore a 90° turn around a fixed
+            // center would cause the edges to fall between two grid points. To correct this, half a grid unit is added to x or y of
+            // the center. To prevent the component from "walking away" each time it is rotated, we switch between adding to x or y.
+            if (((this.width / Grid.SPACING) % 2) !== ((this.height / Grid.SPACING) % 2)) {
+                if (this.width < this.height) {
+                    x += Grid.SPACING / 2;
+                } else {
+                    y += Grid.SPACING / 2;
+                }
+            }
             [ this.x, this.y ] = Grid.align(x, y);
             this.#rotation = value;
             this.updateDimensions();

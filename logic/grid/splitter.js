@@ -8,7 +8,7 @@ class Splitter extends Component {
 
     static #EDIT_DIALOG = [
         { name: 'numSplits', label: 'Number of n-ports', type: 'int', check: (v, f) => { const p = Number.parseSI(v, true); return isFinite(p) && p >= 2 && p <= 64; } },
-        { name: 'gapPosition', label: 'Pin gap (when n-ports is even)', type: 'select', options: { start: "Next to n0", middle: "Middle", end: "Next to nMax", none: "None (rotation moves splitter)" } },
+        { name: 'gapPosition', label: 'Pin gap (when n-ports is even)', type: 'select', options: { start: "Next to n0", middle: "Middle", end: "Next to nMax", none: "None (rotation snaps)" } },
         { name: 'orientation', label: 'Position of 1-port', type: 'select', options: { start: "Opposite of n0", middle: "Middle", end: "Opposite of nMax" } },
         ...Component.EDIT_DIALOG,
     ];

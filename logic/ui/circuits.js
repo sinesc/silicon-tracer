@@ -6,7 +6,7 @@ class Circuits {
     static EDIT_DIALOG = [
         { name: 'label', label: 'Circuit label', type: 'string' },
         { name: 'gap', label: 'Pin gap', type: 'select', options: { start: "Top or left", middle: "Middle", end: "Bottom or right" } },
-        { name: 'parity', label: 'Side lengths', type: 'select', options: { auto: "Automatic", even: "Even", odd: "Odd" } },
+        { name: 'parity', label: 'Side lengths', type: 'select', options: { auto: "Automatic", none: "Mixed (rotation snaps)", even: "Even", odd: "Odd" } },
     ];
 
     static STRINGIFY_SPACE = "\t";
@@ -359,8 +359,10 @@ Circuits.Circuit = class {
         const parity = this.portConfig.parity ?? 'auto';
         const even = parity === 'auto' ? Math.max(width, height) % 2 === 0 : parity === 'even';
         // adjust width and height to both be either even or odd
-        height += even !== (height % 2 === 0) ? 1 : 0;
-        width += even !== (width % 2 === 0) ? 1 : 0;
+        if (parity !== 'none') {
+            height += even !== (height % 2 === 0) ? 1 : 0;
+            width += even !== (width % 2 === 0) ? 1 : 0;
+        }
         // also ensure minimum allowed component size is met
         height = Math.max(even ? 2 : 1, height);
         width = Math.max(even ? 2 : 1, width);
