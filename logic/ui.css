@@ -684,7 +684,7 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
 /*
  * Port (the port-component, not a port on a component)
  */
-.component.port .port-name {
+.component.port > .port-name {
     pointer-events: none;
     z-index: 13;
     position: absolute;
@@ -692,6 +692,10 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
     background-color: var(--overlay-bg-color);
     box-sizing: border-box;
     color: var(--muted-text-color);
+    font-weight: bold;
+}
+.grid-zoom-below-85 .component.port > .port-name  {
+    display: none !important;
 }
 .component.port[data-net-state] > .component-inner {
     outline: 4px solid transparent;
@@ -777,7 +781,10 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
     border-radius: 8px;
     display: inline-block;
     vertical-align: middle;
-    margin: 5px;
+    margin: 3px 5px 5px 3px;
+}
+.grid-zoom-below-85 .component.port > .component-inner > span:before  {
+    display: none;
 }
 .component.port[data-port-state="0"] > .component-inner > span:before {
     background-color: var(--wire-colorT-low);
