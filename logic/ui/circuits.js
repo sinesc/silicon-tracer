@@ -5,8 +5,8 @@ class Circuits {
 
     static EDIT_DIALOG = [
         { name: 'label', label: 'Circuit label', type: 'string' },
-        { name: 'gap', label: 'Pin gap', type: 'select', options: { start: "Top or left", middle: "Middle", end: "Bottom or right" } },
-        { name: 'parity', label: 'Side lengths', type: 'select', options: { auto: "Automatic", none: "Mixed (rotation snaps)", even: "Even", odd: "Odd" } },
+        { name: 'gap', label: 'Default pin gap', type: 'select', options: { start: "Top or left", middle: "Middle", end: "Bottom or right" } },
+        { name: 'parity', label: 'Default side lengths', type: 'select', options: { auto: "Automatic", none: "Mixed (rotation snaps)", even: "Even", odd: "Odd" } },
     ];
 
     static STRINGIFY_SPACE = "\t";
