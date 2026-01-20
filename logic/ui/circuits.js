@@ -108,6 +108,12 @@ class Circuits {
         return this.#circuits[uid] ?? null;
     }
 
+    // Adds a circuit.
+    add(circuit) {
+        assert.class(Circuits.Circuit, circuit);
+        this.#circuits[circuit.uid] = circuit;
+    }
+
     // Returns a list of loaded circuits.
     list() {
         const circuits = Object.values(this.#circuits).map((c) => [ c.uid, c.label ]);
@@ -170,9 +176,10 @@ class Circuits {
     // Unserializes circuits from file.
     unserialize(content) {
         for (const serialized of content.circuits) {
-            const circuit = Circuits.Circuit.unserialize(this.#app, serialized);
-            Wire.compact(circuit);
-            this.#circuits[circuit.uid] = circuit; // TODO: check uid conflict
+            // skip circuits that were already unserialized recursively by GridItem's dependency check for CustomComponents.
+            if (!this.#circuits[serialized.uid]) {
+                Circuits.Circuit.unserialize(this.#app, serialized, content.circuits);
+            }
         }
         return content.currentUID;
     }
@@ -257,13 +264,14 @@ Circuits.Circuit = class {
         return { label: this.label, uid: this.uid, data, gridConfig: this.gridConfig, portConfig: this.portConfig };
     }
 
-    // Unserializes circuit from decoded JSON-object.
-    static unserialize(app, circuit) {
+    // Unserializes circuit from decoded JSON-object and adds it to Circuits. Dependencies of CustomComponents will also be added.
+    static unserialize(app, rawCircuit, rawOthers) {
         assert.class(Application, app);
-        assert.object(circuit);
-        const items = circuit.data.map((item) => GridItem.unserialize(app, item));
-        const uid = circuit.uid.includes('-') ? 'u' + circuit.uid.replaceAll('-', '') : circuit.uid; // LEGACY: convert legacy uid
-        return new Circuits.Circuit(circuit.label, uid, items, circuit.gridConfig, circuit.portConfig);
+        assert.object(rawCircuit);
+        const items = rawCircuit.data.map((item) => GridItem.unserialize(app, item, rawOthers));
+        const circuit = new Circuits.Circuit(rawCircuit.label, rawCircuit.uid, items, rawCircuit.gridConfig, rawCircuit.portConfig);
+        Wire.compact(circuit);
+        app.circuits.add(circuit);
     }
 
     // Link circuit to the grid, creating DOM elements for the circuit's components. Ensures the item is detached.
