@@ -142,6 +142,20 @@ class Circuits {
         throw new Error('Could not find circuit ' + uid);
     }
 
+    // Remove circuit by UID.
+    delete(uid) {
+        assert.string(uid);
+        delete this.#circuits[uid];
+        if (uid === this.#currentCircuit) {
+            const fallback = Object.keys(this.#circuits)[0] ?? null;
+            if (fallback) {
+                this.select(fallback);
+            }
+            return;
+        }
+    }
+
+
     // Creates a new circuit.
     async create() {
         const config = await dialog("Create circuit", Circuits.EDIT_DIALOG, { label: this.#generateName(), gap: 'middle', parity: 'automatic' });

@@ -214,6 +214,7 @@ class Application {
         const [ , circuitMenuState, circuitMenu ] = this.toolbar.createMenuButton('Circuit', 'Circuit management menu. <i>LMB</i> Open menu.', () => updateCircuitMenu());
 
         updateCircuitMenu = () => {
+            const circuitList = this.circuits.list();
             circuitMenu.clear();
             circuitMenu.createActionButton('New...', 'Create a new circuit.', async () => {
                 circuitMenuState(false);
@@ -223,8 +224,14 @@ class Application {
                 addButton.classList.remove('toolbar-menu-button-disabled');
                 updateCircuitMenu();
             });
+            const [ button ] = circuitMenu.createActionButton(`Remove "${this.circuits.current.label}"`, circuitList.length <= 1 ? 'Cannot remove last remaining circuit.' : 'Remove current circuit.', async () => {
+                circuitMenuState(false);
+                this.circuits.delete(this.circuits.current.uid);
+                updateCircuitMenu();
+            });
+            button.classList.toggle('toolbar-menu-button-disabled', circuitList.length <= 1);
             circuitMenu.createSeparator();
-            for (const [ uid, label ] of this.circuits.list()) {
+            for (const [ uid, label ] of circuitList) {
                 const isCurrentGrid = uid === this.grid.circuit.uid; // grid circuit may be different from current circuit when navigating through simulation subcomponents
                 const isCurrentCircuit = uid === this.circuits.current.uid;
                 // place circuit as component
