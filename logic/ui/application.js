@@ -166,14 +166,12 @@ class Application {
             this.simulations.clear();
             this.simulations.select(this.circuits.current, this.config.autoCompile);
             updateFileMenu();
-            updateCircuitMenu();
         });
         const [ addButton ] = fileMenu.createActionButton('Open additional...', 'Load additional circuits from a file, keeping open circuits.', async () => {
             fileMenuState(false);
             await this.circuits.loadFile(false); // TODO don't switch to new circuit
             this.simulations.select(this.circuits.current, this.config.autoCompile);
             updateFileMenu();
-            updateCircuitMenu();
         });
         fileMenu.createSeparator();
         const [ saveButton ] = fileMenu.createActionButton('Save', 'Save circuits to file.', async () => {
@@ -192,7 +190,6 @@ class Application {
             this.simulations.clear();
             this.simulations.select(this.circuits.current, this.config.autoCompile);
             updateFileMenu();
-            updateCircuitMenu();
         });
 
         updateFileMenu = () => {
@@ -222,12 +219,12 @@ class Application {
                     this.simulations.select(this.circuits.current, this.config.autoCompile);
                 }
                 addButton.classList.remove('toolbar-menu-button-disabled');
-                updateCircuitMenu();
             });
             const [ button ] = circuitMenu.createActionButton(`Remove "${this.circuits.current.label}"`, circuitList.length <= 1 ? 'Cannot remove last remaining circuit.' : 'Remove current circuit.', async () => {
                 circuitMenuState(false);
-                this.circuits.delete(this.circuits.current.uid);
-                updateCircuitMenu();
+                if (await confirmDialog('Confirm deletion',`Delete "${this.circuits.current.label}" from project?`)) {
+                    this.circuits.delete(this.circuits.current.uid);
+                }
             });
             button.classList.toggle('toolbar-menu-button-disabled', circuitList.length <= 1);
             circuitMenu.createSeparator();

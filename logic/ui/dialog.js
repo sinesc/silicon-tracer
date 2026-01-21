@@ -23,40 +23,48 @@ function dialog(title, fields, data, context = null) {
     const form = [];
 
     for (const field of values(fields)) {
-        // check field definition
-        assert.string(field.name);
-        assert.string(field.type);
-        if (!Object.hasOwn(data, field.name)) {
-            throw new Error(`Field "${field.name}" does not exist in the input data`);
-        }
-        if (!Object.hasOwn(validations, field.type)) {
-            if (!Object.hasOwn(data, field.check)) {
-                throw new Error(`Field "${field.name}" uses an unknown validation and does not define its own check function`);
-            }
-            if (!Object.hasOwn(data, field.apply)) {
-                throw new Error(`Field "${field.name}" uses an unknown validation and does not define its own apply function`);
-            }
-        }
-        // construct field html, add field to form
-        const rowElement = element(tableElement, 'tr', 'dialog-row');
-        element(rowElement, 'td', 'dialog-row-label', field.label ?? field.name.toUpperFirst());
-        const rowRight = element(rowElement, 'td', 'dialog-row-mask');
-        let fieldElement
-        if (field.type === 'select') {
-            fieldElement = element(rowRight, 'select', 'dialog-row-select', { name: field.name, options: field.options, value: data[field.name] });
+        if (field.text) {
+            const rowElement = element(tableElement, 'tr', 'dialog-row');
+            element(rowElement, 'td', 'dialog-row-label', field.text);
         } else {
-            fieldElement = element(rowRight, 'input', 'dialog-row-input', { name: field.name, value: data[field.name] });
+            // check field definition
+            assert.string(field.name);
+            assert.string(field.type);
+            if (!Object.hasOwn(data, field.name)) {
+                throw new Error(`Field "${field.name}" does not exist in the input data`);
+            }
+            if (!Object.hasOwn(validations, field.type)) {
+                if (!Object.hasOwn(data, field.check)) {
+                    throw new Error(`Field "${field.name}" uses an unknown validation and does not define its own check function`);
+                }
+                if (!Object.hasOwn(data, field.apply)) {
+                    throw new Error(`Field "${field.name}" uses an unknown validation and does not define its own apply function`);
+                }
+            }
+            // construct field html, add field to form
+            const rowElement = element(tableElement, 'tr', 'dialog-row');
+            element(rowElement, 'td', 'dialog-row-label', field.label ?? field.name.toUpperFirst());
+            const rowRight = element(rowElement, 'td', 'dialog-row-mask');
+            let fieldElement
+            if (field.type === 'select') {
+                fieldElement = element(rowRight, 'select', 'dialog-row-select', { name: field.name, options: field.options, value: data[field.name] });
+            } else {
+                fieldElement = element(rowRight, 'input', 'dialog-row-input', { name: field.name, value: data[field.name] });
+            }
+            form.push({ element: fieldElement, field });
         }
-        form.push({ element: fieldElement, field });
     }
 
     const rowElement = element(contentElement, 'div', 'dialog-button-row', );
     const cancelElement = element(rowElement, 'span', 'dialog-button dialog-cancel', 'Cancel');
     const confirmElement = element(rowElement, 'span', 'dialog-button dialog-confirm', 'Ok');
     document.body.appendChild(blackout);
-    form[0].element.focus();
-    if (form[0].element.select) {
-        form[0].element.select();
+
+    if (form.length > 0) {
+        form[0].element.focus();
+        if (form[0].element.select) {
+            form[0].element.select();
+        }
     }
 
     // validate form input
@@ -110,4 +118,9 @@ function dialog(title, fields, data, context = null) {
         containerElement.onclick = (e) => e.stopPropagation();
         blackout.onclick = cancel;
     })
+}
+
+// Opens a modal confirmation dialog with a custom message. Returns true on ok, false on cancel.
+function confirmDialog(title, message) {
+    return dialog(title, [ { text: message } ], { }).then((v) => !!v, (v) => false);
 }
