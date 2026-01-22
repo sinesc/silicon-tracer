@@ -30,9 +30,17 @@ class NetList {
                 nets.push(net);
             }
         }
-        let unconnectedWires = []; // TODO possibly move out of here to keep this code simple
+
+        NetList.#splitNetChannels(nets);
+
+        let unconnectedWires = []; // TODO identify wires that aren't connected to any ports / ports that aren't connected to any wires. used in UI to highlight these
         let unconnectedPorts = [];
         return new NetList(nets, unconnectedWires, unconnectedPorts, instances);
+    }
+
+    // Splits channels of a net into individual nets.
+    static #splitNetChannels(nets) {
+
     }
 
     // Returns a port suffix for the given gid and instance.
@@ -121,7 +129,7 @@ class NetList {
     static #buildInstanceTree(circuit, circuits, gid, instances = [], parentInstanceId = null) {
         const instanceId = instances.length;
         const subInstances = { }; // maps CustomComponent gids in each instance to their sub-instance
-        const netItems = circuit.netItems(instanceId);
+        const netItems = circuit.netItems(instanceId); // note: Circuit.netItems() returns { wires: [ NetWire ], ports: [ NetPort ] }
         instances.push({ circuit, netItems, gid, subInstances, parentInstanceId, simIds: {} });
         if (circuits) {
             for (const component of circuit.items.filter((i) => i instanceof CustomComponent)) {
@@ -153,7 +161,7 @@ class NetList {
                 }
             }
         }
-        return { wires, ports };
+        return { wires, ports, numChannels: null };
     }
 
     // Follow wires attached to port in and out of subcomponents to trace out the entire net.
@@ -246,7 +254,8 @@ NetList.NetPort = class {
     instanceId;
     type;
     uid;
-    constructor(point, type, name, compareName, gid, instanceId, uid) {
+    numChannels;
+    constructor(point, type, name, compareName, gid, instanceId, uid, numChannels) {
         assert.class(Point, point);
         assert.enum([ 'ascend', 'descend', 'n-to-1', '1-to-n' ], type, true);
         assert.string(name);
@@ -254,6 +263,7 @@ NetList.NetPort = class {
         assert.string(gid);
         assert.integer(instanceId);
         assert.string(uid, true);
+        assert.integer(numChannels, true);
         this.point = point;
         this.name = name;
         this.compareName = compareName;
@@ -261,6 +271,7 @@ NetList.NetPort = class {
         this.instanceId = instanceId;
         this.type = type;
         this.uid = uid;
+        this.numChannels = numChannels;
     }
     get uniqueName() {
         return this.name + NetList.suffix(this.gid, this.instanceId);
