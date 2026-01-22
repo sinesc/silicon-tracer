@@ -40,7 +40,7 @@ class GridItem {
     // Serializes the object for writing to disk.
     serialize() {
         return {
-            _: { c: this.constructor.name, a: [] },
+            _: null, // omitted since class is never directly serialized
             width: this.#size.x,
             height: this.#size.y,
         };

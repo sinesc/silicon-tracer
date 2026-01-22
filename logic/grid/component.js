@@ -183,7 +183,7 @@ class Component extends GridItem {
     serialize() {
         return {
             ...super.serialize(),
-            _: { c: this.constructor.name, a: [ this.x, this.y, this.#ports.map((p) => p.name), this.#type ]},
+            _: null, // omitted since class is never directly serialized
             rotation: this.#rotation,
         };
     }
@@ -195,11 +195,13 @@ class Component extends GridItem {
             assert.object(portChannels, true);
         }
         this.#ports = { left: [], right: [], top: [], bottom: [], ...ports };
+        // ensure same number of ports on opposing sides of the component by filling up the shorter side with null ports
         for (const [ side, other ] of Object.entries({ 'left': 'right', 'right': 'left', 'top': 'bottom', 'bottom': 'top' })) {
             while (this.#ports[side].length < this.#ports[other].length) {
                 this.#ports[side].push(null);
             }
         }
+        // convert port names to ComponentPort instances
         this.#ports = this.#ports.map((side, sidePorts) => sidePorts.map((name, index) => new ComponentPort(name, side, index, Number.isInteger(portChannels) ? portChannels : (portChannels?.[name] ?? null))));
         this.updateDimensions();
         this.#findPortLabelCharPos();

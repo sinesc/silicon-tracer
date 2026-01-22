@@ -73,10 +73,9 @@ class NetList {
         return sim;
     }
 
-    // Returns a hash of this netlist.
-    hash() {
-        // imagine this is a hash because I sure as heck am not going to use the idiocy that is subtle crypt's async digest function. holy hell WHY?!? next up async math operators or what?
-        // FIXME: this needs to be ordered, output order is currently unstable
+    // Returns a string representation of this netlist. Used to compare netlists and check if nets changed.
+    toString() {
+        // FIXME: this needs to be ordered. internally order not stable and irrelevant but unordered output can't easily be compared for changes.
         return JSON.stringify(this.nets);
     }
 
@@ -177,7 +176,7 @@ class NetList {
             instance = instances[instanceId];
             matchingPort = instance.netItems.ports.swapRemoveWith((p) => p.type === 'descend' && p.gid === gid && p.compareName === port.compareName);
         }
-        if (matchingPort === null) {
+        if (matchingPort === undefined) {
             // port already visited
             return { wires: [], ports: [] };
         }
@@ -251,7 +250,7 @@ NetList.NetPort = class {
         assert.class(Point, point);
         assert.enum([ 'ascend', 'descend', 'n-to-1', '1-to-n' ], type, true);
         assert.string(name);
-        assert.string(compareName); // TODO: add a port id (like a gid)
+        assert.string(compareName); // TODO: add a random port id (like a gid)
         assert.string(gid);
         assert.integer(instanceId);
         assert.string(uid, true);
