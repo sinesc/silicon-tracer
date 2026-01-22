@@ -40,7 +40,108 @@ class NetList {
 
     // Splits channels of a net into individual nets.
     static #splitNetChannels(nets) {
+        const splitters = {};
 
+        // 1. Identify splitters and initialize net widths from component ports
+        for (let i = 0; i < nets.length; i++) {
+            for (const port of nets[i].ports) {
+                if (port.type === '1-to-n') {
+                    const id = NetList.suffix(port.gid, port.instanceId);
+                    if (!splitters[id]) splitters[id] = { bus: null, channels: {}, maxCh: -1 };
+                    splitters[id].bus = i;
+                } else if (port.type === 'n-to-1') {
+                    const id = NetList.suffix(port.gid, port.instanceId);
+                    if (!splitters[id]) splitters[id] = { bus: null, channels: {}, maxCh: -1 };
+                    const ch = parseInt(port.name.substring(1));
+                    if (!isNaN(ch)) {
+                        splitters[id].channels[ch] = i;
+                        if (ch > splitters[id].maxCh) splitters[id].maxCh = ch;
+                    }
+                } else {
+                    // Component port
+                    const w = port.numChannels ?? 1;
+                    if (w > nets[i].numChannels) nets[i].numChannels = w;
+                }
+            }
+        }
+
+        // 2. Propagate widths through splitters
+        let changed = true;
+        let iterations = 0;
+        while (changed && iterations++ < 100) {
+            changed = false;
+            for (const s of Object.values(splitters)) {
+                if (s.bus === null) continue;
+
+                let currentWidth = 0;
+                for (let ch = 0; ch <= s.maxCh; ch++) {
+                    const nNet = s.channels[ch];
+                    const w = nNet !== undefined ? nets[nNet].numChannels : 1;
+                    currentWidth += w;
+                }
+
+                if (currentWidth > nets[s.bus].numChannels) {
+                    nets[s.bus].numChannels = currentWidth;
+                    changed = true;
+                }
+            }
+        }
+
+        // 3. Union-Find setup
+        const parent = new Map();
+        const find = (key) => {
+            if (!parent.has(key)) parent.set(key, key);
+            if (parent.get(key) !== key) parent.set(key, find(parent.get(key)));
+            return parent.get(key);
+        };
+        const union = (k1, k2) => {
+            const r1 = find(k1);
+            const r2 = find(k2);
+            if (r1 !== r2) parent.set(r1, r2);
+        };
+        const key = (netIdx, ch) => `${netIdx}:${ch}`;
+
+        // 4. Process splitters for unions
+        for (const s of Object.values(splitters)) {
+            if (s.bus !== null) {
+                let offset = 0;
+                for (let ch = 0; ch <= s.maxCh; ch++) {
+                    const nNet = s.channels[ch];
+                    const w = nNet !== undefined ? nets[nNet].numChannels : 1;
+
+                    if (nNet !== undefined) {
+                        for (let k = 0; k < w; k++) {
+                            union(key(nNet, k), key(s.bus, offset + k));
+                        }
+                    }
+                    offset += w;
+                }
+            }
+        }
+
+        // 5. Build new nets
+        const newNetsMap = new Map();
+
+        for (let i = 0; i < nets.length; i++) {
+            if (nets[i].numChannels === 0) continue;
+
+            for (let ch = 0; ch < nets[i].numChannels; ch++) {
+                const root = find(key(i, ch));
+                if (!newNetsMap.has(root)) newNetsMap.set(root, { wires: [], ports: [], numChannels: 1 });
+                const newNet = newNetsMap.get(root);
+
+                if (ch === 0) {
+                    newNet.wires.push(...nets[i].wires);
+                    newNet.ports.push(...nets[i].ports);
+                }
+            }
+        }
+
+        // 6. Replace nets
+        nets.length = 0;
+        for (const n of newNetsMap.values()) {
+            nets.push(n);
+        }
     }
 
     // Returns a port suffix for the given gid and instance.
@@ -161,7 +262,7 @@ class NetList {
                 }
             }
         }
-        return { wires, ports, numChannels: null };
+        return { wires, ports, numChannels: 1 };
     }
 
     // Follow wires attached to port in and out of subcomponents to trace out the entire net.
