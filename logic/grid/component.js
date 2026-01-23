@@ -226,7 +226,12 @@ class Component extends GridItem {
         for (const item of this.ports) {
             // TODO: add and call link() method on ComponentPort instead?
             const port = element(this.#element, 'div', 'component-port');
-            this.setHoverMessage(port, () => `Port <b>${item.name}</b> of <b>${this.#type}</b>. <i>LMB</i> Drag to connect.`, { type: 'hover-port' });
+            const message = () => {
+                const channels = item.netIds?.length ?? 1;
+                const kind = channels === 1 ? 'Port' : `<b>${channels}-bit</b> port`;
+                return `${kind} <b>${item.name}</b> of <b>${this.#type}</b>. <i>LMB</i> Drag to connect.`;
+            };
+            this.setHoverMessage(port, message, { type: 'hover-port' });
             // port hover label
             const labelElement = element(this.#element, 'div', 'component-port-label');
             // update component port with linked dom nodes

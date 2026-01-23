@@ -42,8 +42,8 @@ class Wire extends GridItem {
         this.registerMouseAction(this.#element, { type: 'connect', ordering: this.#direction === 'h' ? 'vh' : 'hv' });
         const message = () => {
             const channels = this.netIds?.length ?? 1;
-            const name = channels === 1 ? 'Wire' : `${channels}-channel bus`;
-            return `${name}. <i>LMB</i> Drag to branch off new wire. <i>DEL</i> Delete, <i>0</i> - <i>9</i> Set net color, ${GridItem.HOTKEYS}.`;
+            const kind = channels === 1 ? 'Wire' : `<b>${channels}-bit</b> bus`;
+            return `${kind}. <i>LMB</i> Drag to branch off new wire. <i>DEL</i> Delete, <i>0</i> - <i>9</i> Set net color, ${GridItem.HOTKEYS}.`;
         };
         this.setHoverMessage(this.#element, message, { type: 'hover' });
         this.grid.addVisual(this.#element);
