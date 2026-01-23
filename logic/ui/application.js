@@ -334,8 +334,13 @@ class Application {
         const DRAG_MSG = '<i>LMB</i> Drag to move onto grid.';
 
         // add ports
-        this.toolbar.createComponentButton('Port ·', `<b>Component IO pin</b>. ${DRAG_MSG}`, (grid, x, y) => {
+        this.toolbar.createComponentButton('Port', `<b>Component IO pin</b>. ${DRAG_MSG}`, (grid, x, y) => {
             return grid.addItem(new Port(this, x, y, 'right'))
+        });
+
+        // add tunnels
+        this.toolbar.createComponentButton('Tunnel', `<b>Network tunnel</b>. ${DRAG_MSG}`, (grid, x, y) => {
+            return grid.addItem(new Tunnel(this, x, y, 'right'))
         });
 
         // add a splitter component

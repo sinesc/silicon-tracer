@@ -369,10 +369,10 @@ Circuits.Circuit = class {
         const ports = [];
         for (const component of this.#data.filter((i) => !(i instanceof Wire))) {
             const uid = component instanceof CustomComponent ? component.uid : null;
-            const type = component instanceof CustomComponent ? 'descend' : (component instanceof Port ? 'ascend' : null);
+            const type = component instanceof CustomComponent ? 'descend' : (component instanceof Port ? 'ascend' : (component instanceof Tunnel ? 'tunnel' : null));
             for (const port of component.ports) {
                 const { x, y } = port.coords(component.width, component.height, component.rotation);
-                const compareName = component instanceof Port ? component.name : port.name;
+                const compareName = component instanceof Port || component instanceof Tunnel ? component.name : port.name;
                 const portType = type ?? (component instanceof Splitter ? (port.name === Splitter.SINGLE_PORT_NAME ? '1-to-n' : 'n-to-1') : null);
                 ports.push(new NetList.NetPort(new Point(x + component.x, y + component.y), portType, port.name, compareName, component.gid, instanceId, uid, port.numChannels));
             }

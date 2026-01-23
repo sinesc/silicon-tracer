@@ -684,7 +684,7 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
 /*
  * Port (the port-component, not a port on a component)
  */
-.component.port > .port-name {
+.component > .port-name {
     pointer-events: none;
     z-index: 13;
     position: absolute;
@@ -694,7 +694,7 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
     color: var(--muted-text-color);
     font-weight: bold;
 }
-.grid-zoom-below-85 .component.port > .port-name  {
+.grid-zoom-below-85 .component > .port-name  {
     display: none !important;
 }
 .component.port[data-net-state] > .component-inner {

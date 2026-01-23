@@ -74,6 +74,8 @@ class GridItem {
             instance = new CustomComponent(app, ...cargs);
         } else if (cname === 'Splitter') {
             instance = new Splitter(app, ...cargs);
+        } else if (cname === 'Tunnel') {
+            instance = new Tunnel(app, ...cargs);
         } else {
             throw new Error('Invalid component type "' + cname + '"');
         }
