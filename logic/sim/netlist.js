@@ -23,16 +23,20 @@ class NetList {
         assert.object(circuits, true);
         const instances = NetList.#buildInstanceTree(circuit, circuits);
         const nets = [];
+        const unconnectedWires = [];
+        const unconnectedPorts = [];
         for (const instance of instances) {
             let port;
             while (port = instance.netItems.ports.pop()) {
                 const net = NetList.#assembleNet(port, instance.netItems.wires, instance.netItems.ports, instances, circuits !== null);
                 nets.push(net);
+                if (net.wires.length === 0 && net.ports.length === 1) {
+                    unconnectedPorts.push(net.ports[0]);
+                }
             }
+            unconnectedWires.push(...instance.netItems.wires);
         }
         NetList.#splitNetChannels(nets);
-        let unconnectedWires = []; // TODO identify wires that aren't connected to any ports / ports that aren't connected to any wires. used in UI to highlight these
-        let unconnectedPorts = [];
         return new NetList(nets, unconnectedWires, unconnectedPorts, instances);
     }
 
@@ -57,9 +61,7 @@ class NetList {
         for (const [instanceId, { circuit, simIds }] of this.instances.entries()) {
             for (const component of circuit.items.filter((i) => !(i instanceof Wire))) {
                 const suffix = NetList.suffix(component.gid, instanceId);
-                if (this.#isConnected(component, suffix)) {
-                    simIds[component.gid] = component.declare(sim, config, suffix);
-                }
+                simIds[component.gid] = component.declare(sim, config, suffix);
             }
         }
         // declare nets
@@ -103,19 +105,6 @@ class NetList {
             }
         }
         return null;
-    }
-
-    // Returns whether the given component is connected to a net with at least one port.
-    #isConnected(component, suffix) {
-        let connected = false;
-        for (const port of component.ports) {
-            const uniqueName = port.name + suffix;
-            if (!this.unconnected.ports.find((p) => p.uniqueName === uniqueName)) {
-                connected = true;
-                break;
-            }
-        }
-        return connected;
     }
 
     // Creates a tree of nested component instances within the given circuit.

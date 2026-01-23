@@ -26,6 +26,7 @@
     --wire-color9: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 215);
 
     /* high state */
+    --wire-colorD-high: oklch(from var(--wire-colorD) calc(l * var(--wire-high-factor) * 0.8) c h);
     --wire-colorT-high: oklch(from var(--wire-colorT) calc(l * var(--wire-high-factor) * 1.3) c h);
     --wire-color0-high: oklch(from var(--wire-color0) calc(l * var(--wire-high-factor)) c h);
     --wire-color1-high: oklch(from var(--wire-color1) calc(l * var(--wire-high-factor)) c h);
@@ -39,6 +40,7 @@
     --wire-color9-high: oklch(from var(--wire-color9) calc(l * var(--wire-high-factor)) c h);
 
     /* high state glow effect */
+    --wire-colorD-high-alpha: oklch(from var(--wire-colorD) calc(l * var(--wire-high-factor)) c h / var(--wire-high-alpha));
     --wire-colorT-high-alpha: oklch(from var(--wire-colorT) calc(l * var(--wire-high-factor)) c h / var(--wire-high-alpha));
     --wire-colorE1-alpha: oklch(from var(--wire-colorE1) calc(l * var(--wire-high-factor)) c h / var(--wire-high-alpha));
     --wire-colorE2-alpha: oklch(from var(--wire-colorE2) calc(l * var(--wire-high-factor)) c h / var(--wire-high-alpha));
@@ -54,6 +56,7 @@
     --wire-color9-high-alpha: oklch(from var(--wire-color9) calc(l * var(--wire-high-factor)) c h / var(--wire-high-alpha));
 
     /* low state */
+    --wire-colorD-low: oklch(from var(--wire-colorD) calc(l * var(--wire-low-factor)) calc(c * var(--wire-low-factor)) h);
     --wire-colorT-low: oklch(from var(--wire-colorT) calc(l * var(--wire-low-factor)) calc(c * var(--wire-low-factor)) h);
     --wire-color0-low: oklch(from var(--wire-color0) calc(l * var(--wire-low-factor)) calc(c * var(--wire-low-factor)) h);
     --wire-color1-low: oklch(from var(--wire-color1) calc(l * var(--wire-low-factor)) calc(c * var(--wire-low-factor)) h);
@@ -67,6 +70,7 @@
     --wire-color9-low: oklch(from var(--wire-color9) calc(l * var(--wire-low-factor)) calc(c * var(--wire-low-factor)) h);
 
     /* null state (high impedance) */
+    --wire-colorD-null: oklch(from var(--wire-colorD) calc(l * var(--wire-low-factor)) calc(c * var(--wire-null-factor)) h / var(--wire-null-alpha));
     --wire-colorT-null: oklch(from var(--wire-colorT) calc(l * var(--wire-low-factor)) calc(c * var(--wire-null-factor)) h / var(--wire-null-alpha));
     --wire-color0-null: oklch(from var(--wire-color0) calc(l * var(--wire-low-factor)) calc(c * var(--wire-null-factor)) h / var(--wire-null-alpha));
     --wire-color1-null: oklch(from var(--wire-color1) calc(l * var(--wire-low-factor)) calc(c * var(--wire-null-factor)) h / var(--wire-null-alpha));
@@ -651,6 +655,9 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
     color: var(--text-color);
     filter: brightness(1.75) saturate(0.5);
 }
+.component-port[data-net-state="null"] { background-color: var(--wire-colorD-null); }
+.component-port[data-net-state="0"] { background-color: var(--wire-colorD-low); }
+.component-port[data-net-state="1"] { background-color: var(--wire-colorD-high); box-shadow: 1px 1px 3px var(--wire-colorD-high-alpha), -1px -1px 3px var(--wire-colorD-high-alpha); }
 .component-port-label {
     pointer-events: none;
     z-index: 13;
