@@ -85,11 +85,26 @@ class GridItem {
         return instance;
     }
 
-    // Gets the net-state attribute string for the given netId.
-    getNetState(netId) {
-        assert.integer(netId, true);
+    // Gets the net-state attribute string for the given netIds.
+    getNetState(netIds) {
+        assert.array(netIds);
         const sim = this.#app.simulations.current;
-        return !sim || !sim.engine ? '' : (netId === null ? 'null' : '' + sim.engine.getNetValue(netId));
+        if (!sim || !sim.engine) {
+            return '';
+        }
+        let state = null;
+        for (const netId of netIds) {
+            const netState = sim.engine.getNetValue(netId);
+            if (netState === -1) {
+                // conflict, other state doesn't matter, exit
+                state = -1;
+                break;
+            } else if ((netState === 0 && state === null) || netState === 1) {
+                // high state has priority over low state over unset
+                state = netState;
+            }
+        }
+        return '' + state;
     }
 
     // Link item to a grid, enabling it to be rendered.

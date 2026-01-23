@@ -308,10 +308,10 @@ Circuits.Circuit = class {
     attachSimulation(netList, subCircuitInstance) {
         assert.class(NetList, netList);
         assert.integer(subCircuitInstance);
-        this.detachSimulation();
         // link components to their simulation id (e.g. a clock id)
         const simIds = netList.instances[subCircuitInstance].simIds;
         for (const component of this.#data) {
+            component.detachSimulation();
             component.simId = simIds[component.gid] ?? null; // TODO: throw error here
         }
         for (const net of netList.nets) {
@@ -321,16 +321,18 @@ Circuits.Circuit = class {
                     const component = this.itemByGID(gid);
                     if (component) {
                         const port = component.portByName(name);
-                        port.netId = net.netId;
+                        port.netIds ??= [];
+                        port.netIds.push(net.netId);
                     }
                 }
             }
             // link wires
             for (const { gid, instanceId } of net.wires) {
                 if (subCircuitInstance === instanceId) {
-                    const component = this.itemByGID(gid);
-                    if (component) {
-                        component.netId = net.netId;
+                    const wire = this.itemByGID(gid);
+                    if (wire) {
+                        wire.netIds ??= [];
+                        wire.netIds.push(net.netId);
                     }
                 }
             }

@@ -6,7 +6,7 @@ class Wire extends GridItem {
     static #THICKNESS = 3;
 
     // Net-id for this wire. Directly set by Circuit.attachSimulation()
-    netId = null;
+    netIds = null;
 
     // Whether the wire is actually on the grid yet. false during wire-drag.
     limbo = false;
@@ -53,7 +53,7 @@ class Wire extends GridItem {
 
     // Detach wire from simulation.
     detachSimulation() {
-        this.netId = null;
+        this.netIds = null;
     }
 
     // Return whether the element is selected.
@@ -228,7 +228,7 @@ class Wire extends GridItem {
 
     // Renders/updates the current net state of the wire to the grid.
     renderNetState() {
-        const state = this.getNetState(this.netId);
+        const state = this.getNetState(this.netIds);
         if (this.#element.getAttribute('data-net-state') !== state) {
             this.#element.setAttribute('data-net-state', state);
         }

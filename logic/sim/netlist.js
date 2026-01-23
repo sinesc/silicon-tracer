@@ -130,10 +130,10 @@ class NetList {
                 if (!newNetsMap.has(root)) newNetsMap.set(root, { wires: [], ports: [], numChannels: 1 });
                 const newNet = newNetsMap.get(root);
 
-                if (ch === 0) {
+                //if (ch === 0) {
                     newNet.wires.push(...nets[i].wires);
                     newNet.ports.push(...nets[i].ports);
-                }
+                //}
             }
         }
 

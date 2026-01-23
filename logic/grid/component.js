@@ -11,7 +11,7 @@ class ComponentPort {
     labelElement = null;
 
     // Net-id for this item. Directly set by Circuit.attachSimulation()
-    netId = null;
+    netIds = null;
 
     numChannels = null;
 
@@ -236,7 +236,6 @@ class Component extends GridItem {
 
     // Removes the component from the grid.
     unlink() {
-        this.simId = null; // FIXME: shouldn't this be in detachSimulation?
         for (const item of this.ports) {
             item.unlink();
         }
@@ -251,8 +250,9 @@ class Component extends GridItem {
 
     // Detach component ports from simulation.
     detachSimulation() {
+        this.simId = null;
         for (const item of this.ports) {
-            item.netId = null;
+            item.netIds = null;
         }
     }
 
@@ -515,7 +515,7 @@ class Component extends GridItem {
     // Renders/updates the current net state of the component ports to the grid.
     renderNetState() {
         for (const item of this.ports) {
-            const state = this.getNetState(item.netId);
+            const state = this.getNetState(item.netIds);
             if (item.element.getAttribute('data-net-state') !== state) {
                 item.element.setAttribute('data-net-state', state);
             }

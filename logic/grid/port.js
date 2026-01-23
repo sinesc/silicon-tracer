@@ -116,7 +116,7 @@ class Port extends Component {
         super.renderNetState();
 
         // render extra big state indicator around entire component
-        const state = this.getNetState(this.#port.netId);
+        const state = this.getNetState(this.#port.netIds);
         if (this.element.getAttribute('data-net-state') !== state) {
             this.element.setAttribute('data-net-state', state);
         }
