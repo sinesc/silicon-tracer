@@ -87,9 +87,9 @@ class GridItem {
 
     // Gets the net-state attribute string for the given netIds.
     getNetState(netIds) {
-        assert.array(netIds);
+        assert.array(netIds, true);
         const sim = this.#app.simulations.current;
-        if (!sim || !sim.engine) {
+        if (!netIds || !sim || !sim.engine) {
             return '';
         }
         let state = null;
