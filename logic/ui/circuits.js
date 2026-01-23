@@ -321,7 +321,7 @@ Circuits.Circuit = class {
                     const component = this.itemByGID(gid);
                     if (component) {
                         const port = component.portByName(name);
-                        port.netIds ??= [];
+                        port.netIds ??= []; // TODO: error here after changing port names in sub-circuit: this is because the port change is not propagated from the modified sub-circuit to all custom components that represent that circuit yet. this needs to be added in or before NetList.identify
                         port.netIds.push(net.netId);
                     }
                 }

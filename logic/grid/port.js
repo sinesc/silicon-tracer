@@ -80,6 +80,12 @@ class Port extends Component {
         if (config) {
             this.name = config.name;
             this.rotation = config.rotation;
+            // update ports on all custom components  // TODO: optimize by actually only updating those custom components that use this circuit
+            for (const circuit of values(this.app.circuits.all)) {
+                for (const component of circuit.items.filter((i) => i instanceof CustomComponent)) {
+                    component.updatePorts();
+                }
+            }
             this.redraw();
         }
     }

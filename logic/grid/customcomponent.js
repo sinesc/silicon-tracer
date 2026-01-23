@@ -45,13 +45,19 @@ class CustomComponent extends Component {
 
     // Link custom component to a grid, enabling it to be rendered.
     link(grid) {
+        this.updatePorts();
         const circuit = this.app.circuits.byUID(this.uid) ?? {};
-        const ports = CustomComponent.#generatePorts(circuit, this.#portParity, this.#portGap);
-        this.setPortsFromNames(ports);
         this.type = circuit.label;
         super.link(grid);
         this.element.classList.add('custom');
         this.setHoverMessage(this.inner, () => `<b>${this.label}</b>. <i>E</i> Edit, <i>W</i> Switch to sub-circuit ${this.app.simulations.current ? ' simulation, ' : ', '} ${Component.HOTKEYS}.`, { type: 'hover' });
+    }
+
+    // Update ports from circuit.
+    updatePorts() {
+        const circuit = this.app.circuits.byUID(this.uid) ?? {};
+        const portNames = CustomComponent.#generatePorts(circuit, this.#portParity, this.#portGap);
+        this.setPortsFromNames(portNames);
     }
 
     // Set the simulation instance of the represented sub-circuit.

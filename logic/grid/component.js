@@ -188,21 +188,26 @@ class Component extends GridItem {
         };
     }
 
-    // Sets port names/locations and optionally channels per port or for all ports.
-    setPortsFromNames(ports, portChannels = null) {
-        assert.object(ports);
+    // Builds ComponentPort instances from map of list of ports.
+    buildPortsFromNames(portNames, portChannels = null) {
+        assert.object(portNames);
         if (!Number.isInteger(portChannels)) {
             assert.object(portChannels, true);
         }
-        this.#ports = { left: [], right: [], top: [], bottom: [], ...ports };
+        const ports = { left: [], right: [], top: [], bottom: [], ...portNames };
         // ensure same number of ports on opposing sides of the component by filling up the shorter side with null ports
         for (const [ side, other ] of Object.entries({ 'left': 'right', 'right': 'left', 'top': 'bottom', 'bottom': 'top' })) {
-            while (this.#ports[side].length < this.#ports[other].length) {
-                this.#ports[side].push(null);
+            while (ports[side].length < ports[other].length) {
+                ports[side].push(null);
             }
         }
         // convert port names to ComponentPort instances
-        this.#ports = this.#ports.map((side, sidePorts) => sidePorts.map((name, index) => new ComponentPort(name, side, index, Number.isInteger(portChannels) ? portChannels : (portChannels?.[name] ?? null))));
+        return ports.map((side, sidePorts) => sidePorts.map((name, index) => new ComponentPort(name, side, index, Number.isInteger(portChannels) ? portChannels : (portChannels?.[name] ?? null))));
+    }
+
+    // Sets port names/locations and optionally channels per port or for all ports.
+    setPortsFromNames(portNames, portChannels = null) {
+        this.#ports = this.buildPortsFromNames(portNames, portChannels);
         this.updateDimensions();
         this.#findPortLabelCharPos();
     }
