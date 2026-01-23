@@ -40,7 +40,12 @@ class Wire extends GridItem {
         super.link(grid);
         this.#element = element(null, 'div', 'wire wire-' + this.#direction);
         this.registerMouseAction(this.#element, { type: 'connect', ordering: this.#direction === 'h' ? 'vh' : 'hv' });
-        this.setHoverMessage(this.#element, `Wire. <i>LMB</i> Drag to branch off new wire. <i>DEL</i> Delete, <i>0</i> - <i>9</i> Set net color, ${GridItem.HOTKEYS}.`, { type: 'hover' });
+        const message = () => {
+            const channels = this.netIds?.length ?? 1;
+            const name = channels === 1 ? 'Wire' : `${channels}-channel bus`;
+            return `${name}. <i>LMB</i> Drag to branch off new wire. <i>DEL</i> Delete, <i>0</i> - <i>9</i> Set net color, ${GridItem.HOTKEYS}.`;
+        };
+        this.setHoverMessage(this.#element, message, { type: 'hover' });
         this.grid.addVisual(this.#element);
     }
 
@@ -197,7 +202,7 @@ class Wire extends GridItem {
             return false;
         }
 
-        const thickness = Wire.#THICKNESS * this.grid.zoom;
+        const thickness = Wire.#THICKNESS * this.grid.zoom * (this.netIds?.length > 1 ? 2 : 1);
         const v = this.visual;
         const t = thickness / 2;
 
