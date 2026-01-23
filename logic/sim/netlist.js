@@ -137,13 +137,34 @@ class NetList {
 
     // Finds wires and ports attached to given port. Removes found ports/wires from remainingPorts/Wires
     static #assembleNet(port, remainingWires, remainingPorts, instances, recurse) {
-        // find single wire attached to port
-        const wire = NetList.#findWireOnPort(port, remainingWires);
-        // find more wires connected to initially found wire (result includes initial wire)
-        const wires = wire === null ? [] : NetList.#findConnectedWires(wire, remainingWires);
-        // find all ports on the wires and return along with initial port
-        const ports = wire === null ? [] : NetList.#findPortsOnWires(wires, remainingPorts);
-        ports.push(port);
+        const wires = [];
+        const ports = [ port ];
+        const portsTodo = [ port ];
+        while (portsTodo.length > 0) {
+            const portCurrent = portsTodo.shift();
+            // find single wire attached to port
+            const wire = NetList.#findWireOnPort(portCurrent, remainingWires);
+            if (wire !== null) {
+                // find more wires connected to the initially found wire (result includes initial wire)
+                const newWires = NetList.#findConnectedWires(wire, remainingWires);
+                wires.push(...newWires);
+                // find all ports on the wires and return along with initial port
+                const newPorts = NetList.#findPortsOnWires(newWires, remainingPorts);
+                ports.push(...newPorts);
+                portsTodo.push(...newPorts);
+            }
+            // follow tunnel
+            if (portCurrent.type === 'tunnel') {
+                for (let p = remainingPorts.length - 1; p >= 0; --p) {
+                    const other = remainingPorts[p];
+                    if (other.type === 'tunnel' && other.compareName === portCurrent.compareName && other.instanceId === portCurrent.instanceId) {
+                        remainingPorts.swapRemove(p);
+                        ports.push(other);
+                        portsTodo.push(other);
+                    }
+                }
+            }
+        }
         // traverse subcomponents
         if (recurse) {
             for (const netPort of ports) {
