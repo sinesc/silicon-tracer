@@ -4,7 +4,7 @@
 class Tunnel extends Component {
 
     static EDIT_DIALOG = [
-        { name: 'name', label: 'Name', type: 'string', check: (v, f) => v !== '' },
+        { name: 'name', label: 'Network name', type: 'string', check: (v, f) => v !== '' },
         ...Component.EDIT_DIALOG,
     ];
 
@@ -20,7 +20,7 @@ class Tunnel extends Component {
     // Link port to a grid, enabling it to be rendered.
     link(grid) {
         super.link(grid);
-        this.setHoverMessage(this.inner, () => `Tunnel <b>${this.name}</b>. <i>E</i> Edit, ${Component.HOTKEYS}.`, { type: 'hover' });
+        this.setHoverMessage(this.inner, () => (this.name === '' ? 'Inactive tunnel (needs a network name)' : `Tunnel <b>${this.name}</b>`) + `. <i>E</i> Edit, ${Component.HOTKEYS}.`, { type: 'hover' });
         this.#labelElement = element(this.element, 'div', 'port-name');
         this.element.classList.add('tunnel');
     }

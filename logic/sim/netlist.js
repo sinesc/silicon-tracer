@@ -143,7 +143,7 @@ class NetList {
                 portsTodo.push(...newPorts);
             }
             // follow tunnel
-            if (portCurrent.type === 'tunnel') {
+            if (portCurrent.type === 'tunnel' && portCurrent.compareName !== '') {
                 for (let p = remainingPorts.length - 1; p >= 0; --p) {
                     const other = remainingPorts[p];
                     if (other.type === 'tunnel' && other.compareName === portCurrent.compareName && other.instanceId === portCurrent.instanceId) {
