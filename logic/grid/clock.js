@@ -18,7 +18,7 @@ class Clock extends Component {
     serialize() {
         return {
             ...super.serialize(),
-            _: { c: this.constructor.name, a: [ this.x, this.y ]},
+            _: { c: this.constructor.name, a: [ this.x, this.y, this.rotation ]},
             frequency: this.frequency,
         };
     }

@@ -34,7 +34,7 @@ class Tunnel extends Component {
     serialize() {
         return {
             ...super.serialize(),
-            _: { c: this.constructor.name, a: [ this.x, this.y, this.#side ]},
+            _: { c: this.constructor.name, a: [ this.x, this.y, this.rotation ]},
             name: this.name,
         };
     }

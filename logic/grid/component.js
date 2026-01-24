@@ -180,13 +180,13 @@ class Component extends GridItem {
     }
 
     // Serializes the object for writing to disk.
-    serialize() {
+    /*serialize() {
         return {
             ...super.serialize(),
             _: null, // omitted since class is never directly serialized
             rotation: this.#rotation,
         };
-    }
+    }*/
 
     // Builds ComponentPort instances from map of list of ports.
     buildPortsFromNames(portNames, portChannels = null) {

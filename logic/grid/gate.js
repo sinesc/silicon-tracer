@@ -33,7 +33,7 @@ class Gate extends Component {
     serialize() {
         return {
             ...super.serialize(),
-            _: { c: this.constructor.name, a: [ this.x, this.y, this.type, this.inputs.length ]},
+            _: { c: this.constructor.name, a: [ this.x, this.y, this.rotation, this.type, this.inputs.length ]},
         };
     }
 

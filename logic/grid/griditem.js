@@ -41,8 +41,8 @@ class GridItem {
     serialize() {
         return {
             _: null, // omitted since class is never directly serialized
-            width: this.#size.x,
-            height: this.#size.y,
+            //width: this.#size.x,
+            //height: this.#size.y,
         };
     }
 
@@ -80,7 +80,7 @@ class GridItem {
             throw new Error('Invalid component type "' + cname + '"');
         }
         for (const [ k, v ] of Object.entries(item)) {
-            if (k !== '_') {
+            if (k !== '_' /*&& k !== 'width' && k !== 'height'*/) {
                 instance[k] = v;
             }
         }
