@@ -515,6 +515,12 @@ class Component extends GridItem {
         return true;
     }
 
+    // Override redraw to also update the inner label.
+    redraw(beforeRender = null) {
+        super.redraw(beforeRender);
+        this.#inner.innerHTML = `<span>${this.label}</span>`;
+    }
+
     // Renders/updates the current net state of the component ports to the grid.
     renderNetState() {
         for (const item of this.ports) {

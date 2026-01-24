@@ -9,31 +9,35 @@ class PullResistor extends Component {
     ];
 
     #direction = 'down';
-    #numChannels;
 
-    constructor(app, x, y, rotation, numChannels = 1) {
+    constructor(app, x, y, rotation, direction = 'down', numChannels = 1) {
+        assert.enum([ "up", "down" ], direction);
         super(app, x, y, rotation, { right: [ 'q' ] }, 'pull', numChannels);
-        this.#numChannels = numChannels;
+        this.#direction = direction;
     }
 
     // Serializes the object for writing to disk.
     serialize() {
         return {
             ...super.serialize(),
-            _: { c: this.constructor.name, a: [ this.x, this.y, this.rotation ]},
-            direction: this.#direction,
+            _: { c: this.constructor.name, a: [ this.x, this.y, this.rotation, this.#direction ]},
         };
     }
 
     // Link pull resistor to a grid, enabling it to be rendered.
     link(grid) {
         super.link(grid);
-        this.setHoverMessage(this.inner, () => `<b>Pull-${this.#direction === 1 ? 'up' : 'down'} resistor</b>. <i>E</i> Edit, ${Component.HOTKEYS}.`, { type: 'hover' });
+        this.setHoverMessage(this.inner, () => `<b>Pull-${this.#direction} resistor</b>. <i>E</i> Edit, ${Component.HOTKEYS}.`, { type: 'hover' });
     }
 
     // Declare component simulation item.
     declare(sim, config, suffix) {
         return sim.declarePullResistor(this.#direction, suffix);
+    }
+
+    // Override inner component label.
+    get label() {
+        return this.#direction.toUpperFirst();
     }
 
     // Handle edit hotkey.

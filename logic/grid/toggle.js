@@ -82,7 +82,7 @@ class Toggle extends Component {
         if (config) {
             this.name = config.name;
             this.rotation = config.rotation;
-            this.state = config.state === -1 ? null : Number.parseInt(config.state);
+            this.state = config.state === '-1' ? null : Number.parseInt(config.state);
             this.redraw();
         }
     }
