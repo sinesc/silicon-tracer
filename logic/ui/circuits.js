@@ -176,7 +176,8 @@ class Circuits {
             circuit.label = result.label;
             circuit.portConfig.gap = result.gap;
             circuit.portConfig.parity = result.parity;
-            this.#app.grid.setCircuit(circuit);
+            this.#app.grid.setCircuitLabel(result.label);
+            this.#app.grid.setSimulationLabel(result.label);
             return true;
         }
         return false;

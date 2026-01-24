@@ -77,6 +77,12 @@ class Grid {
         this.#dirty |= Grid.#DIRTY_INNER | Grid.#DIRTY_OUTER | Grid.#DIRTY_OVERLAY;
     }
 
+    // Update circuit label in infobox.
+    setCircuitLabel(label) {
+        this.#dirty |= this.#infoBox.circuitLabel !== label ? Grid.#DIRTY_OVERLAY : 0;
+        this.#infoBox.circuitLabel = label;
+    }
+
     // Update circuit details in infobox.
     setCircuitDetails(details) {
         this.#dirty |= this.#infoBox.circuitDetails !== details ? Grid.#DIRTY_OVERLAY : 0;
