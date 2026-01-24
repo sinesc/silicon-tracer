@@ -682,6 +682,19 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
 }
 
 /*
+ * Tunnel
+ */
+.component.tunnel[data-component-rotation="1"] .component-inner, .component.tunnel[data-component-rotation="3"] .component-inner {
+    margin: 13px 5px;
+    height: calc(100% - 26px);
+}
+.component.tunnel[data-component-rotation="0"] .component-inner, .component.tunnel[data-component-rotation="2"] .component-inner {
+    margin: 5px 13px;
+    width: calc(100% - 26px);
+}
+
+
+/*
  * Custom component
  */
 .component.custom.simulated .component-inner {

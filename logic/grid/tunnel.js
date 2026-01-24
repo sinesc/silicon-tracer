@@ -4,7 +4,7 @@
 class Tunnel extends Component {
 
     static EDIT_DIALOG = [
-        { name: 'name', label: 'Network name', type: 'string', check: (v, f) => v !== '' },
+        { name: 'name', label: 'Network name', type: 'string' /*, check: (v, f) => v !== '' */ },
         ...Component.EDIT_DIALOG,
     ];
 
@@ -47,6 +47,11 @@ class Tunnel extends Component {
             this.rotation = config.rotation;
             this.redraw();
         }
+    }
+
+    // Override inner component label.
+    get label() {
+        return '';
     }
 
     // Renders the port onto the grid.
