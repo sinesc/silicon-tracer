@@ -41,8 +41,6 @@ class GridItem {
     serialize() {
         return {
             _: null, // omitted since class is never directly serialized
-            //width: this.#size.x,
-            //height: this.#size.y,
         };
     }
 

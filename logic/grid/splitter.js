@@ -19,12 +19,12 @@ class Splitter extends Component {
     #orientation;
     #ordering;
 
-    constructor(app, x, y, numSplits, gapPosition = 'none', orientation = 'start', ordering = 'ltr') {
+    constructor(app, x, y, rotation, numSplits, gapPosition = 'none', orientation = 'start', ordering = 'ltr') {
         assert.number(numSplits);
         assert.enum([ 'start', 'middle', 'end', 'none' ], gapPosition);
         assert.enum([ 'start', 'middle', 'end' ], orientation);
         const { left, right/*, channelMap*/ } = Splitter.#generatePorts(numSplits, gapPosition, orientation, ordering);
-        super(app, x, y, { 'left': left, 'right': right }, 'splitter', null);
+        super(app, x, y, rotation, { 'left': left, 'right': right }, 'splitter', null);
         this.#numSplits = numSplits;
         this.#gapPosition = gapPosition;
         this.#orientation = orientation;

@@ -28,8 +28,7 @@ class CustomComponent extends Component {
         parity ??= circuit.portConfig.parity;
         gap ??= circuit.portConfig.gap;
         const ports = CustomComponent.#generatePorts(circuit, parity, gap);
-        super(app, x, y, ports, circuit.label ?? '');
-        this.rotation = rotation;
+        super(app, x, y, rotation, ports, circuit.label ?? '');
         this.uid = uid;
         this.#portParity = parity;
         this.#portGap = gap;

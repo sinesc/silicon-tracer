@@ -8,17 +8,12 @@ class Tunnel extends Component {
         ...Component.EDIT_DIALOG,
     ];
 
-    #side;
     #port;
     #labelElement;
     name = '';
 
-    constructor(app, x, y, side) {
-        assert.string(side);
-        super(app, x, y, { 'top': [ '' ], 'left': [ null, ] }, 'tunnel');
-        this.rotation = Component.SIDES.indexOf(side);
-        this.updateDimensions();
-        this.#side = side;
+    constructor(app, x, y, rotation) {
+        super(app, x, y, rotation, { 'top': [ '' ], 'left': [ null, ] }, 'tunnel');
         this.#port = this.portByName('');
     }
 

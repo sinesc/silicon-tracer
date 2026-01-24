@@ -11,8 +11,8 @@ class PullResistor extends Component {
     #direction = 'down';
     #numChannels;
 
-    constructor(app, x, y, numChannels = 1) {
-        super(app, x, y, { right: [ 'q' ] }, 'pull', numChannels);
+    constructor(app, x, y, rotation, numChannels = 1) {
+        super(app, x, y, rotation, { right: [ 'q' ] }, 'pull', numChannels);
         this.#numChannels = numChannels;
     }
 

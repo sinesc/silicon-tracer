@@ -8,18 +8,13 @@ class Port extends Component {
         ...Component.EDIT_DIALOG,
     ];
 
-    #side;
     #port;
     #labelElement;
     #state = null;
     name = '';
 
-    constructor(app, x, y, side) {
-        assert.string(side);
-        super(app, x, y, { 'top': [ '' ], 'left': [ null, null, null ] }, 'port');
-        this.rotation = Component.SIDES.indexOf(side);
-        this.updateDimensions();
-        this.#side = side;
+    constructor(app, x, y, rotation) {
+        super(app, x, y, rotation, { 'top': [ '' ], 'left': [ null, null, null ] }, 'port');
         this.#port = this.portByName('');
     }
 

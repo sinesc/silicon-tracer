@@ -172,21 +172,13 @@ class Component extends GridItem {
     // An id for the simulated component. This could be a constId, clockId, ....
     simId = null;
 
-    constructor(app, x, y, ports, type, numChannels = null) {
+    constructor(app, x, y, rotation, ports, type, numChannels = null) {
         assert.string(type);
         super(app, x, y);
-        this.setPortsFromNames(ports, numChannels);
+        this.#rotation = rotation;
         this.#type = type;
+        this.setPortsFromNames(ports, numChannels);
     }
-
-    // Serializes the object for writing to disk.
-    /*serialize() {
-        return {
-            ...super.serialize(),
-            _: null, // omitted since class is never directly serialized
-            rotation: this.#rotation,
-        };
-    }*/
 
     // Builds ComponentPort instances from map of list of ports.
     buildPortsFromNames(portNames, portChannels = null) {
