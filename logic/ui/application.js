@@ -370,6 +370,11 @@ class Application {
             return grid.addItem(new PullResistor(this, x, y, rotation.pull));
         });
 
+        // add toggle buttons
+        this.toolbar.createComponentButton('Toggle', `<b>Toggle button</b> with permanently saved state. ${DRAG_MSG}`, (grid, x, y) => {
+            return grid.addItem(new Toggle(this, x, y, rotation.port))
+        });
+
         // add gates
         for (const [ gateType, { joinOp } ] of Object.entries(Simulation.GATE_MAP)) {
             const gateLabel = gateType.toUpperFirst();
