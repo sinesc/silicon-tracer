@@ -12,6 +12,15 @@ class Application {
         debugShowGid: false,
         debugShowCoords: false,
         debugShowWireBox: false,
+        rotationDefaults: {
+            port: 1,
+            tunnel: 1,
+            splitter: 0,
+            clock: 0,
+            pull: 1,
+            gate: 0,
+            builtin: 0,
+        },
     };
 
     grid;
@@ -333,31 +342,32 @@ class Application {
     // Initialize tool bar entries.
     #initToolbar() {
         const DRAG_MSG = '<i>LMB</i> Drag to move onto grid.';
+        const rotation = this.config.rotationDefaults;
 
         // add ports
         this.toolbar.createComponentButton('Port', `<b>Component IO pin</b>. ${DRAG_MSG}`, (grid, x, y) => {
-            return grid.addItem(new Port(this, x, y, 'right'))
+            return grid.addItem(new Port(this, x, y, rotation.port))
         });
 
         // add tunnels
         this.toolbar.createComponentButton('Tunnel', `<b>Network tunnel</b>. ${DRAG_MSG}`, (grid, x, y) => {
-            return grid.addItem(new Tunnel(this, x, y, 'right'))
+            return grid.addItem(new Tunnel(this, x, y, rotation.tunnel))
         });
 
         // add a splitter component
         this.toolbar.createComponentButton('Splitter', `<b>Wire splitter/joiner</b>. ${DRAG_MSG}`, (grid, x, y) => {
             let numChannels = 8; // TODO: configurable somewhere
-            return grid.addItem(new Splitter(this, x, y, numChannels));
+            return grid.addItem(new Splitter(this, x, y, rotation.splitter, numChannels));
         });
 
         // add a clock component
         this.toolbar.createComponentButton('Clock', `<b>Clock</b>. ${DRAG_MSG}`, (grid, x, y) => {
-            return grid.addItem(new Clock(this, x, y));
+            return grid.addItem(new Clock(this, x, y, rotation.clock));
         });
 
         // add a pull resistor component
         this.toolbar.createComponentButton('Pull', `<b>Pull up/down resistor</b>. ${DRAG_MSG}`, (grid, x, y) => {
-            return grid.addItem(new PullResistor(this, x, y));
+            return grid.addItem(new PullResistor(this, x, y, rotation.pull));
         });
 
         // add gates
@@ -365,7 +375,7 @@ class Application {
             const gateLabel = gateType.toUpperFirst();
             this.toolbar.createComponentButton(gateLabel, `<b>${gateLabel} gate</b>. ${DRAG_MSG}`, (grid, x, y) => {
                 let numInputs = 2; // TODO: configurable somewhere
-                return grid.addItem(new Gate(this, x, y, gateType, joinOp !== null ? numInputs : 1));
+                return grid.addItem(new Gate(this, x, y, rotation[gateType] ?? rotation.gate, gateType, joinOp !== null ? numInputs : 1));
             });
         }
 
@@ -373,7 +383,7 @@ class Application {
         for (const builtinType of keys(Simulation.BUILTIN_MAP)) {
             const builtinLabel = Builtin.LABELS[builtinType] ?? builtinType.toUpperFirst();
             this.toolbar.createComponentButton(builtinLabel, `<b>${builtinLabel}</b> builtin. ${DRAG_MSG}`, (grid, x, y) => {
-                return grid.addItem(new Builtin(this, x, y, builtinType));
+                return grid.addItem(new Builtin(this, x, y, rotation[builtinType] ?? rotation.builtin, builtinType));
             });
         }
     }
