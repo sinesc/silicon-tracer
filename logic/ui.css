@@ -521,8 +521,11 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
 .grid[data-zoom] {
     --zoom-factor: attr(data-zoom type(<number>));
 }
+.grid.grid-zoom-below-100 {
+    background-image: radial-gradient(circle, #333 1px, var(--grid-bg-color) 1px);
+}
 .grid.grid-zoom-50 {
-    background-image: radial-gradient(circle, #444 1px, var(--grid-bg-color) 1px);
+    background-image: radial-gradient(circle, #222 1px, var(--grid-bg-color) 1px);
 }
 .grid.grid-zoom-100 {
     background-image: radial-gradient(circle, #444 1px, var(--grid-bg-color) 1px);
