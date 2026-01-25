@@ -11,6 +11,7 @@ class NetList {
     static identify(circuit, circuits = null) {
         assert.class(Circuits.Circuit, circuit);
         assert.object(circuits, true);
+        const recurse = circuits !== null;
 
         // identify hierarchy of customcomponents/circuits
         const instances = NetList.#buildInstanceTree(circuit, circuits);
@@ -22,7 +23,7 @@ class NetList {
         for (const instance of instances) {
             let port;
             while (port = instance.netItems.ports.pop()) {
-                const net = NetList.#assembleNet(port, instance.netItems.wires, instance.netItems.ports, instances, circuits !== null);
+                const net = NetList.#assembleNet(port, instance.netItems.wires, instance.netItems.ports, instances, recurse);
                 nets.push(net);
                 if (net.wires.length === 0 && net.ports.length === 1) {
                     unconnectedPorts.push(net.ports[0]);
@@ -39,7 +40,7 @@ class NetList {
         netList.nets = nets;
         netList.unconnected = { wires: unconnectedWires, ports: unconnectedPorts };
         netList.instances = instances;
-        netList.longestSignalPath = NetList.#getLongestSignalPath(nets);
+        netList.longestSignalPath = recurse ? NetList.#getLongestSignalPath(nets): 0; // only useful on full identify
         return netList;
     }
 
