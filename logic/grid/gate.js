@@ -4,15 +4,15 @@
 class Gate extends Component {
 
     static #START_LETTER = 97; // 65 for capitalized
-    static #UNARY = Object.keys(Simulation.GATE_MAP.filter((k, v) => v.joinOp === null));
+    static #UNARY = Object.keys(Object.filter(Simulation.GATE_MAP, (k, v) => v.joinOp === null));
 
     static #UNARY_DIALOG = [
-        { name: 'type', label: 'Logic function', type: 'select', options: Simulation.GATE_MAP.map((k, v) => k.toUpperFirst()).filter((k, v) => Gate.#UNARY.includes(k)) },
+        { name: 'type', label: 'Logic function', type: 'select', options: Object.filter(Object.map(Simulation.GATE_MAP, (k, v) => k.toUpperFirst()), (k, v) => Gate.#UNARY.includes(k)) },
         ...Component.EDIT_DIALOG,
     ];
     static #XARY_DIALOG = [
         { name: 'numInputs', label: 'Number of inputs', type: 'select', options: { "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8 }, apply: (v, f) => parseInt(v) },
-        { name: 'type', label: 'Logic function', type: 'select', options: Simulation.GATE_MAP.map((k, v) => k.toUpperFirst()).filter((k, v) => !Gate.#UNARY.includes(k))  },
+        { name: 'type', label: 'Logic function', type: 'select', options: Object.filter(Object.map(Simulation.GATE_MAP, (k, v) => k.toUpperFirst()), (k, v) => !Gate.#UNARY.includes(k))  },
         ...Component.EDIT_DIALOG,
     ];
 

@@ -1,28 +1,24 @@
 "use strict";
 
-Object.defineProperty(Object.prototype, "map", {
-    value: function(c) {
-        assert.function(c);
-        const result = Object.create(this);
-        for (const [ k, v ] of Object.entries(this)) {
-            result[k] = c(k, v, this); // TODO: change argument order to match Array.map()?
-        }
-        return result;
+Object.map = function(object, c) {
+    assert.function(c);
+    const result = Object.create(object);
+    for (const [ k, v ] of Object.entries(object)) {
+        result[k] = c(k, v, object); // TODO: change argument order to match Array.map()?
     }
-});
+    return result;
+};
 
-Object.defineProperty(Object.prototype, "filter", {
-    value: function(c) {
-        assert.function(c);
-        const result = Object.create(this);
-        for (const [ k, v ] of Object.entries(this)) {
-            if (c(k, v, this)) { // TODO: change argument order to match Array.filter()?
-                result[k] = v;
-            }
+Object.filter = function(object, c) {
+    assert.function(c);
+    const result = Object.create(object);
+    for (const [ k, v ] of Object.entries(object)) {
+        if (c(k, v, object)) { // TODO: change argument order to match Array.filter()?
+            result[k] = v;
         }
-        return result;
     }
-});
+    return result;
+};
 
 // Removes an element from an array by swapping it with the last array element and popping the array. Returns the removed element.
 Object.defineProperty(Array.prototype, "swapRemove", {

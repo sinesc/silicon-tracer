@@ -194,7 +194,7 @@ class Component extends GridItem {
             }
         }
         // convert port names to ComponentPort instances
-        return ports.map((side, sidePorts) => sidePorts.map((name, index) => new ComponentPort(name, side, index, Number.isInteger(portChannels) ? portChannels : (portChannels?.[name] ?? null))));
+        return Object.map(ports, (side, sidePorts) => sidePorts.map((name, index) => new ComponentPort(name, side, index, Number.isInteger(portChannels) ? portChannels : (portChannels?.[name] ?? null))));
     }
 
     // Sets port names/locations and optionally channels per port or for all ports.
