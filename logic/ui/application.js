@@ -167,60 +167,44 @@ class Application {
     #initMenu() {
 
         // Add file operations to toolbar
-        let updateFileMenu;
-        const [ , fileMenuState, fileMenu ] = this.toolbar.createMenuButton('File', 'File operations menu. <i>LMB</i> Open menu.', () => updateFileMenu());
-
-        fileMenu.createActionButton('Open...', 'Close all circuits and load new circuits from a file.', async () => {
-            fileMenuState(false);
-            await this.circuits.loadFile(true);
-            this.simulations.clear();
-            this.simulations.select(this.circuits.current, this.config.autoCompile);
-            updateFileMenu();
-        });
-        const [ addButton ] = fileMenu.createActionButton('Open additional...', 'Load additional circuits from a file, keeping open circuits.', async () => {
-            fileMenuState(false);
-            await this.circuits.loadFile(false); // TODO don't switch to new circuit
-            this.simulations.select(this.circuits.current, this.config.autoCompile);
-            updateFileMenu();
-        });
-        fileMenu.createSeparator();
-        const [ saveButton ] = fileMenu.createActionButton('Save', 'Save circuits to file.', async () => {
-            fileMenuState(false);
-            await this.circuits.saveFile();
-        });
-        fileMenu.createActionButton('Save as...', 'Save circuits to a new file.', async () => {
-            fileMenuState(false);
-            await this.circuits.saveFileAs();
-            updateFileMenu();
-        });
-        fileMenu.createSeparator();
-        fileMenu.createActionButton('Close', 'Close all open circuits.', async () => {
-            fileMenuState(false);
-            this.circuits.closeFile();
-            this.simulations.clear();
-            this.simulations.select(this.circuits.current, this.config.autoCompile);
-            updateFileMenu();
-        });
-
-        updateFileMenu = () => {
-            if (this.circuits.fileName) {
-                saveButton.innerHTML = 'Save <i>' + this.circuits.fileName + '</i>';
-                saveButton.classList.remove('toolbar-menu-button-disabled');
+        const [ , fileMenuState, fileMenu ] = this.toolbar.createMenuButton('File', 'File operations menu. <i>LMB</i> Open menu.', () => {
+            fileMenu.clear();
+            fileMenu.createActionButton('Open...', 'Close all circuits and load new circuits from a file.', async () => {
+                fileMenuState(false);
+                await this.circuits.loadFile(true);
+                this.simulations.clear();
+                this.simulations.select(this.circuits.current, this.config.autoCompile);
                 document.title = this.circuits.fileName + ' - Silicon Tracer';
-            } else {
-                saveButton.innerHTML = 'Save';
-                document.title = 'Silicon Tracer';
-                saveButton.classList.add('toolbar-menu-button-disabled');
-            }
+            });
+            const [ addButton ] = fileMenu.createActionButton('Merge...', 'Load additional circuits from a file, keeping open circuits.', async () => {
+                fileMenuState(false);
+                await this.circuits.loadFile(false); // TODO don't switch to new circuit
+                this.simulations.select(this.circuits.current, this.config.autoCompile);
+            });
             addButton.classList.toggle('toolbar-menu-button-disabled', this.circuits.allEmpty());
-        }
+            fileMenu.createSeparator();
+            const [ saveButton ] = fileMenu.createActionButton(this.circuits.fileName ? 'Save <i>' + this.circuits.fileName + '</i>' : 'Save', 'Save circuits to file.', async () => {
+                fileMenuState(false);
+                await this.circuits.saveFile();
+            });
+            saveButton.classList.toggle('toolbar-menu-button-disabled', !this.circuits.fileName);
+            fileMenu.createActionButton('Save as...', 'Save circuits to a new file.', async () => {
+                fileMenuState(false);
+                await this.circuits.saveFileAs();
+                document.title = this.circuits.fileName + ' - Silicon Tracer';
+            });
+            fileMenu.createSeparator();
+            fileMenu.createActionButton('Close', 'Close all open circuits.', async () => {
+                fileMenuState(false);
+                this.circuits.closeFile();
+                this.simulations.clear();
+                this.simulations.select(this.circuits.current, this.config.autoCompile);
+                document.title = 'Silicon Tracer';
+            });
+        });
 
         // Circuit selection menu
-
-        let updateCircuitMenu;
-        const [ , circuitMenuState, circuitMenu ] = this.toolbar.createMenuButton('Circuit', 'Circuit management menu. <i>LMB</i> Open menu.', () => updateCircuitMenu());
-
-        updateCircuitMenu = () => {
+        const [ , circuitMenuState, circuitMenu ] = this.toolbar.createMenuButton('Circuit', 'Circuit management menu. <i>LMB</i> Open menu.', () => {
             const circuitList = this.circuits.list();
             circuitMenu.clear();
             circuitMenu.createActionButton('New...', 'Create a new circuit.', async () => {
@@ -228,7 +212,6 @@ class Application {
                 if (await this.circuits.create()) {
                     this.simulations.select(this.circuits.current, this.config.autoCompile);
                 }
-                addButton.classList.remove('toolbar-menu-button-disabled');
             });
             const [ button ] = circuitMenu.createActionButton(`Remove "${this.circuits.current.label}"`, circuitList.length <= 1 ? 'Cannot remove last remaining circuit.' : 'Remove current circuit.', async () => {
                 circuitMenuState(false);
@@ -255,10 +238,9 @@ class Application {
                 switchButton.classList.add(!isCurrentGrid ? 'toolbar-circuit-select' : 'toolbar-circuit-select-fullrow');
                 switchButton.classList.toggle('toolbar-menu-button-disabled', isCurrentCircuit);
             }
-        }
+        });
 
         // Simulation menu
-
         let updateSimulationMenu;
         const [ , simulationMenuState, simulationMenu ] = this.toolbar.createMenuButton('Simulation', 'Simulation management menu. <i>LMB</i> Open menu.', () => updateSimulationMenu());
 
@@ -336,7 +318,7 @@ class Application {
                 });
                 button.classList.toggle('toolbar-menu-button-disabled', isCurrent);
             }
-        }
+        };
     }
 
     // Initialize tool bar entries.
