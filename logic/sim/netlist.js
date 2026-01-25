@@ -362,9 +362,12 @@ class NetList {
         const componentOutputs = new Map();
         for (const net of nets) {
             for (const port of net.ports) {
-                if (port.type === null && port.compareName === 'q') {
+                if (port.type === null && port.ioType === 'out') {
                     const key = NetList.suffix(port.gid, port.instanceId);
-                    componentOutputs.set(key, net);
+                    if (!componentOutputs.has(key)) {
+                        componentOutputs.set(key, []);
+                    }
+                    componentOutputs.get(key).push(net);
                 }
             }
         }
@@ -381,13 +384,15 @@ class NetList {
             visiting.add(net);
             let maxSubPath = [];
             for (const port of net.ports) {
-                if (port.type === null && port.compareName !== 'q') {
+                if (port.type === null && port.ioType === 'in') {
                     const key = NetList.suffix(port.gid, port.instanceId);
-                    const outputNet = componentOutputs.get(key);
-                    if (outputNet) {
-                        const subPath = getPath(outputNet);
-                        if (subPath.length > maxSubPath.length) {
-                            maxSubPath = subPath;
+                    const outputNets = componentOutputs.get(key);
+                    if (outputNets) {
+                        for (const outputNet of outputNets) {
+                            const subPath = getPath(outputNet);
+                            if (subPath.length > maxSubPath.length) {
+                                maxSubPath = subPath;
+                            }
                         }
                     }
                 }
