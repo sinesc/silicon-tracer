@@ -21,6 +21,7 @@ class Application {
             pull: 1,
             gate: 0,
             builtin: 0,
+            text: 0,
         },
     };
 
@@ -376,7 +377,12 @@ class Application {
 
         // add toggle buttons
         this.toolbar.createComponentButton('Toggle', `<b>Toggle button</b> with permanently saved state. ${DRAG_MSG}`, (grid, x, y) => {
-            return grid.addItem(new Toggle(this, x, y, rotation.port))
+            return grid.addItem(new Toggle(this, x, y, rotation.port));
+        });
+
+        // add text
+        this.toolbar.createComponentButton('Text', `<b>Userdefined text message</b>. ${DRAG_MSG}`, (grid, x, y) => {
+            return grid.addItem(new Text(this, x, y, rotation.text));
         });
 
         // add gates

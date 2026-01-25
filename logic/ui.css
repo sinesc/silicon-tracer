@@ -586,16 +586,18 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
 /*
  * Base component
  */
-.component {
+.component, .text {
     z-index: 11;
     position: absolute;
     background-color: transparent;
     cursor: default;
     box-sizing: border-box;
     opacity: 1;
+}
+.component {
     pointer-events: none;
 }
-.component.selected {
+.component.selected, .text.selected {
     outline: 1px dotted white;
     outline-offset: -3px;
     border-radius: 6px;

@@ -63,7 +63,7 @@ class NetList {
         const sim = new Simulation(config.debugCompileComments, config.checkNetConflicts);
         // declare items
         for (const [instanceId, { circuit, simIds }] of this.instances.entries()) {
-            for (const component of circuit.items.filter((i) => !(i instanceof Wire))) {
+            for (const component of circuit.items.filter((i) => !(i instanceof Wire) && !(i instanceof Text))) {
                 const suffix = NetList.suffix(component.gid, instanceId);
                 simIds[component.gid] = component.declare(sim, config, suffix);
             }
