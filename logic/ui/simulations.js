@@ -229,6 +229,7 @@ Simulations.Simulation = class {
                 }
             }
         }
-        this.#stats = { nets: this.#netList.nets.length, gates };
+        const netDepth = this.#netList.longestSignalPath.length; // depth in nets, gates sit between nets, so we have to subtract 1 to get gate propagations
+        this.#stats = { nets: this.#netList.nets.length, gates, maxDelay: Math.max(0, netDepth - 1) };
     }
 }

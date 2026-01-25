@@ -141,7 +141,7 @@ class Application {
             this.grid.render();
         }
         if (sim) {
-            this.grid.setCircuitDetails(`Gates: ${sim.stats.gates}<br>Nets: ${sim.stats.nets}`);
+            this.grid.setCircuitDetails(`Gates: ${sim.stats.gates}<br>Max delay: ${sim.stats.maxDelay}<br>Nets: ${sim.stats.nets}`);
         }
         this.#renderLoop.framesCounted += 1;
         // handle both TPS smaller or larger than FPS

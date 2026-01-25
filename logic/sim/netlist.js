@@ -43,11 +43,6 @@ class NetList {
         return netList;
     }
 
-    // Identifies the longest signal path and returns its length in gates.
-    static #getLongestSignalPath(nets) {
-        return 0; // TODO
-    }
-
     // Returns a port suffix for the given gid and instance.
     static suffix(gid, instanceId) {
         return '@' + gid + '@' + instanceId;
@@ -359,6 +354,58 @@ class NetList {
     // Returns whether line-endpoints of one line intersect any point on the other line.
     static #endsIntersect(a, b) {
         return a[0].onLine(b) || a[1].onLine(b) || b[0].onLine(a) || b[1].onLine(a);
+    }
+
+    // Identifies the longest signal path for informational purposes.
+    static #getLongestSignalPath(nets) {
+        // identify outputs
+        const componentOutputs = new Map();
+        for (const net of nets) {
+            for (const port of net.ports) {
+                if (port.type === null && port.compareName === 'q') {
+                    const key = NetList.suffix(port.gid, port.instanceId);
+                    componentOutputs.set(key, net);
+                }
+            }
+        }
+        // find longest path from given net
+        const memo = new Map();
+        const visiting = new Set();
+        const getPath = (net) => {
+            if (memo.has(net)) {
+                return memo.get(net);
+            }
+            if (visiting.has(net)) {
+                return [];
+            }
+            visiting.add(net);
+            let maxSubPath = [];
+            for (const port of net.ports) {
+                if (port.type === null && port.compareName !== 'q') {
+                    const key = NetList.suffix(port.gid, port.instanceId);
+                    const outputNet = componentOutputs.get(key);
+                    if (outputNet) {
+                        const subPath = getPath(outputNet);
+                        if (subPath.length > maxSubPath.length) {
+                            maxSubPath = subPath;
+                        }
+                    }
+                }
+            }
+            visiting.delete(net);
+            const path = [net, ...maxSubPath];
+            memo.set(net, path);
+            return path;
+        };
+        // identify net with longest path
+        let longest = [];
+        for (const net of nets) {
+            const path = getPath(net);
+            if (path.length > longest.length) {
+                longest = path;
+            }
+        }
+        return longest;
     }
 }
 
