@@ -420,6 +420,18 @@ class File {
         startIn: 'documents',
         id: 'circuits',
     };
+    static IMPORT_OPTIONS = {
+        types: [
+            {
+                description: "Logisim circuit",
+                accept: {
+                    "text/xml": [ ".circ" ],
+                },
+            },
+        ],
+        startIn: 'documents',
+        id: 'imports',
+    };
 
     static async verifyPermission(fileHandle) {
         const opts = { mode: "readwrite" };
@@ -445,7 +457,51 @@ class File {
         return await window.showOpenFilePicker(options);
     }
 
+    static async importFile(existingHandle) {
+        const options = existingHandle ? { ...File.IMPORT_OPTIONS, startIn: existingHandle } : File.IMPORT_OPTIONS;
+        return await window.showOpenFilePicker(options);
+    }
+
     static makeName(name) {
         return (name || 'unnamed').replace(/\.stc$/, '').replace(/[^a-zA-Z0-9\-\_]/g, '-').replace(/^-+/, '') + '.stc';
+    }
+}
+
+class XML {
+    static parse(text) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(text, "text/xml");
+        if (doc.querySelector('parsererror') || !doc.documentElement) {
+            throw new Error('XML Parse Error');
+        }
+        const result = Object.create(null);
+        result[doc.documentElement.tagName] = XML.#nodeToObj(doc.documentElement);
+        return result;
+    }
+    static #nodeToObj(node) {
+        const obj = Object.create(null);
+        if (node.attributes) {
+            for (let i = 0; i < node.attributes.length; i++) {
+                const attr = node.attributes[i];
+                obj[attr.name] = attr.value;
+            }
+        }
+        for (let i = 0; i < node.childNodes.length; i++) {
+            const child = node.childNodes[i];
+            if (child.nodeType === Node.ELEMENT_NODE) {
+                const childObj = XML.#nodeToObj(child);
+                if (obj[child.tagName]) {
+                    obj[child.tagName].push(childObj);
+                } else {
+                    obj[child.tagName] = [ childObj ];
+                }
+            } else if (child.nodeType === Node.TEXT_NODE) {
+                const text = child.nodeValue.trim();
+                if (text) {
+                    obj['#text'] = (obj['#text'] ? obj['#text'] + '\n' : '') + text;
+                }
+            }
+        }
+        return obj;
     }
 }

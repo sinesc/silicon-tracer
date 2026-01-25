@@ -181,10 +181,14 @@ class Application {
             // Open and merge circuits from file to currently loaded circuits.
             const [ addButton ] = fileMenu.createActionButton('Merge...', 'Load additional circuits from a file, keeping open circuits.', async () => {
                 fileMenuState(false);
-                await this.circuits.loadFile(false); // TODO don't switch to new circuit
-                this.simulations.select(this.circuits.current, this.config.autoCompile);
+                await this.circuits.loadFile(false, false);
             });
             addButton.classList.toggle('toolbar-menu-button-disabled', this.circuits.allEmpty());
+            // Import circuits and add to currently loaded circuits.
+            fileMenu.createActionButton('Import...', 'Import .circ file.', async () => {
+                fileMenuState(false);
+                await this.circuits.importFile();
+            });
             fileMenu.createSeparator();
             // Save circuits to last opened file.
             const [ saveButton ] = fileMenu.createActionButton(this.circuits.fileName ? 'Save <i>' + this.circuits.fileName + '</i>' : 'Save', 'Save circuits to file.', async () => {

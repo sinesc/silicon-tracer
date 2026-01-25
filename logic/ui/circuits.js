@@ -23,8 +23,9 @@ class Circuits {
     }
 
     // Loads circuits from file, returning the filename if circuits was previously empty.
-    async loadFile(clear) {
+    async loadFile(clear, switchTo = true) {
         assert.bool(clear);
+        assert.bool(switchTo);
         const haveCircuits = !this.allEmpty();
         const [ handle ] = await File.openFile(this.#fileHandle);
         const file = await handle.getFile();
@@ -33,7 +34,9 @@ class Circuits {
             this.#circuits = {};
         }
         const newCircuitUID = this.unserialize(content);
-        this.select(newCircuitUID);
+        if (switchTo) {
+            this.select(newCircuitUID);
+        }
         if (clear || !haveCircuits) {
             // no other circuits loaded, make this the new file handle
             this.#fileHandle = handle;
@@ -41,6 +44,18 @@ class Circuits {
             return file.name;
         } else {
             return null;
+        }
+    }
+
+    // Import file and add circuits to loaded circuits.
+    async importFile() {
+        const [ handle ] = await File.importFile(this.#fileHandle);
+        const file = await handle.getFile();
+        const text = await file.text();
+        if (text.includes('This file is intended to be loaded by Logisim')) {
+            this.#importLogisim(text);
+        } else {
+            alert('Unsupported file format'); // lame
         }
     }
 
@@ -202,6 +217,50 @@ class Circuits {
     // Returns a generated name if the given name is empty.
     #generateName(name) {
         return name || 'New circuit #' + (count(this.#circuits) + 1);
+    }
+
+    // Import logisim circuits. This is the bare minimum to be useful and likely will never be complete.
+    #importLogisim(text) {
+
+        const facings = [ 'north', 'east', 'south', 'west' ];
+        const rotation = (f) => facings.indexOf(f ?? 'east');
+        const parseLoc = (l) => l.slice(1, -1).split(',').map((v) => Number.parseInt(v) / 10 * Grid.SPACING);
+        const makeAttr = (x) => {
+            for (const a of x.a ?? []) {
+                x[a.name] = a.val;
+            }
+            delete x.a;
+        };
+
+        for (const rawCircuit of XML.parse(text).project.circuit) {
+            makeAttr(rawCircuit);
+            const circuit = new Circuits.Circuit(rawCircuit.name);
+            // convert wires
+            for (const rawWire of rawCircuit.wire ?? []) {
+                const [ x1, y1 ] = parseLoc(rawWire.from);
+                const [ x2, y2 ] = parseLoc(rawWire.to);
+                const direction = x1 === x2 ? 'v' : 'h';
+                const length = x1 === x2 ? y2 - y1 : x2 - x1;
+                const wire = new Wire(this.#app, x1, y1, length, direction);
+                circuit.addItem(wire);
+            }
+            // convert components
+            for (const rawComp of rawCircuit.comp ?? []) {
+                makeAttr(rawComp);
+                if (rawComp.name === 'Pin') {
+                    const [ x, y ] = parseLoc(rawComp.loc);
+                    const port = new Port(this.#app, x, y, rotation(rawComp.facing));
+                    const offset = port.ports.find((p) => !!p).coords(port.width, port.height, port.rotation);
+                    port.x -= offset.x;
+                    port.y -= offset.y;
+                    port.name = rawComp.label ?? '';
+                    circuit.addItem(port);
+                }
+            }
+            this.add(circuit);
+        }
+
+        //console.log(content.project);
     }
 }
 
