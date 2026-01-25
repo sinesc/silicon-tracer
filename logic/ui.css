@@ -138,6 +138,7 @@ body.dragging * {
     padding: 5px;
     background-color: var(--header-bg-color);
     border-bottom: 1px solid var(--header-border-color);
+    white-space: nowrap;
 }
 #content {
     flex: 1 1 auto;
@@ -462,6 +463,13 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
     border: 2px solid var(--button-border-color);
     background-color: var(--button-bg-color);
     border-radius: 0 0 3px 3px;
+}
+.toolbar > .toolbar-menu-button > .toolbar-menu-container > .toolbar {
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+    position: relative;
+    scrollbar-color: var(--button-border-color) var(--button-bg-color);
+    scrollbar-width: thin;
 }
 .toolbar > .toolbar-menu-button > .toolbar-menu-container > .toolbar > .toolbar-button {
     margin: 0;
