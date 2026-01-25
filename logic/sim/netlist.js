@@ -5,23 +5,17 @@ class NetList {
     nets;
     unconnected;
     instances;
-
-    // Construct a new netlist.
-    constructor(nets, unconnectedWires, unconnectedPorts, instances) {
-        assert.array(nets);
-        assert.array(unconnectedWires);
-        assert.array(unconnectedPorts);
-        assert.array(instances);
-        this.nets = nets;
-        this.unconnected = { wires: unconnectedWires, ports: unconnectedPorts };
-        this.instances = instances;
-    }
+    longestSignalPath;
 
     // Identifies nets in the given circuit and returns a netlist, recursively if a uid=>circuit map of circuits is provided
     static identify(circuit, circuits = null) {
         assert.class(Circuits.Circuit, circuit);
         assert.object(circuits, true);
+
+        // identify hierarchy of customcomponents/circuits
         const instances = NetList.#buildInstanceTree(circuit, circuits);
+
+        // assemble the nets, identify unconnected items
         const nets = [];
         const unconnectedWires = [];
         const unconnectedPorts = [];
@@ -36,8 +30,22 @@ class NetList {
             }
             unconnectedWires.push(...instance.netItems.wires);
         }
+
+        // split networks containing multiple channels into individual networks
         NetList.#splitNetChannels(nets);
-        return new NetList(nets, unconnectedWires, unconnectedPorts, instances);
+
+        // construct and return
+        const netList = new NetList();
+        netList.nets = nets;
+        netList.unconnected = { wires: unconnectedWires, ports: unconnectedPorts };
+        netList.instances = instances;
+        netList.longestSignalPath = NetList.#getLongestSignalPath(nets);
+        return netList;
+    }
+
+    // Identifies the longest signal path and returns its length in gates.
+    static #getLongestSignalPath(nets) {
+        return 0; // TODO
     }
 
     // Returns a port suffix for the given gid and instance.
