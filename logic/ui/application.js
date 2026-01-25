@@ -216,7 +216,9 @@ class Application {
             const [ button ] = circuitMenu.createActionButton(`Remove "${this.circuits.current.label}"`, circuitList.length <= 1 ? 'Cannot remove last remaining circuit.' : 'Remove current circuit.', async () => {
                 circuitMenuState(false);
                 if (await confirmDialog('Confirm deletion',`Delete "${this.circuits.current.label}" from project?`)) {
+                    this.simulations.delete(this.circuits.current);
                     this.circuits.delete(this.circuits.current.uid);
+                    this.simulations.select(this.circuits.current, this.config.autoCompile);
                 }
             });
             button.classList.toggle('toolbar-menu-button-disabled', circuitList.length <= 1);
