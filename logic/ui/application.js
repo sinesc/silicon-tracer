@@ -8,6 +8,7 @@ class Application {
         autoCompile: true,
         singleStep: false,
         checkNetConflicts: true,
+        lockSimulation: false,
         debugCompileComments: false,
         debugShowGid: false,
         debugShowCoords: false,
@@ -169,6 +170,7 @@ class Application {
         // Add file operations to toolbar
         const [ , fileMenuState, fileMenu ] = this.toolbar.createMenuButton('File', 'File operations menu. <i>LMB</i> Open menu.', () => {
             fileMenu.clear();
+            // Open circuit file.
             fileMenu.createActionButton('Open...', 'Close all circuits and load new circuits from a file.', async () => {
                 fileMenuState(false);
                 await this.circuits.loadFile(true);
@@ -176,6 +178,7 @@ class Application {
                 this.simulations.select(this.circuits.current, this.config.autoCompile);
                 document.title = this.circuits.fileName + ' - Silicon Tracer';
             });
+            // Open and merge circuits from file to currently loaded circuits.
             const [ addButton ] = fileMenu.createActionButton('Merge...', 'Load additional circuits from a file, keeping open circuits.', async () => {
                 fileMenuState(false);
                 await this.circuits.loadFile(false); // TODO don't switch to new circuit
@@ -183,17 +186,20 @@ class Application {
             });
             addButton.classList.toggle('toolbar-menu-button-disabled', this.circuits.allEmpty());
             fileMenu.createSeparator();
+            // Save circuits to last opened file.
             const [ saveButton ] = fileMenu.createActionButton(this.circuits.fileName ? 'Save <i>' + this.circuits.fileName + '</i>' : 'Save', 'Save circuits to file.', async () => {
                 fileMenuState(false);
                 await this.circuits.saveFile();
             });
             saveButton.classList.toggle('toolbar-menu-button-disabled', !this.circuits.fileName);
+            // Save circuits as new file.
             fileMenu.createActionButton('Save as...', 'Save circuits to a new file.', async () => {
                 fileMenuState(false);
                 await this.circuits.saveFileAs();
                 document.title = this.circuits.fileName + ' - Silicon Tracer';
             });
             fileMenu.createSeparator();
+            // Close circuits.
             fileMenu.createActionButton('Close', 'Close all open circuits.', async () => {
                 fileMenuState(false);
                 this.circuits.closeFile();
@@ -207,12 +213,14 @@ class Application {
         const [ , circuitMenuState, circuitMenu ] = this.toolbar.createMenuButton('Circuit', 'Circuit management menu. <i>LMB</i> Open menu.', () => {
             const circuitList = this.circuits.list();
             circuitMenu.clear();
+            // Create new circuit.
             circuitMenu.createActionButton('New...', 'Create a new circuit.', async () => {
                 circuitMenuState(false);
                 if (await this.circuits.create()) {
                     this.simulations.select(this.circuits.current, this.config.autoCompile);
                 }
             });
+            // Remove current circuit.
             const [ button ] = circuitMenu.createActionButton(`Remove "${this.circuits.current.label}"`, circuitList.length <= 1 ? 'Cannot remove last remaining circuit.' : 'Remove current circuit.', async () => {
                 circuitMenuState(false);
                 if (await confirmDialog('Confirm deletion',`Delete "${this.circuits.current.label}" from project?`)) {
@@ -223,6 +231,7 @@ class Application {
             });
             button.classList.toggle('toolbar-menu-button-disabled', circuitList.length <= 1);
             circuitMenu.createSeparator();
+            // Switch circuit. Generate menu items for each circuit.
             for (const [ uid, label ] of circuitList) {
                 const isCurrentGrid = uid === this.grid.circuit.uid; // grid circuit may be different from current circuit when navigating through simulation subcomponents
                 const isCurrentCircuit = uid === this.circuits.current.uid;
@@ -260,7 +269,7 @@ class Application {
                     return `Stop "${this.simulations.current.label}"`;
                 }
             };
-            // Continuous simulation toggle
+            // Continuous simulation toggle.
             simulationMenu.createToggleButton('Autostart', 'Automatically starts a new simulation when switching circuits.', this.config.autoCompile, (enabled) => {
                 this.config.autoCompile = enabled;
                 if (enabled) {
@@ -269,12 +278,18 @@ class Application {
                 }
                 updateSimulationMenu();
             });
+            // Recompile simulation to flag conflicting networks (and show them in UI).
             simulationMenu.createToggleButton('Show net conflicts', 'Networks with conflicting gate outputs will be highlighted. Increases simulation complexity.', this.config.checkNetConflicts, (enabled) => {
                 this.config.checkNetConflicts = enabled;
                 this.simulations.markDirty(null)
                 if (enabled) {
                     this.simulations.select(this.circuits.current, this.config.autoCompile);
                 }
+                updateSimulationMenu();
+            });
+            // Lock simulation.
+            simulationMenu.createToggleButton('Lock simulation', 'Prevents accidental changes from resetting the simulation. Does not prevent the changes but they won\'t be included in the simulation.', this.config.lockSimulation, (enabled) => {
+                this.config.lockSimulation = enabled;
                 updateSimulationMenu();
             });
             // Simulate current grid
@@ -298,8 +313,8 @@ class Application {
                     this.simulations.select(this.circuits.current, true);
                 }
             });
-            // Simulate current grid
-            simulationMenu.createActionButton(`Set ticks/s (${Number.formatSI(this.config.targetTPS)})...`, 'Configure simulation speed', async () => {
+            // Configure simulation speed.
+            simulationMenu.createActionButton(`Set ticks/s (${Number.formatSI(this.config.targetTPS)})...`, 'Configure simulation speed.', async () => {
                 simulationMenuState(false);
                 const result = await dialog('Simulation speed', [ { label: "Ticks per second", name: "targetTPS", type: "int", check: (v, f) => { const p = Number.parseSI(v); return Number.isInteger(p) && p >= 1; } } ], { targetTPS: Number.formatSI(this.config.targetTPS, true) });
                 if (result) {
@@ -307,6 +322,7 @@ class Application {
                     this.simulations.updateClocks(this.config.targetTPS);
                 }
             });
+            // Switch simulation. Generate menu items for each running simulation.
             if (this.simulations.list().length > 0) {
                 simulationMenu.createSeparator();
             }

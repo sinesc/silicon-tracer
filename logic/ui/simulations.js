@@ -152,7 +152,7 @@ Simulations.Simulation = class {
 
     // Checks if the simulation requires recompilation/attachment (and does so if required).
     checkDirty() {
-        if (this.#dirty) {
+        if (this.#dirty && !this.#app.config.lockSimulation) {
             this.#compile();
             const circuit = this.#netList.instances[this.#instanceId].circuit
             if (this.#attached) {
