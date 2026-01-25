@@ -16,16 +16,19 @@ class ComponentPort {
     netIds = null;
 
     numChannels = null;
+    ioType = null;
 
-    constructor(name, originalSide, index, numChannels) {
+    constructor(name, originalSide, index, numChannels, ioType) {
         assert.string(name, true);
         assert.string(originalSide);
         assert.integer(index);
         assert.integer(numChannels, true);
+        assert.enum(['in', 'out'], ioType, true);
         this.name = name;
         this.originalSide = originalSide;
         this.index = index;
         this.numChannels = numChannels;
+        this.ioType = ioType;
     }
 
     // Removes port dom elements from grid.
@@ -192,17 +195,18 @@ class Component extends GridItem {
     // An id for the simulated component. This could be a constId, clockId, ....
     simId = null;
 
-    constructor(app, x, y, rotation, ports, type, numChannels = null) {
+    constructor(app, x, y, rotation, ports, type, numChannels = null, ioTypes = null) {
         assert.string(type);
         super(app, x, y);
         this.#rotation = rotation;
         this.#type = type;
-        this.setPortsFromNames(ports, numChannels);
+        this.setPortsFromNames(ports, numChannels, ioTypes);
     }
 
     // Builds ComponentPort instances from map of list of ports.
-    buildPortsFromNames(portNames, portChannels = null) {
+    buildPortsFromNames(portNames, portChannels = null, ioTypes = null) {
         assert.object(portNames);
+        assert.object(ioTypes, true);
         if (!Number.isInteger(portChannels)) {
             assert.object(portChannels, true);
         }
@@ -214,12 +218,12 @@ class Component extends GridItem {
             }
         }
         // convert port names to ComponentPort instances
-        return Object.map(ports, (side, sidePorts) => sidePorts.map((name, index) => new ComponentPort(name, side, index, Number.isInteger(portChannels) ? portChannels : (portChannels?.[name] ?? null))));
+        return Object.map(ports, (side, sidePorts) => sidePorts.map((name, index) => new ComponentPort(name, side, index, Number.isInteger(portChannels) ? portChannels : (portChannels?.[name] ?? null), ioTypes?.[name] ?? null)));
     }
 
     // Sets port names/locations and optionally channels per port or for all ports.
-    setPortsFromNames(portNames, portChannels = null) {
-        this.#ports = this.buildPortsFromNames(portNames, portChannels);
+    setPortsFromNames(portNames, portChannels = null, ioTypes = null) {
+        this.#ports = this.buildPortsFromNames(portNames, portChannels, ioTypes);
         this.updateDimensions();
         this.#findPortLabelCharPos();
     }

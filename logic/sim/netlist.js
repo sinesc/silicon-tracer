@@ -419,7 +419,8 @@ NetList.NetPort = class {
     type;
     uid;
     numChannels;
-    constructor(point, type, name, compareName, gid, instanceId, uid, numChannels) {
+    ioType;
+    constructor(point, type, name, compareName, gid, instanceId, uid, numChannels, ioType) {
         assert.class(Point, point);
         assert.enum([ 'ascend', 'descend', 'n-to-1', '1-to-n', 'tunnel' ], type, true);
         assert.string(name);
@@ -428,6 +429,7 @@ NetList.NetPort = class {
         assert.integer(instanceId);
         assert.string(uid, true);
         assert.integer(numChannels, true);
+        assert.enum(['in', 'out'], ioType, true);
         this.point = point;
         this.name = name;
         this.compareName = compareName;
@@ -436,6 +438,7 @@ NetList.NetPort = class {
         this.type = type;
         this.uid = uid;
         this.numChannels = numChannels;
+        this.ioType = ioType;
     }
     get uniqueName() {
         return this.name + NetList.suffix(this.gid, this.instanceId);

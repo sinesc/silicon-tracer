@@ -434,7 +434,7 @@ Circuits.Circuit = class {
                 const { x, y } = port.coords(component.width, component.height, component.rotation);
                 const compareName = component instanceof Port || component instanceof Tunnel ? component.name : port.name;
                 const portType = type ?? (component instanceof Splitter ? (port.name === Splitter.SINGLE_PORT_NAME ? '1-to-n' : 'n-to-1') : null);
-                ports.push(new NetList.NetPort(new Point(x + component.x, y + component.y), portType, port.name, compareName, component.gid, instanceId, uid, port.numChannels));
+                ports.push(new NetList.NetPort(new Point(x + component.x, y + component.y), portType, port.name, compareName, component.gid, instanceId, uid, port.numChannels, port.ioType));
             }
         }
         return { wires, ports };
