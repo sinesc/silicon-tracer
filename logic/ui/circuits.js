@@ -223,6 +223,47 @@ class Circuits {
     #importLogisim(text) {
 
         const facings = [ 'north', 'east', 'south', 'west' ];
+        const splitterOffsets = {
+            left: {
+                east: { x: 0, y: 1 },
+                south: { x: 0, y: 0 },
+                west: { x: 1, y: 0 },
+                north: { x: 1, y: 1 },
+            },
+            right: {
+                east: { x: 0, y: 0 },
+                south: { x: 1, y: 0 },
+                west: { x: 1, y: 1 },
+                north: { x: 0, y: 1 },
+            },
+            center: {
+                east: { x: 0, y: 0.5 },
+                south: { x: 0.5, y: 0 },
+                west: { x: 1, y: 0.5 },
+                north: { x: 0.5, y: 1 },
+            },
+        };
+        const splitterHelperWire = {
+            left: {
+                east: { x: 0, y: 1 },
+                south: { x: -1, y: 0 },
+                west: { x: 0, y: -1 },
+                north: { x: 1, y: 0 },
+            },
+            right: {
+                east: { x: 0, y: -1 },
+                south: { x: 1, y: 0 },
+                west: { x: 0, y: 1 },
+                north: { x: -1, y: 0 },
+            },
+            center: {
+                east: { x: 0, y: 1 },
+                south: null,
+                west: null,
+                north: { x: 1, y: 0 },
+            },
+        };
+
         const rotation = (f) => facings.indexOf(f ?? 'east');
         const parseLoc = (l) => l.slice(1, -1).split(',').map((v) => Number.parseInt(v) / 10 * Grid.SPACING);
         const makeAttr = (x) => {
@@ -250,17 +291,42 @@ class Circuits {
                 if (rawComp.name === 'Pin') {
                     const [ x, y ] = parseLoc(rawComp.loc);
                     const port = new Port(this.#app, x, y, rotation(rawComp.facing));
-                    const offset = port.ports.find((p) => !!p).coords(port.width, port.height, port.rotation);
+                    const offset = first(port.ports).coords(port.width, port.height, port.rotation);
                     port.x -= offset.x;
                     port.y -= offset.y;
                     port.name = rawComp.label ?? '';
                     circuit.addItem(port);
                 }
+                if (rawComp.name === 'Splitter') {
+                    // the splitter
+                    const [ x, y ] = parseLoc(rawComp.loc);
+                    const numSplits = Number.parseInt(rawComp.fanout ?? 2);
+                    const rawFacing = rawComp.facing ?? 'east';
+                    const rawAppear = rawComp.appear ?? 'left';
+                    const ordering = rawFacing === 'west' || rawFacing === 'north' ? 'rtl' : 'ltr';
+                    const orientation = rawAppear === 'left' ? (ordering === 'ltr' ? 'end' : 'start') : (rawAppear === 'right' ? (ordering === 'ltr' ? 'start' : 'end') : 'middle');
+                    const splitter = new Splitter(this.#app, x, y, rotation(rawFacing) + 1, numSplits, 'none', orientation, ordering);
+                    const offsets = splitterOffsets[rawAppear][rawFacing];
+                    splitter.x -= Math.ceil(splitter.width * offsets.x / Grid.SPACING) * Grid.SPACING;
+                    splitter.y -= Math.ceil(splitter.height * offsets.y / Grid.SPACING) * Grid.SPACING;
+                    circuit.addItem(splitter);
+                    // helper wire to attach the 1-port
+                    const helperDirection = splitterHelperWire[rawAppear][rawFacing] ?? null;
+                    if (helperDirection) {
+                        const singlePortOffset = splitter.portByName(Splitter.SINGLE_PORT_NAME).coords(splitter.width, splitter.height, splitter.rotation);
+                        const x1 = splitter.x + singlePortOffset.x;
+                        const y1 = splitter.y + singlePortOffset.y;
+                        const x2 = x1 + helperDirection.x * Grid.SPACING;
+                        const y2 = y1 + helperDirection.y * Grid.SPACING;
+                        const wire = new Wire(this.#app, x1, y1, Grid.SPACING, 'h'); // temporary coords/length...
+                        wire.setEndpoints(x1, y1, x2, y2); // ... we use more convenient api instead
+                        circuit.addItem(wire);
+                    }
+                }
             }
             this.add(circuit);
         }
 
-        //console.log(content.project);
     }
 }
 

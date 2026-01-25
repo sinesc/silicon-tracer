@@ -99,7 +99,7 @@ Object.defineProperty(String.prototype, "toUpperFirst", {
     }
 }
 
-// Returns the fractional part of a number
+// Returns the fractional part of a number.
 Math.fract = function(number) {
     return (number - (0 | number));
 }
@@ -140,6 +140,14 @@ function *values(iterable) {
     for (const [ k , v ] of pairs(iterable)) {
         yield v;
     }
+}
+
+// Returns the first value of an iterable or undefined if the iterable was empty.
+function first(iterable) {
+    for (const item of values(iterable)) {
+        return item;
+    }
+    return undefined;
 }
 
 // Normalizes javascript iteration mess. Counts items in an iterable.
