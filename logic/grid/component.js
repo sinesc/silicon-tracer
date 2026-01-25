@@ -196,9 +196,10 @@ class Component extends GridItem {
     simId = null;
 
     constructor(app, x, y, rotation, ports, type, numChannels = null, ioTypes = null) {
+        assert.integer(rotation);
         assert.string(type);
         super(app, x, y);
-        this.#rotation = rotation;
+        this.#rotation = rotation & 3;
         this.#type = type;
         this.setPortsFromNames(ports, numChannels, ioTypes);
     }
