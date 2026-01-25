@@ -3,6 +3,8 @@
 // IO port on a component.
 class ComponentPort {
 
+    static #SIDES = ['top','right','bottom','left'];
+
     name;
     originalSide;
     index;
@@ -35,7 +37,12 @@ class ComponentPort {
     }
 
     // Returns port coordinates for the given parent component width/height.
-    static portCoords(width, height, side, index, offsetCenter) {
+    static portCoords(width, height, side, index, offsetCenter = false) {
+        assert.integer(width);
+        assert.integer(height);
+        assert.enum(ComponentPort.#SIDES, side);
+        assert.integer(index);
+        assert.bool(offsetCenter);
         // for correct rotation required: top: left->right, right: top->bottom, bottom: right->left, left: bottom->top
         const map = {
             'top'   : { x: Grid.SPACING,            y: 0,                       stepX: Grid.SPACING },
@@ -50,23 +57,28 @@ class ComponentPort {
 
     // Returns the port side name after given component rotation is considered.
     static portSide(rotation, originalSide) {
+        assert.integer(rotation);
+        assert.enum(ComponentPort.#SIDES, originalSide);
         const index = Component.SIDES.indexOf(originalSide);
         return Component.SIDES[(index + rotation) % 4];
     }
 
     // Returns the port coordinates after component rotation is considered. Also requires component width and height as input.
-    coords(width, height, rotation, offsetCenter) {
+    coords(width, height, rotation, offsetCenter = false) {
         return ComponentPort.portCoords(width, height, this.side(rotation), this.index, offsetCenter);
     }
 
     // Returns the port side name after component rotation is considered.
     side(rotation) {
+        assert.integer(rotation);
         const index = Component.SIDES.indexOf(this.originalSide);
         return Component.SIDES[(index + rotation) % 4];
     }
 
     // Renders the port onto the given component
     render(component, labelCharPos = 0) {
+        assert.class(Component, component);
+        assert.integer(labelCharPos);
         const visualPortSize = Component.PORT_SIZE * component.grid.zoom;
         const visualPortInset = visualPortSize / 4;
         const side = this.side(component.rotation);
@@ -90,6 +102,14 @@ class ComponentPort {
 
     // Renders a label next to a port.
     static renderLabel(component, element, side, x, y, label, containPort = true, force = false) {
+        assert.class(Component, component);
+        assert.class(Node, element);
+        assert.enum(ComponentPort.#SIDES, side);
+        assert.number(x);
+        assert.number(y);
+        assert.string(label);
+        assert.bool(containPort);
+        assert.bool(force);
         if (label.length <= 1 && !force) {
             element.style.display = 'none';
         } else {
