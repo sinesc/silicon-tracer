@@ -21,8 +21,9 @@ class Builtin extends Component {
     #numChannels;
 
     constructor(app, x, y, rotation, type, numChannels = 1) {
-        const { left, right } = Builtin.#generatePorts(type);
-        super(app, x, y, rotation, { 'left': left, 'right': right }, type, numChannels);
+        const { left, right, inputs, outputs } = Builtin.#generatePorts(type);
+        const ioTypes = Object.fromEntries([ ...inputs.map((i) => [ i, 'in' ]), ...outputs.map((o) => [ o, 'out' ]) ]);
+        super(app, x, y, rotation, { 'left': left, 'right': right }, type, numChannels, ioTypes);
         this.#numChannels = numChannels;
         this.gates = Simulation.BUILTIN_MAP[type].statsGates;
     }
@@ -103,6 +104,6 @@ class Builtin extends Component {
             }
         }
 
-        return { left, right };
+        return { left, right, inputs, outputs };
     }
 }

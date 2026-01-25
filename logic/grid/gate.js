@@ -23,7 +23,8 @@ class Gate extends Component {
     constructor(app, x, y, rotation, type, numInputs, numChannels = 1) {
         assert.integer(numInputs);
         const { left, right, inputs, output } = Gate.#generatePorts(numInputs);
-        super(app, x, y, rotation, { 'left': left, 'right': right }, type, numChannels);
+        const ioTypes = Object.fromEntries([ ...inputs.map((i) => [ i, 'in' ]), [ output, 'out'] ]);
+        super(app, x, y, rotation, { 'left': left, 'right': right }, type, numChannels, ioTypes);
         this.inputs = inputs;
         this.output = output;
         this.#numChannels = numChannels;
