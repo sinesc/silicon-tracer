@@ -167,7 +167,9 @@ class GridItem {
     onDrag(x, y, status, what) {
         const selection = this.grid.selection;
         if (selection.length > 0 && this.selected) {
-            what.items ??= (new Array(selection.length)).fill(null, 0, selection.length).map((_) => ({})); // the ridiculousness that is js just to actually "fill" an array with distinct objects
+            if (status === 'start') {
+                what.items = (new Array(selection.length)).fill(null, 0, selection.length).map((_) => ({})); // excellent developer experience
+            }
             for (const [ index, item ] of pairs(this.grid.selection)) {
                 item.onMove(x, y, status, what.items[index]);
             }
