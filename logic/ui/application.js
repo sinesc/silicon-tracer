@@ -22,6 +22,7 @@ class Application {
             gate: 0,
             builtin: 0,
             text: 0,
+            constant: 1,
         },
     };
 
@@ -373,6 +374,11 @@ class Application {
         // add a pull resistor component
         this.toolbar.createComponentButton('Pull', `<b>Pull up/down resistor</b>. ${DRAG_MSG}`, (grid, x, y) => {
             return grid.addItem(new PullResistor(this, x, y, rotation.pull));
+        });
+
+        // add a constant component
+        this.toolbar.createComponentButton('Constant', `<b>Constant value</b>. ${DRAG_MSG}`, (grid, x, y) => {
+            return grid.addItem(new Constant(this, x, y, rotation.constant));
         });
 
         // add toggle buttons

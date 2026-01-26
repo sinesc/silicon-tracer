@@ -78,6 +78,8 @@ class GridItem {
             instance = new Toggle(app, ...cargs);
         } else if (cname === 'TextLabel') {
             instance = new TextLabel(app, ...cargs);
+        } else if (cname === 'Constant') {
+            instance = new Constant(app, ...cargs);
         } else {
             throw new Error('Invalid component type "' + cname + '"');
         }
