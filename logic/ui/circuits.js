@@ -370,7 +370,7 @@ class Circuits {
                     circuit.addItem(item);
                 } else if (rawComp.name === 'Text') {
                     const [ x, y ] = parseLoc(rawComp.loc);
-                    const item = new Text(this.#app, x, y, rotation(rawComp.facing ?? 'east') + 3, 200, rawComp.text);
+                    const item = new TextLabel(this.#app, x, y, rotation(rawComp.facing ?? 'east') + 3, 200, rawComp.text);
                     circuit.addItem(item);
                 }
             }

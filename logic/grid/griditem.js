@@ -76,6 +76,8 @@ class GridItem {
             instance = new Tunnel(app, ...cargs);
         } else if (cname === 'Toggle') {
             instance = new Toggle(app, ...cargs);
+        } else if (cname === 'TextLabel') {
+            instance = new TextLabel(app, ...cargs);
         } else {
             throw new Error('Invalid component type "' + cname + '"');
         }

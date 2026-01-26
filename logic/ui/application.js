@@ -382,7 +382,7 @@ class Application {
 
         // add text
         this.toolbar.createComponentButton('Text', `<b>Userdefined text message</b>. ${DRAG_MSG}`, (grid, x, y) => {
-            return grid.addItem(new Text(this, x, y, rotation.text));
+            return grid.addItem(new TextLabel(this, x, y, rotation.text));
         });
 
         // add gates

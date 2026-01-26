@@ -584,7 +584,7 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
 }
 
 /*
- * Base component
+ * Base component and text
  */
 .component, .text {
     z-index: 11;
@@ -603,11 +603,22 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
     border-radius: 6px;
     filter: grayscale(100%) sepia(100%) hue-rotate(var(--selection-hue)) brightness(var(--selection-brightness));
 }
+.text > .inner {
+    padding: 5px;
+    display: inline-block;
+}
 .component-drop-preview {
     z-index: 9;
     position: absolute;
     border-radius: 8px;
     outline: 2px solid var(--component-preview-color);
+    outline-offset: -4px;
+}
+.text-drop-preview {
+    z-index: 9;
+    position: absolute;
+    border-radius: 8px;
+    outline: 1px dashed var(--muted-text-color);
     outline-offset: -4px;
 }
 .component-rotate-animation {
