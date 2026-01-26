@@ -607,6 +607,28 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
     padding: 5px;
     display: inline-block;
 }
+.text.size-small > .inner {
+    font-size: calc(var(--zoom-factor) / 100 * 12px);
+}
+.text.size-medium > .inner {
+    font-size: calc(var(--zoom-factor) / 100 * 16px);
+}
+.text.size-large > .inner {
+    font-size: calc(var(--zoom-factor) / 100 * 24px);
+}
+.text.text-rotate-animation {
+    transition: transform var(--component-rotate-duration);
+    transform: rotate(90deg);
+}
+.text[data-text-rotation="1"] > .inner {
+    transform: rotate(90deg);
+}
+.text[data-text-rotation="2"] > .inner {
+    transform: rotate(180deg);
+}
+.text[data-text-rotation="3"] > .inner {
+    transform: rotate(270deg);
+}
 .component-drop-preview {
     z-index: 9;
     position: absolute;
