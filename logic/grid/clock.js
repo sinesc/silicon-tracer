@@ -39,14 +39,18 @@ class Clock extends SimulationComponent {
         const config = await dialog("Configure clock", Clock.EDIT_DIALOG, { frequency: Number.formatSI(this.frequency, true), rotation: this.rotation });
         if (config) {
             this.frequency = config.frequency;
-            this.rotation = config.rotation;
 
-            /*const sim = this.app.simulations.current;
-            if (this.simId !== null && sim) {
-                sim.engine.setClockFrequency(this.simId, this.frequency);
-            }*/
-
-            this.redraw();
+            if (this.rotation !== config.rotation) {
+                // rotation changed, need to rebuilt sim
+                this.rotation = config.rotation;
+                this.redraw();
+            } else {
+                // only frequency may have changed, just set it without restaring the sim
+                const sim = this.app.simulations.current;
+                if (this.simId !== null && sim) {
+                    sim.engine.setClockFrequency(this.simId, this.frequency);
+                }
+            }
         }
     }
 }
