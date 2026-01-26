@@ -37,7 +37,7 @@ class NetList {
 
         // construct and return
         const netList = new NetList();
-        netList.nets = nets;
+        netList.nets = nets;  // FIXME: nets needs to be ordered to get reproducable/compatible compile results when the circuit item order changes without the actual logic changing
         netList.unconnected = { wires: unconnectedWires, ports: unconnectedPorts };
         netList.instances = instances;
         netList.longestSignalPath = recurse ? NetList.#getLongestSignalPath(nets): 0; // only useful on full identify
@@ -82,7 +82,6 @@ class NetList {
 
     // Returns a string representation of this netlist. Used to compare netlists and check if nets changed.
     toString() {
-        // FIXME: this needs to be ordered. internally order not stable and irrelevant but unordered output can't easily be compared for changes.
         return JSON.stringify(this.nets);
     }
 

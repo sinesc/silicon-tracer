@@ -1,6 +1,6 @@
 "use strict";
 
-// An IO port to interface with other circuits.
+// A toggleable button with saved state.
 class Toggle extends SimulationComponent {
 
     static EDIT_DIALOG = [
@@ -25,7 +25,7 @@ class Toggle extends SimulationComponent {
         super.link(grid);
         this.setHoverMessage(this.inner, () => `Toggle button <b>${this.name}</b>. <i>1</i> Set high, <i>2</i> Set low, <i>3</i> Unset, <i>E</i> Edit, ${Component.HOTKEYS}.`, { type: 'hover' });
         this.#labelElement = element(this.element, 'div', 'port-name');
-        this.element.classList.add('port'); // reuse port css here
+        this.element.classList.add('port', 'status-outline'); // reuse port lightbulb css here
     }
 
     // Serializes the object for writing to disk.
@@ -78,7 +78,7 @@ class Toggle extends SimulationComponent {
 
     // Handle edit hotkey.
     async onEdit() {
-        const config = await dialog("Configure port", Toggle.EDIT_DIALOG, { name: this.name, rotation: this.rotation, state: this.#state === null ? '-1' : this.#state }, this);
+        const config = await dialog("Configure button", Toggle.EDIT_DIALOG, { name: this.name, rotation: this.rotation, state: this.#state === null ? '-1' : this.#state }, this);
         if (config) {
             this.name = config.name;
             this.rotation = config.rotation;
@@ -87,7 +87,7 @@ class Toggle extends SimulationComponent {
         }
     }
 
-    // Renders the port onto the grid.
+    // Renders the toggle onto the grid.
     render() {
         if (!super.render()) {
             return false;

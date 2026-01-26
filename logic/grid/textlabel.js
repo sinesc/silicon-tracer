@@ -4,8 +4,8 @@
 class TextLabel extends GridItem {
 
     static #EDIT_DIALOG = [
-        { name: 'text', label: 'text', type: 'string', check: (v, f) => v.trim().length > 0 },
-        { name: 'maxLength', label: 'Line width', type: 'int', check: (v, f) => { const p = Number.parseInt(v); return isFinite(p) && p >= Grid.SPACING; } },
+        { name: 'text', label: 'Text', type: 'string', check: (v, f) => v.trim().length > 0 },
+        { name: 'maxLength', label: 'Max. width', type: 'int', check: (v, f) => { const p = Number.parseInt(v); return isFinite(p) && p >= Grid.SPACING; } },
         //...Component.EDIT_DIALOG,
     ];
 
@@ -149,7 +149,7 @@ class TextLabel extends GridItem {
 
     // Handle edit hotkey.
     async onEdit() {
-        const config = await dialog("Configure splitter", TextLabel.#EDIT_DIALOG, { text: this.#text, maxLength: this.width, rotation: this.rotation });
+        const config = await dialog("Configure text element", TextLabel.#EDIT_DIALOG, { text: this.#text, maxLength: this.width, rotation: this.rotation });
         if (config) {
             this.#text = config.text;
             this.width = config.maxLength;

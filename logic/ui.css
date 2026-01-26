@@ -741,78 +741,78 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
 .grid-zoom-below-85 .component > .port-name  {
     display: none !important;
 }
-.component.port[data-net-state] > .component-inner {
+.component.status-outline[data-net-state] > .component-inner {
     outline: 4px solid transparent;
     outline-offset: -4px;
 }
-.component.port[data-net-state="-1"] > .component-inner:has(+div[data-net-color]) {
+.component.status-outline[data-net-state="-1"] > .component-inner:has(+div[data-net-color]) {
     outline-color: var(--wire-colorE1);
     box-shadow: 1px 1px 3px var(--wire-colorE2-alpha), -1px -1px 3px var(--wire-colorE2-alpha);
 }
-.component.port[data-net-state="1"] > .component-inner:has(+div[data-net-color="0"]) {
+.component.status-outline[data-net-state="1"] > .component-inner:has(+div[data-net-color="0"]) {
     outline-color: var(--wire-color0-high);
     box-shadow: 1px 1px 3px var(--wire-color0-high-alpha), -1px -1px 3px var(--wire-color0-high-alpha);
 }
-.component.port[data-net-state="0"] > .component-inner:has(+div[data-net-color="1"]) {
+.component.status-outline[data-net-state="0"] > .component-inner:has(+div[data-net-color="1"]) {
     outline-color: var(--wire-color1-low);
 }
-.component.port[data-net-state="1"] > .component-inner:has(+div[data-net-color="1"]) {
+.component.status-outline[data-net-state="1"] > .component-inner:has(+div[data-net-color="1"]) {
     outline-color: var(--wire-color1-high);
     box-shadow: 1px 1px 3px var(--wire-color1-high-alpha), -1px -1px 3px var(--wire-color1-high-alpha);
 }
-.component.port[data-net-state="0"] > .component-inner:has(+div[data-net-color="2"]) {
+.component.status-outline[data-net-state="0"] > .component-inner:has(+div[data-net-color="2"]) {
     outline-color: var(--wire-color2-low);
 }
-.component.port[data-net-state="1"] > .component-inner:has(+div[data-net-color="2"]) {
+.component.status-outline[data-net-state="1"] > .component-inner:has(+div[data-net-color="2"]) {
     outline-color: var(--wire-color2-high);
     box-shadow: 1px 1px 3px var(--wire-color2-high-alpha), -1px -1px 3px var(--wire-color2-high-alpha);
 }
-.component.port[data-net-state="0"] > .component-inner:has(+div[data-net-color="3"]) {
+.component.status-outline[data-net-state="0"] > .component-inner:has(+div[data-net-color="3"]) {
     outline-color: var(--wire-color3-low);
 }
-.component.port[data-net-state="1"] > .component-inner:has(+div[data-net-color="3"]) {
+.component.status-outline[data-net-state="1"] > .component-inner:has(+div[data-net-color="3"]) {
     outline-color: var(--wire-color3-high);
     box-shadow: 1px 1px 3px var(--wire-color3-high-alpha), -1px -1px 3px var(--wire-color3-high-alpha);
 }
-.component.port[data-net-state="0"] > .component-inner:has(+div[data-net-color="4"]) {
+.component.status-outline[data-net-state="0"] > .component-inner:has(+div[data-net-color="4"]) {
     outline-color: var(--wire-color4-low);
 }
-.component.port[data-net-state="1"] > .component-inner:has(+div[data-net-color="4"]) {
+.component.status-outline[data-net-state="1"] > .component-inner:has(+div[data-net-color="4"]) {
     outline-color: var(--wire-color4-high);
     box-shadow: 1px 1px 3px var(--wire-color4-high-alpha), -1px -1px 3px var(--wire-color4-high-alpha);
 }
-.component.port[data-net-state="0"] > .component-inner:has(+div[data-net-color="5"]) {
+.component.status-outline[data-net-state="0"] > .component-inner:has(+div[data-net-color="5"]) {
     outline-color: var(--wire-color5-low);
 }
-.component.port[data-net-state="1"] > .component-inner:has(+div[data-net-color="5"]) {
+.component.status-outline[data-net-state="1"] > .component-inner:has(+div[data-net-color="5"]) {
     outline-color: var(--wire-color5-high);
     box-shadow: 1px 1px 3px var(--wire-color5-high-alpha), -1px -1px 3px var(--wire-color5-high-alpha);
 }
-.component.port[data-net-state="0"] > .component-inner:has(+div[data-net-color="6"]) {
+.component.status-outline[data-net-state="0"] > .component-inner:has(+div[data-net-color="6"]) {
     outline-color: var(--wire-color6-low);
 }
-.component.port[data-net-state="1"] > .component-inner:has(+div[data-net-color="6"]) {
+.component.status-outline[data-net-state="1"] > .component-inner:has(+div[data-net-color="6"]) {
     outline-color: var(--wire-color6-high);
     box-shadow: 1px 1px 3px var(--wire-color6-high-alpha), -1px -1px 3px var(--wire-color6-high-alpha);
 }
-.component.port[data-net-state="0"] > .component-inner:has(+div[data-net-color="7"]) {
+.component.status-outline[data-net-state="0"] > .component-inner:has(+div[data-net-color="7"]) {
     outline-color: var(--wire-color7-low);
 }
-.component.port[data-net-state="1"] > .component-inner:has(+div[data-net-color="7"]) {
+.component.status-outline[data-net-state="1"] > .component-inner:has(+div[data-net-color="7"]) {
     outline-color: var(--wire-color7-high);
     box-shadow: 1px 1px 3px var(--wire-color7-high-alpha), -1px -1px 3px var(--wire-color7-high-alpha);
 }
-.component.port[data-net-state="0"] > .component-inner:has(+div[data-net-color="8"]) {
+.component.status-outline[data-net-state="0"] > .component-inner:has(+div[data-net-color="8"]) {
     outline-color: var(--wire-color8-low);
 }
-.component.port[data-net-state="1"] > .component-inner:has(+div[data-net-color="8"]) {
+.component.status-outline[data-net-state="1"] > .component-inner:has(+div[data-net-color="8"]) {
     outline-color: var(--wire-color8-high);
     box-shadow: 1px 1px 3px var(--wire-color8-high-alpha), -1px -1px 3px var(--wire-color8-high-alpha);
 }
-.component.port[data-net-state="0"] > .component-inner:has(+div[data-net-color="9"]) {
+.component.status-outline[data-net-state="0"] > .component-inner:has(+div[data-net-color="9"]) {
     outline-color: var(--wire-color9-low);
 }
-.component.port[data-net-state="1"] > .component-inner:has(+div[data-net-color="9"]) {
+.component.status-outline[data-net-state="1"] > .component-inner:has(+div[data-net-color="9"]) {
     outline-color: var(--wire-color9-high);
     box-shadow: 1px 1px 3px var(--wire-color9-high-alpha), -1px -1px 3px var(--wire-color9-high-alpha);
 }
