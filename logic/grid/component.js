@@ -283,10 +283,6 @@ class Component extends GridItem {
         }
     }
 
-    // Implement to declare component simulation item.
-    declare(sim, config, suffix) {
-    }
-
     // Return whether the element is selected.
     get selected() {
         return this.#element.classList.contains('selected');
@@ -581,5 +577,16 @@ class Component extends GridItem {
             abbrev[key] = pos;
         }
         this.#portLabelCharPos = abbrev;
+    }
+}
+
+// Component subclass used to identify components that are removed/replaced during NetList processing.
+class VirtualComponent extends Component { }
+
+// Component subclass used to identify components that are compiled into the simulation.
+class SimulationComponent extends Component {
+    // Implement to declare component simulation item.
+    declare(sim, config, suffix) {
+        return null;
     }
 }

@@ -496,7 +496,7 @@ Circuits.Circuit = class {
                     const component = this.itemByGID(gid);
                     if (component) {
                         const port = component.portByName(name);
-                        port.netIds ??= []; // TODO: error here after changing port names in sub-circuit: this is because the port change is not propagated from the modified sub-circuit to all custom components that represent that circuit yet. this needs to be added in or before NetList.identify
+                        port.netIds ??= [];
                         port.netIds.push(net.netId);
                     }
                 }
@@ -542,7 +542,7 @@ Circuits.Circuit = class {
             .map((w) => new NetList.NetWire([ new Point(w.x, w.y), new Point(w.x + w.width, w.y + w.height) ], w.gid, instanceId));
         // get all component ports
         const ports = [];
-        for (const component of this.#data.filter((i) => !(i instanceof Wire) && !(i instanceof Text))) {
+        for (const component of this.#data.filter((i) => (i instanceof SimulationComponent) || (i instanceof VirtualComponent))) {
             const uid = component instanceof CustomComponent ? component.uid : null;
             const type = component instanceof CustomComponent ? 'descend' : (component instanceof Port ? 'ascend' : (component instanceof Tunnel ? 'tunnel' : null));
             for (const port of component.ports) {

@@ -1,7 +1,7 @@
 "use strict";
 
 // Custom circuit represented as a component.
-class CustomComponent extends Component {
+class CustomComponent extends VirtualComponent {
 
     static EDIT_DIALOG = [
         //{ name: 'label', label: 'Component label', type: 'string' },

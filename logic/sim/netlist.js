@@ -63,7 +63,7 @@ class NetList {
         const sim = new Simulation(config.debugCompileComments, config.checkNetConflicts);
         // declare items
         for (const [instanceId, { circuit, simIds }] of this.instances.entries()) {
-            for (const component of circuit.items.filter((i) => !(i instanceof Wire) && !(i instanceof Text))) {
+            for (const component of circuit.items.filter((i) => i instanceof SimulationComponent)) {
                 const suffix = NetList.suffix(component.gid, instanceId);
                 simIds[component.gid] = component.declare(sim, config, suffix);
             }
@@ -72,7 +72,7 @@ class NetList {
         for (const net of this.nets) {
             // create new net from connected gate i/o-ports
             const debugPortComponents = net.ports.filter((p) => this.instances[p.instanceId].circuit.itemByGID(p.gid) instanceof Port).map((p) => p.uniqueName);
-            const attachedPorts = net.ports.filter((p) => { const c = this.instances[p.instanceId].circuit.itemByGID(p.gid); return (c instanceof Component) && !(c instanceof CustomComponent) && !(c instanceof Splitter) && !(c instanceof Tunnel); }).map((p) => p.uniqueName); // TODO: improve check here, either by new common base class or add Set of declared gids and check it here
+            const attachedPorts = net.ports.filter((p) => this.instances[p.instanceId].circuit.itemByGID(p.gid) instanceof SimulationComponent).map((p) => p.uniqueName);
             net.netId = sim.declareNet(attachedPorts, debugPortComponents);
         }
         // compile

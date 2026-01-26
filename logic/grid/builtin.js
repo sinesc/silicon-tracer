@@ -1,7 +1,7 @@
 "use strict";
 
 // Basic gate-like builtin component.
-class Builtin extends Component {
+class Builtin extends SimulationComponent {
 
     static EDIT_DIALOG = [
         ...Component.EDIT_DIALOG,

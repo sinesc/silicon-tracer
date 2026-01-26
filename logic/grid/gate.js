@@ -1,7 +1,7 @@
 "use strict";
 
 // Basic logic gate component.
-class Gate extends Component {
+class Gate extends SimulationComponent {
 
     static #START_LETTER = 97; // 65 for capitalized
     static #UNARY = Object.keys(Object.filter(Simulation.GATE_MAP, (k, v) => v.joinOp === null));

@@ -1,7 +1,7 @@
 "use strict";
 
 // An IO port to interface with other circuits.
-class Port extends Component {
+class Port extends SimulationComponent {
 
     static EDIT_DIALOG = [
         { name: 'name', label: 'Name', type: 'string', check: function(v, f) { return v === '' || this.checkNameIsUnique(v, this.grid.circuit) } },

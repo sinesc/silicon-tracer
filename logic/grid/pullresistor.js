@@ -1,7 +1,7 @@
 "use strict";
 
 // Basic clock provider.
-class PullResistor extends Component {
+class PullResistor extends SimulationComponent {
 
     static EDIT_DIALOG = [
         { name: 'direction', label: 'Pull direction', type: 'select', options: { "up": "Up", "down": "Down" } },

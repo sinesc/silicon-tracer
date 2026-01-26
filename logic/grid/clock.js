@@ -1,7 +1,7 @@
 "use strict";
 
 // Basic clock provider.
-class Clock extends Component {
+class Clock extends SimulationComponent {
 
     static EDIT_DIALOG = [
         { name: 'frequency', label: 'Frequency in Hz', type: 'int', check: (v, f) => { const p = Number.parseSI(v, true); return isFinite(p) && p >= 1; } },

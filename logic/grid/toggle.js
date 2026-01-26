@@ -1,7 +1,7 @@
 "use strict";
 
 // An IO port to interface with other circuits.
-class Toggle extends Component {
+class Toggle extends SimulationComponent {
 
     static EDIT_DIALOG = [
         { name: 'name', label: 'Label', type: 'string' },

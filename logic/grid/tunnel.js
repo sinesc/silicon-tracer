@@ -1,7 +1,7 @@
 "use strict";
 
 // A network tunnel connecting all tunnels of the same name/circuit.
-class Tunnel extends Component {
+class Tunnel extends VirtualComponent {
 
     static EDIT_DIALOG = [
         { name: 'name', label: 'Network name', type: 'string' /*, check: (v, f) => v !== '' */ },
@@ -32,11 +32,6 @@ class Tunnel extends Component {
             _: { c: this.constructor.name, a: [ this.x, this.y, this.rotation ]},
             name: this.name,
         };
-    }
-
-    // Declare component simulation item.
-    declare(sim, config, suffix) {
-        return null;
     }
 
     // Handle edit hotkey.

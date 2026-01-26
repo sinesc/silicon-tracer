@@ -1,7 +1,7 @@
 "use strict";
 
 // Wire splitter/joiner.
-class Splitter extends Component {
+class Splitter extends VirtualComponent {
 
     static MULTI_PORT_TEMPLATE = 'n{i}';
     static SINGLE_PORT_NAME = 'm';
@@ -44,11 +44,6 @@ class Splitter extends Component {
         super.link(grid);
         this.element.classList.add('splitter');
         this.setHoverMessage(this.inner, `<b>Wire-splitter/joiner</b>. <i>E</i> Edit, ${Component.HOTKEYS}.`, { type: 'hover' });
-    }
-
-    // Declare component simulation item.
-    declare(sim, config, suffix) {
-        return null;
     }
 
     // Handle edit hotkey.
