@@ -10,11 +10,18 @@ class Builtin extends SimulationComponent {
     static LABELS = {
         latch: 'D latch',
         flipflop: 'D flip-flip',
-        buffer3: 'Tri-state buffer',
-        not3: 'Tri-state not',
+        buffer3: 'Buffer 3',
+        not3: 'Not 3',
         mux3: 'Tri-state mux',
         demux3: 'Tri-state demux',
         adder: 'Full adder',
+    };
+
+    static LAYOUT_OVERRIDES = {
+        buffer3: { left: [ 'data' ], right: [ 'q' ], top: [ null ], bottom: [ 'enable' ] },
+        not3: { left: [ 'data' ], right: [ 'q' ], top: [ null ], bottom: [ 'enable' ] },
+        mux3: { left: [ 'select', 'a', 'b'  ], right: [ null, 'q', null ], top: [ null ], bottom: [ 'enable' ] },
+        demux3: { left: [ 'select', null, 'data'  ], right: [ 'qa', null, 'qb' ], top: [ null ], bottom: [ 'enable' ] },
     };
 
     gates;
@@ -23,7 +30,7 @@ class Builtin extends SimulationComponent {
     constructor(app, x, y, rotation, type, numChannels = 1) {
         const { left, right, inputs, outputs } = Builtin.#generatePorts(type);
         const ioTypes = Object.fromEntries([ ...inputs.map((i) => [ i, 'in' ]), ...outputs.map((o) => [ o, 'out' ]) ]);
-        super(app, x, y, rotation, { 'left': left, 'right': right }, type, numChannels, ioTypes);
+        super(app, x, y, rotation, Builtin.LAYOUT_OVERRIDES[type] ?? { 'left': left, 'right': right }, type, numChannels, ioTypes);
         this.#numChannels = numChannels;
         this.gates = Simulation.BUILTIN_MAP[type].statsGates;
     }
