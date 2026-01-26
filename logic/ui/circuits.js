@@ -357,14 +357,9 @@ class Circuits {
                     const item = new Clock(this.#app, x, y, rotation(rawComp.facing ?? 'east') + 3);
                     offsetPort(item, 'c');
                     circuit.addItem(item);
-                } else if (rawComp.name === 'NOT Gate') {
+                } else if ([ 'NOT Gate', 'Buffer' ].includes(rawComp.name)) {
                     const [ x, y ] = parseLoc(rawComp.loc);
-                    const item = new Gate(this.#app, x, y, rotation(rawComp.facing ?? 'east') + 3, 'not', 1);
-                    offsetPort(item, 'q');
-                    circuit.addItem(item);
-                } else if (rawComp.name === 'Buffer') {
-                    const [ x, y ] = parseLoc(rawComp.loc);
-                    const item = new Gate(this.#app, x, y, rotation(rawComp.facing ?? 'east') + 3, 'buffer', 1);
+                    const item = new Gate(this.#app, x, y, rotation(rawComp.facing ?? 'east') + 3, rawComp.name.split(' ', 1)[0].toLowerCase(), 1);
                     offsetPort(item, 'q');
                     circuit.addItem(item);
                 } else if ([ 'AND Gate', 'OR Gate', 'XOR Gate',  'NAND Gate', 'NOR Gate', 'XNOR Gate' ].includes(rawComp.name)) {
@@ -372,6 +367,10 @@ class Circuits {
                     const inputs = Number.parseInt(rawComp.inputs ?? '2');
                     const item = new Gate(this.#app, x, y, rotation(rawComp.facing ?? 'east') + 3, rawComp.name.split(' ', 1)[0].toLowerCase(), inputs);
                     offsetPort(item, 'q');
+                    circuit.addItem(item);
+                } else if (rawComp.name === 'Text') {
+                    const [ x, y ] = parseLoc(rawComp.loc);
+                    const item = new Text(this.#app, x, y, rotation(rawComp.facing ?? 'east') + 3, 200, rawComp.text);
                     circuit.addItem(item);
                 }
             }
