@@ -304,20 +304,18 @@ class Circuits {
             // convert components
             for (const rawComp of rawCircuit.comp ?? []) {
                 makeAttr(rawComp);
+                const [ x, y ] = parseLoc(rawComp.loc);
                 if (rawComp.lib === undefined && circuitLookup[rawComp.name]) {
                     // custom component
-                    const [ x, y ] = parseLoc(rawComp.loc);
                     const item = new CustomComponent(this.#app, x, y, 0, circuitLookup[rawComp.name]);
                     circuit.addItem(item);
                 } else if (rawComp.name === 'Pin') {
-                    const [ x, y ] = parseLoc(rawComp.loc);
                     const item = new Port(this.#app, x, y, rotation(rawComp.facing));
                     offsetPort(item, '');
                     item.name = rawComp.label ?? '';
                     circuit.addItem(item);
                 } else if (rawComp.name === 'Splitter') {
                     // splitter
-                    const [ x, y ] = parseLoc(rawComp.loc);
                     const numSplits = Number.parseInt(rawComp.fanout ?? 2);
                     const rawFacing = rawComp.facing ?? 'east';
                     const rawAppear = rawComp.appear ?? 'left';
@@ -341,35 +339,45 @@ class Circuits {
                         circuit.addItem(wire);
                     }
                 } else if (rawComp.name === 'Tunnel') {
-                    const [ x, y ] = parseLoc(rawComp.loc);
                     const item = new Tunnel(this.#app, x, y, rotation(rawComp.facing ?? 'west'));
                     offsetPort(item, '');
                     item.name = rawComp.label ?? '';
                     circuit.addItem(item);
                 } else if (rawComp.name === 'Pull Resistor') {
-                    const [ x, y ] = parseLoc(rawComp.loc);
                     const direction = rawComp.pull === '1' ? 'up' : 'down';
                     const item = new PullResistor(this.#app, x, y, rotation(rawComp.facing ?? 'south') + 3, direction);
                     offsetPort(item, 'q');
                     circuit.addItem(item);
                 } else if (rawComp.name === 'Clock') {
-                    const [ x, y ] = parseLoc(rawComp.loc);
                     const item = new Clock(this.#app, x, y, rotation(rawComp.facing ?? 'east') + 3);
                     offsetPort(item, 'c');
                     circuit.addItem(item);
                 } else if ([ 'NOT Gate', 'Buffer' ].includes(rawComp.name)) {
-                    const [ x, y ] = parseLoc(rawComp.loc);
                     const item = new Gate(this.#app, x, y, rotation(rawComp.facing ?? 'east') + 3, rawComp.name.split(' ', 1)[0].toLowerCase(), 1);
                     offsetPort(item, 'q');
                     circuit.addItem(item);
                 } else if ([ 'AND Gate', 'OR Gate', 'XOR Gate',  'NAND Gate', 'NOR Gate', 'XNOR Gate' ].includes(rawComp.name)) {
-                    const [ x, y ] = parseLoc(rawComp.loc);
                     const inputs = Number.parseInt(rawComp.inputs ?? '2');
                     const item = new Gate(this.#app, x, y, rotation(rawComp.facing ?? 'east') + 3, rawComp.name.split(' ', 1)[0].toLowerCase(), inputs);
                     offsetPort(item, 'q');
                     circuit.addItem(item);
+                } else if (rawComp.name === 'Ground') {
+                    const item = new Constant(this.#app, x, y, rotation(rawComp.facing ?? 'south') + 2, 0);
+                    offsetPort(item, '');
+                    circuit.addItem(item);
+                } else if (rawComp.name === 'Power') {
+                    const item = new Constant(this.#app, x, y, rotation(rawComp.facing ?? 'north') + 2, 1);
+                    offsetPort(item, '');
+                    circuit.addItem(item);
+                } else if (rawComp.name === 'Constant') {
+                    const item = new Constant(this.#app, x, y, rotation(rawComp.facing ?? 'east'), rawComp.value === '0x1' ? 1 : 0);
+                    offsetPort(item, '');
+                    circuit.addItem(item);
+                } else if ([ 'Controlled Buffer', 'Controlled Inverter' ].includes(rawComp.name)) {
+                    const item = new Builtin(this.#app, x, y, rotation(rawComp.facing ?? 'east') + 3, rawComp.name === 'Controlled Buffer' ? 'buffer3' : 'not3');
+                    offsetPort(item, 'q');
+                    circuit.addItem(item);
                 } else if (rawComp.name === 'Text') {
-                    const [ x, y ] = parseLoc(rawComp.loc);
                     const item = new TextLabel(this.#app, x, y, rotation(rawComp.facing ?? 'east') + 3, 200, rawComp.text);
                     circuit.addItem(item);
                 }
