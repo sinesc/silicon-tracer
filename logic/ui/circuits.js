@@ -222,6 +222,7 @@ class Circuits {
     // Import logisim circuits. This is the bare minimum to be useful and likely will never be complete.
     #importLogisim(text) {
 
+        const portExplainer = 'Scroll up. Import has replaced circuit pins with tunnels connected to the ports above to allow for placing the ports such that the resulting component shape matches the original shape and properly connects to existing circuits.';
         const facings = [ 'north', 'east', 'south', 'west' ];
         const splitterOffsets = {
             left: {
@@ -266,7 +267,8 @@ class Circuits {
 
         const rotation = (f) => facings.indexOf(f ?? 'east');
         const parseLoc = (l) => l.slice(1, -1).split(',').map((v) => Number.parseInt(v) / 10 * Grid.SPACING);
-        const offsetPort= (item, name) => {
+        const parseDim = (n) => Number.parseInt(n) / 10 * Grid.SPACING;
+        const offsetPort = (item, name) => {
             const offset = item.portByName(name).coords(item.width, item.height, item.rotation);
             item.x -= offset.x;
             item.y -= offset.y;
@@ -280,18 +282,50 @@ class Circuits {
 
         const contents = XML.parse(text).project;
 
-        // first create all circuits as they may be included as subcomponents.
+        // first create all circuits as they may be included as subcomponents
+        // also identify port layout bounding box (so that we can figure out which ports are on the left/right/top/bottom of the box)
         const circuitLookup = {};
         for (const rawCircuit of contents.circuit) {
             makeAttr(rawCircuit);
-            const circuit = new Circuits.Circuit(rawCircuit.name);
-            circuitLookup[rawCircuit.name] = circuit.uid;
+            const circuit = new Circuits.Circuit(rawCircuit.name, null, [], {}, { parity: "none" });
+            const anchor = rawCircuit.appear?.[0]?.['circ-anchor']?.[0] ?? { x: 0, y: 0, facing: 'east' };
+            circuitLookup[rawCircuit.name] = {
+                uid: circuit.uid,
+                offsetX: Number.parseInt(anchor.x) / 10 * Grid.SPACING, // TODO need to subtract top left corner of that subcircuit :/
+                offsetY: Number.parseInt(anchor.y) / 10 * Grid.SPACING,
+                facing: anchor.facing,
+            };
+            if (rawCircuit.appear?.[0]?.['circ-port']) {
+                circuit.addItem(new TextLabel(this.#app, Grid.SPACING, Grid.SPACING, 0, 800, portExplainer, 'small', 3));
+                const layout = circuitLookup[rawCircuit.name];
+                const portLayout = rawCircuit.appear[0]['circ-port'].map((p) => ({
+                    pin: p.pin,
+                    x: Number.parseInt(p.x) / 10 * Grid.SPACING,
+                    y: Number.parseInt(p.y) / 10 * Grid.SPACING,
+                }));
+                layout.minX = Math.min(...portLayout.map((p) => p.x));
+                layout.minY = Math.min(...portLayout.map((p) => p.y));
+                layout.maxX = Math.max(...portLayout.map((p) => p.x));
+                layout.maxY = Math.max(...portLayout.map((p) => p.y));
+                layout.ports = portLayout;
+                for (const rect of rawCircuit.appear[0].rect ?? []) {
+                    layout.minX = Math.min(layout.minX, Math.floor(parseDim(rect.x) / Grid.SPACING) * Grid.SPACING);
+                    layout.minY = Math.min(layout.minY, Math.floor(parseDim(rect.y) / Grid.SPACING) * Grid.SPACING);
+                    layout.maxX = Math.max(layout.maxX, Math.ceil((parseDim(rect.x) + parseDim(rect.width)) / Grid.SPACING) * Grid.SPACING);
+                    layout.maxY = Math.max(layout.maxY, Math.ceil((parseDim(rect.y) + parseDim(rect.height)) / Grid.SPACING) * Grid.SPACING);
+                }
+                layout.offsetX -= layout.minX;
+                layout.offsetY -= layout.minY;
+                layout.width = layout.maxX - layout.minX;
+                layout.height = layout.maxY - layout.minY;
+            }
             this.add(circuit);
         }
 
         // convert circuits
         for (const rawCircuit of contents.circuit) {
-            const circuit = this.#circuits[circuitLookup[rawCircuit.name]];
+            const circuit = this.#circuits[circuitLookup[rawCircuit.name].uid];
+            const portMap = {};
             // convert wires
             for (const rawWire of rawCircuit.wire ?? []) {
                 const [ x1, y1 ] = parseLoc(rawWire.from);
@@ -305,14 +339,41 @@ class Circuits {
             for (const rawComp of rawCircuit.comp ?? []) {
                 makeAttr(rawComp);
                 const [ x, y ] = parseLoc(rawComp.loc);
-                if (rawComp.lib === undefined && circuitLookup[rawComp.name]) {
+                if (rawComp.lib === undefined && circuitLookup[rawComp.name].uid) {
                     // custom component
-                    const item = new CustomComponent(this.#app, x, y, 0, circuitLookup[rawComp.name]);
+                    const meta = circuitLookup[rawComp.name];
+                    const rot = (rotation(rawComp.facing) + 3) & 3;
+                    const item = new CustomComponent(this.#app, 0, 0, rot, meta.uid);
+                    let vx, vy;
+                    if (rot === 0) { // offset = vector from topleft corner
+                        vx = meta.offsetX;
+                        vy = meta.offsetY;
+                    } else if (rot === 1) { // ... from bottom left
+                        vx = meta.height - meta.offsetY;
+                        vy = meta.offsetX;
+                    }  else if (rot === 2) { // ... from bottom right
+                        vx = meta.width - meta.offsetX;
+                        vy = meta.height - meta.offsetY;
+                    } else if (rot === 3) { // ... from top right
+                        vx = meta.offsetY;
+                        vy = meta.width - meta.offsetX;
+                    }
+                    item.x = x - vx - 0.5 * Grid.SPACING;
+                    item.y = y - vy - 0.5 * Grid.SPACING;
                     circuit.addItem(item);
-                } else if (rawComp.name === 'Pin') {
+                } else if (rawComp.name === 'Pin' && rawCircuit.appear) {
+                    // replace pins with tunnels leading to properly laid out ports to make CustomComponent outline match the logisim component
+                    const item = new Tunnel(this.#app, x, y, rotation(rawComp.facing));
+                    offsetPort(item, '');
+                    item.name = 'pin-' + (rawComp.label || crypto.randomUUID().replaceAll('-', '').slice(0, 8));
+                    const pinRef = rawComp.loc.slice(1, -1);
+                    portMap[pinRef] = { pin: pinRef, tunnelName: item.name, portName: rawComp.label ?? '' };
+                    circuit.addItem(item);
+                } else if (rawComp.name === 'Pin' && !rawCircuit.appear) {
+                    // circuit has no custom appearance configuration and we don't support the logisim default appearances yet, place ports where the file indicates
                     const item = new Port(this.#app, x, y, rotation(rawComp.facing));
                     offsetPort(item, '');
-                    item.name = rawComp.label ?? '';
+                    item.name = 'pin-' + rawComp.label;
                     circuit.addItem(item);
                 } else if (rawComp.name === 'Splitter') {
                     // splitter
@@ -363,15 +424,15 @@ class Circuits {
                     circuit.addItem(item);
                 } else if (rawComp.name === 'Ground') {
                     const item = new Constant(this.#app, x, y, rotation(rawComp.facing ?? 'south') + 2, 0);
-                    offsetPort(item, '');
+                    offsetPort(item, 'c');
                     circuit.addItem(item);
                 } else if (rawComp.name === 'Power') {
                     const item = new Constant(this.#app, x, y, rotation(rawComp.facing ?? 'north') + 2, 1);
-                    offsetPort(item, '');
+                    offsetPort(item, 'c');
                     circuit.addItem(item);
                 } else if (rawComp.name === 'Constant') {
                     const item = new Constant(this.#app, x, y, rotation(rawComp.facing ?? 'east'), rawComp.value === '0x1' ? 1 : 0);
-                    offsetPort(item, '');
+                    offsetPort(item, 'c');
                     circuit.addItem(item);
                 } else if ([ 'Controlled Buffer', 'Controlled Inverter' ].includes(rawComp.name)) {
                     const item = new Builtin(this.#app, x, y, rotation(rawComp.facing ?? 'east') + 3, rawComp.name === 'Controlled Buffer' ? 'buffer3' : 'not3');
@@ -382,6 +443,62 @@ class Circuits {
                     circuit.addItem(item);
                 }
             }
+
+            const layout = circuitLookup[rawCircuit.name];
+            if (layout.ports) {
+                // shift ports above circuit and scale by factor 2 so that ports fit next to each other
+                const scale = 2;
+                const yShift = layout.maxY * scale + (10 * Grid.SPACING);
+                const xShift = layout.minX * scale - (10 * Grid.SPACING);
+                let errorPos = 0;
+                for (const rawPort of layout.ports) {
+                    // determine port rotation by position on bounding box
+                    const mapping = portMap[rawPort.pin];
+                    if (mapping) {
+                        let rotation = 0;
+                        if (rawPort.x === layout.minX && rawPort.y > 0 && rawPort.y < layout.maxY) { // on top line but not in corner
+                            rotation = 0;
+                        } else if (rawPort.y === layout.minY && rawPort.x > 0 && rawPort.x < layout.maxX) {
+                            rotation = 1;
+                        } else if (rawPort.x === layout.maxX && rawPort.y > 0 && rawPort.y < layout.maxY) {
+                            rotation = 2;
+                        } else if (rawPort.y === layout.maxY && rawPort.x > 0 && rawPort.x < layout.maxX) {
+                            rotation = 3;
+                        } else {
+                            circuit.addItem(new TextLabel(this.#app, Grid.SPACING * 40, -(yShift - layout.minY * scale) + errorPos * Grid.SPACING, 0, 800, `Port ${mapping.portName} could not be placed on the outline of the component.`, 'small', 4));
+                            errorPos += 1;
+                            continue;
+                        }
+                        const item = new Port(this.#app, scale * rawPort.x - xShift, scale * rawPort.y - yShift, rotation + 1);
+                        offsetPort(item, '');
+                        item.name = mapping.portName;
+                        circuit.addItem(item);
+                    }
+                }
+                // fill in unoccupied positions with dummy ports (item.name='') on the component outline
+                const occupied = new Set(layout.ports.map((p) => `${p.x},${p.y}`));
+                const addDummy = (x, y, rotation) => {
+                    if (!occupied.has(`${x},${y}`)) {
+                        const item = new Port(this.#app, scale * x - xShift, scale * y - yShift, rotation + 1);
+                        offsetPort(item, '');
+                        item.name = '';
+                        circuit.addItem(item);
+                        occupied.add(`${x},${y}`);
+                    }
+                };
+                for (let y = layout.minY + Grid.SPACING; y < layout.maxY; y += Grid.SPACING) {
+                    addDummy(layout.minX, y, 0);
+                }
+                for (let x = layout.minX + Grid.SPACING; x < layout.maxX; x += Grid.SPACING) {
+                    addDummy(x, layout.minY, 1);
+                }
+                for (let y = layout.minY + Grid.SPACING; y < layout.maxY; y += Grid.SPACING) {
+                    addDummy(layout.maxX, y, 2);
+                }
+                for (let x = layout.minX + Grid.SPACING; x < layout.maxX; x += Grid.SPACING) {
+                    addDummy(x, layout.maxY, 3);
+                }
+            }
         }
     }
 }
@@ -390,7 +507,6 @@ class Circuits {
 Circuits.Circuit = class {
     label;
     uid;
-    ports;
     gridConfig;
     portConfig;
 
