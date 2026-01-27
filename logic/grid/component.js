@@ -514,7 +514,10 @@ class Component extends GridItem {
         // don't need to update ports when only moving
         if (this.dirty) {
             for (const port of this.ports) {
-                port.render(this, this.#portLabelCharPos[port.originalSide]);
+                // TODO: refactor into overrideable function.
+                if (this instanceof Port || this instanceof Tunnel || port.name !== '') {
+                    port.render(this, this.#portLabelCharPos[port.originalSide]);
+                }
             }
         }
 

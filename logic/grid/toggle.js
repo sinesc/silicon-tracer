@@ -15,8 +15,8 @@ class Toggle extends SimulationComponent {
     name = '';
 
     constructor(app, x, y, rotation, state = null) {
-        super(app, x, y, rotation, { 'top': [ '' ], 'left': [ null ] }, 'toggle');
-        this.#port = this.portByName('');
+        super(app, x, y, rotation, { 'top': [ 'q' ], 'left': [ null ] }, 'toggle');
+        this.#port = this.portByName('q');
         this.#state = state;
     }
 
@@ -39,7 +39,7 @@ class Toggle extends SimulationComponent {
 
     // Declare component simulation item.
     declare(sim, config, suffix) {
-        return sim.declareConst(this.state, '', suffix);
+        return sim.declareConst(this.state, 'q', suffix);
     }
 
     // Returns user-set component state.

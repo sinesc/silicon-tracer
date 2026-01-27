@@ -15,8 +15,8 @@ class Constant extends SimulationComponent {
     name = '';
 
     constructor(app, x, y, rotation, state = null) {
-        super(app, x, y, rotation, { 'top': [ '' ], 'left': [ null ] }, 'toggle');
-        this.#port = this.portByName('');
+        super(app, x, y, rotation, { 'top': [ 'c' ], 'left': [ null ] }, 'toggle');
+        this.#port = this.portByName('c');
         this.#state = state;
     }
 
@@ -39,7 +39,7 @@ class Constant extends SimulationComponent {
 
     // Declare component simulation item.
     declare(sim, config, suffix) {
-        return sim.declareConst(this.state, '', suffix);
+        return sim.declareConst(this.state, 'c', suffix);
     }
 
     // Override inner component label.
