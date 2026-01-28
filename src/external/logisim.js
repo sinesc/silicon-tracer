@@ -60,6 +60,12 @@ class LogiSim {
             'NOR Gate': 1,
             'XNOR Gate': 2,
         };
+        const direction = [
+            { x: 0, y: -1 },
+            { x: 1, y: 0 },
+            { x: 0, y: 1 },
+            { x: -1, y: 0 },
+        ];
 
         const rotation = (f) => facings.indexOf(f ?? 'east');
         const parseDim = (n) => Number.parseInt(n) / 10 * Grid.SPACING;
@@ -265,38 +271,52 @@ class LogiSim {
             if (layout.ports) {
                 // shift ports above circuit and scale by factor 2 so that ports fit next to each other
                 const scale = 2;
-                const yShift = layout.maxY * scale + (10 * Grid.SPACING);
-                const xShift = layout.minX * scale - (10 * Grid.SPACING);
+                const expansion = 3;
+                const globalOffsetY = layout.maxY * scale + (10 * Grid.SPACING);
+                const globalOffsetX = layout.minX * scale - (10 * Grid.SPACING);
+                const expandX = (r) => direction[r & 3].x * Grid.SPACING * expansion; // expand ports outwards to make room for the tunnels
+                const expandY = (r) => direction[r & 3].y * Grid.SPACING * expansion;
                 let errorPos = 0;
-                for (const rawPort of layout.ports) {
+                for (const layoutPort of layout.ports) {
                     // determine port rotation by position on bounding box
-                    const mapping = portMap[rawPort.pin];
+                    const mapping = portMap[layoutPort.pin];
                     if (mapping) {
                         let rotation = 0;
-                        if (rawPort.x === layout.minX && rawPort.y > 0 && rawPort.y < layout.maxY) { // on top line but not in corner
+                        if (layoutPort.x === layout.minX && layoutPort.y > 0 && layoutPort.y < layout.maxY) { // on top line but not in corner
                             rotation = 0;
-                        } else if (rawPort.y === layout.minY && rawPort.x > 0 && rawPort.x < layout.maxX) {
+                        } else if (layoutPort.y === layout.minY && layoutPort.x > 0 && layoutPort.x < layout.maxX) {
                             rotation = 1;
-                        } else if (rawPort.x === layout.maxX && rawPort.y > 0 && rawPort.y < layout.maxY) {
+                        } else if (layoutPort.x === layout.maxX && layoutPort.y > 0 && layoutPort.y < layout.maxY) {
                             rotation = 2;
-                        } else if (rawPort.y === layout.maxY && rawPort.x > 0 && rawPort.x < layout.maxX) {
+                        } else if (layoutPort.y === layout.maxY && layoutPort.x > 0 && layoutPort.x < layout.maxX) {
                             rotation = 3;
                         } else {
-                            circuit.addItem(new TextLabel(app, Grid.SPACING * 40, -(yShift - layout.minY * scale) + errorPos * Grid.SPACING, 0, 800, `Port ${mapping.portName} could not be placed on the outline of the component.`, 'small', 4));
+                            circuit.addItem(new TextLabel(app, Grid.SPACING * 40, -(globalOffsetY - layout.minY * scale) + errorPos * Grid.SPACING, 0, 800, `Port ${mapping.portName} could not be placed on the outline of the component.`, 'small', 4));
                             errorPos += 1;
                             continue;
                         }
-                        const item = new Port(app, scale * rawPort.x - xShift, scale * rawPort.y - yShift, rotation + 1);
-                        offsetPort(item, '');
-                        item.name = mapping.portName;
-                        circuit.addItem(item);
+                        // port
+                        const port = new Port(app, scale * layoutPort.x - globalOffsetX - expandX(rotation + 1), scale * layoutPort.y - globalOffsetY - expandY(rotation + 1), rotation + 1);
+                        offsetPort(port, '');
+                        port.name = mapping.portName;
+                        circuit.addItem(port);
+                        // wire between port and tunnel
+                        const tunnelOffsetDir = direction[port.rotation];
+                        helperWire(circuit, port, '', tunnelOffsetDir, 1);
+                        const tunnelOffsetX = tunnelOffsetDir.x * Grid.SPACING;
+                        const tunnelOffsetY = tunnelOffsetDir.y * Grid.SPACING;
+                        // tunnel
+                        const tunnel = new Tunnel(app, scale * layoutPort.x - globalOffsetX + tunnelOffsetX - expandX(rotation + 1), scale * layoutPort.y - globalOffsetY + tunnelOffsetY - expandY(rotation + 1), rotation + 1 + 2);
+                        offsetPort(tunnel, '');
+                        tunnel.name = mapping.tunnelName;
+                        circuit.addItem(tunnel);
                     }
                 }
                 // fill in unoccupied positions with dummy ports (item.name='') on the component outline
                 const occupied = new Set(layout.ports.map((p) => `${p.x},${p.y}`));
                 const addDummy = (x, y, rotation) => {
                     if (!occupied.has(`${x},${y}`)) {
-                        const item = new Port(app, scale * x - xShift, scale * y - yShift, rotation + 1);
+                        const item = new Port(app, scale * x - globalOffsetX - expandX(rotation + 1), scale * y - globalOffsetY - expandY(rotation + 1), rotation + 1);
                         offsetPort(item, '');
                         item.name = '';
                         circuit.addItem(item);
@@ -305,14 +325,10 @@ class LogiSim {
                 };
                 for (let y = layout.minY + Grid.SPACING; y < layout.maxY; y += Grid.SPACING) {
                     addDummy(layout.minX, y, 0);
-                }
-                for (let x = layout.minX + Grid.SPACING; x < layout.maxX; x += Grid.SPACING) {
-                    addDummy(x, layout.minY, 1);
-                }
-                for (let y = layout.minY + Grid.SPACING; y < layout.maxY; y += Grid.SPACING) {
                     addDummy(layout.maxX, y, 2);
                 }
                 for (let x = layout.minX + Grid.SPACING; x < layout.maxX; x += Grid.SPACING) {
+                    addDummy(x, layout.minY, 1);
                     addDummy(x, layout.maxY, 3);
                 }
             }
