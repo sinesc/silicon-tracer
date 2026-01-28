@@ -151,11 +151,12 @@ Simulations.Simulation = class {
     }
 
     // Checks if the simulation requires recompilation/attachment (and does so if required).
-    checkDirty() {
+    checkDirty(reattach = true) {
+        assert.bool(reattach);
         if (this.#dirty && !this.#app.config.lockSimulation) {
             this.#compile();
             const circuit = this.#netList.instances[this.#instanceId].circuit
-            if (this.#attached) {
+            if (reattach && this.#attached) {
                 circuit.attachSimulation(this.#netList, this.#instanceId);
             }
             this.#app.grid.markDirty();
@@ -167,6 +168,7 @@ Simulations.Simulation = class {
     // Re-attach simulation to a subcircuit.
     reattach(instanceId) {
         assert.integer(instanceId);
+        this.checkDirty(false);
         const circuit = this.#netList.instances[instanceId].circuit;
         if (this.#app.grid.circuit !== circuit) {
             this.#app.grid.setCircuit(circuit);
@@ -189,6 +191,7 @@ Simulations.Simulation = class {
 
     // Attach simulation to its root circuit.
     attach() {
+        this.checkDirty(false);
         this.#circuit.attachSimulation(this.#netList, 0);
         this.#instanceId = 0;
         this.#app.grid.setSimulationLabel(this.#circuit.label);
