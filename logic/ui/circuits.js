@@ -264,14 +264,39 @@ class Circuits {
                 north: { x: 1, y: 0 },
             },
         };
+        const gateHelperWire = {
+            east: { x: -1, y: 0 },
+            south: { x: 0, y: -1 },
+            west: { x: 1, y: 0 },
+            north: { x: 0, y: 1 },
+        };
+        const gateSizeMod = {
+            'XOR Gate': 1,
+            'NAND Gate': 1,
+            'NOR Gate': 1,
+            'XNOR Gate': 2,
+        };
 
         const rotation = (f) => facings.indexOf(f ?? 'east');
-        const parseLoc = (l) => l.slice(1, -1).split(',').map((v) => Number.parseInt(v) / 10 * Grid.SPACING);
         const parseDim = (n) => Number.parseInt(n) / 10 * Grid.SPACING;
+        const parseLoc = (l) => l.slice(1, -1).split(',').map(parseDim);
         const offsetPort = (item, name) => {
             const offset = item.portByName(name).coords(item.width, item.height, item.rotation);
             item.x -= offset.x;
             item.y -= offset.y;
+        };
+        const helperWire = (circuit, item, portName, direction, length) => {
+            if (length <= 0) {
+                return;
+            }
+            const portOffset = item.portByName(portName).coords(item.width, item.height, item.rotation);
+            const x1 = item.x + portOffset.x;
+            const y1 = item.y + portOffset.y;
+            const x2 = x1 + direction.x * Grid.SPACING * length;
+            const y2 = y1 + direction.y * Grid.SPACING * length;
+            const wire = new Wire(this.#app, x1, y1, Grid.SPACING, 'h'); // temporary coords/length...
+            wire.setEndpoints(x1, y1, x2, y2); // ... we use more convenient api instead
+            circuit.addItem(wire);
         };
         const makeAttr = (x) => {
             for (const a of x.a ?? []) {
@@ -282,8 +307,8 @@ class Circuits {
 
         const contents = XML.parse(text).project;
 
-        // first create all circuits as they may be included as subcomponents
-        // also identify port layout bounding box (so that we can figure out which ports are on the left/right/top/bottom of the box)
+        // create all circuits first as they might be included as subcomponents and this avoids dependency resolution.
+        // also identify port layout bounding box (so that we can figure out which ports are on the left/right/top/bottom of the box).
         const circuitLookup = {};
         for (const rawCircuit of contents.circuit) {
             makeAttr(rawCircuit);
@@ -291,8 +316,8 @@ class Circuits {
             const anchor = rawCircuit.appear?.[0]?.['circ-anchor']?.[0] ?? { x: 0, y: 0, facing: 'east' };
             circuitLookup[rawCircuit.name] = {
                 uid: circuit.uid,
-                offsetX: Number.parseInt(anchor.x) / 10 * Grid.SPACING, // TODO need to subtract top left corner of that subcircuit :/
-                offsetY: Number.parseInt(anchor.y) / 10 * Grid.SPACING,
+                offsetX: parseDim(anchor.x),
+                offsetY: parseDim(anchor.y),
                 facing: anchor.facing,
             };
             if (rawCircuit.appear?.[0]?.['circ-port']) {
@@ -300,8 +325,8 @@ class Circuits {
                 const layout = circuitLookup[rawCircuit.name];
                 const portLayout = rawCircuit.appear[0]['circ-port'].map((p) => ({
                     pin: p.pin,
-                    x: Number.parseInt(p.x) / 10 * Grid.SPACING,
-                    y: Number.parseInt(p.y) / 10 * Grid.SPACING,
+                    x: parseDim(p.x),
+                    y: parseDim(p.y),
                 }));
                 layout.minX = Math.min(...portLayout.map((p) => p.x));
                 layout.minY = Math.min(...portLayout.map((p) => p.y));
@@ -417,11 +442,19 @@ class Circuits {
                     const item = new Gate(this.#app, x, y, rotation(rawComp.facing ?? 'east') + 3, rawComp.name.split(' ', 1)[0].toLowerCase(), 1);
                     offsetPort(item, 'q');
                     circuit.addItem(item);
-                } else if ([ 'AND Gate', 'OR Gate', 'XOR Gate',  'NAND Gate', 'NOR Gate', 'XNOR Gate' ].includes(rawComp.name)) {
+                    const helperDirection = gateHelperWire[rawComp.facing ?? 'east'];
+                    const helperLength = (Number.parseInt(rawComp.size ?? '30') / 10) - 2 + (gateSizeMod[rawComp.name] ?? 0);
+                    helperWire(circuit, item, 'a', helperDirection, helperLength);
+                } else if ([ 'AND Gate', 'OR Gate', 'XOR Gate', 'NAND Gate', 'NOR Gate', 'XNOR Gate' ].includes(rawComp.name)) {
                     const inputs = Number.parseInt(rawComp.inputs ?? '2');
                     const item = new Gate(this.#app, x, y, rotation(rawComp.facing ?? 'east') + 3, rawComp.name.split(' ', 1)[0].toLowerCase(), inputs);
                     offsetPort(item, 'q');
                     circuit.addItem(item);
+                    const helperDirection = gateHelperWire[rawComp.facing ?? 'east'];
+                    const helperLength = (Number.parseInt(rawComp.size ?? '50') / 10) - 2 + (gateSizeMod[rawComp.name] ?? 0);
+                    for (const input of item.inputs) {
+                        helperWire(circuit, item, input, helperDirection, helperLength);
+                    }
                 } else if (rawComp.name === 'Ground') {
                     const item = new Constant(this.#app, x, y, rotation(rawComp.facing ?? 'south') + 2, 0);
                     offsetPort(item, 'c');
@@ -443,7 +476,7 @@ class Circuits {
                     circuit.addItem(item);
                 }
             }
-
+            // generate port compatibility outline
             const layout = circuitLookup[rawCircuit.name];
             if (layout.ports) {
                 // shift ports above circuit and scale by factor 2 so that ports fit next to each other
@@ -668,7 +701,8 @@ Circuits.Circuit = class {
         for (const component of this.#data.filter((i) => (i instanceof SimulationComponent) || (i instanceof VirtualComponent))) {
             const uid = component instanceof CustomComponent ? component.uid : null;
             const type = component instanceof CustomComponent ? 'descend' : (component instanceof Port ? 'ascend' : (component instanceof Tunnel ? 'tunnel' : null));
-            for (const port of component.ports) {
+            const allowUnnamed = component instanceof Port || component instanceof Tunnel;
+            for (const port of component.ports.filter((p) => allowUnnamed || p.name !== '')) {
                 const { x, y } = port.coords(component.width, component.height, component.rotation);
                 const compareName = component instanceof Port || component instanceof Tunnel ? component.name : port.name;
                 const portType = type ?? (component instanceof Splitter ? (port.name === Splitter.SINGLE_PORT_NAME ? '1-to-n' : 'n-to-1') : null);
