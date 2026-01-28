@@ -264,6 +264,9 @@ class LogiSim {
                 } else if (rawComp.name === 'Text') {
                     const item = new TextLabel(app, x, y, rotation(rawComp.facing ?? 'east') + 3, 200, rawComp.text);
                     circuit.addItem(item);
+                } else {
+                    const item = new TextLabel(app, x, y, rotation(rawComp.facing ?? 'east') + 3, 200, rawComp.name, 'medium', 4);
+                    circuit.addItem(item);
                 }
             }
             // generate port compatibility outline
