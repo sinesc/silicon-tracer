@@ -53,7 +53,7 @@ class Circuits {
         const file = await handle.getFile();
         const text = await file.text();
         if (text.includes('This file is intended to be loaded by Logisim')) {
-            LogiSim.import(this.#app, text);
+            LogiSim.import(this.#app, handle, text);
         } else {
             alert('Unsupported file format'); // lame
         }
