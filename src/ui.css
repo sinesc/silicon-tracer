@@ -331,6 +331,10 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
     padding: 0 10px 0 0;
     line-height: 2;
 }
+.dialog-container.info-dialog .dialog-row-label, .dialog-container.confirm-dialog .dialog-row-label {
+    line-height: 1.2;
+    color: #ddd;
+}
 .dialog-container .dialog-row-mask input, .dialog-container .dialog-row-mask select {
     outline: 1px solid var(--component-border-color);
     background-color: var(--component-body-color);

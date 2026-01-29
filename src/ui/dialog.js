@@ -1,8 +1,9 @@
 "use strict";
 
 // Opens a modal dialog with the given fields and returns the user input to the awaiting caller.
-function dialog(title, fields, data, context = null, cancelable = true) {
+function dialog(title, fields, data, context = null, extraClass = null, cancelable = true) {
     assert.string(title),
+    assert.string(extraClass, true),
     assert.array(fields);
     assert.object(data);
     assert.bool(cancelable);
@@ -17,7 +18,7 @@ function dialog(title, fields, data, context = null, cancelable = true) {
 
     // build html form
     const blackout = element(null, 'div', 'dialog-blackout');
-    const containerElement = element(blackout, 'div', 'dialog-container');
+    const containerElement = element(blackout, 'div', 'dialog-container' + (extraClass ? ' ' + extraClass : ''));
     element(containerElement, 'div', 'dialog-title', title);
     const contentElement = element(containerElement, 'div', 'dialog-content');
     const tableElement = element(contentElement, 'table');
@@ -125,10 +126,10 @@ function dialog(title, fields, data, context = null, cancelable = true) {
 
 // Opens a modal confirmation dialog with a custom message. Returns true on ok, false on cancel.
 function confirmDialog(title, message) {
-    return dialog(title, [ { text: message } ], { }).then((v) => !!v, (v) => false);
+    return dialog(title, [ { text: message } ], { }, null, 'confirm-dialog').then((v) => !!v, (v) => false);
 }
 
 // Opens a modal info dialog with a custom message and an ok button only. Returns true.
 function infoDialog(title, message) {
-    return dialog(title, [ { text: message } ], { }, null, false).then((v) => !!v, (v) => false);
+    return dialog(title, [ { text: message } ], { }, null, 'info-dialog', false).then((v) => !!v, (v) => false);
 }
