@@ -16,6 +16,7 @@ class Circuits {
     #currentCircuit;
     #fileHandle = null;
     #fileName = null;
+    #libraries = {};
 
     constructor(app) {
         assert.class(Application, app);
@@ -105,7 +106,7 @@ class Circuits {
     // Returns true while all existing circuits are empty.
     allEmpty() {
         for (const circuit of values(this.#circuits)) {
-            if (!circuit.empty) {
+            if (circuit.lid === null && !circuit.empty) { // TODO: decide whether to consider libs or not
                 return false;
             }
         }
@@ -129,9 +130,9 @@ class Circuits {
         this.#circuits[circuit.uid] = circuit;
     }
 
-    // Returns a list of loaded circuits.
-    list() {
-        const circuits = Object.values(this.#circuits).map((c) => [ c.uid, c.label ]);
+    // Returns a map(uid=>label) of loaded circuits or library circuits.
+    list(lid = null) {
+        const circuits = Object.values(this.#circuits).filter((c) => c.lid === lid).map((c) => [ c.uid, c.label ]);
         circuits.sort((a, b) => a[1].toLowerCase() < b[1].toLowerCase() ? -1 : (a[1].toLowerCase() > b[1].toLowerCase() ? 1 : 0));
         return circuits;
     }
@@ -170,6 +171,24 @@ class Circuits {
         }
     }
 
+    // Add library identifier.
+    addLibrary(label, lid = null) {
+        assert.string(label);
+        assert.string(lid, true);
+        lid ??= Circuits.generateLID();
+        this.#libraries[lid] = label;
+        return lid;
+    }
+
+    // Returns a map(lid=>label) of libraries.
+    get libraries() {
+        return pairs(this.#libraries);
+    }
+
+    // Generate a library id.
+    static generateLID() {
+        return 'l' + crypto.randomUUID().replaceAll('-', '');
+    }
 
     // Creates a new circuit.
     async create() {
@@ -200,11 +219,14 @@ class Circuits {
 
     // Serializes loaded circuits for saving to file.
     #serialize() {
-        return { version: 2, currentUID: this.#currentCircuit, circuits: Object.values(this.#circuits).map((c) => c.serialize()) };
+        return { version: 2, currentUID: this.#currentCircuit, circuits: Object.values(this.#circuits).map((c) => c.serialize()), libraries: this.#libraries };
     }
 
     // Unserializes circuits from file.
     unserialize(content) {
+        for (const [ lid, label ] of pairs(content.libraries ?? {})) {
+            this.#libraries[lid] = label;
+        }
         for (const serialized of content.circuits) {
             // skip circuits that were already unserialized recursively by GridItem's dependency check for CustomComponents.
             if (!this.#circuits[serialized.uid]) {
@@ -229,15 +251,18 @@ Circuits.Circuit = class {
 
     #data;
     #gidLookup;
+    #lid;
 
-    constructor(label, uid = null, data = [], gridConfig = {}, portConfig = {}) {
+    constructor(label, uid = null, data = [], gridConfig = {}, portConfig = {}, lid = null) {
         assert.string(label),
         assert.string(uid, true);
+        assert.string(lid, true);
         assert.array(data, false, (i) => assert.class(GridItem, i));
         assert.object(gridConfig);
         assert.object(portConfig);
         this.label = label;
         this.uid = uid ?? Circuits.Circuit.generateUID();
+        this.#lid = lid;
         this.#data = data;
         this.gridConfig = Object.assign({}, { zoom: 1.25, offsetX: 0, offsetY: 0 }, gridConfig);
         this.portConfig = Object.assign({}, { gap: "middle", parity: "auto" }, portConfig);
@@ -287,10 +312,15 @@ Circuits.Circuit = class {
         return this.#data.length === 0;
     }
 
+    // Return the library id of this circuit, if any, or null.
+    get lid() {
+        return this.#lid;
+    }
+
     // Serializes a circuit for saving to file.
     serialize() {
         const data = this.#data.map((item) => item.serialize());
-        return { label: this.label, uid: this.uid, data, gridConfig: this.gridConfig, portConfig: this.portConfig };
+        return { label: this.label, uid: this.uid, data, gridConfig: this.gridConfig, portConfig: this.portConfig, lid: this.#lid };
     }
 
     // Unserializes circuit from decoded JSON-object and adds it to Circuits. Dependencies of CustomComponents will also be added.
@@ -298,7 +328,7 @@ Circuits.Circuit = class {
         assert.class(Application, app);
         assert.object(rawCircuit);
         const items = rawCircuit.data.map((item) => GridItem.unserialize(app, item, rawOthers));
-        const circuit = new Circuits.Circuit(rawCircuit.label, rawCircuit.uid, items, rawCircuit.gridConfig, rawCircuit.portConfig);
+        const circuit = new Circuits.Circuit(rawCircuit.label, rawCircuit.uid, items, rawCircuit.gridConfig, rawCircuit.portConfig, rawCircuit.lid);
         Wire.compact(circuit);
         app.circuits.add(circuit);
     }

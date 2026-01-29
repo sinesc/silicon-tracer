@@ -257,6 +257,34 @@ class Application {
             }
         });
 
+        // Component selection menu
+        const [ , componentMenuState, componentMenu ] = this.toolbar.createMenuButton('Component', 'Component palette. <i>LMB</i> Open menu.', () => {
+            componentMenu.clear();
+            for (const [ lid, label ] of this.circuits.libraries) {
+
+                const componentList = this.circuits.list(lid);
+                // Switch component. Generate menu items for each component.
+                for (const [ uid, label ] of componentList) {
+                    const isCurrentGrid = uid === this.grid.circuit.uid; // grid component may be different from current component when navigating through simulation subcomponents
+                    const isCurrentCircuit = uid === this.circuits.current.uid;
+                    // place component as component
+                    if (!isCurrentGrid) {
+                        const [ componentButton ] = componentMenu.createComponentButton('&#9094;', label + '. <i>LMB</i> Drag to move onto grid.', (grid, x, y) => grid.addItem(new CustomComponent(this, x, y, 0, uid)));
+                        componentButton.classList.add('toolbar-circuit-place');
+                    }
+                    // component select
+                    const [ switchButton ] = componentMenu.createActionButton(label, isCurrentCircuit ? 'This is the current component' : 'Switch grid to component "' + label + '".', () => {
+                        componentMenuState(false);
+                        this.circuits.select(uid);
+                        this.simulations.select(this.circuits.current, this.config.autoCompile);
+                    });
+                    switchButton.classList.add(!isCurrentGrid ? 'toolbar-circuit-select' : 'toolbar-circuit-select-fullrow');
+                    switchButton.classList.toggle('toolbar-menu-button-disabled', isCurrentCircuit);
+                }
+
+            }
+        });
+
         // Simulation menu
         let updateSimulationMenu;
         const [ , simulationMenuState, simulationMenu ] = this.toolbar.createMenuButton('Simulation', 'Simulation management menu. <i>LMB</i> Open menu.', () => updateSimulationMenu());
