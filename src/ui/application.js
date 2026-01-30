@@ -240,20 +240,19 @@ class Application {
             // Switch circuit. Generate menu items for each circuit.
             for (const [ uid, label ] of circuitList) {
                 const isCurrentGrid = uid === this.grid.circuit.uid; // grid circuit may be different from current circuit when navigating through simulation subcomponents
-                const isCurrentCircuit = uid === this.circuits.current.uid;
                 // place circuit as component
-                if (!isCurrentGrid) {
+                if (uid !== this.grid.circuit.uid && !this.circuits.subcircuitUIDs(uid).has(this.grid.circuit.uid)) {
                     const [ componentButton ] = circuitMenu.createComponentButton('&#9094;', label + '. <i>LMB</i> Drag to move onto grid.', (grid, x, y) => grid.addItem(new CustomComponent(this, x, y, 0, uid)));
                     componentButton.classList.add('toolbar-circuit-place');
                 }
                 // circuit select
-                const [ switchButton ] = circuitMenu.createActionButton(label, isCurrentCircuit ? 'This is the current circuit' : 'Switch grid to circuit "' + label + '".', () => {
+                const [ switchButton ] = circuitMenu.createActionButton(label, isCurrentGrid ? 'This is the current circuit on the grid' : 'Switch grid to circuit "' + label + '".', () => {
                     circuitMenuState(false);
                     this.circuits.select(uid);
                     this.simulations.select(this.circuits.current, this.config.autoCompile);
                 });
                 switchButton.classList.add(!isCurrentGrid ? 'toolbar-circuit-select' : 'toolbar-circuit-select-fullrow');
-                switchButton.classList.toggle('toolbar-menu-button-disabled', isCurrentCircuit);
+                switchButton.classList.toggle('toolbar-menu-button-disabled', isCurrentGrid);
             }
         });
 

@@ -236,6 +236,20 @@ class Circuits {
         return content.currentUID;
     }
 
+    // Returns a list of subcircuit uids contained directly or indirectly within this ciruit.
+    subcircuitUIDs(uid) {
+        assert.string(uid);
+        let foundUIDs = new Set();
+        const circuit = this.#circuits[uid];
+        for (const item of circuit.items) {
+            if (item instanceof CustomComponent && !foundUIDs.has(item.uid)) {
+                foundUIDs.add(item.uid);
+                foundUIDs = foundUIDs.union(this.subcircuitUIDs(item.uid));
+            }
+        }
+        return foundUIDs;
+    }
+
     // Returns a generated name if the given name is empty.
     #generateName(name) {
         return name || 'New circuit #' + (count(this.#circuits) + 1);
