@@ -14,7 +14,7 @@ class LogiSim {
         instance.#fileHandle = fileHandle;
         const project = XML.parse(text).project;
         await instance.#importFile(null, project, 'Your project');
-        infoDialog('Import complete', `Your project has been imported. ${instance.#numImported} circuits have been added to the circuits menu.`);
+        infoDialog('Import complete', `Your project has been imported. ${instance.#numImported} circuits have been added to the Circuit and/or Component menus.`);
     }
 
     // Recursively imports the file and dependencies.
@@ -94,26 +94,21 @@ class LogiSim {
                 north: { x: 1, y: 0 },
             },
         };
-        const gateHelperWire = {
-            east: { x: -1, y: 0 },
-            south: { x: 0, y: -1 },
-            west: { x: 1, y: 0 },
-            north: { x: 0, y: 1 },
-        };
         const gateSizeMod = {
             'XOR Gate': 1,
             'NAND Gate': 1,
             'NOR Gate': 1,
             'XNOR Gate': 2,
         };
-        const direction = [
-            { x: 0, y: -1 },
+        const directions = [
+            { x: 0, y: -1 }, // rotation 0: up
             { x: 1, y: 0 },
             { x: 0, y: 1 },
             { x: -1, y: 0 },
         ];
 
         const rotation = (f) => facings.indexOf(f ?? 'east');
+        const direction = (r) => directions[r & 3];
         const parseDim = (n) => Number.parseInt(n) / 10 * Grid.SPACING;
         const parseLoc = (l) => l.slice(1, -1).split(',').map(parseDim);
         const offsetPort = (item, name) => {
@@ -278,7 +273,7 @@ class LogiSim {
                     const item = new Gate(this.#app, x, y, rotation(rawComp.facing ?? 'east') + 3, rawComp.name.split(' ', 1)[0].toLowerCase(), 1);
                     offsetPort(item, 'q');
                     circuit.addItem(item);
-                    const helperDirection = gateHelperWire[rawComp.facing ?? 'east'];
+                    const helperDirection = direction(rotation(rawComp.facing ?? 'east') + 2);
                     const helperLength = (Number.parseInt(rawComp.size ?? '30') / 10) - 2 + (gateSizeMod[rawComp.name] ?? 0);
                     helperWire(circuit, item, 'a', helperDirection, helperLength);
                 } else if ([ 'AND Gate', 'OR Gate', 'XOR Gate', 'NAND Gate', 'NOR Gate', 'XNOR Gate' ].includes(rawComp.name)) {
@@ -286,7 +281,7 @@ class LogiSim {
                     const item = new Gate(this.#app, x, y, rotation(rawComp.facing ?? 'east') + 3, rawComp.name.split(' ', 1)[0].toLowerCase(), inputs);
                     offsetPort(item, 'q');
                     circuit.addItem(item);
-                    const helperDirection = gateHelperWire[rawComp.facing ?? 'east'];
+                    const helperDirection = direction(rotation(rawComp.facing ?? 'east') + 2);
                     const helperLength = (Number.parseInt(rawComp.size ?? '50') / 10) - 2 + (gateSizeMod[rawComp.name] ?? 0);
                     for (const input of item.inputs) {
                         helperWire(circuit, item, input, helperDirection, helperLength);
@@ -323,8 +318,8 @@ class LogiSim {
                 const expansion = 3;
                 const globalOffsetY = layout.maxY * scale + (10 * Grid.SPACING);
                 const globalOffsetX = layout.minX * scale - (10 * Grid.SPACING);
-                const expandX = (r) => direction[r & 3].x * Grid.SPACING * expansion; // expand ports outwards to make room for the tunnels
-                const expandY = (r) => direction[r & 3].y * Grid.SPACING * expansion;
+                const expandX = (r) => direction(r).x * Grid.SPACING * expansion; // expand ports outwards to make room for the tunnels
+                const expandY = (r) => direction(r).y * Grid.SPACING * expansion;
                 let errorPos = 0;
                 for (const layoutPort of layout.ports) {
                     // determine port rotation by position on bounding box
@@ -350,7 +345,7 @@ class LogiSim {
                         port.name = mapping.portName;
                         circuit.addItem(port);
                         // wire between port and tunnel
-                        const tunnelOffsetDir = direction[port.rotation];
+                        const tunnelOffsetDir = direction(port.rotation);
                         helperWire(circuit, port, '', tunnelOffsetDir, 1);
                         const tunnelOffsetX = tunnelOffsetDir.x * Grid.SPACING;
                         const tunnelOffsetY = tunnelOffsetDir.y * Grid.SPACING;
