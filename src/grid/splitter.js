@@ -35,7 +35,7 @@ class Splitter extends VirtualComponent {
     serialize() {
         return {
             ...super.serialize(),
-            _: { c: this.constructor.name, a: [ this.x, this.y, this.rotation, this.#numSplits, this.#gapPosition, this.#orientation, this.#ordering ]},
+            '#a': [ this.x, this.y, this.rotation, this.#numSplits, this.#gapPosition, this.#orientation, this.#ordering ],
         };
     }
 

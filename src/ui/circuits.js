@@ -219,7 +219,7 @@ class Circuits {
 
     // Serializes loaded circuits for saving to file.
     #serialize() {
-        return { version: 2, currentUID: this.#currentCircuit, circuits: Object.values(this.#circuits).map((c) => c.serialize()), libraries: this.#libraries };
+        return { version: 3, currentUID: this.#currentCircuit, circuits: Object.values(this.#circuits).map((c) => c.serialize()), libraries: this.#libraries };
     }
 
     // Unserializes circuits from file.

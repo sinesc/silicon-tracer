@@ -44,7 +44,7 @@ class Builtin extends SimulationComponent {
     serialize() {
         return {
             ...super.serialize(),
-            _: { c: this.constructor.name, a: [ this.x, this.y, this.rotation, this.type ]},
+            '#a': [ this.x, this.y, this.rotation, this.type ],
         };
     }
 

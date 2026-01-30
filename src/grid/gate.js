@@ -34,7 +34,7 @@ class Gate extends SimulationComponent {
     serialize() {
         return {
             ...super.serialize(),
-            _: { c: this.constructor.name, a: [ this.x, this.y, this.rotation, this.type, this.inputs.length ]},
+            '#a': [ this.x, this.y, this.rotation, this.type, this.inputs.length ],
         };
     }
 

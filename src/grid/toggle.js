@@ -32,7 +32,7 @@ class Toggle extends SimulationComponent {
     serialize() {
         return {
             ...super.serialize(),
-            _: { c: this.constructor.name, a: [ this.x, this.y, this.rotation, this.#state ]},
+            '#a': [ this.x, this.y, this.rotation, this.#state ],
             name: this.name,
         };
     }

@@ -31,7 +31,7 @@ class Wire extends GridItem {
         const direction = this.width > 0 ? 'h' : 'v';
         return {
             ...super.serialize(),
-            _: { c: this.constructor.name, a: [ this.x, this.y, direction === 'h' ? this.width : this.height, direction, this.color ]},
+            '#a': [ this.x, this.y, direction === 'h' ? this.width : this.height, direction, this.color ],
         };
     }
 
