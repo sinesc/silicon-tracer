@@ -56,6 +56,11 @@ class Wire extends GridItem {
         super.unlink();
     }
 
+    // Return true to completely ignore this component in netlist/simulation.
+    disregard() {
+        return this.limbo;
+    }
+
     // Detach wire from simulation.
     detachSimulation() {
         this.netIds = null;

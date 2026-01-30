@@ -34,6 +34,11 @@ class Tunnel extends VirtualComponent {
         };
     }
 
+    // Completely ignore this port if it doesn't have a name.
+    disregard() {
+        return this.name === '';
+    }
+
     // Handle edit hotkey.
     async onEdit() {
         const config = await dialog("Configure tunnel", Tunnel.EDIT_DIALOG, { name: this.name, rotation: this.rotation }, this);

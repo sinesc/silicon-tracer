@@ -275,6 +275,11 @@ class Component extends GridItem {
         super.unlink();
     }
 
+    // Return false to completely ignore this component in netlist/simulation.
+    disregard() {
+        return false;
+    }
+
     // Detach component ports from simulation.
     detachSimulation() {
         this.simId = null;

@@ -408,15 +408,15 @@ Circuits.Circuit = class {
         assert.integer(instanceId);
         // get all individual wires
         const wires = this.#data
-            .filter((i) => i instanceof Wire && !i.limbo)
+            .filter((i) => i instanceof Wire && !i.disregard())
             .map((w) => new NetList.NetWire([ new Point(w.x, w.y), new Point(w.x + w.width, w.y + w.height) ], w.gid, instanceId));
         // get all component ports
         const ports = [];
-        for (const component of this.#data.filter((i) => (i instanceof SimulationComponent) || (i instanceof VirtualComponent))) {
+        for (const component of this.#data.filter((i) => ((i instanceof SimulationComponent) || (i instanceof VirtualComponent)) && !i.disregard())) {
             const uid = component instanceof CustomComponent ? component.uid : null;
             const type = component instanceof CustomComponent ? 'descend' : (component instanceof Port ? 'ascend' : (component instanceof Tunnel ? 'tunnel' : null));
-            const allowUnnamed = component instanceof Port || component instanceof Tunnel;
-            for (const port of component.ports.filter((p) => allowUnnamed || p.name !== '')) {
+            const allowUnnamedPorts = component instanceof Port || component instanceof Tunnel; // the component-port on these has no name but the component itself does
+            for (const port of component.ports.filter((p) => allowUnnamedPorts || p.name !== '')) {
                 const { x, y } = port.coords(component.width, component.height, component.rotation);
                 const compareName = component instanceof Port || component instanceof Tunnel ? component.name : port.name;
                 const portType = type ?? (component instanceof Splitter ? (port.name === Splitter.SINGLE_PORT_NAME ? '1-to-n' : 'n-to-1') : null);

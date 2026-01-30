@@ -21,7 +21,7 @@ class Port extends SimulationComponent {
     // Link port to a grid, enabling it to be rendered.
     link(grid) {
         super.link(grid);
-        this.setHoverMessage(this.inner, () => `Port <b>${this.name}</b>. <i>1</i> Set high, <i>2</i> Set low, <i>3</i> Unset, <i>E</i> Edit, ${Component.HOTKEYS}.`, { type: 'hover' });
+        this.setHoverMessage(this.inner, () => (this.name === '' ? 'Inactive port (needs a network name)' : `Port <b>${this.name}</b>`) +  `. <i>1</i> Set high, <i>2</i> Set low, <i>3</i> Unset, <i>E</i> Edit, ${Component.HOTKEYS}.`, { type: 'hover' });
         this.#labelElement = element(this.element, 'div', 'port-name');
         this.element.classList.add('port', 'status-outline');
     }
@@ -33,6 +33,11 @@ class Port extends SimulationComponent {
             '#a': [ this.x, this.y, this.rotation ],
             name: this.name,
         };
+    }
+
+    // Completely ignore this port if it doesn't have a name.
+    disregard() {
+        return this.name === '';
     }
 
     // Declare component simulation item.
