@@ -48,8 +48,8 @@ class GridItem {
     static unserialize(app, item, rawOthers) {
         assert.class(Application, app);
         assert.object(item);
-        const cname = item._.c;
-        const cargs = item._.a;
+        const cname = item['#c'];
+        const cargs = item['#a'];
         let instance;
         if (cname === 'Port') { // TODO: meh to have cases here
             instance = new Port(app, ...cargs);
@@ -84,7 +84,7 @@ class GridItem {
             throw new Error('Invalid component type "' + cname + '"');
         }
         for (const [ k, v ] of Object.entries(item)) {
-            if (k !== '_' /*&& k !== 'width' && k !== 'height'*/) {
+            if (k.slice(0, 1) !== '#') {
                 instance[k] = v;
             }
         }
