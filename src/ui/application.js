@@ -259,28 +259,95 @@ class Application {
         // Component selection menu
         const [ , componentMenuState, componentMenu ] = this.toolbar.createMenuButton('Component', 'Component palette. <i>LMB</i> Open menu.', () => {
             componentMenu.clear();
-            for (const [ lid, label ] of this.circuits.libraries) {
+            const DRAG_MSG = '<i>LMB</i> Drag to move onto grid.';
+            const rotation = this.config.rotationDefaults;
 
-                const componentList = this.circuits.list(lid);
-                // Switch component. Generate menu items for each component.
-                for (const [ uid, label ] of componentList) {
-                    const isCurrentGrid = uid === this.grid.circuit.uid; // grid component may be different from current component when navigating through simulation subcomponents
-                    const isCurrentCircuit = uid === this.circuits.current.uid;
-                    // place component as component
-                    if (!isCurrentGrid) {
-                        const [ componentButton ] = componentMenu.createComponentButton('&#9094;', label + '. <i>LMB</i> Drag to move onto grid.', (grid, x, y) => grid.addItem(new CustomComponent(this, x, y, 0, uid)));
-                        componentButton.classList.add('toolbar-circuit-place');
-                    }
-                    // component select
-                    const [ switchButton ] = componentMenu.createActionButton(label, isCurrentCircuit ? 'This is the current component' : 'Switch grid to component "' + label + '".', () => {
-                        componentMenuState(false);
-                        this.circuits.select(uid);
-                        this.simulations.select(this.circuits.current, this.config.autoCompile);
+            // routing/utilities
+            const [ , routingMenuState, routingMenu ] = componentMenu.createMenuCategory('Routing &amp; labeling', 'Ports, tunnels, splitters, text. <i>LMB</i> Open category.', () => {
+                routingMenu.clear();
+                routingMenu.createComponentButton('Port', `<b>Component IO pin</b>. ${DRAG_MSG}`, (grid, x, y) => {
+                    return grid.addItem(new Port(this, x, y, rotation.port))
+                });
+                routingMenu.createComponentButton('Tunnel', `<b>Network tunnel</b>. ${DRAG_MSG}`, (grid, x, y) => {
+                    return grid.addItem(new Tunnel(this, x, y, rotation.tunnel))
+                });
+                routingMenu.createComponentButton('Splitter', `<b>Wire splitter/joiner</b>. ${DRAG_MSG}`, (grid, x, y) => {
+                    let numChannels = 8; // TODO: configurable somewhere
+                    return grid.addItem(new Splitter(this, x, y, rotation.splitter, numChannels));
+                });
+                routingMenu.createComponentButton('Text', `<b>Userdefined text message</b>. ${DRAG_MSG}`, (grid, x, y) => {
+                    return grid.addItem(new TextLabel(this, x, y, rotation.text));
+                });
+            });
+
+            // add gates
+            const [ , gatesMenuState, gatesMenu ] = componentMenu.createMenuCategory('Basic gates', 'Basic gates. <i>LMB</i> Open category.', () => {
+                gatesMenu.clear();
+                for (const [ gateType, { joinOp } ] of Object.entries(Simulation.GATE_MAP)) {
+                    const gateLabel = gateType.toUpperFirst();
+                    gatesMenu.createComponentButton(gateLabel, `<b>${gateLabel} gate</b>. ${DRAG_MSG}`, (grid, x, y) => {
+                        let numInputs = 2; // TODO: configurable somewhere
+                        return grid.addItem(new Gate(this, x, y, rotation[gateType] ?? rotation.gate, gateType, joinOp !== null ? numInputs : 1));
                     });
-                    switchButton.classList.add(!isCurrentGrid ? 'toolbar-circuit-select' : 'toolbar-circuit-select-fullrow');
-                    switchButton.classList.toggle('toolbar-menu-button-disabled', isCurrentCircuit);
                 }
+            });
 
+
+            // add extra gate-like builtins
+            const [ , builtinMenuState, builtinMenu ] = componentMenu.createMenuCategory('Basic components', 'Latches, muxes, ... <i>LMB</i> Open category.', () => {
+                builtinMenu.clear();
+                for (const builtinType of keys(Simulation.BUILTIN_MAP)) {
+                    const builtinLabel = Builtin.LABELS[builtinType] ?? builtinType.toUpperFirst();
+                    builtinMenu.createComponentButton(builtinLabel, `<b>${builtinLabel}</b> builtin. ${DRAG_MSG}`, (grid, x, y) => {
+                        return grid.addItem(new Builtin(this, x, y, rotation[builtinType] ?? rotation.builtin, builtinType));
+                    });
+                }
+            });
+
+            // io/utilities
+            const [ , ioMenuState, ioMenu ] = componentMenu.createMenuCategory('IO/Control', 'Clocks, constants, ... <i>LMB</i> Open category.', () => {
+                ioMenu.clear();
+                ioMenu.createComponentButton('Clock', `<b>Clock</b>. ${DRAG_MSG}`, (grid, x, y) => {
+                    return grid.addItem(new Clock(this, x, y, rotation.clock));
+                });
+                ioMenu.createComponentButton('Pull', `<b>Pull up/down resistor</b>. ${DRAG_MSG}`, (grid, x, y) => {
+                    return grid.addItem(new PullResistor(this, x, y, rotation.pull));
+                });
+                ioMenu.createComponentButton('Constant', `<b>Constant value</b>. ${DRAG_MSG}`, (grid, x, y) => {
+                    return grid.addItem(new Constant(this, x, y, rotation.constant));
+                });
+                ioMenu.createComponentButton('Toggle', `<b>Toggle button</b> with permanently saved state. ${DRAG_MSG}`, (grid, x, y) => {
+                    return grid.addItem(new Toggle(this, x, y, rotation.port));
+                });
+            });
+
+            // add libraries
+            if (first(this.circuits.libraries)) {
+                componentMenu.createSeparator();
+            }
+            for (const [ lid, label ] of this.circuits.libraries) {
+                const [ , libraryMenuState, libraryMenu ] = componentMenu.createMenuCategory(label, label + ' components. <i>LMB</i> Open category.', () => {
+                    libraryMenu.clear();
+                    const componentList = this.circuits.list(lid);
+                    // Switch component. Generate menu items for each component.
+                    for (const [ uid, label ] of componentList) {
+                        const isCurrentGrid = uid === this.grid.circuit.uid; // grid component may be different from current component when navigating through simulation subcomponents
+                        const isCurrentCircuit = uid === this.circuits.current.uid;
+                        // place component as component
+                        if (!isCurrentGrid) {
+                            const [ componentButton ] = libraryMenu.createComponentButton('&#9094;', label + '. <i>LMB</i> Drag to move onto grid.', (grid, x, y) => grid.addItem(new CustomComponent(this, x, y, 0, uid)));
+                            componentButton.classList.add('toolbar-circuit-place');
+                        }
+                        // component select
+                        const [ switchButton ] = libraryMenu.createActionButton(label, isCurrentCircuit ? 'This is the current component' : 'Switch grid to component "' + label + '".', () => {
+                            libraryMenuState(false);
+                            this.circuits.select(uid);
+                            this.simulations.select(this.circuits.current, this.config.autoCompile);
+                        });
+                        switchButton.classList.add(!isCurrentGrid ? 'toolbar-circuit-select' : 'toolbar-circuit-select-fullrow');
+                        switchButton.classList.toggle('toolbar-menu-button-disabled', isCurrentCircuit);
+                    }
+                });
             }
         });
 
@@ -393,6 +460,11 @@ class Application {
             return grid.addItem(new Splitter(this, x, y, rotation.splitter, numChannels));
         });
 
+        // add text
+        this.toolbar.createComponentButton('Text', `<b>Userdefined text message</b>. ${DRAG_MSG}`, (grid, x, y) => {
+            return grid.addItem(new TextLabel(this, x, y, rotation.text));
+        });
+
         // add a clock component
         this.toolbar.createComponentButton('Clock', `<b>Clock</b>. ${DRAG_MSG}`, (grid, x, y) => {
             return grid.addItem(new Clock(this, x, y, rotation.clock));
@@ -413,11 +485,6 @@ class Application {
             return grid.addItem(new Toggle(this, x, y, rotation.port));
         });
 
-        // add text
-        this.toolbar.createComponentButton('Text', `<b>Userdefined text message</b>. ${DRAG_MSG}`, (grid, x, y) => {
-            return grid.addItem(new TextLabel(this, x, y, rotation.text));
-        });
-
         // add gates
         for (const [ gateType, { joinOp } ] of Object.entries(Simulation.GATE_MAP)) {
             const gateLabel = gateType.toUpperFirst();
@@ -426,7 +493,7 @@ class Application {
                 return grid.addItem(new Gate(this, x, y, rotation[gateType] ?? rotation.gate, gateType, joinOp !== null ? numInputs : 1));
             });
         }
-
+        /*
         // add extra gate-like builtins
         for (const builtinType of keys(Simulation.BUILTIN_MAP)) {
             const builtinLabel = Builtin.LABELS[builtinType] ?? builtinType.toUpperFirst();
@@ -434,6 +501,7 @@ class Application {
                 return grid.addItem(new Builtin(this, x, y, rotation[builtinType] ?? rotation.builtin, builtinType));
             });
         }
+        */
     }
 
     // Initialize render loop and other periodic events.

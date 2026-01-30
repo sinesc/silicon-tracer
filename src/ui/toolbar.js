@@ -83,6 +83,23 @@ class Toolbar {
     // Creates a menu-button to open/close a sub-toolbar acting as a menu. Returns a new toolbar
     // as well as a state function to get/set the menu state.
     createMenuButton(label, hoverMessage, openAction) {
+        return this.#createMenuButton(label, hoverMessage, openAction, 'toolbar-menu-root toolbar-menu-', true, true);
+    }
+
+    // Creates a menu-category to open/close a sub-menu. Returns a new toolbar
+    // as well as a state function to get/set the menu state.
+    createMenuCategory(label, hoverMessage, openAction) {
+        return this.#createMenuButton(label, hoverMessage, openAction, 'toolbar-menu-category toolbar-menu-', false, false);
+    }
+
+    // Creates a separator
+    createSeparator() {
+        const separator = element(this.#element, 'div', 'toolbar-separator');
+        return [ separator ];
+    }
+
+    // Creates a menu or submenu/category. Returns a new toolbar as well as a state function to get/set the menu state.
+    #createMenuButton(label, hoverMessage, openAction, classPrefix, hoverOpens, documentCloses) {
         assert.string(label);
         assert.string(hoverMessage);
         assert.function(openAction);
@@ -99,28 +116,32 @@ class Toolbar {
                 }
                 this.#menuOpen = button;
                 // close menu on click outside of menu
-                document.onclick = (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    document.onclick = null;
-                    this.#menuOpen = null;
-                    stateFn(false);
+                if (documentCloses) {
+                    document.onclick = (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        document.onclick = null;
+                        this.#menuOpen = null;
+                        stateFn(false);
+                    }
                 }
-            } else {
+            } else if (documentCloses) {
                 document.onclick = null;
             }
         });
         this.#menuStates.add(stateFn);
-        button.classList.add('toolbar-menu-button');
-        const subToolbarContainer = element(button, 'div', 'toolbar-menu-container');
+        button.classList.add(...(classPrefix + 'button').split(' '));
+        const subToolbarContainer = element(button, 'div', classPrefix + 'container');
         // hover-open: modify mouse-enter to open another menu if one is already open, modify stateFn to disable hover-open when a menu is intentionally closed
-        const originalMouseEnter = button.onmouseenter;
-        button.onmouseenter = (e) => {
-            if (this.#menuOpen && this.#menuOpen !== button) {
-                button.onclick(e);
-            }
-            originalMouseEnter.call(button, e);
-        };
+        if (hoverOpens) {
+            const originalMouseEnter = button.onmouseenter;
+            button.onmouseenter = (e) => {
+                if (this.#menuOpen && this.#menuOpen !== button) {
+                    button.onclick(e);
+                }
+                originalMouseEnter.call(button, e);
+            };
+        }
         const menuStateFn = (state) => {
             if (!state) {
                 this.#menuOpen = null;
@@ -132,16 +153,10 @@ class Toolbar {
         return [ button, menuStateFn, subToolbar ];
     }
 
-    // Creates a separator
-    createSeparator() {
-        const separator = element(this.#element, 'div', 'toolbar-separator');
-        return [ separator ];
-    }
-
     // Creates a toggle button and returns the button element as well as a function that sets/returns the current button state.
     #createToggleButton(label, hoverMessage, defaultState, action) {
         let state = defaultState;
-        const button = element(null, 'div', `toolbar-button toolbar-toggle-button toolbar-toggle-button-${state ? 'on' : 'off'}`, label);
+        const button = element(null, 'div', `toolbar-button toolbar-toggle-button toolbar-toggle-button-${state ? 'on' : 'off'}`, '<div class="toolbar-button-label">' + label + '</div>');
         const stateFn = (newState) => {
             if (newState !== undefined) {
                 button.classList.remove(state ? 'toolbar-toggle-button-on' : 'toolbar-toggle-button-off');

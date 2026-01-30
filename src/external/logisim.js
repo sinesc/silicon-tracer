@@ -26,7 +26,7 @@ class LogiSim {
             if (type === 'file') {
                 const fileProject = await this.#openFile(fileName, whoNeedsIt);
                 if (fileProject) {
-                    const fileLid = app.circuits.addLibrary(fileName);
+                    const fileLid = app.circuits.addLibrary(fileName.replace(/\.circ$/, ''));
                     await this.#importFile(fileLid, fileProject, `The library <b><code>${fileName}</code></b>`);
                     libs.push(fileLid);
                 }

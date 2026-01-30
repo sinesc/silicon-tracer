@@ -429,7 +429,7 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
     background-color: var(--button-bg-color);
     color: var(--inverted-text-color);
 }
-.toolbar > .toolbar-toggle-button:hover {
+.toolbar > .toolbar-toggle-button:hover, .toolbar > .toolbar-toggle-button.toolbar-menu-button.toolbar-toggle-button-on {
     border-color: var(--button-border-hover-color);
     background-color: var(--button-bg-hover-color);
 }
@@ -446,7 +446,7 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
     content: '☐ ';
 }
 /* Menu button */
-.toolbar > .toolbar-menu-button {
+.toolbar > .toolbar-menu-button.toolbar-menu-root {
     padding: 0 10px;
     text-shadow: 1px 1px 2px #555;
 }
@@ -459,7 +459,7 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
 .toolbar > .toolbar-toggle-button-off.toolbar-menu-button:before {
     content: '';
 }
-.toolbar > .toolbar-menu-button > .toolbar-menu-container {
+.toolbar > .toolbar-menu-button > .toolbar-menu-container.toolbar-menu-root {
     position: absolute;
     z-index: 255;
     margin-top: 1px;
@@ -467,8 +467,9 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
     border: 2px solid var(--button-border-color);
     background-color: var(--button-bg-color);
     border-radius: 0 0 3px 3px;
+    min-width: 150px;
 }
-.toolbar > .toolbar-menu-button > .toolbar-menu-container > .toolbar {
+.toolbar > .toolbar-menu-button > .toolbar-menu-container.toolbar-menu-root > .toolbar {
     max-height: calc(100vh - 100px);
     overflow-y: auto;
     position: relative;
@@ -494,6 +495,29 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
     margin: 1px 0;
     border: 1px solid var(--button-border-color);
     border-radius: 0;
+}
+.toolbar .toolbar-button-label {
+    display: inline-block;
+}
+/* Menu categories */
+.toolbar > .toolbar-button.toolbar-menu-category {
+    padding: 0;
+}
+.toolbar-menu-category.toolbar-menu-button > .toolbar-button-label {
+    display: block;
+    padding: 0 5px;
+}
+.toolbar-menu-category.toolbar-menu-button > .toolbar-button-label:after {
+    content: '▼';
+    width: 25px;
+    text-align: right;
+    float: right;
+}
+.toolbar-menu-category.toolbar-menu-button.toolbar-toggle-button-on > .toolbar-button-label:after {
+    content: '▲';
+}
+.toolbar > .toolbar-menu-button > .toolbar-menu-container.toolbar-menu-category {
+    background-color: var(--button-bg-color);
 }
 /* Circuit select/place */
 .toolbar > .toolbar-menu-button > .toolbar-menu-container > .toolbar > .toolbar-circuit-select {
