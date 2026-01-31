@@ -9,7 +9,11 @@ class Builtin extends SimulationComponent {
 
     static LABELS = {
         latch: 'D latch',
-        flipflop: 'D flip-flip',
+        dflipflop: 'D flip-flop',
+        adflipflop: 'D flip-flop, async. reset',
+        jkflipflop: 'JK flip-flop',
+        tflipflop: 'T flip-flop',
+        srflipflop: 'SR flip-flop',
         buffer3: 'Tri-state buffer',
         not3: 'Tri-state inverter',
         mux3: 'Tri-state mux',
@@ -22,12 +26,16 @@ class Builtin extends SimulationComponent {
         not3: { left: [ 'data' ], right: [ 'q' ], top: [ null ], bottom: [ 'enable' ] },
         mux3: { left: [ 'select', 'a', 'b'  ], right: [ null, 'q', null ], top: [ null ], bottom: [ 'enable' ] },
         demux3: { left: [ 'select', null, 'data'  ], right: [ 'qa', null, 'qb' ], top: [ null ], bottom: [ 'enable' ] },
+        adflipflop: { left: [ 'clock', null, 'data'  ], right: [ null, 'q', null ], top: [ 'set' ], bottom: [ 'reset' ] },
     };
 
     gates;
     #numChannels;
 
     constructor(app, x, y, rotation, type, numChannels = 1) {
+        if (type === 'flipflop') {
+            type = 'dflipflop';
+        }
         const { left, right, inputs, outputs } = Builtin.#generatePorts(type);
         const ioTypes = Object.fromEntries([ ...inputs.map((i) => [ i, 'in' ]), ...outputs.map((o) => [ o, 'out' ]) ]);
         super(app, x, y, rotation, Builtin.LAYOUT_OVERRIDES[type] ?? { 'left': left, 'right': right }, type, numChannels, ioTypes);

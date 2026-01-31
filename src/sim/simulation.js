@@ -8,26 +8,30 @@ class Simulation {
     static OPTIMIZE_0TICK_INPUTS = true;
 
     static GATE_MAP = {
-        'buffer': { negIn: false, negOut: false, joinOp: null },
-        'not'   : { negIn: false, negOut: true,  joinOp: null },
-        'and'   : { negIn: false, negOut: false, joinOp: '&' },
-        'nand'  : { negIn: false, negOut: true,  joinOp: '&' },
-        'or'    : { negIn: false, negOut: false, joinOp: '|' },
-        'nor'   : { negIn: false, negOut: true,  joinOp: '|' },
-        'xor'   : { negIn: false, negOut: false, joinOp: '^' },
-        'xnor'  : { negIn: false, negOut: true,  joinOp: '^' },
+        buffer  : { negIn: false, negOut: false, joinOp: null },
+        not     : { negIn: false, negOut: true,  joinOp: null },
+        and     : { negIn: false, negOut: false, joinOp: '&' },
+        nand    : { negIn: false, negOut: true,  joinOp: '&' },
+        or      : { negIn: false, negOut: false, joinOp: '|' },
+        nor     : { negIn: false, negOut: true,  joinOp: '|' },
+        xor     : { negIn: false, negOut: false, joinOp: '^' },
+        xnor    : { negIn: false, negOut: true,  joinOp: '^' },
     };
 
     static BUILTIN_MAP = {
-        'latch'     : { outputs: { q: '(load & data) | (~load & q)' }, inputs: [ 'load', 'data' ], statsGates: 4  },
-        'flipflop'  : { outputs: { q: '(+clock & data) | (~+clock & q)' }, inputs: [ 'clock', 'data' ], statsGates: 6 },
-        'buffer3'   : { outputs: { q: 'data' }, signals: { q: 'enable' }, inputs: [ 'enable', 'data' ], statsGates: 1 },
-        'not3'      : { outputs: { q: '~data' }, signals: { q: 'enable' }, inputs: [ 'enable', 'data' ], statsGates: 1 },
-        'adder'     : { outputs: { cOut: '((a ^ b) & cIn) | (a & b)', q: '(a ^ b) ^ cIn' }, inputs: [ 'a', 'b', 'cIn' ], statsGates: 5  },
-        'mux'       : { outputs: { q: '(~select & a) | (select & b)' }, inputs: [ 'select', 'a', 'b' ], statsGates: 5 }, // stats: 2 and, 1 or, 1 not, 1 buffer to balance not
-        'mux3'       : { outputs: { q: '(~select & a) | (select & b)' }, signals: { q: 'enable' }, inputs: [ 'select', 'enable', 'a', 'b' ], statsGates: 5 },
-        'demux'     : { outputs: { qa: '(~select & data)', qb: '(select & data)' }, inputs: [ 'select', 'data' ], statsGates: 4 }, // stats: 2 and, 1 not, 1 buffer to balance not
-        'demux3'    : { outputs: { qa: '(~select & data)', qb: '(select & data)' }, signals: { qa: 'enable & ~select', qb: 'enable & select' }, inputs: [ 'select', 'enable', 'data' ], statsGates: 4 },
+        latch       : { outputs: { q: '(load & data) | (~load & q)' }, inputs: [ 'load', 'data' ], statsGates: 4  },
+        dflipflop   : { outputs: { q: '(+clock & data) | (~+clock & q)' }, inputs: [ 'clock', 'data' ], statsGates: 6 },
+        adflipflop  : { outputs: { q: '~reset & (set | ((+clock & data) | (~+clock & q)))' }, inputs: [ 'clock', 'data', 'reset', 'set' ], statsGates: 10 },
+        jkflipflop  : { outputs: { q: '(+clock & ((j & ~q) | (~k & q))) | (~+clock & q)' }, inputs: [ 'clock', 'j', 'k' ], statsGates: 11 },
+        tflipflop   : { outputs: { q: '(+clock & ((t & ~q) | (~t & q))) | (~+clock & q)' }, inputs: [ 'clock', 't' ], statsGates: 11 },
+        srflipflop  : { outputs: { q: '(+clock & (s | (~r & q))) | (~+clock & q)' }, inputs: [ 'clock', 's', 'r' ], statsGates: 9 },
+        buffer3     : { outputs: { q: 'data' }, signals: { q: 'enable' }, inputs: [ 'enable', 'data' ], statsGates: 1 },
+        not3        : { outputs: { q: '~data' }, signals: { q: 'enable' }, inputs: [ 'enable', 'data' ], statsGates: 1 },
+        adder       : { outputs: { cOut: '((a ^ b) & cIn) | (a & b)', q: '(a ^ b) ^ cIn' }, inputs: [ 'a', 'b', 'cIn' ], statsGates: 5  },
+        mux         : { outputs: { q: '(~select & a) | (select & b)' }, inputs: [ 'select', 'a', 'b' ], statsGates: 5 }, // stats: 2 and, 1 or, 1 not, 1 buffer to balance not
+        mux3        : { outputs: { q: '(~select & a) | (select & b)' }, signals: { q: 'enable' }, inputs: [ 'select', 'enable', 'a', 'b' ], statsGates: 5 },
+        demux       : { outputs: { qa: '(~select & data)', qb: '(select & data)' }, inputs: [ 'select', 'data' ], statsGates: 4 }, // stats: 2 and, 1 not, 1 buffer to balance not
+        demux3      : { outputs: { qa: '(~select & data)', qb: '(select & data)' }, signals: { qa: 'enable & ~select', qb: 'enable & select' }, inputs: [ 'select', 'enable', 'data' ], statsGates: 4 },
     };
 
     #debug;
