@@ -282,14 +282,7 @@ class LogiSim {
                 // helper wire to attach the 1-port
                 const helperDirection = splitterHelperWire[rawAppear][rawFacing] ?? null;
                 if (helperDirection) {
-                    const singlePortOffset = splitter.portByName(Splitter.SINGLE_PORT_NAME).coords(splitter.width, splitter.height, splitter.rotation);
-                    const x1 = splitter.x + singlePortOffset.x;
-                    const y1 = splitter.y + singlePortOffset.y;
-                    const x2 = x1 + helperDirection.x * Grid.SPACING;
-                    const y2 = y1 + helperDirection.y * Grid.SPACING;
-                    const wire = new Wire(this.#app, x1, y1, Grid.SPACING, 'h'); // temporary coords/length...
-                    wire.setEndpoints(x1, y1, x2, y2); // ... we use more convenient api instead
-                    circuit.addItem(wire);
+                    this.#addHelperWire(circuit, splitter, Splitter.SINGLE_PORT_NAME, helperDirection, 1);
                 }
             } else if (rawComp.name === 'Tunnel') {
                 const item = new Tunnel(this.#app, x, y, rotation(rawComp.facing ?? 'west'));
