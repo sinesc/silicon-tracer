@@ -315,21 +315,40 @@ class LogiSim {
                 for (const input of item.inputs) {
                     this.#addHelperWire(circuit, item, input, helperDirection, helperLength);
                 }
-            } else if (rawComp.name === 'D Flip-Flop') {
+            } else if ([ 'D Flip-Flop', 'T Flip-Flop', 'J-K Flip-Flop', 'S-R Flip-Flop' ].includes(rawComp.name)) {
                 const mapping = {
-                    'rising'    : { type: 'adflipflop', trigger: 'clock' },
-                    'falling'   : { type: 'adflipflop', trigger: 'clock' }, // FIXME
-                    'high'      : { type: 'adlatch', trigger: 'load' },
-                    'low'       : { type: 'adlatch', trigger: 'load' },     // FIXME
+                    'D Flip-Flop' : {
+                        'rising'    : { type: 'adflipflop', trigger: 'clock', input: 'data' },
+                        'falling'   : { type: 'adflipflop', trigger: 'clock', input: 'data' }, // FIXME
+                        'high'      : { type: 'adlatch', trigger: 'load', input: 'data' },
+                        'low'       : { type: 'adlatch', trigger: 'load', input: 'data' },     // FIXME
+                    },
+                    'T Flip-Flop' : {
+                        'rising'    : { type: 'tflipflop', trigger: 'clock', input: 't' },
+                        'falling'   : { type: 'tflipflop', trigger: 'clock', input: 't' }, // FIXME
+                    },
+                    'J-K Flip-Flop' : {
+                        'rising'    : { type: 'jkflipflop', trigger: 'clock', input: 'j', input2: 'k' },
+                        'falling'   : { type: 'jkflipflop', trigger: 'clock', input: 'j', input2: 'k' }, // FIXME
+                    },
+                    'S-R Flip-Flop' : {
+                        'rising'    : { type: 'srflipflop', trigger: 'clock', input: 's', input2: 'r' },
+                        'falling'   : { type: 'srflipflop', trigger: 'clock', input: 's', input2: 'r' }, // FIXME
+                    }
                 };
-                const mapped = mapping[rawComp.trigger ?? 'rising'];
+                const mapped = mapping[rawComp.name][rawComp.trigger ?? 'rising'];
                 const item = new Builtin(this.#app, x, y, 0, mapped.type);
                 item.x += Grid.SPACING;
                 item.y += Grid.SPACING;
                 circuit.addItem(item);
-                this.#addHelperWire(circuit, item, 'set', direction(0), 1);
-                this.#addHelperWire(circuit, item, 'reset', direction(2), 1);
-                this.#addHelperWire(circuit, item, 'data', direction(3), 2);
+                if (mapped.type.slice(0, 1) === 'a') { // FIXME support set/reset for all
+                    this.#addHelperWire(circuit, item, 'set', direction(0), 1);
+                    this.#addHelperWire(circuit, item, 'reset', direction(2), 1);
+                }
+                this.#addHelperWire(circuit, item, mapped.input, direction(3), 2);
+                if (mapped.input2) {
+                    this.#addHelperWire(circuit, item, mapped.input2, direction(3), 2);
+                }
                 this.#addHelperWire(circuit, item, mapped.trigger, direction(3), 2);
                 this.#addHelperWire(circuit, item, 'q', direction(1), 1);
                 const buffer = new Gate(this.#app, x + 3 * Grid.SPACING, y + 1 * Grid.SPACING, 3, 'buffer', 1);
