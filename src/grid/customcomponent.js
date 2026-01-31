@@ -6,6 +6,7 @@ class CustomComponent extends VirtualComponent {
     static EDIT_DIALOG = [
         //{ name: 'label', label: 'Component label', type: 'string' },
         ...Component.EDIT_DIALOG,
+        { name: 'spacing', label: 'Pin spacing', type: 'select', options: { 0: "None", 1: "One", 2: "Two" } },
         { name: 'gap', label: 'Pin gap', type: 'select', options: { start: "Top or left", middle: "Middle", end: "Bottom or right" } },
         { name: 'parity', label: 'Side lengths', type: 'select', options: { auto: "Automatic", none: "Mixed (rotation snaps)", even: "Even", odd: "Odd" } },
     ];
@@ -15,30 +16,34 @@ class CustomComponent extends VirtualComponent {
 
     #portParity;
     #portGap;
+    #portSpacing;
 
     // Simulation instance of the represented sub-circuit.
     #instanceId = null;
 
-    constructor(app, x, y, rotation, uid, parity = null, gap = null) {
+    constructor(app, x, y, rotation, uid, parity = null, gap = null, spacing = null) {
         assert.integer(rotation);
         assert.string(uid);
         assert.enum([ 'auto', 'none', 'even', 'odd' ], parity, true);
         assert.enum([ 'start', 'middle', 'end' ], gap, true);
+        assert.integer(spacing, true);
         const circuit = app.circuits.byUID(uid) ?? {};
         parity ??= circuit.portConfig.parity;
         gap ??= circuit.portConfig.gap;
-        const ports = CustomComponent.#generatePorts(circuit, parity, gap);
+        spacing ??= circuit.portConfig.spacing;
+        const ports = CustomComponent.#generatePorts(circuit, parity, gap, spacing);
         super(app, x, y, rotation, ports, circuit.label ?? '');
         this.uid = uid;
         this.#portParity = parity;
         this.#portGap = gap;
+        this.#portSpacing = spacing;
     }
 
     // Serializes the object for writing to disk.
     serialize() {
         return {
             ...super.serialize(),
-            '#a': [ this.x, this.y, this.rotation, this.uid, this.#portParity, this.#portGap ],
+            '#a': [ this.x, this.y, this.rotation, this.uid, this.#portParity, this.#portGap, this.#portSpacing ],
         };
     }
 
@@ -55,7 +60,7 @@ class CustomComponent extends VirtualComponent {
     // Update ports from circuit.
     updatePorts() {
         const circuit = this.app.circuits.byUID(this.uid) ?? {};
-        const portNames = CustomComponent.#generatePorts(circuit, this.#portParity, this.#portGap);
+        const portNames = CustomComponent.#generatePorts(circuit, this.#portParity, this.#portGap, this.#portSpacing);
         this.setPortsFromNames(portNames);
     }
 
@@ -101,10 +106,11 @@ class CustomComponent extends VirtualComponent {
     // Handle edit hotkey.
     async onEdit() {
         const circuit = this.app.circuits.byUID(this.uid) ?? {};
-        const result = await dialog("Configure custom component", CustomComponent.EDIT_DIALOG, { gap: this.#portGap ?? circuit.portConfig.gap, parity: this.#portParity ?? circuit.portConfig.parity, rotation: this.rotation });
+        const result = await dialog("Configure custom component", CustomComponent.EDIT_DIALOG, { spacing: '' + this.#portSpacing, gap: this.#portGap, parity: this.#portParity, rotation: this.rotation });
         if (result) {
             const grid = this.grid;
             this.unlink();
+            this.#portSpacing = Number.parseInt(result.spacing);
             this.#portGap = result.gap;
             this.#portParity = result.parity;
             this.link(grid);
@@ -114,7 +120,7 @@ class CustomComponent extends VirtualComponent {
     }
 
     // Generates port outline for the circuit's component representation.
-    static #generatePorts(circuit, parity, gap) {
+    static #generatePorts(circuit, parity, gap, spacing) {
         // get ports from circuit
         const ports = circuit.items.filter((i) => i instanceof Port);
         const outline = { 'left': [], 'right': [], 'top': [], 'bottom': [] };
@@ -139,19 +145,34 @@ class CustomComponent extends VirtualComponent {
         width = Math.max(even ? 2 : 1, width);
         // arrange ports as specified
         for (const side of Object.keys(outline)) {
+            let ports = outline[side];
             // sort by position
-            outline[side].sort(([a,], [b,]) => a - b);
-            outline[side] = outline[side].map(([sort, label]) => label);
+            ports.sort(([a,], [b,]) => a - b);
+            ports = ports.map(([sort, label]) => label);
             // determine expected length of side (number of required ports) and actual number of ports
             const length = side === 'left' || side === 'right' ? height : width;
-            const available = length - outline[side].length;
+            const available = length - ports.length;
             // prepare additional ports to insert on the outside and/or center (or wherever configured) of the side
             const edgePorts = (new Array(Math.floor(available / 2))).fill(null);
             const centerPorts = available % 2 === 1 ? [ null ] : [];
             // insert ports according to configured position
-            outline[side] = [ ...edgePorts, ...outline[side], ...edgePorts ];
-            const position = gap === 'middle' ? outline[side].length / 2 : (gap === 'start' ? 0 : outline[side].length);
-            outline[side].splice(position, 0, ...centerPorts);
+            ports = [ ...edgePorts, ...ports, ...edgePorts ];
+            const position = gap === 'middle' ? ports.length / 2 : (gap === 'start' ? 0 : ports.length);
+            ports.splice(position, 0, ...centerPorts);
+            // insert spacing
+            if (spacing > 0) {
+                const result = [];
+                for (let i = 0; i < ports.length; ++i) {
+                    result.push(ports[i]);
+                    if (i < ports.length - 1) {
+                        for (let s = 0; s < spacing; ++s) {
+                            result.push(null);
+                        }
+                    }
+                }
+                ports = result;
+            }
+            outline[side] = ports;
         }
         // reverse left/bottom due to the way we enumerate ports for easier rotation
         outline['left'].reverse();

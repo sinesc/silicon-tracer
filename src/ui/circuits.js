@@ -5,6 +5,7 @@ class Circuits {
 
     static EDIT_DIALOG = [
         { name: 'label', label: 'Circuit label', type: 'string' },
+        { name: 'spacing', label: 'Default pin spacing', type: 'select', options: { 0: "None", 1: "One", 2: "Two" } },
         { name: 'gap', label: 'Default pin gap', type: 'select', options: { start: "Top or left", middle: "Middle", end: "Bottom or right" } },
         { name: 'parity', label: 'Default side lengths', type: 'select', options: { auto: "Automatic", none: "Mixed (rotation snaps)", even: "Even", odd: "Odd" } },
     ];
@@ -205,9 +206,10 @@ class Circuits {
     // Rename
     async edit(uid) {
         const circuit = this.byUID(uid);
-        const result = await dialog("Configure circuit", Circuits.EDIT_DIALOG, { label: circuit.label, gap: circuit.portConfig.gap, parity: circuit.portConfig.parity });
+        const result = await dialog("Configure circuit", Circuits.EDIT_DIALOG, { label: circuit.label, spacing: '' + circuit.portConfig.spacing, gap: circuit.portConfig.gap, parity: circuit.portConfig.parity });
         if (result) {
             circuit.label = result.label;
+            circuit.portConfig.spacing = Number.parseInt(result.spacing);
             circuit.portConfig.gap = result.gap;
             circuit.portConfig.parity = result.parity;
             this.#app.grid.setCircuitLabel(result.label);
@@ -279,7 +281,7 @@ Circuits.Circuit = class {
         this.#lid = lid;
         this.#data = data;
         this.gridConfig = Object.assign({}, { zoom: 1.25, offsetX: 0, offsetY: 0 }, gridConfig);
-        this.portConfig = Object.assign({}, { gap: "middle", parity: "auto" }, portConfig);
+        this.portConfig = Object.assign({}, { spacing: 0, gap: "middle", parity: "auto" }, portConfig);
         this.#gidLookup = new Map(data.map((v) => [ v.gid, new WeakRef(v) ]));
     }
 
