@@ -34,6 +34,7 @@ class Circuits {
         const content = JSON.parse(await file.text());
         if (clear) {
             this.#circuits = {};
+            this.#libraries = {};
         }
         const newCircuitUID = this.unserialize(content);
         if (switchTo) {
