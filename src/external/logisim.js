@@ -341,16 +341,16 @@ class LogiSim {
                         'low'       : { type: 'adlatch', trigger: 'load', input: 'data' },     // FIXME
                     },
                     'T Flip-Flop' : {
-                        'rising'    : { type: 'tflipflop', trigger: 'clock', input: 't' },
-                        'falling'   : { type: 'tflipflop', trigger: 'clock', input: 't' }, // FIXME
+                        'rising'    : { type: 'atflipflop', trigger: 'clock', input: 't' },
+                        'falling'   : { type: 'atflipflop', trigger: 'clock', input: 't' }, // FIXME
                     },
                     'J-K Flip-Flop' : {
-                        'rising'    : { type: 'jkflipflop', trigger: 'clock', input: 'j', input2: 'k' },
-                        'falling'   : { type: 'jkflipflop', trigger: 'clock', input: 'j', input2: 'k' }, // FIXME
+                        'rising'    : { type: 'ajkflipflop', trigger: 'clock', input: 'j', input2: 'k' },
+                        'falling'   : { type: 'ajkflipflop', trigger: 'clock', input: 'j', input2: 'k' }, // FIXME
                     },
                     'S-R Flip-Flop' : {
-                        'rising'    : { type: 'srflipflop', trigger: 'clock', input: 's', input2: 'r' },
-                        'falling'   : { type: 'srflipflop', trigger: 'clock', input: 's', input2: 'r' }, // FIXME
+                        'rising'    : { type: 'asrflipflop', trigger: 'clock', input: 's', input2: 'r' },
+                        'falling'   : { type: 'asrflipflop', trigger: 'clock', input: 's', input2: 'r' }, // FIXME
                     }
                 };
                 const mapped = mapping[rawComp.name][rawComp.trigger ?? 'rising'];
@@ -358,10 +358,8 @@ class LogiSim {
                 item.x += Grid.SPACING;
                 item.y += Grid.SPACING;
                 circuit.addItem(item);
-                if (mapped.type.slice(0, 1) === 'a') { // FIXME support set/reset for all
-                    this.#addHelperWire(circuit, item, 'set', direction(0), 1);
-                    this.#addHelperWire(circuit, item, 'reset', direction(2), 1);
-                }
+                this.#addHelperWire(circuit, item, 'set', direction(0), 1);
+                this.#addHelperWire(circuit, item, 'reset', direction(2), 1);
                 this.#addHelperWire(circuit, item, mapped.input, direction(3), 2);
                 if (mapped.input2) {
                     this.#addHelperWire(circuit, item, mapped.input2, direction(3), 2);
