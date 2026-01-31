@@ -80,9 +80,10 @@ class Port extends SimulationComponent {
         if (config) {
             this.name = config.name;
             this.rotation = config.rotation;
-            // update ports on all custom components  // TODO: optimize by actually only updating those custom components that use this circuit
             for (const circuit of values(this.app.circuits.all)) {
-                for (const component of circuit.items.filter((i) => i instanceof CustomComponent)) {
+                // update ports on all custom components that are NOT on the grid (firstly because that unlinks them and secondly because the
+                // circuit this port belongs to is the one being edited on the grid, so can't possibly have a component of itself on the grid
+                for (const component of circuit.items.filter((i) => i.grid === null && i instanceof CustomComponent)) {
                     component.updatePorts();
                 }
             }
