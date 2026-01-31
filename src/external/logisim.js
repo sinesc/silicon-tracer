@@ -7,13 +7,30 @@ class LogiSim {
     #layouts = {};
     #fileHandle;
     #numImported = 0;
+    #problems;
 
     static async import(app, fileHandle, text) {
         const instance = new LogiSim();
         instance.#app = app;
         instance.#fileHandle = fileHandle;
+        instance.#problems = new Set();
         const project = XML.parse(text).project;
         await instance.#importFile(null, project, 'Your project');
+        if (instance.#problems.size > 0) {
+            const circuit = new Circuits.Circuit("# Import issues");
+            let y = 0;
+            circuit.addItem(new TextLabel(app, Grid.SPACING, y += Grid.SPACING, 0,600, 'Issues detected during import', 'medium', null));
+            circuit.addItem(new TextLabel(app, Grid.SPACING, y += Grid.SPACING, 0,600, 'The following circuits may require manual attention.\Unsupported components or unplaceable ports have been marked in red within the circuits.', 'small', null));
+            y += Grid.SPACING;
+            for (const label of values(instance.#problems)) {
+                circuit.addItem(new TextLabel(app, 2*Grid.SPACING, y += Grid.SPACING, 0, 600, '- ' + label, 'small', null));
+            }
+            circuit.addItem(new TextLabel(app, Grid.SPACING, y += Grid.SPACING, 0,600, 'This document is for your information only. You can delete it via Circuits > Remove "# Import issues" once you don\'t need it anymore.', 'small', null));
+            app.circuits.add(circuit);
+            app.circuits.select(circuit.uid);
+            app.simulations.select(app.circuits.current, app.config.autoCompile);
+        }
+
         infoDialog('Import complete', `Your project has been imported. ${instance.#numImported} circuits have been added to the Circuit and/or Component menus.`);
     }
 
@@ -378,10 +395,14 @@ class LogiSim {
             } else if (rawComp.name === 'Text') {
                 const item = new TextLabel(this.#app, x, y, rotation(rawComp.facing ?? 'east') + 3, 200, rawComp.text);
                 circuit.addItem(item);
+            } else if (rawComp.name === 'Probe') {
+                // since this isn't required for the circuit to work we'll skip it for now without
+                // spamming the error log and making it hard to find the actual problems
             } else {
                 const item = new TextLabel(this.#app, x, y, rotation(rawComp.facing ?? 'east') + 3, 200, rawComp.name, 'medium', 4);
                 circuit.addItem(item);
-                //console.log(rawComp);
+                this.#problems.add(rawCircuit.name);
+                //console.log(rawCircuit.name, rawComp);
             }
         }
         return portMap;
@@ -414,6 +435,7 @@ class LogiSim {
                     rotation = 3;
                 } else {
                     circuit.addItem(new TextLabel(this.#app, Grid.SPACING * 40, -(globalOffsetY - layout.minY * scale) + errorPos * Grid.SPACING, 0, 800, `Port ${mapping.portName} could not be placed on the outline of the component.`, 'small', 4));
+                    this.#problems.add(circuit.label);
                     errorPos += 1;
                     continue;
                 }
