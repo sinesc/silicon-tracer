@@ -18,8 +18,11 @@ class Builtin extends SimulationComponent {
         dflipflop: 'D flip-flop',
         adflipflop: 'D flip-flop, async. reset',
         jkflipflop: 'JK flip-flop',
+        ajkflipflop: 'JK flip-flop, async. reset',
         tflipflop: 'T flip-flop',
+        atflipflop: 'T flip-flop, async. reset',
         srflipflop: 'SR flip-flop',
+        asrflipflop: 'SR flip-flop, async. reset',
         buffer3: 'Tri-state buffer',
         not3: 'Tri-state inverter',
         mux3: 'Tri-state mux',
@@ -34,6 +37,9 @@ class Builtin extends SimulationComponent {
         demux3: { left: [ 'select', null, 'data'  ], right: [ 'qa', null, 'qb' ], top: [ null ], bottom: [ 'enable' ] },
         adlatch: { left: [ 'load', null, 'data' ], right: [ null, 'q', null ], top: [ 'set' ], bottom: [ 'reset' ] },
         adflipflop: { left: [ 'clock', null, 'data'  ], right: [ null, 'q', null ], top: [ 'set' ], bottom: [ 'reset' ] },
+        ajkflipflop: { left: [ 'clock', 'k', 'j' ], right: [ null, 'q', null ], top: [ 'set' ], bottom: [ 'reset' ] },
+        atflipflop: { left: [ 'clock', null, 't' ], right: [ null, 'q', null ], top: [ 'set' ], bottom: [ 'reset' ] },
+        asrflipflop: { left: [ 'clock', 'r', 's' ], right: [ null, 'q', null ], top: [ 'set' ], bottom: [ 'reset' ] },
     };
 
     gates;
