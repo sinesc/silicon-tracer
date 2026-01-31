@@ -127,6 +127,7 @@ class Toolbar {
                 }
             } else if (documentCloses) {
                 document.onclick = null;
+                this.#menuOpen = null;
             }
         });
         this.#menuStates.add(stateFn);
