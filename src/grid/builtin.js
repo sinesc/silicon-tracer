@@ -10,8 +10,8 @@ class Builtin extends SimulationComponent {
     static LABELS = {
         latch: 'D latch',
         flipflop: 'D flip-flip',
-        buffer3: 'Buffer 3',
-        not3: 'Not 3',
+        buffer3: 'Tri-state buffer',
+        not3: 'Tri-state inverter',
         mux3: 'Tri-state mux',
         demux3: 'Tri-state demux',
         adder: 'Full adder',

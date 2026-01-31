@@ -444,6 +444,11 @@ class Application {
         const DRAG_MSG = '<i>LMB</i> Drag to move onto grid.';
         const rotation = this.config.rotationDefaults;
 
+        // add text
+        this.toolbar.createComponentButton('Text', `<b>Userdefined text message</b>. ${DRAG_MSG}`, (grid, x, y) => {
+            return grid.addItem(new TextLabel(this, x, y, rotation.text));
+        });
+
         // add ports
         this.toolbar.createComponentButton('Port', `<b>Component IO pin</b>. ${DRAG_MSG}`, (grid, x, y) => {
             return grid.addItem(new Port(this, x, y, rotation.port))
@@ -460,31 +465,6 @@ class Application {
             return grid.addItem(new Splitter(this, x, y, rotation.splitter, numChannels));
         });
 
-        // add text
-        this.toolbar.createComponentButton('Text', `<b>Userdefined text message</b>. ${DRAG_MSG}`, (grid, x, y) => {
-            return grid.addItem(new TextLabel(this, x, y, rotation.text));
-        });
-
-        // add a clock component
-        this.toolbar.createComponentButton('Clock', `<b>Clock</b>. ${DRAG_MSG}`, (grid, x, y) => {
-            return grid.addItem(new Clock(this, x, y, rotation.clock));
-        });
-
-        // add a pull resistor component
-        this.toolbar.createComponentButton('Pull', `<b>Pull up/down resistor</b>. ${DRAG_MSG}`, (grid, x, y) => {
-            return grid.addItem(new PullResistor(this, x, y, rotation.pull));
-        });
-
-        // add a constant component
-        this.toolbar.createComponentButton('Constant', `<b>Constant value</b>. ${DRAG_MSG}`, (grid, x, y) => {
-            return grid.addItem(new Constant(this, x, y, rotation.constant));
-        });
-
-        // add toggle buttons
-        this.toolbar.createComponentButton('Toggle', `<b>Toggle button</b> with permanently saved state. ${DRAG_MSG}`, (grid, x, y) => {
-            return grid.addItem(new Toggle(this, x, y, rotation.port));
-        });
-
         // add gates
         for (const [ gateType, { joinOp } ] of Object.entries(Simulation.GATE_MAP)) {
             const gateLabel = gateType.toUpperFirst();
@@ -493,15 +473,6 @@ class Application {
                 return grid.addItem(new Gate(this, x, y, rotation[gateType] ?? rotation.gate, gateType, joinOp !== null ? numInputs : 1));
             });
         }
-        /*
-        // add extra gate-like builtins
-        for (const builtinType of keys(Simulation.BUILTIN_MAP)) {
-            const builtinLabel = Builtin.LABELS[builtinType] ?? builtinType.toUpperFirst();
-            this.toolbar.createComponentButton(builtinLabel, `<b>${builtinLabel}</b> builtin. ${DRAG_MSG}`, (grid, x, y) => {
-                return grid.addItem(new Builtin(this, x, y, rotation[builtinType] ?? rotation.builtin, builtinType));
-            });
-        }
-        */
     }
 
     // Initialize render loop and other periodic events.
