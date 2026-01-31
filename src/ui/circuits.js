@@ -383,7 +383,9 @@ Circuits.Circuit = class {
                     if (component) {
                         const port = component.portByName(name);
                         port.netIds ??= [];
-                        port.netIds.push(net.netId);
+                        if (net.netId !== null) {
+                            port.netIds.push(net.netId);
+                        }
                     }
                 }
             }
@@ -393,7 +395,9 @@ Circuits.Circuit = class {
                     const wire = this.itemByGID(gid);
                     if (wire) {
                         wire.netIds ??= [];
-                        wire.netIds.push(net.netId);
+                        if (net.netId !== null) {
+                            wire.netIds.push(net.netId);
+                        }
                     }
                 }
             }

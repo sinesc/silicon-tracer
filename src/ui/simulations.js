@@ -212,10 +212,10 @@ Simulations.Simulation = class {
         this.#netList = NetList.identify(this.#circuit, this.#app.circuits.all);
         const newHash = this.#netList.toString();
         const retainMemory = this.#engine && this.#netListHash === newHash;
-        if (!retainMemory) {
-            this.#computeCircuitStats()
-        }
         this.#engine = this.#netList.compileSimulation(retainMemory ? this.#engine.rawMem() : null, this.#app.config);
+        if (!retainMemory) {
+            this.#computeCircuitStats();
+        }
         this.#netListHash = newHash;
         this.#dirty = false;
     }
@@ -232,7 +232,7 @@ Simulations.Simulation = class {
                 }
             }
         }
-        const netDepth = this.#netList.longestSignalPath.length; // depth in nets, gates sit between nets, so we have to subtract 1 to get gate propagations
-        this.#stats = { nets: this.#netList.nets.length, gates, maxDelay: Math.max(0, netDepth - 1) };
+        const netDepth = this.#netList.statsLongestSignalPath.length; // depth in nets, gates sit between nets, so we have to subtract 1 to get gate propagations
+        this.#stats = { nets: this.#netList.statsCompiledNets ?? this.#netList.nets.length, gates, maxDelay: Math.max(0, netDepth - 1) };
     }
 }

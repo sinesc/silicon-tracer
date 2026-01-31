@@ -5,7 +5,8 @@ class NetList {
     nets;
     unconnected;
     instances;
-    longestSignalPath;
+    statsLongestSignalPath;
+    statsCompiledNets = null;
 
     // Identifies nets in the given circuit and returns a netlist, recursively if a uid=>circuit map of circuits is provided
     static identify(circuit, circuits = null) {
@@ -40,7 +41,7 @@ class NetList {
         netList.nets = nets;  // FIXME: nets needs to be ordered to get reproducable/compatible compile results when the circuit item order changes without the actual logic changing
         netList.unconnected = { wires: unconnectedWires, ports: unconnectedPorts };
         netList.instances = instances;
-        netList.longestSignalPath = recurse ? NetList.#getLongestSignalPath(nets): 0; // only useful on full identify
+        netList.statsLongestSignalPath = recurse ? NetList.#getLongestSignalPath(nets): 0; // only useful on full identify
         return netList;
     }
 
@@ -75,12 +76,13 @@ class NetList {
             // create new net from connected gate i/o-ports
             const debugPortComponents = net.ports.filter((p) => { const c = getComponent(p); c instanceof Port && !c.disregard(); }).map((p) => p.uniqueName);
             const attachedPorts = net.ports.filter((p) => { const c = getComponent(p); return c instanceof SimulationComponent && !c.disregard() && wasDeclared(p); }).map((p) => p.uniqueName);
-            if (attachedPorts) {
+            if (attachedPorts.length > 0) {
                 net.netId = sim.declareNet(attachedPorts, debugPortComponents);
             }
         }
         // compile
         sim.compile(rawMem);
+        this.statsCompiledNets = sim.nets.length;
         return sim;
     }
 
@@ -171,7 +173,7 @@ class NetList {
                 }
             }
         }
-        return { wires, ports, numChannels: 1 };
+        return { wires, ports, numChannels: 1, netId: null }; // TODO: add netList.Net class for this
     }
 
     // Follow wires attached to port in and out of subcomponents to trace out the entire net.
@@ -290,7 +292,7 @@ class NetList {
 
             for (let ch = 0; ch < nets[i].numChannels; ch++) {
                 const root = find(key(i, ch));
-                if (!newNetsMap.has(root)) newNetsMap.set(root, { wires: [], ports: [], numChannels: 1 });
+                if (!newNetsMap.has(root)) newNetsMap.set(root, { wires: [], ports: [], numChannels: 1, netId: null });
                 const newNet = newNetsMap.get(root);
 
                 //if (ch === 0) {

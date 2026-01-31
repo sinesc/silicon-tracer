@@ -53,6 +53,7 @@ class Simulation {
     // Declares a net (which inputs/outputs are connected) and returns the net-index. Attached IO-names must include their suffixes. Meta can be any custom data.
     declareNet(attachedIONames, meta) {
         assert.array(attachedIONames, false, (i) => assert.string(i));
+        assert(attachedIONames.length > 0);
         this.#nets.push({ offset: this.#alloc8(), io: attachedIONames, meta });
         return this.#nets.length - 1;
     }
