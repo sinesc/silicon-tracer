@@ -19,7 +19,8 @@ class Simulation {
     };
 
     static BUILTIN_MAP = {
-        latch       : { outputs: { q: '(load & data) | (~load & q)' }, inputs: [ 'load', 'data' ], statsGates: 4  },
+        dlatch      : { outputs: { q: '(load & data) | (~load & q)' }, inputs: [ 'load', 'data' ], statsGates: 4  },
+        adlatch     : { outputs: { q: '~reset & (set | ((load & data) | (~load & q)))' }, inputs: [ 'load', 'data', 'reset', 'set' ], statsGates: 8  },
         dflipflop   : { outputs: { q: '(+clock & data) | (~+clock & q)' }, inputs: [ 'clock', 'data' ], statsGates: 6 },
         adflipflop  : { outputs: { q: '~reset & (set | ((+clock & data) | (~+clock & q)))' }, inputs: [ 'clock', 'data', 'reset', 'set' ], statsGates: 10 },
         jkflipflop  : { outputs: { q: '(+clock & ((j & ~q) | (~k & q))) | (~+clock & q)' }, inputs: [ 'clock', 'j', 'k' ], statsGates: 11 },

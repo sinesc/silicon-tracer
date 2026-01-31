@@ -7,8 +7,14 @@ class Builtin extends SimulationComponent {
         ...Component.EDIT_DIALOG,
     ];
 
+    static #LEGACY_RENAME = {
+        flipflop: 'dflipflop',
+        latch: 'dlatch',
+    };
+
     static LABELS = {
-        latch: 'D latch',
+        dlatch: 'D latch',
+        adlatch: 'D latch, async. reset',
         dflipflop: 'D flip-flop',
         adflipflop: 'D flip-flop, async. reset',
         jkflipflop: 'JK flip-flop',
@@ -26,6 +32,7 @@ class Builtin extends SimulationComponent {
         not3: { left: [ 'data' ], right: [ 'q' ], top: [ null ], bottom: [ 'enable' ] },
         mux3: { left: [ 'select', 'a', 'b'  ], right: [ null, 'q', null ], top: [ null ], bottom: [ 'enable' ] },
         demux3: { left: [ 'select', null, 'data'  ], right: [ 'qa', null, 'qb' ], top: [ null ], bottom: [ 'enable' ] },
+        adlatch: { left: [ 'load', null, 'data' ], right: [ null, 'q', null ], top: [ 'set' ], bottom: [ 'reset' ] },
         adflipflop: { left: [ 'clock', null, 'data'  ], right: [ null, 'q', null ], top: [ 'set' ], bottom: [ 'reset' ] },
     };
 
@@ -33,9 +40,7 @@ class Builtin extends SimulationComponent {
     #numChannels;
 
     constructor(app, x, y, rotation, type, numChannels = 1) {
-        if (type === 'flipflop') {
-            type = 'dflipflop';
-        }
+        type = Builtin.#LEGACY_RENAME[type] ?? type;
         const { left, right, inputs, outputs } = Builtin.#generatePorts(type);
         const ioTypes = Object.fromEntries([ ...inputs.map((i) => [ i, 'in' ]), ...outputs.map((o) => [ o, 'out' ]) ]);
         super(app, x, y, rotation, Builtin.LAYOUT_OVERRIDES[type] ?? { 'left': left, 'right': right }, type, numChannels, ioTypes);

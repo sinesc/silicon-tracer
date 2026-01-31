@@ -315,6 +315,31 @@ class LogiSim {
                 for (const input of item.inputs) {
                     this.#addHelperWire(circuit, item, input, helperDirection, helperLength);
                 }
+            } else if (rawComp.name === 'D Flip-Flop') {
+                const mapping = {
+                    'rising'    : { type: 'adflipflop', trigger: 'clock' },
+                    'falling'   : { type: 'adflipflop', trigger: 'clock' }, // FIXME
+                    'high'      : { type: 'adlatch', trigger: 'load' },
+                    'low'       : { type: 'adlatch', trigger: 'load' },     // FIXME
+                };
+                const mapped = mapping[rawComp.trigger ?? 'rising'];
+                const item = new Builtin(this.#app, x, y, 0, mapped.type);
+                item.x += Grid.SPACING;
+                item.y += Grid.SPACING;
+                circuit.addItem(item);
+                this.#addHelperWire(circuit, item, 'set', direction(0), 1);
+                this.#addHelperWire(circuit, item, 'reset', direction(2), 1);
+                this.#addHelperWire(circuit, item, 'data', direction(3), 2);
+                this.#addHelperWire(circuit, item, mapped.trigger, direction(3), 2);
+                this.#addHelperWire(circuit, item, 'q', direction(1), 1);
+                const buffer = new Gate(this.#app, x + 3 * Grid.SPACING, y + 1 * Grid.SPACING, 3, 'buffer', 1);
+                const inverter = new Gate(this.#app, x + 3 * Grid.SPACING, y + 3 * Grid.SPACING, 1, 'not', 1);
+                circuit.addItem(buffer);
+                circuit.addItem(inverter);
+                this.#addHelperWire(circuit, buffer, 'q', direction(1), 1);
+                this.#addHelperWire(circuit, inverter, 'q', direction(1), 1);
+                circuit.addItem(new Wire(this.#app, x - Grid.SPACING, y + Grid.SPACING, Grid.SPACING, 'v'));
+                circuit.addItem(new Wire(this.#app, x - Grid.SPACING, y + 4 * Grid.SPACING, Grid.SPACING, 'v'));
             } else if (rawComp.name === 'Ground') {
                 const item = new Constant(this.#app, x, y, rotation(rawComp.facing ?? 'south') + 2, 0);
                 offsetPort(item, 'c');
@@ -337,6 +362,7 @@ class LogiSim {
             } else {
                 const item = new TextLabel(this.#app, x, y, rotation(rawComp.facing ?? 'east') + 3, 200, rawComp.name, 'medium', 4);
                 circuit.addItem(item);
+                //console.log(rawComp);
             }
         }
         return portMap;
