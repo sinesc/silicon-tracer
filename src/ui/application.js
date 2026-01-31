@@ -340,7 +340,7 @@ class Application {
                         }
                         // component select
                         const [ switchButton ] = libraryMenu.createActionButton(label, isCurrentCircuit ? 'This is the current component' : 'Switch grid to component "' + label + '".', () => {
-                            libraryMenuState(false);
+                            componentMenuState(false);
                             this.circuits.select(uid);
                             this.simulations.select(this.circuits.current, this.config.autoCompile);
                         });

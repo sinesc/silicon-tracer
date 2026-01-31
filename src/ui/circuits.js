@@ -145,6 +145,7 @@ class Circuits {
         const circuit = new Circuits.Circuit(label);
         this.#circuits[circuit.uid] = circuit;
         this.#currentCircuit = circuit.uid;
+        this.#libraries = {};
         this.select(circuit.uid);
     }
 
