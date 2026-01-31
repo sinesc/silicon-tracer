@@ -15,7 +15,7 @@ class Simulations {
     // Returns list of simulations
     list() {
         const simulations = Object.keys(this.#simulations).map((uid) => [ uid, this.#app.circuits.byUID(uid).label ]);
-        simulations.sort((a, b) => a[1].toLowerCase() < b[1].toLowerCase() ? -1 : (a[1].toLowerCase() > b[1].toLowerCase() ? 1 : 0));
+        simulations.sort((a, b) => a[1].localeCompare(b[1], 'en', { numeric: true }));
         return simulations;
     }
 

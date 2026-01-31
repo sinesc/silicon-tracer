@@ -268,12 +268,12 @@ class Application {
                 routingMenu.createComponentButton('Port', `<b>Component IO pin</b>. ${DRAG_MSG}`, (grid, x, y) => {
                     return grid.addItem(new Port(this, x, y, rotation.port))
                 });
-                routingMenu.createComponentButton('Tunnel', `<b>Network tunnel</b>. ${DRAG_MSG}`, (grid, x, y) => {
-                    return grid.addItem(new Tunnel(this, x, y, rotation.tunnel))
-                });
                 routingMenu.createComponentButton('Splitter', `<b>Wire splitter/joiner</b>. ${DRAG_MSG}`, (grid, x, y) => {
                     let numChannels = 8; // TODO: configurable somewhere
                     return grid.addItem(new Splitter(this, x, y, rotation.splitter, numChannels));
+                });
+                routingMenu.createComponentButton('Tunnel', `<b>Network tunnel</b>. ${DRAG_MSG}`, (grid, x, y) => {
+                    return grid.addItem(new Tunnel(this, x, y, rotation.tunnel))
                 });
                 routingMenu.createComponentButton('Text', `<b>Userdefined text message</b>. ${DRAG_MSG}`, (grid, x, y) => {
                     return grid.addItem(new TextLabel(this, x, y, rotation.text));
@@ -292,12 +292,15 @@ class Application {
                 }
             });
 
-
             // add extra gate-like builtins
             const [ , builtinMenuState, builtinMenu ] = componentMenu.createMenuCategory('Basic components', 'Latches, muxes, ... <i>LMB</i> Open category.', () => {
                 builtinMenu.clear();
+                const builtins = [];
                 for (const builtinType of keys(Simulation.BUILTIN_MAP)) {
-                    const builtinLabel = Builtin.LABELS[builtinType] ?? builtinType.toUpperFirst();
+                    builtins.push([ builtinType, Builtin.LABELS[builtinType] ?? builtinType.toUpperFirst() ]);
+                }
+                builtins.sort((a, b) => a[1].localeCompare(b[1], 'en', { numeric: true }));
+                for (const [ builtinType, builtinLabel ] of values(builtins)) {
                     builtinMenu.createComponentButton(builtinLabel, `<b>${builtinLabel}</b> builtin. ${DRAG_MSG}`, (grid, x, y) => {
                         return grid.addItem(new Builtin(this, x, y, rotation[builtinType] ?? rotation.builtin, builtinType));
                     });
@@ -310,11 +313,11 @@ class Application {
                 ioMenu.createComponentButton('Clock', `<b>Clock</b>. ${DRAG_MSG}`, (grid, x, y) => {
                     return grid.addItem(new Clock(this, x, y, rotation.clock));
                 });
-                ioMenu.createComponentButton('Pull', `<b>Pull up/down resistor</b>. ${DRAG_MSG}`, (grid, x, y) => {
-                    return grid.addItem(new PullResistor(this, x, y, rotation.pull));
-                });
                 ioMenu.createComponentButton('Constant', `<b>Constant value</b>. ${DRAG_MSG}`, (grid, x, y) => {
                     return grid.addItem(new Constant(this, x, y, rotation.constant));
+                });
+                ioMenu.createComponentButton('Pull', `<b>Pull up/down resistor</b>. ${DRAG_MSG}`, (grid, x, y) => {
+                    return grid.addItem(new PullResistor(this, x, y, rotation.pull));
                 });
                 ioMenu.createComponentButton('Toggle', `<b>Toggle button</b> with permanently saved state. ${DRAG_MSG}`, (grid, x, y) => {
                     return grid.addItem(new Toggle(this, x, y, rotation.port));

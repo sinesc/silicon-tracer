@@ -135,7 +135,7 @@ class Circuits {
     // Returns a map(uid=>label) of loaded circuits or library circuits.
     list(lid = null) {
         const circuits = Object.values(this.#circuits).filter((c) => c.lid === lid).map((c) => [ c.uid, c.label ]);
-        circuits.sort((a, b) => a[1].toLowerCase() < b[1].toLowerCase() ? -1 : (a[1].toLowerCase() > b[1].toLowerCase() ? 1 : 0));
+        circuits.sort((a, b) => a[1].localeCompare(b[1], 'en', { numeric: true }));
         return circuits;
     }
 
@@ -195,7 +195,7 @@ class Circuits {
 
     // Creates a new circuit.
     async create() {
-        const config = await dialog("Create circuit", Circuits.EDIT_DIALOG, { label: this.#generateName(), gap: 'middle', parity: 'automatic' });
+        const config = await dialog("Create circuit", Circuits.EDIT_DIALOG, { label: this.#generateName(), gap: 'middle', parity: 'automatic', spacing: 0 });
         if (config) {
             const circuit = new Circuits.Circuit(config.label);
             this.#circuits[circuit.uid] = circuit;
