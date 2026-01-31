@@ -65,16 +65,19 @@ class NetList {
         for (const [instanceId, { circuit, simIds }] of this.instances.entries()) {
             for (const component of circuit.items.filter((i) => i instanceof SimulationComponent && !i.disregard())) {
                 const suffix = NetList.suffix(component.gid, instanceId);
-                simIds[component.gid] = component.declare(sim, config, suffix);
+                simIds[component.gid] = component.declare(sim, config, suffix, instanceId);
             }
         }
         // declare nets
         const getComponent = (p) => this.instances[p.instanceId].circuit.itemByGID(p.gid);
+        const wasDeclared = (p) => this.instances[p.instanceId].simIds[p.gid] !== null;
         for (const net of this.nets) {
             // create new net from connected gate i/o-ports
             const debugPortComponents = net.ports.filter((p) => { const c = getComponent(p); c instanceof Port && !c.disregard(); }).map((p) => p.uniqueName);
-            const attachedPorts = net.ports.filter((p) => { const c = getComponent(p); return c instanceof SimulationComponent && !c.disregard(); }).map((p) => p.uniqueName);
-            net.netId = sim.declareNet(attachedPorts, debugPortComponents);
+            const attachedPorts = net.ports.filter((p) => { const c = getComponent(p); return c instanceof SimulationComponent && !c.disregard() && wasDeclared(p); }).map((p) => p.uniqueName);
+            if (attachedPorts) {
+                net.netId = sim.declareNet(attachedPorts, debugPortComponents);
+            }
         }
         // compile
         sim.compile(rawMem);
