@@ -13,16 +13,16 @@ class Application {
         debugShowGid: false,
         debugShowCoords: false,
         debugShowWireBox: false,
-        rotationDefaults: {
-            port: 1,
-            tunnel: 1,
-            splitter: 0,
-            clock: 0,
-            pull: 1,
-            gate: 0,
-            builtin: 0,
-            text: 0,
-            constant: 1,
+        placementDefaults: {
+            port: { rotation: 1, },
+            tunnel: { rotation: 1, },
+            splitter: { rotation: 0, },
+            clock: { rotation: 0, },
+            pull: { rotation: 1, },
+            gate: { rotation: 0, numInputs: 2 },
+            builtin: { rotation: 0, },
+            textlabel: { rotation: 0, },
+            constant: { rotation: 1, },
         },
     };
 
@@ -260,23 +260,23 @@ class Application {
         const [ , componentMenuState, componentMenu ] = this.toolbar.createMenuButton('Component', 'Component palette. <i>LMB</i> Open menu.', () => {
             componentMenu.clear();
             const DRAG_MSG = '<i>LMB</i> Drag to move onto grid.';
-            const rotation = this.config.rotationDefaults;
+            const defaults = this.config.placementDefaults;
 
             // routing/utilities
             const [ , routingMenuState, routingMenu ] = componentMenu.createMenuCategory('Routing &amp; labeling', 'Ports, tunnels, splitters, text. <i>LMB</i> Open category.', () => {
                 routingMenu.clear();
                 routingMenu.createComponentButton('Port', `<b>Component IO pin</b>. ${DRAG_MSG}`, (grid, x, y) => {
-                    return grid.addItem(new Port(this, x, y, rotation.port))
+                    return grid.addItem(new Port(this, x, y, defaults.port.rotation))
                 });
                 routingMenu.createComponentButton('Splitter', `<b>Wire splitter/joiner</b>. ${DRAG_MSG}`, (grid, x, y) => {
                     let numChannels = 8; // TODO: configurable somewhere
-                    return grid.addItem(new Splitter(this, x, y, rotation.splitter, numChannels));
+                    return grid.addItem(new Splitter(this, x, y, defaults.splitter.rotation, numChannels));
                 });
                 routingMenu.createComponentButton('Tunnel', `<b>Network tunnel</b>. ${DRAG_MSG}`, (grid, x, y) => {
-                    return grid.addItem(new Tunnel(this, x, y, rotation.tunnel))
+                    return grid.addItem(new Tunnel(this, x, y, defaults.tunnel.rotation))
                 });
                 routingMenu.createComponentButton('Text', `<b>Userdefined text message</b>. ${DRAG_MSG}`, (grid, x, y) => {
-                    return grid.addItem(new TextLabel(this, x, y, rotation.text));
+                    return grid.addItem(new TextLabel(this, x, y, defaults.textlabel.rotation ));
                 });
             });
 
@@ -286,8 +286,8 @@ class Application {
                 for (const [ gateType, { joinOp } ] of Object.entries(Simulation.GATE_MAP)) {
                     const gateLabel = gateType.toUpperFirst();
                     gatesMenu.createComponentButton(gateLabel, `<b>${gateLabel} gate</b>. ${DRAG_MSG}`, (grid, x, y) => {
-                        let numInputs = 2; // TODO: configurable somewhere
-                        return grid.addItem(new Gate(this, x, y, rotation[gateType] ?? rotation.gate, gateType, joinOp !== null ? numInputs : 1));
+                        let numInputs = defaults[gateType]?.numInputs ?? defaults.gate.numInputs;
+                        return grid.addItem(new Gate(this, x, y, defaults[gateType]?.rotation ?? defaults.gate.rotation, gateType, joinOp !== null ? numInputs : 1));
                     });
                 }
             });
@@ -302,7 +302,7 @@ class Application {
                 builtins.sort((a, b) => a[1].localeCompare(b[1], 'en', { numeric: true }));
                 for (const [ builtinType, builtinLabel ] of values(builtins)) {
                     builtinMenu.createComponentButton(builtinLabel, `<b>${builtinLabel}</b> builtin. ${DRAG_MSG}`, (grid, x, y) => {
-                        return grid.addItem(new Builtin(this, x, y, rotation[builtinType] ?? rotation.builtin, builtinType));
+                        return grid.addItem(new Builtin(this, x, y, defaults[builtinType]?.rotation ?? defaults.builtin.rotation, builtinType));
                     });
                 }
             });
@@ -311,16 +311,16 @@ class Application {
             const [ , ioMenuState, ioMenu ] = componentMenu.createMenuCategory('IO/Control', 'Clocks, constants, ... <i>LMB</i> Open category.', () => {
                 ioMenu.clear();
                 ioMenu.createComponentButton('Clock', `<b>Clock</b>. ${DRAG_MSG}`, (grid, x, y) => {
-                    return grid.addItem(new Clock(this, x, y, rotation.clock));
+                    return grid.addItem(new Clock(this, x, y, defaults.clock));
                 });
                 ioMenu.createComponentButton('Constant', `<b>Constant value</b>. ${DRAG_MSG}`, (grid, x, y) => {
-                    return grid.addItem(new Constant(this, x, y, rotation.constant));
+                    return grid.addItem(new Constant(this, x, y, defaults.constant));
                 });
                 ioMenu.createComponentButton('Pull', `<b>Pull up/down resistor</b>. ${DRAG_MSG}`, (grid, x, y) => {
-                    return grid.addItem(new PullResistor(this, x, y, rotation.pull));
+                    return grid.addItem(new PullResistor(this, x, y, defaults.pull));
                 });
                 ioMenu.createComponentButton('Toggle', `<b>Toggle button</b> with permanently saved state. ${DRAG_MSG}`, (grid, x, y) => {
-                    return grid.addItem(new Toggle(this, x, y, rotation.port));
+                    return grid.addItem(new Toggle(this, x, y, defaults.port));
                 });
             });
 
@@ -445,35 +445,35 @@ class Application {
     // Initialize tool bar entries.
     #initToolbar() {
         const DRAG_MSG = '<i>LMB</i> Drag to move onto grid.';
-        const rotation = this.config.rotationDefaults;
+        const defaults = this.config.placementDefaults;
 
         // add text
         this.toolbar.createComponentButton('Text', `<b>Userdefined text message</b>. ${DRAG_MSG}`, (grid, x, y) => {
-            return grid.addItem(new TextLabel(this, x, y, rotation.text));
+            return grid.addItem(new TextLabel(this, x, y, defaults.textlabel.rotation));
         });
 
         // add ports
         this.toolbar.createComponentButton('Port', `<b>Component IO pin</b>. ${DRAG_MSG}`, (grid, x, y) => {
-            return grid.addItem(new Port(this, x, y, rotation.port))
+            return grid.addItem(new Port(this, x, y, defaults.port.rotation))
         });
 
         // add tunnels
         this.toolbar.createComponentButton('Tunnel', `<b>Network tunnel</b>. ${DRAG_MSG}`, (grid, x, y) => {
-            return grid.addItem(new Tunnel(this, x, y, rotation.tunnel))
+            return grid.addItem(new Tunnel(this, x, y, defaults.tunnel.rotation))
         });
 
         // add a splitter component
         this.toolbar.createComponentButton('Splitter', `<b>Wire splitter/joiner</b>. ${DRAG_MSG}`, (grid, x, y) => {
             let numChannels = 8; // TODO: configurable somewhere
-            return grid.addItem(new Splitter(this, x, y, rotation.splitter, numChannels));
+            return grid.addItem(new Splitter(this, x, y, defaults.splitter.rotation, numChannels));
         });
 
         // add gates
         for (const [ gateType, { joinOp } ] of Object.entries(Simulation.GATE_MAP)) {
             const gateLabel = gateType.toUpperFirst();
             this.toolbar.createComponentButton(gateLabel, `<b>${gateLabel} gate</b>. ${DRAG_MSG}`, (grid, x, y) => {
-                let numInputs = 2; // TODO: configurable somewhere
-                return grid.addItem(new Gate(this, x, y, rotation[gateType] ?? rotation.gate, gateType, joinOp !== null ? numInputs : 1));
+                let numInputs = defaults[gateType]?.numInputs ?? defaults.gate.numInputs;
+                return grid.addItem(new Gate(this, x, y, defaults[gateType]?.rotation ?? defaults.gate.rotation, gateType, joinOp !== null ? numInputs : 1));
             });
         }
     }

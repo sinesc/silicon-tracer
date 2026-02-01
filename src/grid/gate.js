@@ -61,6 +61,8 @@ class Gate extends SimulationComponent {
             this.setPortsFromNames({ 'left': left, 'right': right }, this.#numChannels);
             this.type = config.type;
             this.inputs = inputs;
+            this.app.config.placementDefaults[this.type] ??= {};
+            this.app.config.placementDefaults[this.type].numInputs = inputs.length;
             this.output = output;
             this.link(grid);
             this.rotation = config.rotation; // needs to be on grid for rotation to properly update x/y/width/height

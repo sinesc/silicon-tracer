@@ -326,7 +326,8 @@ class Component extends GridItem {
             }
             [ this.x, this.y ] = Grid.align(x, y);
             this.#rotation = value;
-            this.app.config.rotationDefaults[this.#type] = value;
+            this.app.config.placementDefaults[this.#type] ??= {};
+            this.app.config.placementDefaults[this.#type].rotation = value;
             this.updateDimensions();
         } else {
             this.#rotation = value;

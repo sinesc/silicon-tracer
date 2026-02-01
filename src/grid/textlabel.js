@@ -92,6 +92,8 @@ class TextLabel extends GridItem {
         if (key === 'r' && what.type === 'hover') {
             // rotate component with R while mouse is hovering
             this.#rotation = (this.#rotation + 1) & 3;
+            this.app.config.placementDefaults.textlabel ??= {};
+            this.app.config.placementDefaults.textlabel.rotation = this.#rotation;
             this.#element.classList.add('component-rotate-animation');
             setTimeout(() => {
                 // queue class removal for next render call to avoid brief flickering
