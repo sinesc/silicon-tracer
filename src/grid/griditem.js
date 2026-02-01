@@ -152,6 +152,7 @@ class GridItem {
         }
         this.#app.simulations.markDirty(this.grid.circuit);
         this.dirty = true;
+        this.#app.haveChanges = true;
     }
 
     // Returns the app reference.

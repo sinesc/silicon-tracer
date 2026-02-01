@@ -111,6 +111,7 @@ class Grid {
         if (restart) {
             this.#app.simulations.markDirty(this.#circuit);
         }
+        this.#app.haveChanges = true;
         return item;
     }
 
@@ -124,6 +125,7 @@ class Grid {
         if (restart) {
             this.#app.simulations.markDirty(this.#circuit);
         }
+        this.#app.haveChanges = true;
         return item;
     }
 

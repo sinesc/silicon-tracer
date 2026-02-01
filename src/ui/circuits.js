@@ -56,9 +56,6 @@ class Circuits {
             // no other circuits loaded, make this the new file handle
             this.#fileHandle = handle;
             this.#fileName = file.name;
-            return file.name;
-        } else {
-            return null;
         }
     }
 

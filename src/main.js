@@ -2,6 +2,14 @@
 
 const app = Application.create(document.querySelector('#content'), document.querySelector('#toolbar'));
 
+// confirm when leaving page with unsaved changes
+window.addEventListener("beforeunload", (event) => {
+    if (app.haveChanges) {
+        event.preventDefault();
+        event.returnValue = true;
+    }
+});
+
 // add 'Open example' button on github demo
 if (location.hostname === 'sinesc.github.io' && location.pathname === '/silicon-tracer/') {
     const [ exampleButton ] = app.toolbar.createActionButton('Open example', 'Loads an example circuit.', async () => {

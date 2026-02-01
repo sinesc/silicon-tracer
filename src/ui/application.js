@@ -30,6 +30,7 @@ class Application {
     toolbar;
     circuits;
     simulations;
+    haveChanges = false;
 
     #status = {
         element: null,
@@ -175,43 +176,53 @@ class Application {
             // Open circuit file.
             fileMenu.createActionButton('Open...', 'Close all circuits and load new circuits from a file.', async () => {
                 fileMenuState(false);
-                await this.circuits.loadFile(true);
-                this.simulations.clear();
-                this.simulations.select(this.circuits.current, this.config.autoCompile);
-                document.title = this.circuits.fileName + ' - Silicon Tracer';
+                if (!this.haveChanges || await unsavedDialog('Click Ok to discard and open another project anyway or Cancel to abort.')) {
+                    await this.circuits.loadFile(true);
+                    this.simulations.clear();
+                    this.simulations.select(this.circuits.current, this.config.autoCompile);
+                    document.title = this.circuits.fileName + ' - Silicon Tracer';
+                    this.haveChanges = false;
+                }
             });
             // Open and merge circuits from file to currently loaded circuits.
             const [ addButton ] = fileMenu.createActionButton('Merge...', 'Load additional circuits from a file, keeping open circuits.', async () => {
                 fileMenuState(false);
                 await this.circuits.loadFile(false, false);
+                this.haveChanges = true;
             });
             addButton.classList.toggle('toolbar-menu-button-disabled', this.circuits.allEmpty());
             // Import circuits and add to currently loaded circuits.
             fileMenu.createActionButton('Import...', 'Import .circ file.', async () => {
                 fileMenuState(false);
                 await this.circuits.importFile();
+                this.haveChanges = true;
             });
             fileMenu.createSeparator();
             // Save circuits to last opened file.
             const [ saveButton ] = fileMenu.createActionButton(this.circuits.fileName ? 'Save <i>' + this.circuits.fileName + '</i>' : 'Save', 'Save circuits to file.', async () => {
                 fileMenuState(false);
                 await this.circuits.saveFile();
+                this.haveChanges = false;
             });
             saveButton.classList.toggle('toolbar-menu-button-disabled', !this.circuits.fileName);
             // Save circuits as new file.
             fileMenu.createActionButton('Save as...', 'Save circuits to a new file.', async () => {
                 fileMenuState(false);
                 await this.circuits.saveFileAs();
+                this.haveChanges = false;
                 document.title = this.circuits.fileName + ' - Silicon Tracer';
             });
             fileMenu.createSeparator();
             // Close circuits.
             fileMenu.createActionButton('Close', 'Close all open circuits.', async () => {
                 fileMenuState(false);
-                this.circuits.closeFile();
-                this.simulations.clear();
-                this.simulations.select(this.circuits.current, this.config.autoCompile);
-                document.title = 'Silicon Tracer';
+                if (!this.haveChanges || await unsavedDialog('Click Ok to close it anyway or Cancel to abort.')) {
+                    this.circuits.closeFile();
+                    this.simulations.clear();
+                    this.simulations.select(this.circuits.current, this.config.autoCompile);
+                    this.haveChanges = false;
+                    document.title = 'Silicon Tracer';
+                }
             });
         });
 
@@ -224,6 +235,7 @@ class Application {
                 circuitMenuState(false);
                 if (await this.circuits.create()) {
                     this.simulations.select(this.circuits.current, this.config.autoCompile);
+                    this.haveChanges = true;
                 }
             });
             // Remove current circuit.
@@ -233,6 +245,7 @@ class Application {
                     this.simulations.delete(this.circuits.current);
                     this.circuits.delete(this.circuits.current.uid);
                     this.simulations.select(this.circuits.current, this.config.autoCompile);
+                    this.haveChanges = true;
                 }
             });
             button.classList.toggle('toolbar-menu-button-disabled', circuitList.length <= 1);
