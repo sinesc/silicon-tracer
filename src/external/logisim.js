@@ -25,7 +25,7 @@ class LogiSim {
             for (const label of values(instance.#problems)) {
                 circuit.addItem(new TextLabel(app, 2*Grid.SPACING, y += Grid.SPACING, 0, 600, '- ' + label, 'small', null));
             }
-            circuit.addItem(new TextLabel(app, Grid.SPACING, y += Grid.SPACING, 0,600, 'This document is for your information only. You can delete it via Circuits > Remove "# Import issues" once you don\'t need it anymore.', 'small', null));
+            circuit.addItem(new TextLabel(app, Grid.SPACING, y += Grid.SPACING, 0,600, 'This document is for your information only. You can delete it via Circuit > Remove "# Import issues" once you don\'t need it anymore.', 'small', null));
             app.circuits.add(circuit);
             app.circuits.select(circuit.uid);
             app.simulations.select(app.circuits.current, app.config.autoCompile);
@@ -394,7 +394,7 @@ class LogiSim {
             } else if (rawComp.name === 'Text') {
                 const item = new TextLabel(this.#app, x, y, rotation(rawComp.facing ?? 'east') + 3, 200, rawComp.text);
                 circuit.addItem(item);
-            } else if (rawComp.name === 'Probe') {
+            } else if ([ 'Probe', 'NoConnect' ].includes(rawComp.name)) {
                 // since this isn't required for the circuit to work we'll skip it for now without
                 // spamming the error log and making it hard to find the actual problems
             } else {
