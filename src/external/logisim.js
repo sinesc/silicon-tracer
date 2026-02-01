@@ -274,9 +274,10 @@ class LogiSim {
                 // replace pins with tunnels leading to properly laid out ports to make CustomComponent outline match the logisim component
                 const item = new Tunnel(this.#app, x, y, rotation(rawComp.facing));
                 offsetPort(item, '');
-                item.name = 'pin-' + (rawComp.label || crypto.randomUUID().replaceAll('-', '').slice(0, 8));
+                const baseName = rawComp.label || 'unnamed-' + crypto.randomUUID().replaceAll('-', '').slice(0, 8);
+                item.name = 'pin-' + baseName;
                 const pinRef = rawComp.loc.slice(1, -1);
-                portMap[pinRef] = { pin: pinRef, tunnelName: item.name, portName: rawComp.label ?? '' };
+                portMap[pinRef] = { pin: pinRef, tunnelName: item.name, portName: baseName };
                 circuit.addItem(item);
             } else if (rawComp.name === 'Pin' && !rawCircuit.appear) {
                 // circuit has no custom appearance configuration and we don't support the logisim default appearances yet, place ports where the file indicates
