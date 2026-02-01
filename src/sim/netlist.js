@@ -34,14 +34,14 @@ class NetList {
         }
 
         // split networks containing multiple channels into individual networks
-        NetList.#splitNetChannels(nets);
+        const expandedNets = NetList.#splitNetChannels(nets);
 
         // construct and return
         const netList = new NetList();
-        netList.nets = nets;  // FIXME: nets needs to be ordered to get reproducable/compatible compile results when the circuit item order changes without the actual logic changing
+        netList.nets = expandedNets;  // FIXME: nets needs to be ordered to get reproducable/compatible compile results when the circuit item order changes without the actual logic changing
         netList.unconnected = { wires: unconnectedWires, ports: unconnectedPorts };
         netList.instances = instances;
-        netList.statsLongestSignalPath = recurse ? NetList.#getLongestSignalPath(nets): 0; // only useful on full identify
+        netList.statsLongestSignalPath = recurse ? NetList.#getLongestSignalPath(expandedNets): 0; // only useful on full identify
         return netList;
     }
 
@@ -203,110 +203,112 @@ class NetList {
         return NetList.#assembleNet(matchingPort, instance.netItems.wires, instance.netItems.ports, instances, true);
     }
 
-    // Splits channels of a net into individual nets.
-    static #splitNetChannels(nets) {
+    // Identify splitters and initialize net widths from component ports
+    static #identifySplitters(nets) {
         const splitters = {};
-
-        // 1. Identify splitters and initialize net widths from component ports
         for (let i = 0; i < nets.length; i++) {
             for (const port of nets[i].ports) {
                 if (port.type === '1-to-n') {
                     const id = NetList.suffix(port.gid, port.instanceId);
-                    if (!splitters[id]) splitters[id] = { bus: null, channels: {}, maxCh: -1 };
+                    if (!splitters[id]) {
+                        splitters[id] = { bus: null, channels: {}, maxChannels: -1 };
+                    }
                     splitters[id].bus = i;
                 } else if (port.type === 'n-to-1') {
                     const id = NetList.suffix(port.gid, port.instanceId);
-                    if (!splitters[id]) splitters[id] = { bus: null, channels: {}, maxCh: -1 };
+                    if (!splitters[id]) {
+                        splitters[id] = { bus: null, channels: {}, maxChannels: -1 };
+                    }
                     const ch = parseInt(port.name.substring(1));
                     if (!isNaN(ch)) {
                         splitters[id].channels[ch] = i;
-                        if (ch > splitters[id].maxCh) splitters[id].maxCh = ch;
+                        if (ch > splitters[id].maxChannels) {
+                            splitters[id].maxChannels = ch;
+                        }
                     }
                 } else {
                     // Component port
                     const w = port.numChannels ?? 1;
-                    if (w > nets[i].numChannels) nets[i].numChannels = w;
+                    if (w > nets[i].numChannels) {
+                        nets[i].numChannels = w;
+                    }
                 }
             }
         }
+        return splitters;
+    }
 
-        // 2. Propagate widths through splitters
+    // Propagate widths through splitters
+    static #propagateChannelWidth(nets, splitters) {
+        const MAX_ITERATIONS = 100;
         let changed = true;
         let iterations = 0;
-        while (changed && iterations++ < 100) {
+        while (changed && iterations++ < MAX_ITERATIONS) {
             changed = false;
             for (const s of Object.values(splitters)) {
-                if (s.bus === null) continue;
-
+                if (s.bus === null) {
+                    continue;
+                }
                 let currentWidth = 0;
-                for (let ch = 0; ch <= s.maxCh; ch++) {
+                for (let ch = 0; ch <= s.maxChannels; ch++) {
                     const nNet = s.channels[ch];
                     const w = nNet !== undefined ? nets[nNet].numChannels : 1;
                     currentWidth += w;
                 }
-
                 if (currentWidth > nets[s.bus].numChannels) {
                     nets[s.bus].numChannels = currentWidth;
                     changed = true;
                 }
             }
         }
+    }
 
-        // 3. Union-Find setup
-        const parent = new Map();
-        const find = (key) => {
-            if (!parent.has(key)) parent.set(key, key);
-            if (parent.get(key) !== key) parent.set(key, find(parent.get(key)));
-            return parent.get(key);
-        };
-        const union = (k1, k2) => {
-            const r1 = find(k1);
-            const r2 = find(k2);
-            if (r1 !== r2) parent.set(r1, r2);
-        };
-        const key = (netIdx, ch) => `${netIdx}:${ch}`;
-
-        // 4. Process splitters for unions
+    // Process splitters for unions
+    static #identifySplitterUnions(nets, splitters, key) {
+        const unions = new UnionFind();
         for (const s of Object.values(splitters)) {
             if (s.bus !== null) {
                 let offset = 0;
-                for (let ch = 0; ch <= s.maxCh; ch++) {
+                for (let ch = 0; ch <= s.maxChannels; ch++) {
                     const nNet = s.channels[ch];
-                    const w = nNet !== undefined ? nets[nNet].numChannels : 1;
-
+                    const width = nNet !== undefined ? nets[nNet].numChannels : 1;
                     if (nNet !== undefined) {
-                        for (let k = 0; k < w; k++) {
-                            union(key(nNet, k), key(s.bus, offset + k));
+                        for (let k = 0; k < width; k++) {
+                            unions.union(key(nNet, k), key(s.bus, offset + k));
                         }
                     }
-                    offset += w;
+                    offset += width;
                 }
             }
         }
+        return unions;
+    }
 
-        // 5. Build new nets
+    // Splits channels of a net into individual nets.
+    static #splitNetChannels(nets) {
+        const splitters = NetList.#identifySplitters(nets);
+        NetList.#propagateChannelWidth(nets, splitters);
+        const key = (netIdx, ch) => `${netIdx}:${ch}`;
+        const unions = NetList.#identifySplitterUnions(nets, splitters, key);
+        // build new nets
         const newNetsMap = new Map();
-
         for (let i = 0; i < nets.length; i++) {
-            if (nets[i].numChannels === 0) continue;
-
+            if (nets[i].numChannels === 0) {
+                continue;
+            }
             for (let ch = 0; ch < nets[i].numChannels; ch++) {
-                const root = find(key(i, ch));
-                if (!newNetsMap.has(root)) newNetsMap.set(root, { wires: [], ports: [], numChannels: 1, netId: null });
+                const root = unions.find(key(i, ch));
+                if (!newNetsMap.has(root)) {
+                    newNetsMap.set(root, { wires: [], ports: [], numChannels: 1, netId: null });
+                }
                 const newNet = newNetsMap.get(root);
-
                 //if (ch === 0) {
                     newNet.wires.push(...nets[i].wires);
                     newNet.ports.push(...nets[i].ports);
                 //}
             }
         }
-
-        // 6. Replace nets
-        nets.length = 0;
-        for (const n of newNetsMap.values()) {
-            nets.push(n);
-        }
+        return newNetsMap.values().toArray();
     }
 
     // Find wires connected to the given wire and returns them and the initial wire. Removes found wires from remainingWires.

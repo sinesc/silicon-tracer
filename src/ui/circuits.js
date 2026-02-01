@@ -24,6 +24,18 @@ class Circuits {
         this.#app = app;
     }
 
+    // Creates a new circuit.
+    async create() {
+        const config = await dialog("Create circuit", Circuits.EDIT_DIALOG, { label: this.#generateName(), gap: 'middle', parity: 'automatic', spacing: 0 });
+        if (config) {
+            const circuit = new Circuits.Circuit(config.label);
+            this.#circuits[circuit.uid] = circuit;
+            this.select(circuit.uid);
+            return true;
+        }
+        return false;
+    }
+
     // Loads circuits from file, returning the filename if circuits was previously empty.
     async loadFile(clear, switchTo = true) {
         assert.bool(clear);
@@ -56,9 +68,9 @@ class Circuits {
         const file = await handle.getFile();
         const text = await file.text();
         if (text.includes('This file is intended to be loaded by Logisim')) {
-            LogiSim.import(this.#app, handle, text);
+            await LogiSim.import(this.#app, handle, text);
         } else {
-            alert('Unsupported file format'); // lame
+            await infoDialog('Unsupported file format', 'The file does not appear to be a valid LogiSim Evolution file.');
         }
     }
 
@@ -93,6 +105,22 @@ class Circuits {
         this.#fileHandle = null;
         this.#fileName = null;
         this.clear();
+    }
+
+    // Configure circuit.
+    async edit(uid) {
+        const circuit = this.byUID(uid);
+        const result = await dialog("Configure circuit", Circuits.EDIT_DIALOG, { label: circuit.label, spacing: '' + circuit.portConfig.spacing, gap: circuit.portConfig.gap, parity: circuit.portConfig.parity });
+        if (result) {
+            circuit.label = result.label;
+            circuit.portConfig.spacing = Number.parseInt(result.spacing);
+            circuit.portConfig.gap = result.gap;
+            circuit.portConfig.parity = result.parity;
+            this.#app.grid.setCircuitLabel(result.label);
+            this.#app.grid.setSimulationLabel(result.label);
+            return true;
+        }
+        return false;
     }
 
     // Returns name of currently opened file.
@@ -191,34 +219,6 @@ class Circuits {
     // Generate a library id.
     static generateLID() {
         return 'l' + crypto.randomUUID().replaceAll('-', '');
-    }
-
-    // Creates a new circuit.
-    async create() {
-        const config = await dialog("Create circuit", Circuits.EDIT_DIALOG, { label: this.#generateName(), gap: 'middle', parity: 'automatic', spacing: 0 });
-        if (config) {
-            const circuit = new Circuits.Circuit(config.label);
-            this.#circuits[circuit.uid] = circuit;
-            this.select(circuit.uid);
-            return true;
-        }
-        return false;
-    }
-
-    // Rename
-    async edit(uid) {
-        const circuit = this.byUID(uid);
-        const result = await dialog("Configure circuit", Circuits.EDIT_DIALOG, { label: circuit.label, spacing: '' + circuit.portConfig.spacing, gap: circuit.portConfig.gap, parity: circuit.portConfig.parity });
-        if (result) {
-            circuit.label = result.label;
-            circuit.portConfig.spacing = Number.parseInt(result.spacing);
-            circuit.portConfig.gap = result.gap;
-            circuit.portConfig.parity = result.parity;
-            this.#app.grid.setCircuitLabel(result.label);
-            this.#app.grid.setSimulationLabel(result.label);
-            return true;
-        }
-        return false;
     }
 
     // Serializes loaded circuits for saving to file.

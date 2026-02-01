@@ -415,6 +415,30 @@ class WeakUnorderedSet {
     }
 }
 
+// https://en.wikipedia.org/wiki/Disjoint-set_data_structure
+class UnionFind {
+    #parent;
+    constructor() {
+        this.#parent = new Map();
+    }
+    find(key) {
+        if (!this.#parent.has(key)) {
+            this.#parent.set(key, key);
+        }
+        if (this.#parent.get(key) !== key) {
+            this.#parent.set(key, this.find(this.#parent.get(key)));
+        }
+        return this.#parent.get(key);
+    }
+    union(k1, k2) {
+        const r1 = this.find(k1);
+        const r2 = this.find(k2);
+        if (r1 !== r2) {
+            this.#parent.set(r1, r2);
+        }
+    }
+}
+
 class File {
     static OPTIONS = {
         types: [
