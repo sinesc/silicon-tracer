@@ -33,7 +33,7 @@ class Grid {
         FPSCount: { current: 0, last: 0 },
     };
 
-    constructor(app, parent) {
+    constructor(app, parent, passive = false) {
         assert.class(Application, app);
         assert.class(Node, parent);
         this.#app = app;
@@ -43,10 +43,12 @@ class Grid {
         this.#infoBox.element = element(this.#element, 'div', 'grid-info', '');
         this.#selectionElement = element(this.#element, 'div', 'grid-selection hidden');
         this.#debugElement = element(this.#element, 'div', 'debug-info');
-        document.addEventListener('mousemove', this.#debugHandleMouse.bind(this));
-        // TODO: may have to go to parent UI
-        // TODO: GridItems currently register document.onmouse* temporarily. those should probably follow the same logic: register onmouse* here and then pass on to whichever element wants to have them
-        document.addEventListener('keydown', this.#handleKeyDown.bind(this));
+        if (!passive) {
+            document.addEventListener('mousemove', this.#debugHandleMouse.bind(this));
+            // TODO: may have to go to parent UI
+            // TODO: GridItems currently register document.onmouse* temporarily. those should probably follow the same logic: register onmouse* here and then pass on to whichever element wants to have them
+            document.addEventListener('keydown', this.#handleKeyDown.bind(this));
+        }
     }
 
     // Returns the circuit currently on the grid.

@@ -307,13 +307,14 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
     top: 0;
     bottom: 0;
     background-color: var(--overlay-bg-color);
+    overflow: hidden;
 }
 .dialog-container {
     z-index: 257;
     position: absolute;
     left: 50%;
     top: 30%;
-    transform: translate(-50%, -30%);
+    transform: translate(-50%, -50%);
     background-color: var(--component-body-color);
     border: 2px solid var(--component-border-color);
 }
@@ -382,6 +383,26 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
 .dialog-container .dialog-cancel:hover, .dialog-container .dialog-confirm:hover {
     border-color: var(--button-border-hover-color);
     background-color: var(--button-bg-hover-color);
+}
+
+/*
+ * Circuit edit dialog preview
+ */
+.circuit-preview {
+    z-index: 257;
+    position: absolute;
+    left: 50%;
+    top: 30%;
+    transform: translate(-50%, -50%);
+    width: 500px;
+    height: 300px;
+}
+div.circuit-preview > div.grid {
+    background-image: none !important;
+    background-color: transparent !important;
+}
+div.circuit-preview > div.grid > div.grid-info {
+    display: none;
 }
 
 /*

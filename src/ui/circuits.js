@@ -107,7 +107,32 @@ class Circuits {
     // Configure circuit.
     async edit(uid) {
         const circuit = this.byUID(uid);
-        const result = await dialog("Configure circuit", Circuits.EDIT_DIALOG, { label: circuit.label, spacing: '' + circuit.portConfig.spacing, gap: circuit.portConfig.gap, parity: circuit.portConfig.parity });
+        // add component preview to right side of the dialog
+        let previewContainer = null;
+        let grid = null;
+        const componentPreview = (blackout, data) => {
+            // build/update preview grid
+            if (!previewContainer) {
+                previewContainer = element(blackout, 'div', 'circuit-preview');
+                const dialogWidth = blackout.querySelector('.dialog-container').offsetWidth;
+                const previewWidth = previewContainer.offsetWidth;
+                const fixedOffset = Math.floor(0.5 * dialogWidth + 0.5 * previewWidth)
+                previewContainer.style.transform = `translate(calc(-50% + ${fixedOffset}px), -50%)`;
+                grid = new Grid(this.#app, previewContainer, true);
+                grid.setCircuit(new Circuits.Circuit('preview'));
+            } else {
+                const item = first(grid.circuit.items);
+                grid.removeItem(item);
+            }
+            // replace item on each dialog change, temporarily rename circuit to current value in dialog (bit of a hack but avoids special purpose changes to Circuit/CustomComponent)
+            const backupLabel = circuit.label;
+            circuit.label = data.label;
+            grid.addItem(new CustomComponent(this.#app, 2 * Grid.SPACING, 2 * Grid.SPACING, data.rotation ?? 0, uid, data.parity, data.gap, Number.parseInt(data.spacing)));
+            grid.render();
+            circuit.label = backupLabel;
+        };
+        // show configuration dialog and preview
+        const result = await dialog("Configure circuit", Circuits.EDIT_DIALOG, { label: circuit.label, spacing: '' + circuit.portConfig.spacing, gap: circuit.portConfig.gap, parity: circuit.portConfig.parity }, { onChange: componentPreview });
         if (result) {
             circuit.label = result.label;
             circuit.portConfig.spacing = Number.parseInt(result.spacing);
