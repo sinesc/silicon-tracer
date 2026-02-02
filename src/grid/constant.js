@@ -67,7 +67,7 @@ class Constant extends SimulationComponent {
 
     // Handle edit hotkey.
     async onEdit() {
-        const config = await dialog("Configure constant", Constant.EDIT_DIALOG, { /*name: this.name,*/ rotation: this.rotation, state: this.#state === null ? '-1' : this.#state }, this);
+        const config = await dialog("Configure constant", Constant.EDIT_DIALOG, { /*name: this.name,*/ rotation: this.rotation, state: this.#state === null ? '-1' : this.#state });
         if (config) {
             //this.name = config.name;
             this.rotation = config.rotation;

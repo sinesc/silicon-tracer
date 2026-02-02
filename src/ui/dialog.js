@@ -1,12 +1,14 @@
 "use strict";
 
 // Opens a modal dialog with the given fields and returns the user input to the awaiting caller.
-function dialog(title, fields, data, context = null, extraClass = null, cancelable = true) {
+function dialog(title, fields, data, extraOptions) {
+    const { context, extraClass, cancelable, onChange } = Object.assign({ context: null, extraClass: null, cancelable: true, onChange: () => null }, extraOptions);
     assert.string(title),
     assert.string(extraClass, true),
     assert.array(fields);
     assert.object(data);
     assert.bool(cancelable);
+    assert.function(onChange, true);
 
     // predefine some validations
     const validations = {
@@ -23,6 +25,29 @@ function dialog(title, fields, data, context = null, extraClass = null, cancelab
     const contentElement = element(containerElement, 'div', 'dialog-content');
     const tableElement = element(contentElement, 'table');
     const form = [];
+
+    // validate form input
+    const validate = () => {
+        const result = {};
+        const errors = [];
+        for (const { element, field } of values(form)) {
+            const check = field.check ?? validations[field.type].check;
+            if (check.call(context, element.value, field)) {
+                const apply = field.apply ?? validations[field.type].apply;
+                result[field.name] = apply.call(context, element.value, field);
+            } else {
+                errors.push(field.name);
+            }
+        }
+        return [ errors.length === 0 ? result : null, errors ];
+    };
+
+    const triggerOnChange = (e) => {
+        const result = validate();
+        if (result[0]) {
+            onChange(blackout, result[0]);
+        }
+    };
 
     for (const field of values(fields)) {
         if (field.text) {
@@ -50,8 +75,11 @@ function dialog(title, fields, data, context = null, extraClass = null, cancelab
             let fieldElement
             if (field.type === 'select') {
                 fieldElement = element(rowRight, 'select', 'dialog-row-select', { name: field.name, options: field.options, value: data[field.name] });
+                fieldElement.onchange = triggerOnChange;
             } else {
                 fieldElement = element(rowRight, 'input', 'dialog-row-input', { name: field.name, value: data[field.name] });
+                fieldElement.onkeyup = triggerOnChange;
+                fieldElement.onchange = triggerOnChange;
             }
             form.push({ element: fieldElement, field });
         }
@@ -61,6 +89,7 @@ function dialog(title, fields, data, context = null, extraClass = null, cancelab
     const cancelElement = cancelable ? element(rowElement, 'span', 'dialog-button dialog-cancel', 'Cancel') : null;
     const confirmElement = element(rowElement, 'span', 'dialog-button dialog-confirm', 'Ok');
     document.body.appendChild(blackout);
+    triggerOnChange();
 
     if (form.length > 0) {
         form[0].element.focus();
@@ -68,22 +97,6 @@ function dialog(title, fields, data, context = null, extraClass = null, cancelab
             form[0].element.select();
         }
     }
-
-    // validate form input
-    const validate = () => {
-        const result = {};
-        const errors = [];
-        for (const { element, field } of values(form)) {
-            const check = field.check ?? validations[field.type].check;
-            if (check.call(context, element.value, field)) {
-                const apply = field.apply ?? validations[field.type].apply;
-                result[field.name] = apply.call(context, element.value, field);
-            } else {
-                errors.push(field.name);
-            }
-        }
-        return [ errors.length === 0 ? result : null, errors ];
-    };
 
     // return a promise that resolves on ok/cancel
     return new Promise((resolve, reject) => {
@@ -128,14 +141,14 @@ function dialog(title, fields, data, context = null, extraClass = null, cancelab
 function confirmDialog(title, message) {
     assert.string(title);
     assert.string(message);
-    return dialog(title, [ { text: message } ], { }, null, 'confirm-dialog').then((v) => !!v, (v) => false);
+    return dialog(title, [ { text: message } ], { }, { extraClass: 'confirm-dialog' }).then((v) => !!v, (v) => false);
 }
 
 // Opens a modal info dialog with a custom message and an ok button only. Returns true.
 function infoDialog(title, message) {
     assert.string(title);
     assert.string(message);
-    return dialog(title, [ { text: message } ], { }, null, 'info-dialog', false).then((v) => !!v, (v) => false);
+    return dialog(title, [ { text: message } ], { }, { extraClass: 'info-dialog', cancelable: false }).then((v) => !!v, (v) => false);
 }
 
 // Opens a modal confirmation dialog used to confirm discarding unsaved changes.

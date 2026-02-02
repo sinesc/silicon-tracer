@@ -41,7 +41,7 @@ class Tunnel extends VirtualComponent {
 
     // Handle edit hotkey.
     async onEdit() {
-        const config = await dialog("Configure tunnel", Tunnel.EDIT_DIALOG, { name: this.name, rotation: this.rotation }, this);
+        const config = await dialog("Configure tunnel", Tunnel.EDIT_DIALOG, { name: this.name, rotation: this.rotation });
         if (config) {
             this.name = config.name;
             this.rotation = config.rotation;

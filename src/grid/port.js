@@ -76,7 +76,7 @@ class Port extends SimulationComponent {
 
     // Handle edit hotkey.
     async onEdit() {
-        const config = await dialog("Configure port", Port.EDIT_DIALOG, { name: this.name, rotation: this.rotation }, this);
+        const config = await dialog("Configure port", Port.EDIT_DIALOG, { name: this.name, rotation: this.rotation }, { context: this });
         if (config) {
             this.name = config.name;
             this.rotation = config.rotation;
