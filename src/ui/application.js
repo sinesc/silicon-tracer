@@ -324,16 +324,16 @@ class Application {
             const [ , ioMenuState, ioMenu ] = componentMenu.createMenuCategory('IO/Control', 'Clocks, constants, ... <i>LMB</i> Open category.', () => {
                 ioMenu.clear();
                 ioMenu.createComponentButton('Clock', `<b>Clock</b>. ${DRAG_MSG}`, (grid, x, y) => {
-                    return grid.addItem(new Clock(this, x, y, defaults.clock));
+                    return grid.addItem(new Clock(this, x, y, defaults.clock.rotation));
                 });
                 ioMenu.createComponentButton('Constant', `<b>Constant value</b>. ${DRAG_MSG}`, (grid, x, y) => {
-                    return grid.addItem(new Constant(this, x, y, defaults.constant));
+                    return grid.addItem(new Constant(this, x, y, defaults.constant.rotation));
                 });
                 ioMenu.createComponentButton('Pull', `<b>Pull up/down resistor</b>. ${DRAG_MSG}`, (grid, x, y) => {
-                    return grid.addItem(new PullResistor(this, x, y, defaults.pull));
+                    return grid.addItem(new PullResistor(this, x, y, defaults.pull.rotation));
                 });
                 ioMenu.createComponentButton('Toggle', `<b>Toggle button</b> with permanently saved state. ${DRAG_MSG}`, (grid, x, y) => {
-                    return grid.addItem(new Toggle(this, x, y, defaults.port));
+                    return grid.addItem(new Toggle(this, x, y, defaults.port.rotation));
                 });
             });
 
