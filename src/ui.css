@@ -85,7 +85,7 @@
 
     --main-bg-color: #000;
     --grid-bg-color: #111;
-    --overlay-bg-color: #00000048;
+    --overlay-bg-color: #00000088;
     --overlay-border-color: #4444448a;
     --header-bg-color: #1a1a1a;
     --header-border-color: #222;
@@ -395,7 +395,7 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
     top: 30%;
     transform: translate(-50%, -50%);
     width: 500px;
-    height: 300px;
+    height: 500px;
 }
 div.circuit-preview > div.grid {
     background-image: none !important;

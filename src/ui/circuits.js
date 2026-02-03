@@ -104,33 +104,41 @@ class Circuits {
         this.clear();
     }
 
-    // Configure circuit.
-    async edit(uid) {
-        const circuit = this.byUID(uid);
+    // Creates a component preview handler that can be passed as onChange callback to a dialog.
+    static makeComponentPreview(app, circuit) {
         // add component preview to right side of the dialog
         let previewContainer = null;
         let grid = null;
-        const componentPreview = (blackout, data) => {
+        return (blackout, data) => {
             // build/update preview grid
             if (!previewContainer) {
                 previewContainer = element(blackout, 'div', 'circuit-preview');
-                const dialogWidth = blackout.querySelector('.dialog-container').offsetWidth;
-                const previewWidth = previewContainer.offsetWidth;
-                const fixedOffset = Math.floor(0.5 * dialogWidth + 0.5 * previewWidth)
-                previewContainer.style.transform = `translate(calc(-50% + ${fixedOffset}px), -50%)`;
-                grid = new Grid(this.#app, previewContainer, true);
+                const dialogWindow = blackout.querySelector('.dialog-container');
+                const fixedOffsetX = Math.floor(0.5 * dialogWindow.offsetWidth + 0.5 * previewContainer.offsetWidth)
+                const fixedOffsetY = Math.floor(-0.5 * dialogWindow.offsetHeight + 0.5 * previewContainer.offsetHeight)
+                previewContainer.style.transform = `translate(calc(-50% + ${fixedOffsetX}px), calc(-50% + ${fixedOffsetY}px))`;
+                grid = new Grid(app, previewContainer, true);
                 grid.setCircuit(new Circuits.Circuit('preview'));
             } else {
                 const item = first(grid.circuit.items);
                 grid.removeItem(item);
             }
+            // data defaults (circuit vs component dialog have slightly different options)
+            data.label ??= circuit.label;
+            data.rotation ??= 0;
             // replace item on each dialog change, temporarily rename circuit to current value in dialog (bit of a hack but avoids special purpose changes to Circuit/CustomComponent)
             const backupLabel = circuit.label;
             circuit.label = data.label;
-            grid.addItem(new CustomComponent(this.#app, 2 * Grid.SPACING, 2 * Grid.SPACING, data.rotation ?? 0, uid, data.parity, data.gap, Number.parseInt(data.spacing)));
+            grid.addItem(new CustomComponent(app, 3 * Grid.SPACING, 2 * Grid.SPACING, data.rotation, circuit.uid, data.parity, data.gap, Number.parseInt(data.spacing)));
             grid.render();
             circuit.label = backupLabel;
         };
+    }
+
+    // Configure circuit.
+    async edit(uid) {
+        const circuit = this.byUID(uid);
+        const componentPreview = Circuits.makeComponentPreview(this.#app, circuit);
         // show configuration dialog and preview
         const result = await dialog("Configure circuit", Circuits.EDIT_DIALOG, { label: circuit.label, spacing: '' + circuit.portConfig.spacing, gap: circuit.portConfig.gap, parity: circuit.portConfig.parity }, { onChange: componentPreview });
         if (result) {
