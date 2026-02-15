@@ -334,6 +334,35 @@ function element(parent = null, type = 'div', classNames = null, contents = null
     return element;
 }
 
+// Measures the refresh rate. Should be awaited (returns a promise({min, max, med, avg})).
+function measureRefreshRate(limit = 5) {
+
+    let done;
+    let lastTime = null;
+    const intervals = [];
+
+    const requestAnother = (time) => {
+        if (lastTime !== null) {
+            intervals.push(time - lastTime);
+        }
+        lastTime = time;
+        if (limit--) {
+            requestAnimationFrame(requestAnother);
+        } else {
+            const center = Math.floor(intervals.length / 2);
+            const med = intervals.length & 1 ? intervals[center] : (intervals[center] + intervals[center - 1]) / 2;
+            const avg = intervals.reduce((a, b) => a + b) / intervals.length;
+            done({ min: Math.min(...intervals), max: Math.max(...intervals), med, avg });
+        }
+    }
+
+    requestAnother(null);
+
+    return new Promise((resolve, reject) => {
+        done = resolve;
+    })
+}
+
 class Point {
     x;
     y;
