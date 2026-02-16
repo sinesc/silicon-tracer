@@ -42,9 +42,7 @@ class Application {
     #renderLoop = {
         loadLimit: 0.95,
         refresh: null,
-        renderLast: 0,
         nextTick: 0,
-        intervalComputed: 0.016,
         ticksPerFrameComputed: 0,
         ticksFraction: 0,
         load: 0,
@@ -126,8 +124,8 @@ class Application {
 
     // Called periodically to update stats overlay.
     #renderStats() {
-        const load = Math.round(this.#renderLoop.load);
-        const loadClass = load >= this.#renderLoop.loadLimit ? 'warning' : '';
+        const load = Math.round(this.#renderLoop.load * 100);
+        const loadClass = this.#renderLoop.load >= this.#renderLoop.loadLimit ? 'warning' : '';
         const ticks = this.simulations.current ? `${Number.formatSI(this.config.targetTPS)} ticks/s limit<br>${Number.formatSI(Math.round(this.#renderLoop.ticksCounted))} ticks/s actual<br>` : '';
         this.grid.setSimulationDetails(`${ticks}<span class="${loadClass}">${load}%</span> core load<br>${this.#renderLoop.framesCounted} frames/s`);
         this.#renderLoop.ticksCounted = 0;
@@ -136,10 +134,7 @@ class Application {
 
     // Called each animation-frame to render elements.
     #render() {
-        const lastFrame = this.#renderLoop.renderLast;
-        this.#renderLoop.renderLast = performance.now();
-        this.#renderLoop.intervalComputed = this.#renderLoop.renderLast - lastFrame;
-        requestAnimationFrame(() => this.#render());
+        const renderStart = performance.now();
         const sim = this.simulations.current;
         // after each circuit modification the simulation will not have been ticked yet and net-state won't be known. this causes a brief flickering each time the circuit changes, so we skip that single frame
         if (!sim || !sim.checkDirty()) {
@@ -150,13 +145,11 @@ class Application {
         }
         this.#renderLoop.framesCounted += 1;
         // handle both TPS smaller or larger than FPS
-        this.#renderLoop.ticksPerFrameComputed = this.config.targetTPS / (1000 / this.#renderLoop.intervalComputed);
+        this.#renderLoop.ticksPerFrameComputed = this.config.targetTPS / (1000 / this.#renderLoop.refresh.med);
         this.#renderLoop.nextTick += this.#renderLoop.ticksPerFrameComputed;
         if (this.#renderLoop.nextTick >= 1) {
             this.#renderLoop.nextTick -= Math.floor(this.#renderLoop.nextTick);
             if (!this.config.singleStep) {
-                //const ticksCapped = this.config.targetTPS / (1000 / 60);                            // cap is used to work around large intervals when browser window is not focused
-                //const ticks = Math.max(1, Math.min(this.#renderLoop.ticksPerFrameComputed, ticksCapped));
                 const ticks = Math.max(1, this.#renderLoop.ticksPerFrameComputed);
                 this.#renderLoop.ticksFraction += Math.fract(ticks);                                // accumulate fractional ticks
                 const ticksTotal = Math.trunc(ticks) + Math.trunc(this.#renderLoop.ticksFraction);  //   and apply once at least one full tick has accumulated
@@ -166,13 +159,14 @@ class Application {
             }
         }
         // compute load (time spent computing/time available)
-        const elapsedTime = performance.now() - this.#renderLoop.renderLast;
-        this.#renderLoop.load = elapsedTime / this.#renderLoop.intervalComputed * 100;
+        const elapsedTime = performance.now() - renderStart;
+        this.#renderLoop.load = elapsedTime / this.#renderLoop.refresh.med;
+        requestAnimationFrame(() => this.#render());
     }
 
     // Ticks the simulation up to 'ticks' times but tries to stay within the amount of time available per frame.
     #tickSimulation(ticks) {
-        const maxTiming = this.#renderLoop.refresh.med / 10;
+        const maxTiming = this.#renderLoop.refresh.med / 15;
         let tickLimit = 10;
         let ticksDone = 0;
         const sim = this.simulations.current;
@@ -190,14 +184,13 @@ class Application {
             elapsed = performance.now() - start;
         } while (ticksDone < ticks && elapsed < maxTiming && (tickLimit *= 10));
         // based on elapsed time and number of performed ticks we compute how many ticks we should be able to do in the timelimit.
-        const maxTicks = ticksDone * ((this.#renderLoop.refresh.med - elapsed) / elapsed) * this.#renderLoop.loadLimit;
-        //console.log(elapsed, ticks, maxTicks);
         if (ticks > ticksDone) {
+            const maxTicks = ticksDone * ((this.#renderLoop.refresh.med - elapsed) / elapsed) * this.#renderLoop.loadLimit;
             const stillDoable = 0 | Math.min(ticks - ticksDone, maxTicks);
             sim.tick(stillDoable);
             return stillDoable + ticksDone;
         } else {
-            return ticks;
+            return ticksDone;
         }
     }
 
@@ -529,7 +522,6 @@ class Application {
     async #initRenderLoop() {
         // start simulation/render loop
         this.#renderLoop.refresh = await measureRefreshRate();
-        this.#renderLoop.renderLast = performance.now();
         requestAnimationFrame(() => this.#render());
         // update stats overlay once a second
         setInterval(() => this.#renderStats(), 1000);
