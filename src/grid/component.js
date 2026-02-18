@@ -192,9 +192,6 @@ class Component extends GridItem {
     #rotation = 0;
     #portLabelCharPos;
 
-    // An id for the simulated component. This could be a constId, clockId, ....
-    simId = null;
-
     constructor(app, x, y, rotation, ports, type, numChannels = null, ioTypes = null) {
         assert.integer(rotation);
         assert.string(type);
@@ -589,11 +586,16 @@ class Component extends GridItem {
     }
 }
 
-// Component subclass used to identify components that are removed/replaced during NetList processing.
+// Component subclass used to identify components that are removed/replaced during NetList processing. These are components
+// that exist in the UI but are not actually "real" in the simulation, e.g. wire splitters.
 class VirtualComponent extends Component { }
 
 // Component subclass used to identify components that are compiled into the simulation.
 class SimulationComponent extends Component {
+    // An id for the simulated component. This could be a constId, clockId, ....
+    // simIds are used by the UI to SET constants values, clock frequencies etc.
+    // By contast, netIds are used during rendering to GET the state of a port or wire.  
+    simId = null;
     // Implement to declare component simulation item.
     declare(sim, config, suffix) {
         return null;

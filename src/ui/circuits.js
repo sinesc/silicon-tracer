@@ -405,7 +405,9 @@ Circuits.Circuit = class {
         const simIds = netList.instances[subCircuitInstance].simIds;
         for (const component of this.#data) {
             component.detachSimulation();
-            component.simId = simIds[component.gid] ?? null; // TODO: throw error here
+            if (component instanceof SimulationComponent) {
+                component.simId = simIds[component.gid];
+            }
         }
         for (const net of netList.nets) {
             // link ports on components
@@ -447,7 +449,7 @@ Circuits.Circuit = class {
     detachSimulation() {
         for (const item of this.#data) {
             item.detachSimulation();
-        };
+        }
     }
 
     // Generate a circuit id.
