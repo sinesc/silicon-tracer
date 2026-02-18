@@ -5,25 +5,25 @@ class Toggle extends SimulationComponent {
 
     static EDIT_DIALOG = [
         { name: 'name', label: 'Label', type: 'string' },
-        { name: 'state', label: 'State', type: 'select', options: { "-1": "Unset", "0": "Low", "1": "High" } },
+        { name: 'state', label: 'State', type: 'select', options: { "0": "Open", "1": "Closed" } },
         ...Component.EDIT_DIALOG,
     ];
 
-    #port;
+    #output;
     #labelElement;
     #state = null;
     name = '';
 
     constructor(app, x, y, rotation, state = null) {
-        super(app, x, y, rotation, { 'top': [ 'q' ], 'left': [ null ] }, 'toggle');
-        this.#port = this.portByName('q');
+        super(app, x, y, rotation, { top: [ null ], left: [ 'input' ], right: [ 'output' ] }, 'toggle');
+        this.#output = this.portByName('output');
         this.#state = state;
     }
 
     // Link port to a grid, enabling it to be rendered.
     link(grid) {
         super.link(grid);
-        this.setHoverMessage(this.inner, () => `Toggle button <b>${this.name}</b>. <i>1</i> Set high, <i>2</i> Set low, <i>3</i> Unset, <i>E</i> Edit, ${Component.HOTKEYS}.`, { type: 'hover' });
+        this.setHoverMessage(this.inner, () => `Toggle button <b>${this.name}</b>. <i>1</i> Close circuit, <i>2</i> Open circuit, <i>E</i> Edit, ${Component.HOTKEYS}.`, { type: 'hover' });
         this.#labelElement = element(this.element, 'div', 'port-name');
         this.element.classList.add('port', 'status-outline'); // reuse port lightbulb css here
     }
@@ -39,7 +39,10 @@ class Toggle extends SimulationComponent {
 
     // Declare component simulation item.
     declare(sim, config, suffix) {
-        return sim.declareConst(this.state, 'q', suffix);
+        sim.declareBuiltin('switch', suffix); // use a switch component to allow/block signal passing
+        const c = sim.declareConst(this.state, 'q', suffix); // use const to store toggle button state (open/closed)
+        sim.declareNet(['close' + suffix, 'q' + suffix]); // connect controllable const with switch control
+        return c;
     }
 
     // Returns user-set component state.
@@ -64,13 +67,11 @@ class Toggle extends SimulationComponent {
     onHotkey(key, what) {
         if (super.onHotkey(key, what)) {
             return true;
-        } else if (key >= '0' && key <= '3' && what.type === 'hover') {
+        } else if (key >= '0' && key <= '2' && what.type === 'hover') {
             if (key === '1') {
                 this.state = 1;
             } else if (key === '2') {
                 this.state = 0;
-            } else if (key === '3') {
-                this.state = null;
             }
             return true;
         }
@@ -109,7 +110,7 @@ class Toggle extends SimulationComponent {
         super.renderNetState();
 
         // render extra big state indicator around entire component
-        const state = this.getNetState(this.#port.netIds);
+        const state = this.getNetState(this.#output.netIds);
         if (this.element.getAttribute('data-net-state') !== state) {
             this.element.setAttribute('data-net-state', state);
         }

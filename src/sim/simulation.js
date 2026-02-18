@@ -29,6 +29,7 @@ class Simulation {
         atflipflop  : { outputs: { q: '~reset & (set | ((+clock & ((t & ~q) | (~t & q))) | (~+clock & q)))' }, inputs: [ 'clock', 't', 'reset', 'set' ], statsGates: 14 },
         srflipflop  : { outputs: { q: '(+clock & (s | (~r & q))) | (~+clock & q)' }, inputs: [ 'clock', 'r', 's' ], statsGates: 9 },
         asrflipflop : { outputs: { q: '~reset & (set | ((+clock & (s | (~r & q))) | (~+clock & q)))' }, inputs: [ 'clock', 'r', 's', 'reset', 'set' ], statsGates: 12 },
+        switch      : { outputs: { output: 'input' }, signals: { output: 'close & ?input' }, inputs: [ 'close', 'input' ], statsGates: 0 },
         buffer3     : { outputs: { q: 'data' }, signals: { q: 'enable' }, inputs: [ 'enable', 'data' ], statsGates: 1 },
         not3        : { outputs: { q: '~data' }, signals: { q: 'enable' }, inputs: [ 'enable', 'data' ], statsGates: 1 },
         adder       : { outputs: { cOut: '((a ^ b) & cIn) | (a & b)', q: '(a ^ b) ^ cIn' }, inputs: [ 'a', 'b', 'cIn' ], statsGates: 5  },

@@ -31,6 +31,7 @@ class Builtin extends SimulationComponent {
     };
 
     static LAYOUT_OVERRIDES = {
+        switch: { left: [ 'data' ], right: [ 'q' ], top: [ null ], bottom: [ 'close' ] },
         buffer3: { left: [ 'data' ], right: [ 'q' ], top: [ null ], bottom: [ 'enable' ] },
         not3: { left: [ 'data' ], right: [ 'q' ], top: [ null ], bottom: [ 'enable' ] },
         mux3: { left: [ 'select', 'a', 'b'  ], right: [ null, 'q', null ], top: [ null ], bottom: [ 'enable' ] },

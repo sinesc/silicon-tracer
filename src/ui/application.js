@@ -23,6 +23,7 @@ class Application {
             builtin: { rotation: 0, },
             textlabel: { rotation: 0, },
             constant: { rotation: 1, },
+            toggle: { rotation: 0, },
         },
     };
 
@@ -360,7 +361,7 @@ class Application {
                     return grid.addItem(new PullResistor(this, x, y, defaults.pull.rotation));
                 });
                 ioMenu.createComponentButton('Toggle', `<b>Toggle button</b> with permanently saved state. ${DRAG_MSG}`, (grid, x, y) => {
-                    return grid.addItem(new Toggle(this, x, y, defaults.port.rotation));
+                    return grid.addItem(new Toggle(this, x, y, defaults.toggle.rotation));
                 });
             });
 
