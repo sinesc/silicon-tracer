@@ -74,19 +74,14 @@ class Simulation {
         const replacer = (_, mode, ident) => {
             const name = ident + suffix;
             if (mode === '+') {
-                // shortcuts for rising edge detection: prefix name with +
-                // 00 => 0
-                // 01 => 0
-                // 10 => 1
-                // 11 => 0
+                // rising edge detection: prefix name with +
                 return `(((${name} & 0b10) >> 1) & (~${name} & 0b01))`;
             } else if (mode === '-') {
-                // shortcuts for falling edge detection: prefix name with -
-                // 00 => 0
-                // 01 => 1
-                // 10 => 0
-                // 11 => 0
+                // falling edge detection: prefix name with -
                 return `(((~${name} & 0b10) >> 1) & (${name} & 0b01))`;
+            } else if (mode === '?') {
+                // read signal bit: prefix name with ?
+                return `((${name} & 0b1000) >> 3)`;
             } else {
                 return name;
             }
@@ -95,8 +90,8 @@ class Simulation {
         const outputs = { };
         const signals = { };
         for (const [ name, eq ] of pairs(rules.outputs)) {
-            outputs[name + suffix] = eq.replace(/(\+|\-|\b)([a-z]+)\b/gi, replacer);
-            signals[name + suffix] = ((rules.signals ?? { })[name] ?? '').replace(/(\+|\-|\b)([a-z]+)\b/gi, replacer);
+            outputs[name + suffix] = eq.replace(/(\?|\+|\-|\b)([a-z]+)\b/gi, replacer);
+            signals[name + suffix] = ((rules.signals ?? { })[name] ?? '').replace(/(\?|\+|\-|\b)([a-z]+)\b/gi, replacer);
         }
         this.#gates.push({ inputs, outputs, signals, type });
         for (const input of values(inputs)) {
