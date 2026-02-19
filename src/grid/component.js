@@ -388,7 +388,10 @@ class Component extends GridItem {
     }
 
     // Hover hotkey actions
-    onHotkey(key, what) {
+    onHotkey(key, action, what) {
+        if (action !== 'down') {
+            return;
+        }
         if (key === 'r' && what.type === 'hover') {
             // rotate component with R while mouse is hovering
             this.rotation += 1;

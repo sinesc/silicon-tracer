@@ -45,9 +45,8 @@ class Grid {
         this.#debugElement = element(this.#element, 'div', 'debug-info');
         if (!passive) {
             document.addEventListener('mousemove', this.#debugHandleMouse.bind(this));
-            // TODO: may have to go to parent UI
-            // TODO: GridItems currently register document.onmouse* temporarily. those should probably follow the same logic: register onmouse* here and then pass on to whichever element wants to have them
             document.addEventListener('keydown', this.#handleKeyDown.bind(this));
+            document.addEventListener('keyup', this.#handleKeyUp.bind(this));
         }
     }
 
@@ -240,18 +239,16 @@ class Grid {
     }
 
     // Makes given grid item become the hotkey-target and when locked also prevents hover events from stealing hotkey focus until released.
-    requestHotkeyTarget(gridItem, lock, ...args) {
-        lock ??= false;
+    requestHotkeyTarget(gridItem, lock = false, ...args) {
         assert.class(GridItem, gridItem);
         assert.bool(lock);
         if (!this.#hotkeyTarget || !this.#hotkeyTarget.locked) {
-            this.#hotkeyTarget = { gridItem, args, locked: lock };
+            this.#hotkeyTarget = { gridItem, args, locked: lock, keysDown: { } };
         }
     }
 
     // Releases hotkey focus and lock if given element matches current lock holder.
-    releaseHotkeyTarget(gridItem, unlock) {
-        unlock ??= false;
+    releaseHotkeyTarget(gridItem, unlock = false) {
         assert.class(GridItem, gridItem);
         assert.bool(unlock);
         if (this.#hotkeyTarget && this.#hotkeyTarget.gridItem === gridItem && (!this.#hotkeyTarget.locked || unlock)) {
@@ -406,8 +403,9 @@ class Grid {
             }
         } else if (this.#hotkeyTarget) {
             // handle target specific hotkeys
-            const { gridItem, args } = this.#hotkeyTarget;
-            if (gridItem.onHotkey(e.key, ...args)) {
+            const { gridItem, args, keysDown } = this.#hotkeyTarget;
+            keysDown[e.key] = true;
+            if (gridItem.onHotkey(e.key, 'down', ...args)) {
                 e.preventDefault();
             }
         } else if (e.key === 'e') {
@@ -425,6 +423,18 @@ class Grid {
             this.#netColor = parseInt(e.key);
             this.#app.updateStatus();
             e.preventDefault();
+        }
+    }
+    
+    // Called when a key is released
+    #handleKeyUp(e) {
+        // only send up if target previously received down
+        if (this.#hotkeyTarget && this.#hotkeyTarget.keysDown[e.key]) {            
+            const { gridItem, args, keysDown } = this.#hotkeyTarget;
+            keysDown[e.key] = false;
+            if (gridItem.onHotkey(e.key, 'up', ...args)) {
+                e.preventDefault();
+            }
         }
     }
 

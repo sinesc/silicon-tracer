@@ -88,7 +88,10 @@ class TextLabel extends GridItem {
     }
 
     // Hover hotkey actions
-    onHotkey(key, what) {
+    onHotkey(key, action, what) {
+        if (action !== 'down') {
+            return;
+        }
         if (key === 'r' && what.type === 'hover') {
             // rotate component with R while mouse is hovering
             this.#rotation = (this.#rotation + 1) & 3;

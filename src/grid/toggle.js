@@ -64,8 +64,11 @@ class Toggle extends SimulationComponent {
     }
 
     // Hover hotkey actions
-    onHotkey(key, what) {
-        if (super.onHotkey(key, what)) {
+    onHotkey(key, action, what) {
+        if (action !== "down") {
+            return;
+        }
+        if (super.onHotkey(key, action, what)) {
             return true;
         } else if (key >= '0' && key <= '2' && what.type === 'hover') {
             if (key === '1') {

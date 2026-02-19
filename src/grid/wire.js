@@ -134,7 +134,10 @@ class Wire extends GridItem {
     }
 
     // Hover hotkey actions
-    onHotkey(key, what) {
+    onHotkey(key, action, what) {
+        if (action !== 'down') {
+            return;
+        }
         if (key >= '0' && key <= '9' && what.type === 'hover') {
             const netList = NetList.identify(this.grid.circuit)
             const myNetId = netList.findWire(this);

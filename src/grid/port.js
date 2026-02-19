@@ -51,8 +51,11 @@ class Port extends SimulationComponent {
     }
 
     // Hover hotkey actions
-    onHotkey(key, what) {
-        if (super.onHotkey(key, what)) {
+    onHotkey(key, action, what) {
+        if (action !== 'down') {
+            return;
+        }
+        if (super.onHotkey(key, action, what)) {
             return true;
         } else if (key >= '0' && key <= '3' && what.type === 'hover') {
             const prevState = this.#state;

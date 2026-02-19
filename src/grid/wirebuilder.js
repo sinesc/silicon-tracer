@@ -58,7 +58,10 @@ class WireBuilder extends GridItem { // Note: Not actually a grid item, but uses
     }
 
     // Hover hotkey actions
-    onHotkey(key, what) {
+    onHotkey(key, action, what) {
+        if (action !== 'down') {
+            return;
+        }
         if (key === 'r' && what.type === 'connect') {
             // add new corner when pressing R while dragging a wire
             const x = this.x + this.width;
