@@ -82,7 +82,8 @@ class Momentary extends SimulationComponent {
         if (config) {
             this.name = config.name;
             this.rotation = config.rotation;
-            this.defaultState = Number.parseInt(config.defaultState);
+            this.#defaultState = Number.parseInt(config.defaultState);
+            this.state = this.#defaultState;
             this.redraw();
         }
     }
