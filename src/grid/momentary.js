@@ -1,29 +1,32 @@
 "use strict";
 
-// A toggleable switch with saved state.
-class Toggle extends SimulationComponent {
+// A momentary switch.
+class Momentary extends SimulationComponent {
 
     static EDIT_DIALOG = [
         { name: 'name', label: 'Label', type: 'string' },
-        { name: 'state', label: 'State', type: 'select', options: { "0": "Open", "1": "Closed" } },
+        { name: 'defaultState', label: 'Default state', type: 'select', options: { "0": "Open", "1": "Closed" } },
         ...Component.EDIT_DIALOG,
     ];
 
     #output;
     #labelElement;
-    #state = null;
+    #defaultState;
+    #state;
     name = '';
 
-    constructor(app, x, y, rotation, state = null) {
+    constructor(app, x, y, rotation, default_state = 0) {
         super(app, x, y, rotation, { top: [ null ], left: [ 'input' ], right: [ 'output' ] }, 'toggle');
         this.#output = this.portByName('output');
-        this.#state = state;
+        this.#defaultState = default_state;
+        this.#state = default_state;
     }
 
     // Link port to a grid, enabling it to be rendered.
     link(grid) {
         super.link(grid);
-        this.setHoverMessage(this.inner, () => `Toggle switch <b>${this.name}</b>. <i>1</i> Close circuit, <i>2</i> Open circuit, <i>E</i> Edit, ${Component.HOTKEYS}.`, { type: 'hover' });
+        const action = () => this.#defaultState === 0 ? 'Open' : 'Close';
+        this.setHoverMessage(this.inner, () => `Momentary switch <b>${this.name}</b>. <i>1</i> Hold to ${action()} circuit, <i>E</i> Edit, ${Component.HOTKEYS}.`, { type: 'hover' });
         this.#labelElement = element(this.element, 'div', 'port-name');
         this.element.classList.add('port', 'status-outline'); // reuse port lightbulb css here
     }
@@ -32,7 +35,7 @@ class Toggle extends SimulationComponent {
     serialize() {
         return {
             ...super.serialize(),
-            '#a': [ this.x, this.y, this.rotation, this.#state ],
+            '#a': [ this.x, this.y, this.rotation, this.#defaultState ],
             name: this.name,
         };
     }
@@ -65,28 +68,21 @@ class Toggle extends SimulationComponent {
 
     // Hover hotkey actions
     onHotkey(key, action, what) {
-        if (action !== "down") {
-            return;
-        }
         if (super.onHotkey(key, action, what)) {
             return true;
-        } else if (key >= '0' && key <= '2' && what.type === 'hover') {
-            if (key === '1') {
-                this.state = 1;
-            } else if (key === '2') {
-                this.state = 0;
-            }
+        } else if (key === '1' && what.type === 'hover') {
+            this.state = action === 'up' ? this.#defaultState : (this.#defaultState === 0 ? 1 : 0);
             return true;
         }
     }
 
     // Handle edit hotkey.
     async onEdit() {
-        const config = await dialog("Configure toggle switch", Toggle.EDIT_DIALOG, { name: this.name, rotation: this.rotation, state: this.#state === null ? '-1' : this.#state });
+        const config = await dialog("Configure momentary switch", Momentary.EDIT_DIALOG, { name: this.name, rotation: this.rotation, defaultState: this.#defaultState });
         if (config) {
             this.name = config.name;
             this.rotation = config.rotation;
-            this.state = config.state === '-1' ? null : Number.parseInt(config.state);
+            this.defaultState = Number.parseInt(config.defaultState);
             this.redraw();
         }
     }

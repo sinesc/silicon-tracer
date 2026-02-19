@@ -24,6 +24,7 @@ class Application {
             textlabel: { rotation: 0, },
             constant: { rotation: 1, },
             toggle: { rotation: 0, },
+            momentary: { rotation: 0, },
         },
     };
 
@@ -360,8 +361,11 @@ class Application {
                 ioMenu.createComponentButton('Pull', `<b>Pull up/down resistor</b>. ${DRAG_MSG}`, (grid, x, y) => {
                     return grid.addItem(new PullResistor(this, x, y, defaults.pull.rotation));
                 });
-                ioMenu.createComponentButton('Toggle', `<b>Toggle button</b> with permanently saved state. ${DRAG_MSG}`, (grid, x, y) => {
+                ioMenu.createComponentButton('Toggle switch', `<b>Toggle switch</b> with permanently saved state. ${DRAG_MSG}`, (grid, x, y) => {
                     return grid.addItem(new Toggle(this, x, y, defaults.toggle.rotation));
+                });
+                ioMenu.createComponentButton('Momentary switch', `<b>Momentary switch</b>. ${DRAG_MSG}`, (grid, x, y) => {
+                    return grid.addItem(new Momentary(this, x, y, defaults.momentary.rotation));
                 });
             });
 
