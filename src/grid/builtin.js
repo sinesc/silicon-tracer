@@ -12,35 +12,25 @@ class Builtin extends SimulationComponent {
         latch: 'dlatch',
     };
 
-    static LABELS = {
-        dlatch: 'D latch',
-        adlatch: 'D latch, async. reset',
-        dflipflop: 'D flip-flop',
-        adflipflop: 'D flip-flop, async. reset',
-        jkflipflop: 'JK flip-flop',
-        ajkflipflop: 'JK flip-flop, async. reset',
-        tflipflop: 'T flip-flop',
-        atflipflop: 'T flip-flop, async. reset',
-        srflipflop: 'SR flip-flop',
-        asrflipflop: 'SR flip-flop, async. reset',
-        buffer3: 'Tri-state buffer',
-        not3: 'Tri-state inverter',
-        mux3: 'Tri-state mux',
-        demux3: 'Tri-state demux',
-        adder: 'Full adder',
-    };
-
-    static LAYOUT_OVERRIDES = {
-        switch: { left: [ 'data' ], right: [ 'q' ], top: [ null ], bottom: [ 'close' ] },
-        buffer3: { left: [ 'data' ], right: [ 'q' ], top: [ null ], bottom: [ 'enable' ] },
-        not3: { left: [ 'data' ], right: [ 'q' ], top: [ null ], bottom: [ 'enable' ] },
-        mux3: { left: [ 'select', 'a', 'b'  ], right: [ null, 'q', null ], top: [ null ], bottom: [ 'enable' ] },
-        demux3: { left: [ 'select', null, 'data'  ], right: [ 'qa', null, 'qb' ], top: [ null ], bottom: [ 'enable' ] },
-        adlatch: { left: [ 'load', null, 'data' ], right: [ null, 'q', null ], top: [ 'set' ], bottom: [ 'reset' ] },
-        adflipflop: { left: [ 'clock', null, 'data'  ], right: [ null, 'q', null ], top: [ 'set' ], bottom: [ 'reset' ] },
-        ajkflipflop: { left: [ 'clock', 'k', 'j' ], right: [ null, 'q', null ], top: [ 'set' ], bottom: [ 'reset' ] },
-        atflipflop: { left: [ 'clock', null, 't' ], right: [ null, 'q', null ], top: [ 'set' ], bottom: [ 'reset' ] },
-        asrflipflop: { left: [ 'clock', 'r', 's' ], right: [ null, 'q', null ], top: [ 'set' ], bottom: [ 'reset' ] },
+    static META_INFO = {
+        dlatch: { label: 'D latch', gateCount: 4, layoutOverride: null },
+        adlatch: { label: 'D latch, async. reset', gateCount: 8, layoutOverride: { left: [ 'load', null, 'data' ], right: [ null, 'q', null ], top: [ 'set' ], bottom: [ 'reset' ] } },
+        dflipflop: { label: 'D flip-flop', gateCount: 6, layoutOverride: null },
+        adflipflop: { label: 'D flip-flop, async. reset', gateCount: 10, layoutOverride: { left: [ 'clock', null, 'data' ], right: [ null, 'q', null ], top: [ 'set' ], bottom: [ 'reset' ] } },
+        jkflipflop: { label: 'JK flip-flop', gateCount: 11, layoutOverride: null },
+        ajkflipflop: { label: 'JK flip-flop, async. reset', gateCount: 14, layoutOverride: { left: [ 'clock', 'k', 'j' ], right: [ null, 'q', null ], top: [ 'set' ], bottom: [ 'reset' ] } },
+        tflipflop: { label: 'T flip-flop', gateCount: 11, layoutOverride: null },
+        atflipflop: { label: 'T flip-flop, async. reset', gateCount: 14, layoutOverride: { left: [ 'clock', null, 't' ], right: [ null, 'q', null ], top: [ 'set' ], bottom: [ 'reset' ] } },
+        srflipflop: { label: 'SR flip-flop', gateCount: 9, layoutOverride: null },
+        asrflipflop: { label: 'SR flip-flop, async. reset', gateCount: 12, layoutOverride: { left: [ 'clock', 'r', 's' ], right: [ null, 'q', null ], top: [ 'set' ], bottom: [ 'reset' ] } },
+        switch: { label: 'Switch', gateCount: 0, layoutOverride: { left: [ 'data' ], right: [ 'q' ], top: [ null ], bottom: [ 'close' ] } },
+        buffer3: { label: 'Tri-state buffer', gateCount: 1, layoutOverride: { left: [ 'data' ], right: [ 'q' ], top: [ null ], bottom: [ 'enable' ] } },
+        not3: { label: 'Tri-state inverter', gateCount: 1, layoutOverride: { left: [ 'data' ], right: [ 'q' ], top: [ null ], bottom: [ 'enable' ] } },
+        adder: { label: 'Full adder', gateCount: 5, layoutOverride: null },
+        mux: { label: 'Multiplexer', gateCount: 5, layoutOverride: null },
+        mux3: { label: 'Tri-state mux', gateCount: 5, layoutOverride: { left: [ 'select', 'a', 'b' ], right: [ null, 'q', null ], top: [ null ], bottom: [ 'enable' ] } },
+        demux: { label: 'Demultiplexer', gateCount: 4, layoutOverride: null },
+        demux3: { label: 'Tri-state demux', gateCount: 4, layoutOverride: { left: [ 'select', null, 'data' ], right: [ 'qa', null, 'qb' ], top: [ null ], bottom: [ 'enable' ] } },
     };
 
     gates;
@@ -50,14 +40,15 @@ class Builtin extends SimulationComponent {
         type = Builtin.#LEGACY_RENAME[type] ?? type;
         const { left, right, inputs, outputs } = Builtin.#generatePorts(type);
         const ioTypes = Object.fromEntries([ ...inputs.map((i) => [ i, 'in' ]), ...outputs.map((o) => [ o, 'out' ]) ]);
-        super(app, x, y, rotation, Builtin.LAYOUT_OVERRIDES[type] ?? { 'left': left, 'right': right }, type, numChannels, ioTypes);
+        const meta = Builtin.META_INFO[type];
+        super(app, x, y, rotation, meta?.layoutOverride ?? { 'left': left, 'right': right }, type, numChannels, ioTypes);
         this.#numChannels = numChannels;
-        this.gates = Simulation.BUILTIN_MAP[type].statsGates;
+        this.gates = meta.gateCount ?? 0;
     }
 
     // Returns the builtin's label string.
     get label() {
-        return Builtin.LABELS[this.type] ?? this.type.toUpperFirst();
+        return Builtin.META_INFO[this.type]?.label ?? this.type.toUpperFirst();
     }
 
     // Serializes the object for writing to disk.
