@@ -406,7 +406,7 @@ Circuits.Circuit = class {
         for (const component of this.#data) {
             component.detachSimulation();
             if (component instanceof SimulationComponent) {
-                component.simId = simIds[component.gid];
+                component.simId = simIds[component.gid] ?? null; // null fallback required for disregarded components
             }
         }
         for (const net of netList.nets) {
