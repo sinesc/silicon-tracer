@@ -59,7 +59,7 @@ class Application {
         this.toolbar = new Toolbar(this, toolbarParent);
         this.circuits = new Circuits(this);
         this.simulations = new Simulations(this);
-        this.#status.element = element(gridParent, 'div', 'app-status');
+        this.#status.element = html(gridParent, 'div', 'app-status');
         this.#initMenu();
         this.#initToolbar();
         this.#initFocusMonitor();

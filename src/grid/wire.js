@@ -38,7 +38,7 @@ class Wire extends GridItem {
     // Link wire to a grid, enabling it to be rendered.
     link(grid) {
         super.link(grid);
-        this.#element = element(null, 'div', 'wire wire-' + this.#direction);
+        this.#element = html(null, 'div', 'wire wire-' + this.#direction);
         this.registerMouseAction(this.#element, { type: 'connect', ordering: this.#direction === 'h' ? 'vh' : 'hv' });
         const message = () => {
             const channels = this.netIds?.length ?? 1;

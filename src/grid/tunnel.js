@@ -21,7 +21,7 @@ class Tunnel extends VirtualComponent {
     link(grid) {
         super.link(grid);
         this.setHoverMessage(this.inner, () => (this.name === '' ? 'Inactive tunnel (needs a network name)' : `Tunnel <b>${this.name}</b>`) + `. <i>E</i> Edit, ${Component.HOTKEYS}.`, { type: 'hover' });
-        this.#labelElement = element(this.element, 'div', 'port-name');
+        this.#labelElement = html(this.element, 'div', 'port-name');
         this.element.classList.add('tunnel');
     }
 

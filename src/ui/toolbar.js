@@ -13,7 +13,7 @@ class Toolbar {
         assert.class(Node, parent);
         this.#app = app;
         this.#menuStates = new WeakUnorderedSet();
-        this.#element = element(parent, 'div', 'toolbar');
+        this.#element = html(parent, 'div', 'toolbar');
     }
 
     // Returns the DOM Node.
@@ -36,7 +36,7 @@ class Toolbar {
         assert.string(label);
         assert.string(hoverMessage);
         assert.function(create);
-        const button = element(this.#element, 'div', 'toolbar-button toolbar-component-button', label);
+        const button = html(this.#element, 'div', 'toolbar-button toolbar-component-button', label);
         button.onmousedown = (e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -56,7 +56,7 @@ class Toolbar {
         assert.string(label);
         assert.string(hoverMessage);
         assert.function(action);
-        const button = element(this.#element, 'div', 'toolbar-button toolbar-action-button', label);
+        const button = html(this.#element, 'div', 'toolbar-button toolbar-action-button', label);
         button.onclick= (e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -94,7 +94,7 @@ class Toolbar {
 
     // Creates a separator
     createSeparator() {
-        const separator = element(this.#element, 'div', 'toolbar-separator');
+        const separator = html(this.#element, 'div', 'toolbar-separator');
         return [ separator ];
     }
 
@@ -132,7 +132,7 @@ class Toolbar {
         });
         this.#menuStates.add(stateFn);
         button.classList.add(...(classPrefix + 'button').split(' '));
-        const subToolbarContainer = element(button, 'div', classPrefix + 'container');
+        const subToolbarContainer = html(button, 'div', classPrefix + 'container');
         // hover-open: modify mouse-enter to open another menu if one is already open, modify stateFn to disable hover-open when a menu is intentionally closed
         if (hoverOpens) {
             const originalMouseEnter = button.onmouseenter;
@@ -157,7 +157,7 @@ class Toolbar {
     // Creates a toggle button and returns the button element as well as a function that sets/returns the current button state.
     #createToggleButton(label, hoverMessage, defaultState, action) {
         let state = defaultState;
-        const button = element(null, 'div', `toolbar-button toolbar-toggle-button toolbar-toggle-button-${state ? 'on' : 'off'}`, '<div class="toolbar-button-label">' + label + '</div>');
+        const button = html(null, 'div', `toolbar-button toolbar-toggle-button toolbar-toggle-button-${state ? 'on' : 'off'}`, '<div class="toolbar-button-label">' + label + '</div>');
         const stateFn = (newState) => {
             if (newState !== undefined) {
                 button.classList.remove(state ? 'toolbar-toggle-button-on' : 'toolbar-toggle-button-off');

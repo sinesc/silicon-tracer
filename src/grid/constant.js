@@ -24,7 +24,7 @@ class Constant extends SimulationComponent {
     link(grid) {
         super.link(grid);
         this.setHoverMessage(this.inner, () => `Constant value <b>${this.name}</b>. <i>E</i> Edit, ${Component.HOTKEYS}.`, { type: 'hover' });
-        this.#labelElement = element(this.element, 'div', 'port-name');
+        this.#labelElement = html(this.element, 'div', 'port-name');
         this.element.classList.add('constant', 'status-outline');
     }
 

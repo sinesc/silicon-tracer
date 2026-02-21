@@ -292,7 +292,7 @@ function assert(condition, message = null) {
 }
 
 // Creates an HTML element.
-function element(parent = null, type = 'div', classNames = null, contents = null) {
+function html(parent = null, type = 'div', classNames = null, contents = null) {
     assert.class(Node, parent, true);
     assert.string(type);
     assert.string(classNames, true);

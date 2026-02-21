@@ -37,12 +37,12 @@ class Grid {
         assert.class(Application, app);
         assert.class(Node, parent);
         this.#app = app;
-        this.#element = element(parent, 'div', 'grid');
+        this.#element = html(parent, 'div', 'grid');
         this.#element.onmousedown = this.#handleDragStart.bind(this);
         this.#element.onwheel = this.#handleZoom.bind(this);
-        this.#infoBox.element = element(this.#element, 'div', 'grid-info', '');
-        this.#selectionElement = element(this.#element, 'div', 'grid-selection hidden');
-        this.#debugElement = element(this.#element, 'div', 'debug-info');
+        this.#infoBox.element = html(this.#element, 'div', 'grid-info', '');
+        this.#selectionElement = html(this.#element, 'div', 'grid-selection hidden');
+        this.#debugElement = html(this.#element, 'div', 'debug-info');
         if (!passive) {
             document.addEventListener('mousemove', this.#debugHandleMouse.bind(this));
             document.addEventListener('keydown', this.#handleKeyDown.bind(this));

@@ -19,11 +19,11 @@ function dialog(title, fields, data, extraOptions) {
     };
 
     // build html form
-    const blackout = element(null, 'div', 'dialog-blackout');
-    const containerElement = element(blackout, 'div', 'dialog-container' + (extraClass ? ' ' + extraClass : ''));
-    element(containerElement, 'div', 'dialog-title', title);
-    const contentElement = element(containerElement, 'div', 'dialog-content');
-    const tableElement = element(contentElement, 'table');
+    const blackout = html(null, 'div', 'dialog-blackout');
+    const containerElement = html(blackout, 'div', 'dialog-container' + (extraClass ? ' ' + extraClass : ''));
+    html(containerElement, 'div', 'dialog-title', title);
+    const contentElement = html(containerElement, 'div', 'dialog-content');
+    const tableElement = html(contentElement, 'table');
     const form = [];
 
     // validate form input
@@ -51,8 +51,8 @@ function dialog(title, fields, data, extraOptions) {
 
     for (const field of values(fields)) {
         if (field.text) {
-            const rowElement = element(tableElement, 'tr', 'dialog-row');
-            element(rowElement, 'td', 'dialog-row-label', field.text);
+            const rowElement = html(tableElement, 'tr', 'dialog-row');
+            html(rowElement, 'td', 'dialog-row-label', field.text);
         } else {
             // check field definition
             assert.string(field.name);
@@ -69,15 +69,15 @@ function dialog(title, fields, data, extraOptions) {
                 }
             }
             // construct field html, add field to form
-            const rowElement = element(tableElement, 'tr', 'dialog-row');
-            element(rowElement, 'td', 'dialog-row-label', field.label ?? field.name.toUpperFirst());
-            const rowRight = element(rowElement, 'td', 'dialog-row-mask');
+            const rowElement = html(tableElement, 'tr', 'dialog-row');
+            html(rowElement, 'td', 'dialog-row-label', field.label ?? field.name.toUpperFirst());
+            const rowRight = html(rowElement, 'td', 'dialog-row-mask');
             let fieldElement
             if (field.type === 'select') {
-                fieldElement = element(rowRight, 'select', 'dialog-row-select', { name: field.name, options: field.options, value: data[field.name] });
+                fieldElement = html(rowRight, 'select', 'dialog-row-select', { name: field.name, options: field.options, value: data[field.name] });
                 fieldElement.onchange = triggerOnChange;
             } else {
-                fieldElement = element(rowRight, 'input', 'dialog-row-input', { name: field.name, value: data[field.name] });
+                fieldElement = html(rowRight, 'input', 'dialog-row-input', { name: field.name, value: data[field.name] });
                 fieldElement.onkeyup = triggerOnChange;
                 fieldElement.onchange = triggerOnChange;
             }
@@ -85,9 +85,9 @@ function dialog(title, fields, data, extraOptions) {
         }
     }
 
-    const rowElement = element(contentElement, 'div', 'dialog-button-row', );
-    const cancelElement = cancelable ? element(rowElement, 'span', 'dialog-button dialog-cancel', 'Cancel') : null;
-    const confirmElement = element(rowElement, 'span', 'dialog-button dialog-confirm', 'Ok');
+    const rowElement = html(contentElement, 'div', 'dialog-button-row', );
+    const cancelElement = cancelable ? html(rowElement, 'span', 'dialog-button dialog-cancel', 'Cancel') : null;
+    const confirmElement = html(rowElement, 'span', 'dialog-button dialog-confirm', 'Ok');
     document.body.appendChild(blackout);
     triggerOnChange();
 

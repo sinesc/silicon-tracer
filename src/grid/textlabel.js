@@ -45,8 +45,8 @@ class TextLabel extends GridItem {
     // Link wire to a grid, enabling it to be rendered.
     link(grid) {
         super.link(grid);
-        this.#element = element(null, 'div', 'text');
-        this.#inner = element(this.#element, 'span', 'inner'); // not assigning contents here since we don't want to use innerHTML
+        this.#element = html(null, 'div', 'text');
+        this.#inner = html(this.#element, 'span', 'inner'); // not assigning contents here since we don't want to use innerHTML
         this.#inner.innerText = this.#text;
         this.setHoverMessage(this.#inner, () => `Text element. <i>E</i> Edit, ${Component.HOTKEYS}.`, { type: 'hover' });
         this.registerMouseAction(this.#inner, { type: "component", grabOffsetX: null, grabOffsetY: null });
@@ -140,7 +140,7 @@ class TextLabel extends GridItem {
         // draw grid-aligned drop-preview outline
         if (status !== 'stop') {
             if (!this.#dropPreview) {
-                this.#dropPreview = element(null, 'div', 'text-drop-preview');
+                this.#dropPreview = html(null, 'div', 'text-drop-preview');
                 this.grid.addVisual(this.#dropPreview);
             }
             const [ alignedX, alignedY ] = Grid.align(this.x, this.y);

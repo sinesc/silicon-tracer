@@ -231,15 +231,15 @@ class Component extends GridItem {
         super.link(grid);
 
         // container and inner area with name
-        this.#element = element(null, 'div', 'component');
+        this.#element = html(null, 'div', 'component');
         this.#element.setAttribute('data-component-type', this.#type);
-        this.#inner = element(this.#element, 'div', 'component-inner', `<span>${this.label}</span>`);
+        this.#inner = html(this.#element, 'div', 'component-inner', `<span>${this.label}</span>`);
         this.registerMouseAction(this.#inner, { type: "component", grabOffsetX: null, grabOffsetY: null });
 
         // ports
         for (const item of this.ports) {
             // TODO: add and call link() method on ComponentPort instead?
-            const port = element(this.#element, 'div', 'component-port');
+            const port = html(this.#element, 'div', 'component-port');
             const message = () => {
                 const channels = item.netIds?.length ?? 1;
                 const kind = channels === 1 ? 'Port' : `<b>${channels}-bit</b> port`;
@@ -247,7 +247,7 @@ class Component extends GridItem {
             };
             this.setHoverMessage(port, message, { type: 'hover-port' });
             // port hover label
-            const labelElement = element(this.#element, 'div', 'component-port-label');
+            const labelElement = html(this.#element, 'div', 'component-port-label');
             // update component port with linked dom nodes
             item.element = port;
             item.labelElement = labelElement;
@@ -432,7 +432,7 @@ class Component extends GridItem {
         // draw grid-aligned drop-preview outline
         if (status !== 'stop') {
             if (!this.#dropPreview) {
-                this.#dropPreview = element(null, 'div', 'component-drop-preview');
+                this.#dropPreview = html(null, 'div', 'component-drop-preview');
                 this.grid.addVisual(this.#dropPreview);
             }
             const [ alignedX, alignedY ] = Grid.align(this.x, this.y);

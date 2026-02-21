@@ -24,7 +24,7 @@ class Toggle extends SimulationComponent {
     link(grid) {
         super.link(grid);
         this.setHoverMessage(this.inner, () => `Toggle switch <b>${this.name}</b>. <i>1</i> Close circuit, <i>2</i> Open circuit, <i>E</i> Edit, ${Component.HOTKEYS}.`, { type: 'hover' });
-        this.#labelElement = element(this.element, 'div', 'port-name');
+        this.#labelElement = html(this.element, 'div', 'port-name');
         this.element.classList.add('port', 'status-outline'); // reuse port lightbulb css here
     }
 

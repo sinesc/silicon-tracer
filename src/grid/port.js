@@ -22,7 +22,7 @@ class Port extends SimulationComponent {
     link(grid) {
         super.link(grid);
         this.setHoverMessage(this.inner, () => (this.name === '' ? 'Inactive port (needs a network name)' : `Port <b>${this.name}</b>`) +  `. <i>1</i> Set high, <i>2</i> Set low, <i>3</i> Unset, <i>E</i> Edit, ${Component.HOTKEYS}.`, { type: 'hover' });
-        this.#labelElement = element(this.element, 'div', 'port-name');
+        this.#labelElement = html(this.element, 'div', 'port-name');
         this.element.classList.add('port', 'status-outline');
     }
 

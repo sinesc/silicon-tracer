@@ -27,7 +27,7 @@ class Momentary extends SimulationComponent {
         super.link(grid);
         const action = () => this.#defaultState === 0 ? 'Open' : 'Close';
         this.setHoverMessage(this.inner, () => `Momentary switch <b>${this.name}</b>. <i>1</i> Hold to ${action()} circuit, <i>E</i> Edit, ${Component.HOTKEYS}.`, { type: 'hover' });
-        this.#labelElement = element(this.element, 'div', 'port-name');
+        this.#labelElement = html(this.element, 'div', 'port-name');
         this.element.classList.add('port', 'status-outline'); // reuse port lightbulb css here
     }
 

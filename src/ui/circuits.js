@@ -112,7 +112,7 @@ class Circuits {
         return (blackout, data) => {
             // build/update preview grid
             if (!previewContainer) {
-                previewContainer = element(blackout, 'div', 'circuit-preview');
+                previewContainer = html(blackout, 'div', 'circuit-preview');
                 const dialogWindow = blackout.querySelector('.dialog-container');
                 const fixedOffsetX = Math.floor(0.5 * dialogWindow.offsetWidth + 0.5 * previewContainer.offsetWidth)
                 const fixedOffsetY = Math.floor(-0.5 * dialogWindow.offsetHeight + 0.5 * previewContainer.offsetHeight)
