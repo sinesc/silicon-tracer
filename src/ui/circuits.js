@@ -37,25 +37,31 @@ class Circuits {
     }
 
     // Loads circuits from file, returning the filename if circuits was previously empty.
-    async loadFile(clear, switchTo = true) {
+    async loadFile(clear, switchTo = true, asLibrary = false) {
         assert.bool(clear);
         assert.bool(switchTo);
         const haveCircuits = !this.allEmpty();
         const [ handle ] = await File.openFile(this.#fileHandle);
         const file = await handle.getFile();
         const content = JSON.parse(await file.text());
+        let fileLid = null;
         if (clear) {
             this.#circuits = {};
             this.#libraries = {};
         }
-        const newCircuitUID = this.unserialize(content);
+        if (asLibrary) {            
+            fileLid = app.circuits.addLibrary(file.name.replace(/\.stc/, ''));
+        }
+        const newCircuitUID = this.unserialize(content, fileLid);
         if (switchTo) {
             this.select(newCircuitUID);
         }
         if (clear || !haveCircuits) {
             // no other circuits loaded, make this the new file handle
             this.#fileHandle = handle;
-            this.#fileName = file.name;
+            if (!asLibrary) {
+                this.#fileName = file.name;
+            }
         }
     }
 
@@ -257,14 +263,18 @@ class Circuits {
     }
 
     // Unserializes circuits from file.
-    unserialize(content) {
+    unserialize(content, setLid = null) {
+        assert.object(content);
+        assert.string(setLid, true);
         for (const [ lid, label ] of pairs(content.libraries ?? {})) {
             this.#libraries[lid] = label;
         }
         for (const serialized of content.circuits) {
             // skip circuits that were already unserialized recursively by GridItem's dependency check for CustomComponents.
-            if (!this.#circuits[serialized.uid]) {
-                Circuits.Circuit.unserialize(this.#app, serialized, content.circuits);
+            // also skip library components starting with a "#" (these are intended to be used for demos/examples etc. that 
+            // you wouldn't want in the library menu).
+            if (!this.#circuits[serialized.uid] && !(setLid && serialized.label.startsWith('#'))) {
+                Circuits.Circuit.unserialize(this.#app, serialized, content.circuits, setLid);
             }
         }
         return content.currentUID;
@@ -372,11 +382,12 @@ Circuits.Circuit = class {
     }
 
     // Unserializes circuit from decoded JSON-object and adds it to Circuits. Dependencies of CustomComponents will also be added.
-    static unserialize(app, rawCircuit, rawOthers) {
+    static unserialize(app, rawCircuit, rawOthers, setLid = null) {
         assert.class(Application, app);
         assert.object(rawCircuit);
-        const items = rawCircuit.data.map((item) => GridItem.unserialize(app, item, rawOthers));
-        const circuit = new Circuits.Circuit(rawCircuit.label, rawCircuit.uid, items, rawCircuit.gridConfig, rawCircuit.portConfig, rawCircuit.lid);
+        assert.string(setLid, true);
+        const items = rawCircuit.data.map((item) => GridItem.unserialize(app, item, rawOthers, setLid));
+        const circuit = new Circuits.Circuit(rawCircuit.label, rawCircuit.uid, items, rawCircuit.gridConfig, rawCircuit.portConfig, rawCircuit.lid ?? setLid);
         Wire.compact(circuit);
         app.circuits.add(circuit);
     }

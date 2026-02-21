@@ -220,8 +220,14 @@ class Application {
                 this.haveChanges = true;
             });
             addButton.classList.toggle('toolbar-menu-button-disabled', this.circuits.allEmpty());
+            // Open as library
+            fileMenu.createActionButton('Add library...', 'Add circuits in file as library components. These are accessible via the <i>Component</i> menu and do not show in <i>Circuit</i>.', async () => {
+                fileMenuState(false);
+                await this.circuits.loadFile(false, false, true);                
+                this.haveChanges = true;
+            });
             // Import circuits and add to currently loaded circuits.
-            fileMenu.createActionButton('Import...', 'Import .circ file.', async () => {
+            fileMenu.createActionButton('Import...', 'Import files produced by other applications.', async () => {
                 fileMenuState(false);
                 await this.circuits.importFile();
                 this.haveChanges = true;

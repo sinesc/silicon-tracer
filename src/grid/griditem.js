@@ -45,9 +45,10 @@ class GridItem {
     }
 
     // Unserializes a circuit item to a grid idem.
-    static unserialize(app, item, rawOthers) {
+    static unserialize(app, item, rawOthers, setLid = null) {
         assert.class(Application, app);
         assert.object(item);
+        assert.string(setLid, true);
         const cname = item['#c'];
         const cargs = item['#a'];
         let instance;
@@ -67,7 +68,7 @@ class GridItem {
             const uid = cargs[3];
             if (!app.circuits.byUID(uid)) {
                 const rawCircuit = rawOthers.find((o) => o.uid === uid);
-                Circuits.Circuit.unserialize(app, rawCircuit, rawOthers); // TODO: add max recursion depth
+                Circuits.Circuit.unserialize(app, rawCircuit, rawOthers, setLid); // TODO: add max recursion depth
             }
             instance = new CustomComponent(app, ...cargs);
         } else if (cname === 'Splitter') {
