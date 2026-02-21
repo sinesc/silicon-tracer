@@ -1,5 +1,6 @@
 "use strict";
 
+// Maps object properties using given callback c(k, v, object).
 Object.map = function(object, c) {
     assert.function(c);
     const result = Object.create(object);
@@ -9,6 +10,7 @@ Object.map = function(object, c) {
     return result;
 };
 
+// Filters object properties using given callback c(k, v, object).
 Object.filter = function(object, c) {
     assert.function(c);
     const result = Object.create(object);
@@ -46,14 +48,17 @@ Object.defineProperty(Array.prototype, "swapRemoveWith", {
     }
 });
 
+// Returns whether the given argument is a string.
 String.isString = function(s) {
     return typeof s === 'string';
 }
 
+// Returns whether the given argument is a function.
 Function.isFunction = function(f) {
     return typeof f === 'function';
 }
 
+// Returns the string with its first character converted to upper case.
 Object.defineProperty(String.prototype, "toUpperFirst", {
     value: function() {
         return this.length > 0 ? this.charAt(0).toUpperCase() + this.slice(1) : '';
@@ -169,6 +174,7 @@ function count(iterable) {
     }
 }
 
+// Asserts given condition is true or errors.
 function assert(condition, message = null) {
     if (!condition) {
         throw new Error(message ?? 'Assertion failed');
@@ -363,6 +369,7 @@ function measureRefreshRate(limit = 5) {
     })
 }
 
+// Datastructure representing a single 2 dimensional point.
 class Point {
     x;
     y;
@@ -411,10 +418,12 @@ class Point {
     }
 }
 
+// Creates a new instance of Point.
 function point(x, y) {
     return new Point(x, y);
 }
 
+// Weakly referenced unordered set.
 class WeakUnorderedSet {
     #items;
     constructor(array = []) {
@@ -444,7 +453,7 @@ class WeakUnorderedSet {
     }
 }
 
-// https://en.wikipedia.org/wiki/Disjoint-set_data_structure
+// Disjoint set datastructure, see https://en.wikipedia.org/wiki/Disjoint-set_data_structure
 class UnionFind {
     #parent;
     constructor() {
@@ -468,6 +477,7 @@ class UnionFind {
     }
 }
 
+// Wraps browser file picker API with default options.
 class File {
     static OPTIONS = {
         types: [
@@ -528,6 +538,7 @@ class File {
     }
 }
 
+// XML parser class.
 class XML {
     static parse(text) {
         const parser = new DOMParser();
