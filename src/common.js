@@ -174,11 +174,28 @@ function count(iterable) {
     }
 }
 
-// Asserts given condition is true or errors.
+// Asserts condition is true or throws an error.
 function assert(condition, message = null) {
     if (!condition) {
         throw new Error(message ?? 'Assertion failed');
     }
+}
+
+// Throws an error with the given message.
+function error(message) {
+    throw new Error(message);
+}
+
+// Compares two values. Returns 1 if a > b, -1 if b > a, otherwise 0.
+function compare(a, b) {
+    return a > b ? 1 : (a < b ? -1 : 0);
+}
+
+// Compares priority of two values. Looks up their index in priorities and returns 1 if p(a) > p(b), -1 if p(b) > p(a), otherwise 0.
+function comparePriority(a, b, priorities) {
+    const pa = priorities.indexOf(a);
+    const pb = priorities.indexOf(b);
+    return pa > pb ? 1 : (pa < pb ? -1 : 0);
 }
 
 {
@@ -367,6 +384,23 @@ function measureRefreshRate(limit = 5) {
     return new Promise((resolve, reject) => {
         done = resolve;
     })
+}
+
+// Generates a random word-like id. For debugging only.
+function generateWord(minLength, maxLength) {
+    const vowels = 'aeiou';
+    const consonants = 'bcdfghjklmnpqrstvwxyz';
+    const length = Math.floor(Math.random() * (maxLength - minLength + 1)) + minLength;
+    let word = '';
+    for (let i = 0; i < length; i++) {
+        // Alternate between consonants and vowels more often than not
+        if (i % 2 === 0 && Math.random() > 0.3 || i % 2 !== 0 && Math.random() > 0.7) {
+            word += consonants[Math.floor(Math.random() * consonants.length)];
+        } else {
+            word += vowels[Math.floor(Math.random() * vowels.length)];
+        }
+    }
+    return word;
 }
 
 // Datastructure representing a single 2 dimensional point.
