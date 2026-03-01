@@ -177,13 +177,14 @@ function count(iterable) {
 // Asserts condition is true or throws an error.
 function assert(condition, message = null) {
     if (!condition) {
+        message = typeof message === 'function' ? message() : message;
         throw new Error(message ?? 'Assertion failed');
     }
 }
 
 // Throws an error with the given message.
 function error(message) {
-    throw new Error(message);
+    throw new Error(typeof message === 'function' ? message() : message);
 }
 
 // Compares two values. Returns 1 if a > b, -1 if b > a, otherwise 0.
@@ -220,6 +221,7 @@ function comparePriority(a, b, priorities) {
     assert.string = function(val, allow_null = false, message = null) {
         if (typeof val !== 'string' && !(allow_null && val === null)) {
             const ty = type(val);
+            message = typeof message === 'function' ? message() : message;
             throw new Error(message?.replace('%', ty) ?? 'Assertion failed: Expected string, got ' + ty);
         }
     }
@@ -228,23 +230,32 @@ function comparePriority(a, b, priorities) {
     assert.bool = function(val, allow_null = false, message = null) {
         if (typeof val !== 'boolean' && !(allow_null && val === 'null')) {
             const ty = type(val);
+            message = typeof message === 'function' ? message() : message;
             throw new Error(message?.replace('%', ty) ?? 'Assertion failed: Expected boolean, got ' + ty);
         }
     }
 
     // Asserts given value is a finite number.
-    assert.number = function(val, allow_null = false, message = null) {
+    assert.number = function(val, allow_null = false, min = null, max = null, message = null) {
         if (!Number.isFinite(val) && !(allow_null && val === null)) {
             const ty = type(val);
+            message = typeof message === 'function' ? message() : message;
             throw new Error(message?.replace('%', ty) ?? 'Assertion failed: Expected number, got ' + ty);
+        }
+        if ((min !== null && val < min) || (max !== null && val > max)) {
+            throw new Error(`Assertion failed: Number value ${val} out of specified bounds`);
         }
     }
 
     // Asserts given value is an integer number.
-    assert.integer = function(val, allow_null = false, message = null) {
+    assert.integer = function(val, allow_null = false, min = null, max = null, message = null) {
         if (!Number.isInteger(val) && !(allow_null && val === null)) {
             const ty = type(val);
+            message = typeof message === 'function' ? message() : message;
             throw new Error(message?.replace('%', ty) ?? 'Assertion failed: Expected integer, got ' + ty);
+        }
+        if ((min !== null && val < min) || (max !== null && val > max)) {
+            throw new Error(`Assertion failed: Integer value ${val} out of specified bounds`);
         }
     }
 
@@ -252,6 +263,7 @@ function comparePriority(a, b, priorities) {
     assert.array = function(val, allow_null = false, itemTester = null, message = null) {
         if (!Array.isArray(val) && !(allow_null && val === null)) {
             const ty = type(val);
+            message = typeof message === 'function' ? message() : message;
             throw new Error(message?.replace('%', ty) ?? 'Assertion failed: Expected array, got ' + ty);
         }
         if (val !== null && typeof itemTester === 'function') {
@@ -266,6 +278,7 @@ function comparePriority(a, b, priorities) {
         if (!(allow_null && val === null) && val?.constructor !== Object) {
             let ty = type(val);
             ty = ty === 'object' ? 'instance of ' + val.constructor.name : ty;
+            message = typeof message === 'function' ? message() : message;
             throw new Error(message?.replace('%', ty) ?? 'Assertion failed: Expected object, got ' + ty);
         }
         if (val !== null && typeof objectTester === 'function') {
@@ -277,6 +290,7 @@ function comparePriority(a, b, priorities) {
     assert.function = function(val, allow_null = false, message = null) {
         if (typeof val !== 'function' && !(allow_null && val === null)) {
             const ty = type(val);
+            message = typeof message === 'function' ? message() : message;
             throw new Error(message?.replace('%', ty) ?? 'Assertion failed: Expected function, got ' + ty);
         }
     }
@@ -286,6 +300,7 @@ function comparePriority(a, b, priorities) {
         if (!(val instanceof constructor) && !(allow_null && val === null)) {
             let ty = type(val);
             ty = ty === 'object' ? 'instance of ' + val.constructor.name : ty;
+            message = typeof message === 'function' ? message() : message;
             throw new Error(message?.replace('%', ty) ?? 'Assertion failed: Expected instance of ' + constructor.name + ', got ' + ty);
         }
     }
@@ -293,6 +308,7 @@ function comparePriority(a, b, priorities) {
     // Asserts given value is one of the allowed values.
     assert.enum = function(allowed, val, allow_null = false, message = null) {
         if (!(allow_null && val === null) && !allowed.includes(val)) {
+            message = typeof message === 'function' ? message() : message;
             throw new Error(message ?? 'Assertion failed: Value is not among the allowed values');
         }
     }
@@ -301,6 +317,7 @@ function comparePriority(a, b, priorities) {
     assert.stringable = function(val, allow_null = false, message = null) {
         if (typeof val !== 'string' && !Number.isFinite(val) && !(allow_null && val === null)) {
             const ty = type(val);
+            message = typeof message === 'function' ? message() : message;
             throw new Error(message?.replace('%', ty) ?? 'Assertion failed: Expected string or number, got ' + ty);
         }
     }
@@ -309,6 +326,7 @@ function comparePriority(a, b, priorities) {
     assert.iterable = function(val, allow_null = false, message = null) {
         if (typeof val === 'string' || (!allow_null && val === null) || (val !== null && val.constructor !== Object && !val[Symbol.iterator])) {
             const ty = type(val);
+            message = typeof message === 'function' ? message() : message;
             throw new Error(message?.replace('%', ty) ?? 'Assertion failed: Expected iterable, got ' + ty);
         }
     }
