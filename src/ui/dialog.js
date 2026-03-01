@@ -30,16 +30,20 @@ function dialog(title, fields, data, extraOptions) {
     const validate = () => {
         const result = {};
         const errors = [];
+        const changed = [];
         for (const { element, field } of values(form)) {
             const check = field.check ?? validations[field.type].check;
             if (check.call(context, element.value, field)) {
                 const apply = field.apply ?? validations[field.type].apply;
                 result[field.name] = apply.call(context, element.value, field);
+                if (result[field.name] !== data[field.name]) {
+                    changed.push(field.name);
+                }
             } else {
                 errors.push(field.name);
             }
         }
-        return [ errors.length === 0 ? result : null, errors ];
+        return errors.length === 0 ? [ result, changed, null  ] : [ null, null, errors ];
     };
 
     const triggerOnChange = (e) => {
@@ -101,9 +105,10 @@ function dialog(title, fields, data, extraOptions) {
     // return a promise that resolves on ok/cancel
     return new Promise((resolve, reject) => {
         const confirm = () => {
-            const [ result, errors ] = validate();
+            const [ result, changed, errors ] = validate();
             if (result) {
                 blackout.remove();
+                result._changed = changed; // TODO: tbd whether to return [ result, changed ] instead. would also have to return [ null, null ] in cancel case or deconstructs would error
                 resolve(result);
             } else {
                 for (const { element, field } of values(form)) {
