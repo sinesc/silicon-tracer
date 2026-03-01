@@ -155,6 +155,29 @@ function first(iterable) {
     return undefined;
 }
 
+// Creates an iterator over the results of func. Each iteration func is invoked
+// with with the number of previous iterations and the previous iteration result.
+// Iteration ends when the function returns undefined or the optional limit is reached.
+function *construct(init, limit = null, func = null) {
+    if (limit === null && func === null) {
+        func = init;
+        init = null;
+    } else if (func === null) {
+        func = limit;
+        limit = null;
+    }
+    assert.function(func);
+    assert.integer(limit, true);
+    let prev = init;
+    let current;
+    let index = 0;
+    while ((current = func(index, prev)) !== undefined && (limit === null || index < limit)) {
+        yield current;
+        prev = current;
+        ++index;
+    }
+}
+
 // Normalizes javascript iteration mess. Counts items in an iterable.
 function count(iterable) {
     if (Array.isArray(iterable)) {

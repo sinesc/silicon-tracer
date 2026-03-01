@@ -10,10 +10,10 @@
  * BUILTIN: Builtins are basic digital components that - like gates - have ports that connect to nets. Their functions are defined in BUILTIN_MAP. Builtin output ports support Tri-state logic, their outputs can be "0", "1" or "high impedance" ("not set").
  * Like gates they read from their inputs before the inputs read from the nets they are attached to in order to simulate delay.
  *
- * APPROACH: We store the states of all nets and ports in one single BigUint64Array where each bit of each element stores the state of a port or a net. On the #ports/#nets definitions we store the memory element index in `elementIndex2` and the bit-index in
+ * APPROACH: We store the states of all nets and ports in one single Uint32Array where each bit of each element stores the state of a port or a net. On the #ports/#nets definitions we store the memory element index in `elementIndex2` and the bit-index in
  * bitIndex`. For tri-state logic we use an additional array element `elementIndex3` to store whether the port/net is high-impedance(0) or driven(1) (at the same bit-index). In the BUILTIN_MAP the logic expression for this state is defined in the 'signals' field.
  * When a port needs to detect edges we add another element `elementIndexP` that contains the previous state so that edges can be detected.
- * To optimize simulation performance, all gates/builtins of the same type (e.g. 'and', 'or') are grouped so that a single evaluation of a gate/builtin expression on a BigUint64Array element can compute up to 64 components at once.
+ * To optimize simulation performance, all gates/builtins of the same type (e.g. 'and', 'or') are grouped so that a single evaluation of a gate/builtin expression on a Uint32Array element can compute up to 64 components at once.
  * However, since we need to copy the current net states to the component inputs each tick, we also group nets by their attached component inputs so that we can ideally also copy up to 64-nets to the attached inputs at once.  Of course this will not always
  * be possible (e.g. a net can be attached to multiple gate inputs) so we generate an optimized layout that tries align as many net bits with their connected input ports as possible.
  */
@@ -35,6 +35,9 @@ class SimulationNew {
         xor     : { negate: false, joinOp: '^' },
         xnor    : { negate: true,  joinOp: '^' },
     };
+
+    static GATE_INPUTS = Array.from(construct(null, 16, (i) => String.fromCharCode(97 + i)));
+    static GATE_OUTPUT = 'q';
 
     // Basic builtin components.
     static BUILTIN_MAP = {
@@ -72,34 +75,36 @@ class SimulationNew {
     // Construct a new instance. Enable debug to generate commented code.
     constructor(debug = false) {
         assert.bool(debug);
+        debug = true; // FIXME: remove
+        this.#debug = debug;
     }
 
-    // Declares a net (which inputs/outputs are connected) and returns the net id. Attached IO-names must include their suffixes. Meta can be any custom data.
-    declareNet(attachedIONames, meta = null) {
+    // Declares a net (which inputs/outputs are connected) and returns the net id. Attached IO-names must include their suffixes.
+    declareNet(attachedIONames) {
         assert.array(attachedIONames, false, (i) => assert.string(i));
         assert(attachedIONames.length > 0);
-        const net = { id: this.#nets.all.length, elementIndex2: null, elementIndex3: null, bitIndex: null, copiesTo: null, ports: attachedIONames, meta };
+        const net = { id: this.#nets.all.length, elementIndex2: null, elementIndex3: null, bitIndex: null, copiesTo: null, ports: attachedIONames };
         this.#nets.all.push(net);
         for (const ioName of attachedIONames) {
+            assert(this.#nets.byPort[ioName] === undefined, () => `Port ${ioName} already contained in net ${JSON.stringify({ id: this.#nets.byPort[ioName].id, ports: this.#nets.byPort[ioName].ports })}`);
             this.#nets.byPort[ioName] = net;
         }
         return net.id;
     }
 
     // Declares a gate with the given inputs/output. For convenience, suffix is appended to all IO-names and must be unique.
-    declareGate(type, inputNames, outputName, suffix) { // TODO: change api from inputNames to numInputs and remove outputName
+    declareGate(type, numInputs, suffix) {
         assert.string(type);
         assert.string(suffix);
-        assert.array(inputNames, false, (i) => assert.string(i));
-        assert.string(outputName);
+        assert.integer(numInputs, false, 1, 16);
         const rules = SimulationNew.GATE_MAP[type];
-        const batchType = `${type}[${inputNames.length}]`;
-        for (const input of inputNames) {
-            this.#declarePort(input + suffix, 'i', false, false, batchType, input, suffix);
+        const batchType = `${type}[${numInputs}]`;
+        for (const input of SimulationNew.GATE_INPUTS.slice(0, numInputs)) {
+            this.#declarePort(input, suffix, 'i', false, false, batchType);
         }
-        this.#declarePort('q' + suffix, 'o', false, false, batchType, 'q', suffix);
+        this.#declarePort(SimulationNew.GATE_OUTPUT, suffix, 'o', false, false, batchType);
         if (!this.#functors[batchType]) {
-            const inner = inputNames.join(' ' + rules.joinOp + ' ');
+            const inner = SimulationNew.GATE_INPUTS.slice(0, numInputs).join(' ' + rules.joinOp + ' ');
             const outputs = {
                 q: rules.negate ? '(~(' + inner + '))' : inner,
             };
@@ -114,11 +119,11 @@ class SimulationNew {
         const rules = SimulationNew.BUILTIN_MAP[type];
         for (const input of rules.inputs) {
             const detectEdges = values(rules.outputs).map((eq) => eq.includes(`+${input}`) || eq.includes(`-${input}`)).some((t) => t);
-            this.#declarePort(input + suffix, 'i', false, detectEdges, type, input, suffix);
+            this.#declarePort(input, suffix, 'i', false, detectEdges, type);
         }
         for (const output of keys(rules.outputs)) {
             const isTristate = !!rules.signals?.[output];
-            this.#declarePort(output + suffix, 'o', isTristate, false, type, output, suffix);
+            this.#declarePort(output, suffix, 'o', isTristate, false, type);
         }
         if (!this.#functors[type]) {
             const outputs = { };
@@ -138,8 +143,8 @@ class SimulationNew {
         assert.string(suffix);
         const clock = { id: this.#clocks.length, frequency, tps, enablePortName: 'enable' + suffix, outputPortName: 'c' + suffix, counterIndex: null, limitIndex: null };
         this.#clocks.push(clock);
-        this.#declarePort(clock.enablePortName, 'i', false, false, 'clock', 'enable', suffix);
-        this.#declarePort(clock.outputPortName, 'o', false, false, 'clock', 'c', suffix);
+        this.#declarePort('enable', suffix, 'i', false, false, 'clock');
+        this.#declarePort('c', suffix, 'o', false, false, 'clock');
         return clock.id;
     }
 
@@ -153,7 +158,7 @@ class SimulationNew {
         if (tps !== null) clock.tps = tps;
         if (this.#mem && clock.limitIndex !== null) {
             const ticks = Math.floor(clock.tps / clock.frequency / 2);
-            this.#mem[clock.limitIndex] = BigInt(ticks);
+            this.#mem[clock.limitIndex] = ticks;
         }
     }
 
@@ -171,7 +176,7 @@ class SimulationNew {
         assert.string(suffix);
         const constant = { id: this.#consts.length, initialValue, output: 'q' + suffix }
         this.#consts.push(constant);
-        this.#declarePort('q' + suffix, 'o', true, false, 'const', 'q', suffix);
+        this.#declarePort('q', suffix, 'o', true, false, 'const');
         return constant.id;
     }
 
@@ -179,9 +184,9 @@ class SimulationNew {
     declarePullResistor(type, suffix) {
         assert.enum([ 'up', 'down' ], type);
         assert.string(suffix);
-        const portId = this.#declarePort('q' + suffix, 'o', false, false, 'pull', 'q', suffix);
+        const portId = this.#declarePort('q', suffix, 'o', false, false, 'pull');
         const port = this.#ports.all[portId];
-        port.isPull = true;
+        port.isPull = true; // TODO: instead use ioType u/d to represent pull up/down
         port.pullType = type;
     }
 
@@ -234,11 +239,10 @@ class SimulationNew {
         const bit = 1 << port.bitIndex;
         if (port.elementIndex2 !== null) {
             if (value) {
-                console.log(`setting const ${id} @ ${port.elementIndex2}:${port.bitIndex} to 1`);
+                //console.log(`setting const ${id} @ ${port.elementIndex2}:${port.bitIndex} to 1`);
                 this.#mem[port.elementIndex2] |= bit;
-                binAll(this.#mem);
             } else {
-                console.log(`setting const ${id} @ ${port.elementIndex2}:${port.bitIndex} to 0`);
+                //console.log(`setting const ${id} @ ${port.elementIndex2}:${port.bitIndex} to 0`);
                 this.#mem[port.elementIndex2] &= ~bit;
             }
         }
@@ -282,14 +286,21 @@ class SimulationNew {
         return this.#nets.all;
     }
 
+    // Returns a list of defined ports.
+    get ports() {
+        return this.#ports.all;
+    }
+
     // Returns simulation memory
     get mem() {
         return this.#mem;
     }
 
     // Used by declareGate/declareNet/declareConst/... to declare the ports of those components). Return the port id.
-    #declarePort(name, ioType, isTriState, detectEdges, batchType, batchName, batchComponent) {
+    #declarePort(batchName, batchComponent, ioType, isTriState, detectEdges, batchType) {
+        const name = batchName + batchComponent;
         const port = { id: this.#ports.all.length, name, bitIndex: null, elementIndex2: null, elementIndex3: null, elementIndexP: null, ioType, isTriState, detectEdges, batchType, batchName, batchComponent };
+        assert(this.#ports.byName[name] === undefined, `Port ${name} already defined`);
         this.#ports.all.push(port);
         // deduplicated list of component types
         this.#ports.batchTypes[batchType] ??= {};
@@ -357,13 +368,14 @@ class SimulationNew {
                 assigned = false;
                 let lastAssignedBitIndex = SimulationNew.BITS_PER_ELEMENT;
                 for (const port of values(ports)) {
+                    assert.integer(port.bitIndex);
                     if (port.ioType !== ioType) continue;
                     // get net this port is attached to
                     const candidateNet = this.#nets.byPort[port.name];
                     if (!candidateNet) continue;
                     if (candidateNet.bitIndex !== null) continue;
                     // create new mem array element each time bit index resets
-                    if (port.bitIndex < lastAssignedBitIndex) {
+                    if (port.bitIndex <= lastAssignedBitIndex) {
                         elementIndex.n2 = globalElementIndex++;
                         elementIndex.n3 = globalElementIndex++;
                         lastAssignedBitIndex = SimulationNew.BITS_PER_ELEMENT;
@@ -382,12 +394,13 @@ class SimulationNew {
                 }
             } while (assigned);
         }
+        console.log('missing assignments', this.#nets.all.filter((n) => n.bitIndex === null));
         console.log('nets', this.#nets);
         return globalElementIndex;
     }
 
     // Optimizes bitmaps to join possible bit operations.
-    #optimizeBitmaps(bitmaps) { // note: ignore, calls to this have been disabled for debugging purposes
+    #optimizeBitmaps(bitmaps) {
 
         bitmaps.sort((a, b) => compare(a.destElementIndex2, b.destElementIndex2) || compare(a.srcElementIndex2, b.srcElementIndex2) || compare(a.srcBit, b.srcBit) || compare(a.destBit, b.destBit));
         const result = [];
@@ -415,7 +428,6 @@ class SimulationNew {
             // Add any unoptimized entries to result
             for (const bitmap of remaining2) {
                 bitmap.mode = 'single';
-                //result.push({ offset: bitmap.srcBit - bitmap.destBit, ...bitmap });//debug
             }
             result.push(...remaining2);
         }
@@ -465,8 +477,6 @@ class SimulationNew {
 
     // Optimize bitmaps: Group bits that get shifted by the same offset into the destination.
     #groupOffsets(group) {
-        if (group.length === 0) return [[], []];
-
         const offsets = [];
         const skippedIndices = new Set();
 
@@ -556,7 +566,6 @@ class SimulationNew {
         const rawBitmaps = [];
         for (const port of ports) {
             const net = this.#nets.byPort[port.name];
-            if (!net) continue;
             if (port.name === net.copiesTo) continue;
             bitmap = { mode: null, srcBit: net.bitIndex, destBit: port.bitIndex, srcElementIndex2: net.elementIndex2, destElementIndex2: port.elementIndex2 };
             rawBitmaps.push(bitmap);
@@ -591,6 +600,7 @@ class SimulationNew {
 
     // Generate list of memory operations to perform to simulate the circuit.
     #generateOperations() {
+        const portModifierRegex = /(\?|\+|\-|\b)([a-z]+)\b/gi;
         const replacer = (ports, mode, name) => {
             if (mode === '+') {
                 // rising edge detection: prefix name with +
@@ -613,9 +623,6 @@ class SimulationNew {
             if (!this.#functors[batchType]) continue; // skip e.g. consts
             for (const component of keys(batchComponents)) {
                 const ports = this.#ports.byBatchComponent[component];
-                const portNames = Array.from(keys(ports));
-                if (portNames.length === 0) continue;
-                const portNamesRegex = new RegExp(`(\\?|\\+|-|\\b)(${portNames.join('|')})\\b`, 'gi');
                 const portReplacer = (_, mode, name) => replacer(ports, mode, name);
 
                 // generate code to compute output values from inputs
@@ -626,7 +633,7 @@ class SimulationNew {
                     const operationId2 = `${port.batchType}:${port.batchName}:${port.elementIndex2}`;
                     if (!operations[operationId2]) {
                         const expression = `${port.batchName} = ${functor.outputs[port.batchName]}`;
-                        operations[operationId2] = { code: expression.replace(portNamesRegex, portReplacer), comment: `compute ${port.batchName} for ${port.batchType}` };
+                        operations[operationId2] = { code: expression.replace(portModifierRegex, portReplacer), comment: `compute ${port.batchName} for ${port.batchType}` };
                     }
 
                     // signal
@@ -635,8 +642,7 @@ class SimulationNew {
                         if (!operations[operationId3]) {
                             const expressionStr = functor.signals?.[port.batchName];
                             if (expressionStr) {
-                                const expression = `mem[${port.elementIndex3}] = ${expressionStr}`;
-                                operations[operationId3] = { code: expression.replace(portNamesRegex, portReplacer), comment: `compute signal ${port.batchName} for ${port.batchType}` };
+                                operations[operationId3] = { code: `mem[${port.elementIndex3}] = ` + expressionStr.replace(portModifierRegex, portReplacer), comment: `compute signal ${port.batchName} for ${port.batchType}` };
                             } else {
                                 // always driven if signal expression is empty string but isTriState is true
                                 operations[operationId3] = { code: `mem[${port.elementIndex3}] = ~0`, comment: `compute signal ${port.batchName} for ${port.batchType}` };
@@ -671,7 +677,7 @@ class SimulationNew {
         }
         for (const p of this.#nets.all) {
             const name = `${p.elementIndex2}-${p.bitIndex}`;
-            assert(!known.has(name), `Duplicate port ${name} in memory layout`);
+            assert(!known.has(name), `Duplicate net ${name} in memory layout`);
             known.add(name);
         }
         // ----
@@ -696,26 +702,25 @@ class SimulationNew {
 
     // Generate code for a single element assignment from multiple bitmap sources
     #generateElementAssignment(destElementIndex, bitmaps) {
-        let expr = '0';
-
+        let expr = '';
         for (const bitmap of bitmaps) {
             const srcMem = `mem[${bitmap.srcElementIndex2}]`;
-
             if (bitmap.mode === 'direct') {
                 // Direct range copy
                 const bitCount = bitmap.endBit - bitmap.startBit + 1;
                 const maskRaw = (0xFFFFFFFF >>> (32 - bitCount));
                 const mask = maskRaw << bitmap.startBit;
-                expr += ` | (${srcMem} & 0x${(mask >>> 0).toString(16)})`;
+                expr += ` | (${srcMem} & 0x${(mask >>> 0).toString(16)})`; // TODO: optimize out the mask when range is full 32 bit
             } else if (bitmap.mode === 'duplicate') {
                 // Same source bit to multiple destinations
+                let destMask = 0;
                 for (const destBit of bitmap.destBit) {
-                    expr += ` | (((${srcMem} >>> ${bitmap.srcBit}) & 1) << ${destBit})`;
+                    destMask |= 1 << destBit;
                 }
+                expr += ` | (-((${srcMem} >>> ${bitmap.srcBit}) & 1) & 0x${(destMask >>> 0).toString(16)})`;
             } else if (bitmap.mode === 'offset') {
-                // Offset-based copy
+                // Offset-based copy, construct mask to select all source bits and shift them all at once
                 const offset = bitmap.destBit;
-                // Construct mask to select all source bits and shift them all at once
                 let srcMask = 0;
                 for (const srcBit of bitmap.srcBit) {
                     srcMask |= 1 << srcBit;
@@ -724,28 +729,35 @@ class SimulationNew {
                 expr += ` | ((${srcMem} & 0x${(srcMask >>> 0).toString(16)}) ${shift})`;
             } else if (bitmap.mode === 'single') {
                 // Single bit copy
-                expr += ` | (((${srcMem} >>> ${bitmap.srcBit}) & 1) << ${bitmap.destBit})`;
+                const shiftVal = bitmap.destBit - bitmap.srcBit;
+                const mask = (1 << bitmap.srcBit) >>> 0;
+                if (shiftVal === 0) {
+                    expr += ` | (${srcMem} & 0x${mask.toString(16)})`;
+                } else {
+                    const shift = shiftVal < 0 ? '>>> ' + (-shiftVal) : '<< ' + shiftVal;
+                    expr += ` | ((${srcMem} & 0x${mask.toString(16)}) ${shift})`;
+                }
             }
         }
-
-        return `mem[${destElementIndex}] = ${expr}`;
+        return `mem[${destElementIndex}] = ${expr.slice(3)}`;
     }
 
     // Generate code for a single element assignment from multiple bitmap sources
     #generateOutputToNetAssignment(destElementIndex, bitmaps, mode) {
-        let expr = '0';
-
+        let expr = '';
         for (const bitmap of bitmaps) {
             const srcMem2 = `mem[${bitmap.srcElementIndex2}]`;
             const srcMem3 = bitmap.srcElementIndex3 != null ? `mem[${bitmap.srcElementIndex3}]` : '~0';
-
             const valueExpr = mode === 'value' ? `(${srcMem2} & ${srcMem3})` : srcMem3;
-
             if (bitmap.mode === 'duplicate') {
+                // Same source bit to multiple destinations
+                let destMask = 0;
                 for (const destBit of bitmap.destBit) {
-                    expr += ` | (((${valueExpr} >>> ${bitmap.srcBit}) & 1) << ${destBit})`;
+                    destMask |= 1 << destBit;
                 }
+                expr += ` | (-((${valueExpr} >>> ${bitmap.srcBit}) & 1) & 0x${(destMask >>> 0).toString(16)})`;
             } else if (bitmap.mode === 'offset') {
+                // Offset-based copy, construct mask to select all source bits and shift them all at once
                 const offset = bitmap.destBit;
                 let srcMask = 0;
                 for (const srcBit of bitmap.srcBit) {
@@ -754,11 +766,18 @@ class SimulationNew {
                 const shift = offset < 0 ? '>>> ' + (-offset) : '<< ' + offset;
                 expr += ` | ((${valueExpr} & 0x${(srcMask >>> 0).toString(16)}) ${shift})`;
             } else if (bitmap.mode === 'single') {
-                expr += ` | (((${valueExpr} >>> ${bitmap.srcBit}) & 1) << ${bitmap.destBit})`;
+                // Single bit copy
+                const shiftVal = bitmap.destBit - bitmap.srcBit;
+                const mask = (1 << bitmap.srcBit) >>> 0;
+                if (shiftVal === 0) {
+                    expr += ` | (${valueExpr} & 0x${mask.toString(16)})`;
+                } else {
+                    const shift = shiftVal < 0 ? '>>> ' + (-shiftVal) : '<< ' + shiftVal;
+                    expr += ` | ((${valueExpr} & 0x${mask.toString(16)}) ${shift})`;
+                }
             }
         }
-
-        return `mem[${destElementIndex}] = ${expr}`;
+        return `mem[${destElementIndex}] = ${expr.slice(3)}`;
     }
 
     // Compiles code for a single simulation tick.
