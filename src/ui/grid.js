@@ -106,7 +106,6 @@ class Grid {
     addItem(item, restart = true) {
         assert.class(GridItem, item);
         assert.bool(restart);
-        item.gid ??= Grid.generateGID();
         this.#circuit.addItem(item);
         item.link(this);
         if (restart) {
@@ -330,11 +329,6 @@ class Grid {
             Math.ceil(x / Grid.SPACING) * Grid.SPACING - 0.5 * Grid.SPACING,
             Math.ceil(y / Grid.SPACING) * Grid.SPACING - 0.5 * Grid.SPACING
         ];
-    }
-
-    // Generate a grid id.
-    static generateGID() {
-        return 'g' + crypto.randomUUID().replaceAll('-', '');
     }
 
     // Applies net colors to component ports on the grid.

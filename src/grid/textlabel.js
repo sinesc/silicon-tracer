@@ -100,7 +100,7 @@ class TextLabel extends GridItem {
             this.#element.classList.add('component-rotate-animation');
             setTimeout(() => {
                 // queue class removal for next render call to avoid brief flickering
-                this.redraw(() => this.#element.classList.remove('component-rotate-animation'));
+                this.redraw(false, () => this.#element.classList.remove('component-rotate-animation'));
             }, 150);
             return true;
         } else if (key === 'Delete' && what.type === 'hover') {

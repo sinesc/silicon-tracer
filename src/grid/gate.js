@@ -3,7 +3,6 @@
 // Basic logic gate component.
 class Gate extends SimulationComponent {
 
-    static #START_LETTER = 97; // 65 for capitalized
     static #UNARY = Object.keys(Object.filter(Simulation.GATE_MAP, (k, v) => v.joinOp === null));
 
     static #UNARY_DIALOG = [
@@ -47,7 +46,7 @@ class Gate extends SimulationComponent {
 
     // Declare component simulation item.
     declare(sim, config, suffix) {
-        return sim.declareGate(this.type, this.inputs, this.output, suffix);
+        return sim.declareGate(this.type, this.inputs.length, suffix);
     }
 
     // Handle edit hotkey.
@@ -88,7 +87,7 @@ class Gate extends SimulationComponent {
         const left = [];
         const inputs = [];
         for (let i = 0; i < numInputs; ++i) {
-            const letter = String.fromCharCode(Gate.#START_LETTER + i);
+            const letter = Simulation.GATE_INPUTS[i];
             inputs.push(letter);
             left.push(letter);
             if (i === blankAfter) {
@@ -98,7 +97,7 @@ class Gate extends SimulationComponent {
 
         // output
         const right = [];
-        const output = String.fromCharCode(Gate.#START_LETTER + 16);
+        const output = Simulation.GATE_OUTPUT;
         for (let i = 0; i < numSlots; ++i) {
             right.push(i === outputAt ? output : null);
         }

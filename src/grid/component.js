@@ -5,7 +5,8 @@ class ComponentPort {
 
     static #SIDES = ['top','right','bottom','left'];
 
-    name;
+    name; // simulation port name
+    label; // visible port name
     originalSide;
     index;
     color = null;
@@ -25,6 +26,7 @@ class ComponentPort {
         assert.integer(numChannels, true);
         assert.enum(['in', 'out'], ioType, true);
         this.name = name;
+        this.label = name;
         this.originalSide = originalSide;
         this.index = index;
         this.numChannels = numChannels;
@@ -98,9 +100,9 @@ class ComponentPort {
         this.element.style.width = visualPortSize + "px";
         this.element.style.height = visualPortSize + "px";
         this.element.style.lineHeight = visualPortSize + 'px';
-        this.element.innerHTML = '<span>' + this.name.slice(labelCharPos, labelCharPos + 1) + '</span>';
+        this.element.innerHTML = '<span>' + this.label.slice(labelCharPos, labelCharPos + 1) + '</span>';
         this.element.setAttribute('data-net-color', this.color ?? '');
-        ComponentPort.renderLabel(component, this.labelElement, side, x, y, this.name);
+        ComponentPort.renderLabel(component, this.labelElement, side, x, y, this.label);
     }
 
     // Renders a label next to a port.
@@ -243,7 +245,7 @@ class Component extends GridItem {
             const message = () => {
                 const channels = item.netIds?.length ?? 1;
                 const kind = channels === 1 ? 'Port' : `<b>${channels}-bit</b> port`;
-                return `${kind} <b>${item.name}</b> of <b>${this.#type}</b>. <i>LMB</i> Drag to connect.`;
+                return `${kind} <b>${item.label}</b> of <b>${this.#type}</b>. <i>LMB</i> Drag to connect.`;
             };
             this.setHoverMessage(port, message, { type: 'hover-port' });
             // port hover label
@@ -398,7 +400,7 @@ class Component extends GridItem {
             this.#element.classList.add('component-rotate-animation');
             setTimeout(() => {
                 // queue class removal for next render call to avoid brief flickering
-                this.redraw(() => this.#element.classList.remove('component-rotate-animation'));
+                this.redraw(true, () => this.#element.classList.remove('component-rotate-animation'));
             }, 150);
             return true;
         } else if (key === 'Delete' && what.type === 'hover') {
@@ -546,8 +548,8 @@ class Component extends GridItem {
     }
 
     // Override redraw to also update the inner label.
-    redraw(beforeRender = null) {
-        super.redraw(beforeRender);
+    redraw(recompile = true, beforeRender = null) {
+        super.redraw(recompile, beforeRender);
         this.#inner.innerHTML = `<span>${this.label}</span>`;
     }
 
@@ -597,7 +599,7 @@ class VirtualComponent extends Component { }
 class SimulationComponent extends Component {
     // An id for the simulated component. This could be a constId, clockId, ....
     // simIds are used by the UI to SET constants values, clock frequencies etc.
-    // By contast, netIds are used during rendering to GET the state of a port or wire.  
+    // By contast, netIds are used during rendering to GET the state of a port or wire.
     simId = null;
     // Implement to declare component simulation item.
     declare(sim, config, suffix) {

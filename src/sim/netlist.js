@@ -62,16 +62,35 @@ class NetList {
             assert.bool(o.debugCompileComments);
         });
         const sim = new Simulation(config.debugCompileComments, config.checkNetConflicts);
+
+        // Determine component duplication counts
+        const componentCounts = {};
+        for (const net of this.nets) {
+            for (const port of net.ports) {
+                const key = `${port.instanceId}:${port.gid}`;
+                componentCounts[key] = Math.max(componentCounts[key] ?? 0, port.channel + 1);
+            }
+        }
+
         // declare items
         for (const [instanceId, { circuit, simIds }] of this.instances.entries()) {
             for (const component of circuit.items.filter((i) => i instanceof SimulationComponent && !i.disregard())) {
                 const suffix = NetList.suffix(component.gid, instanceId);
-                simIds[component.gid] = component.declare(sim, config, suffix, instanceId);
+                const key = `${instanceId}:${component.gid}`;
+                const count = componentCounts[key] ?? 1;
+                const ids = [];
+                for (let ch = 0; ch < count; ch++) {
+                    ids.push(component.declare(sim, config, suffix + '_' + ch, instanceId));
+                }
+                simIds[component.gid] = ids.length === 1 ? ids[0] : ids;
             }
         }
         // declare nets
         const getComponent = (p) => this.instances[p.instanceId].circuit.itemByGID(p.gid);
-        const wasDeclared = (p) => this.instances[p.instanceId].simIds[p.gid] !== null;
+        const wasDeclared = (p) => {
+            const ids = this.instances[p.instanceId].simIds[p.gid];
+            return Array.isArray(ids) ? ids[p.channel] !== null : ids !== null;
+        };
         for (const net of this.nets) {
             // create new net from connected gate i/o-ports
             const debugPortComponents = net.ports.filter((p) => { const c = getComponent(p); c instanceof Port && !c.disregard(); }).map((p) => p.uniqueName);
@@ -302,10 +321,11 @@ class NetList {
                     newNetsMap.set(root, { wires: [], ports: [], numChannels: 1, netId: null });
                 }
                 const newNet = newNetsMap.get(root);
-                //if (ch === 0) {
-                    newNet.wires.push(...nets[i].wires);
-                    newNet.ports.push(...nets[i].ports);
-                //}
+                newNet.wires.push(...nets[i].wires);
+                for (const port of nets[i].ports) {
+                    const newPort = new NetList.NetPort(port.point, port.type, port.name, port.compareName, port.gid, port.instanceId, port.uid, port.numChannels, port.ioType, ch);
+                    newNet.ports.push(newPort);
+                }
             }
         }
         return newNetsMap.values().toArray();
@@ -433,7 +453,8 @@ NetList.NetPort = class {
     uid;
     numChannels;
     ioType;
-    constructor(point, type, name, compareName, gid, instanceId, uid, numChannels, ioType) {
+    channel;
+    constructor(point, type, name, compareName, gid, instanceId, uid, numChannels, ioType, channel = 0) {
         assert.class(Point, point);
         assert.enum([ 'ascend', 'descend', 'n-to-1', '1-to-n', 'tunnel' ], type, true);
         assert.string(name);
@@ -443,6 +464,7 @@ NetList.NetPort = class {
         assert.string(uid, true);
         assert.integer(numChannels, true);
         assert.enum(['in', 'out'], ioType, true);
+        assert.integer(channel);
         this.point = point;
         this.name = name;
         this.compareName = compareName;
@@ -452,9 +474,10 @@ NetList.NetPort = class {
         this.uid = uid;
         this.numChannels = numChannels;
         this.ioType = ioType;
+        this.channel = channel;
     }
     get uniqueName() {
-        return this.name + NetList.suffix(this.gid, this.instanceId);
+        return this.name + NetList.suffix(this.gid, this.instanceId) + '_' + this.channel;
     }
 }
 

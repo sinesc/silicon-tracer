@@ -319,7 +319,7 @@ Circuits.Circuit = class {
         assert.object(gridConfig);
         assert.object(portConfig);
         this.label = label;
-        this.uid = uid ?? Circuits.Circuit.generateUID();
+        this.uid = uid ?? 'u' + crypto.randomUUID().replaceAll('-', '');
         this.#lid = lid;
         this.#data = data;
         this.gridConfig = Object.assign({}, { zoom: 1.25, offsetX: 0, offsetY: 0 }, gridConfig);
@@ -417,7 +417,8 @@ Circuits.Circuit = class {
         for (const component of this.#data) {
             component.detachSimulation();
             if (component instanceof SimulationComponent) {
-                component.simId = simIds[component.gid] ?? null; // null fallback required for disregarded components
+                const id = simIds[component.gid];
+                component.simId = Array.isArray(id) ? id[0] : (id ?? null); // null fallback required for disregarded components
             }
         }
         for (const net of netList.nets) {
@@ -461,11 +462,6 @@ Circuits.Circuit = class {
         for (const item of this.#data) {
             item.detachSimulation();
         }
-    }
-
-    // Generate a circuit id.
-    static generateUID() {
-        return 'u' + crypto.randomUUID().replaceAll('-', '');
     }
 
     // Returns the circuit as lists of NetWires and Netports.

@@ -13,6 +13,7 @@ class Application {
         debugShowGid: false,
         debugShowCoords: false,
         debugShowWireBox: false,
+        debugSingleStep: false,
         placementDefaults: {
             port: { rotation: 1, },
             tunnel: { rotation: 1, },
@@ -86,7 +87,7 @@ class Application {
         }
         this.#status.message = message;
         const messageText = String.isString(message) ? message : (Function.isFunction(message) ? message() : null);
-        this.#status.element.innerHTML = messageText !== null ? (this.config.debugShowGid && item ? item.gid.slice(0, 6) + ': ' : '') + messageText : '';
+        this.#status.element.innerHTML = messageText !== null ? (this.config.debugShowGid && item ? item.gid + ': ' : '') + messageText : '';
         if (messageText) {
             this.#status.element.classList.remove('app-status-faded');
         } else if (!messageText) {
@@ -223,7 +224,7 @@ class Application {
             // Open as library
             fileMenu.createActionButton('Add library...', 'Add circuits in file as library components. These are accessible via the <i>Component</i> menu and do not show in <i>Circuit</i>.', async () => {
                 fileMenuState(false);
-                await this.circuits.loadFile(false, false, true);                
+                await this.circuits.loadFile(false, false, true);
                 this.haveChanges = true;
             });
             // Import circuits and add to currently loaded circuits.

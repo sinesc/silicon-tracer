@@ -15,8 +15,9 @@ class Constant extends SimulationComponent {
     name = '';
 
     constructor(app, x, y, rotation, state = null) {
-        super(app, x, y, rotation, { 'top': [ 'c' ], 'left': [ null ] }, 'toggle');
-        this.#port = this.portByName('c');
+        super(app, x, y, rotation, { 'top': [ 'q' ], 'left': [ null ] }, 'toggle');
+        this.#port = this.portByName('q');
+        this.#port.label = '';
         this.#state = state;
     }
 
@@ -39,7 +40,7 @@ class Constant extends SimulationComponent {
 
     // Declare component simulation item.
     declare(sim, config, suffix) {
-        return sim.declareConst(this.state, 'c', suffix);
+        return sim.declareConst(this.state, suffix);
     }
 
     // Override inner component label.
@@ -67,12 +68,11 @@ class Constant extends SimulationComponent {
 
     // Handle edit hotkey.
     async onEdit() {
-        const config = await dialog("Configure constant", Constant.EDIT_DIALOG, { /*name: this.name,*/ rotation: this.rotation, state: this.#state === null ? '-1' : this.#state });
+        const config = await dialog("Configure constant", Constant.EDIT_DIALOG, { rotation: this.rotation, state: this.#state === null ? '-1' : this.#state });
         if (config) {
-            //this.name = config.name;
             this.rotation = config.rotation;
             this.state = config.state === '-1' ? null : Number.parseInt(config.state);
-            this.redraw();
+            this.redraw(config._changed.some((c) => c !== 'state'));
         }
     }
 

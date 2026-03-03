@@ -282,7 +282,7 @@ class LogiSim {
             } else if (rawComp.name === 'Pin' && !rawCircuit.appear) {
                 // circuit has no custom appearance configuration and we don't support the logisim default appearances yet, place ports where the file indicates
                 const item = new Port(this.#app, x, y, rotation(rawComp.facing));
-                offsetPort(item, '');
+                offsetPort(item, 'q');
                 item.name = 'pin-' + rawComp.label;
                 circuit.addItem(item);
             } else if (rawComp.name === 'Splitter') {
@@ -377,15 +377,15 @@ class LogiSim {
                 circuit.addItem(new Wire(this.#app, x - Grid.SPACING, y + 4 * Grid.SPACING, Grid.SPACING, 'v'));
             } else if (rawComp.name === 'Ground') {
                 const item = new Constant(this.#app, x, y, rotation(rawComp.facing ?? 'south') + 2, 0);
-                offsetPort(item, 'c');
+                offsetPort(item, 'q');
                 circuit.addItem(item);
             } else if (rawComp.name === 'Power') {
                 const item = new Constant(this.#app, x, y, rotation(rawComp.facing ?? 'north') + 2, 1);
-                offsetPort(item, 'c');
+                offsetPort(item, 'q');
                 circuit.addItem(item);
             } else if (rawComp.name === 'Constant') {
                 const item = new Constant(this.#app, x, y, rotation(rawComp.facing ?? 'east'), rawComp.value === '0x1' ? 1 : 0);
-                offsetPort(item, 'c');
+                offsetPort(item, 'q');
                 circuit.addItem(item);
             } else if ([ 'Controlled Buffer', 'Controlled Inverter' ].includes(rawComp.name)) {
                 const item = new Builtin(this.#app, x, y, rotation(rawComp.facing ?? 'east') + 3, rawComp.name === 'Controlled Buffer' ? 'buffer3' : 'not3');
@@ -395,13 +395,14 @@ class LogiSim {
                 const item = new TextLabel(this.#app, x, y, rotation(rawComp.facing ?? 'east') + 3, 200, rawComp.text);
                 circuit.addItem(item);
             } else if ([ 'Probe', 'NoConnect' ].includes(rawComp.name)) {
-                // since this isn't required for the circuit to work we'll skip it for now without
-                // spamming the error log and making it hard to find the actual problems
+                const item = new TextLabel(this.#app, x, y, rotation(rawComp.facing ?? 'east') + 3, 200, rawComp.name, 'medium', 4);
+                circuit.addItem(item);
+                // since these aren't required for the circuit to work we'll not generate a problems log entry for them
             } else {
                 const item = new TextLabel(this.#app, x, y, rotation(rawComp.facing ?? 'east') + 3, 200, rawComp.name, 'medium', 4);
                 circuit.addItem(item);
+                // unsupported component type that might be required for the circuit to work, add log entry
                 this.#problems.add(rawCircuit.name);
-                //console.log(rawCircuit.name, rawComp);
             }
         }
         return portMap;
@@ -440,12 +441,12 @@ class LogiSim {
                 }
                 // port
                 const port = new Port(this.#app, scale * layoutPort.x - globalOffsetX - expandX(rotation + 1), scale * layoutPort.y - globalOffsetY - expandY(rotation + 1), rotation + 1);
-                offsetPort(port, '');
+                offsetPort(port, 'q');
                 port.name = mapping.portName;
                 circuit.addItem(port);
                 // wire between port and tunnel
                 const tunnelOffsetDir = direction(port.rotation);
-                this.#addHelperWire(circuit, port, '', tunnelOffsetDir, 1);
+                this.#addHelperWire(circuit, port, 'q', tunnelOffsetDir, 1);
                 const tunnelOffsetX = tunnelOffsetDir.x * Grid.SPACING;
                 const tunnelOffsetY = tunnelOffsetDir.y * Grid.SPACING;
                 // tunnel
@@ -460,7 +461,7 @@ class LogiSim {
         const addDummy = (x, y, rotation) => {
             if (!occupied.has(`${x},${y}`)) {
                 const item = new Port(this.#app, scale * x - globalOffsetX - expandX(rotation + 1), scale * y - globalOffsetY - expandY(rotation + 1), rotation + 1);
-                offsetPort(item, '');
+                offsetPort(item, 'q');
                 item.name = '';
                 circuit.addItem(item);
                 occupied.add(`${x},${y}`);

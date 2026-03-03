@@ -14,8 +14,9 @@ class Port extends SimulationComponent {
     name = '';
 
     constructor(app, x, y, rotation) {
-        super(app, x, y, rotation, { 'top': [ '' ], 'left': [ null, null, null ] }, 'port');
-        this.#port = this.portByName('');
+        super(app, x, y, rotation, { 'top': [ 'q' ], 'left': [ null, null, null ] }, 'port');
+        this.#port = this.portByName('q');
+        this.#port.label = '';
     }
 
     // Link port to a grid, enabling it to be rendered.
@@ -42,7 +43,7 @@ class Port extends SimulationComponent {
 
     // Declare component simulation item.
     declare(sim, config, suffix, instanceId) {
-        return instanceId !== 0 ? null : sim.declareConst(this.state, '', suffix);
+        return instanceId !== 0 ? null : sim.declareConst(this.state, suffix);
     }
 
     // Returns user-set component state.

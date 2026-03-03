@@ -32,11 +32,21 @@ class GridItem {
         assert.number(x);
         assert.number(y);
         this.#app = app;
-        this.#gid = Grid.generateGID();
+        this.#gid = GridItem.#generateGID(app.config.debugCompileComments);
         this.#position = new Point(...Grid.align(x, y));
         this.#size = new Point(0, 0);
     }
 
+    // Generate a unique ID.
+    static #generateGID(readable = false) {
+        assert.bool(readable)
+        if (!readable) {
+            return 'g' + crypto.randomUUID().replaceAll('-', '');
+        } else {
+            return generateWord(5, 10);            
+        }
+    }
+    
     // Serializes the object for writing to disk.
     serialize() {
         return {
@@ -146,7 +156,8 @@ class GridItem {
     renderNetState() { }
 
     // Call after the grid item is modified to ensure the component is fully redrawn and the simulation is updated.
-    redraw(beforeRender = null) {
+    redraw(recompile = true, beforeRender = null) {
+        assert.bool(recompile);
         assert.function(beforeRender, true);
         if (beforeRender) {
             this.#beforeRender.push(beforeRender);
@@ -251,7 +262,7 @@ class GridItem {
         this.#size.y = value;
     }
 
-    // Return grid item gid.
+    // Return grid item id.
     get gid() {
         return this.#gid;
     }
