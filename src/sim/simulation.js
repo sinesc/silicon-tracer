@@ -188,6 +188,42 @@ class Simulation {
         port.pullType = type;
     }
 
+    // Serialize simulation parameters.
+    serialize() {
+        return {
+            functors: this.#functors,
+            consts: this.#consts,
+            nets: this.#nets.all.map((n) => ({ id: n.id, ports: n.ports })),
+            ports: this.#ports.all.map((p) => ({ id: p.id, name: p.name, ioType: p.ioType, isTriState: p.isTriState, detectEdges: p.detectEdges, batchType: p.batchType, batchName: p.batchName, batchComponent: p.batchComponent })),
+            clocks: this.#clocks.map((c) => ({ id: c.id, frequency: c.frequency, tps: c.tps, enablePortName: c.enablePortName, outputPortName: c.outputPortName })),
+        }
+    }
+    
+    // Unserialize simulation from parameters.
+    unserialize(serialized) {
+        this.#functors = serialized.functors;
+        this.#consts = serialized.consts;
+        this.#nets.all = serialized.nets.map((n) => ({ ...n, elementIndex2: null, elementIndex3: null, bitIndex: null, copiesTo: null }));
+        this.#nets.byPort = {};
+        for (const net of this.#nets.all) {
+            for (const port of net.ports) {
+                this.#nets.byPort[port] = net;
+            }
+        }
+        this.#ports.all = serialized.ports.map((p) => ({ ...p, bitIndex: null, elementIndex2: null, elementIndex3: null, elementIndexP: null }));
+        this.#ports.batchTypes = {};
+        this.#ports.byBatchComponent = {};
+        this.#ports.byName = {};        
+        for (const port of this.#ports.all) {   
+            this.#ports.batchTypes[port.batchType] ??= {};
+            this.#ports.batchTypes[port.batchType][port.batchComponent] = true; // TODO: refactor to set      
+            this.#ports.byBatchComponent[port.batchComponent] ??= {};
+            this.#ports.byBatchComponent[port.batchComponent][port.batchName] = port; 
+            this.#ports.byName[port.name] = port;
+        }
+        this.#clocks = serialized.clocks.map((c) => ({ ...c, counterIndex: null, limitIndex: null }));  
+    }
+
     // Compiles the circuit and initializes memory, making it ready for simulate().
     compile(rawMem = null) {
         assert.class(Uint32Array, rawMem, true);

@@ -14,6 +14,7 @@ class Application {
         debugShowCoords: false,
         debugShowWireBox: false,
         debugSingleStep: false,
+        debugSerializeSimulation: false,
         placementDefaults: {
             port: { rotation: 1, },
             tunnel: { rotation: 1, },

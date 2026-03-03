@@ -100,6 +100,9 @@ class NetList {
             }
         }
         // compile
+        if (config.debugSerializeSimulation) {
+            console.log(JSON.stringify(sim.serialize()));
+        }
         sim.compile(rawMem);
         this.statsCompiledNets = sim.nets.length;
         return sim;
