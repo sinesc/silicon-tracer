@@ -48,7 +48,7 @@ class Simulation {
         atflipflop  : { outputs: { q: '~reset & (set | ((+clock & ((t & ~q) | (~t & q))) | (~+clock & q)))' }, inputs: [ 'clock', 't', 'reset', 'set' ] },
         srflipflop  : { outputs: { q: '(+clock & (s | (~r & q))) | (~+clock & q)' }, inputs: [ 'clock', 'r', 's' ] },
         asrflipflop : { outputs: { q: '~reset & (set | ((+clock & (s | (~r & q))) | (~+clock & q)))' }, inputs: [ 'clock', 'r', 's', 'reset', 'set' ] },
-        //switch      : { outputs: { output: 'input' }, signals: { output: 'close & ?input' }, inputs: [ 'close', 'input' ] },
+        switch      : { outputs: { output: 'input' }, signals: { output: 'close' }, inputs: [ 'close', 'input' ] }, // FIXME: signals should be: { output: 'close & ?input' } but ?input not yet supported (reconsider even using this because switch behaviour is inconvenient [requiring an input])
         buffer3     : { outputs: { q: 'data' }, signals: { q: 'enable' }, inputs: [ 'enable', 'data' ] },
         not3        : { outputs: { q: '~data' }, signals: { q: 'enable' }, inputs: [ 'enable', 'data' ] },
         adder       : { outputs: { cOut: '((a ^ b) & cIn) | (a & b)', q: '(a ^ b) ^ cIn' }, inputs: [ 'a', 'b', 'cIn' ]  },
@@ -612,12 +612,13 @@ class Simulation {
     #generateOperations() {
         const operations = {};
         for (const [batchType, batchComponents] of pairs(this.#ports.batchTypes)) {
-            if (!this.#functors[batchType]) continue; // skip e.g. consts
+            if (!this.#functors[batchType]) continue; // skip e.g. consts batch type entirely
             for (const component of keys(batchComponents)) {
                 const ports = this.#ports.byBatchComponent[component];
 
                 // generate code to compute output values from inputs
                 for (const port of values(ports).filter((p) => p.ioType === 'o')) {
+                    if (!this.#functors[port.batchType]) continue; // skip e.g. consts ports
                     const functor = this.#functors[port.batchType];
 
                     // value

@@ -40,8 +40,8 @@ class Toggle extends SimulationComponent {
     // Declare component simulation item.
     declare(sim, config, suffix) {
         sim.declareBuiltin('switch', suffix); // use a switch component to allow/block signal passing
-        const c = sim.declareConst(this.state, 'q', suffix); // use const to store toggle button state (open/closed)
-        sim.declareNet(['close' + suffix, 'q' + suffix]); // connect controllable const with switch control
+        const c = sim.declareConst(this.state, suffix); // use const to store toggle button state (open/closed)
+        sim.declareNet(['close' + suffix, 'q' + suffix]); // connect controllable const (output q) with switch control
         return c;
     }
 
