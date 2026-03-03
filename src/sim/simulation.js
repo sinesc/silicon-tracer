@@ -304,9 +304,14 @@ class Simulation {
         return this.#ports.all;
     }
 
-    // Returns simulation memory
+    // Returns simulation memory.
     get mem() {
         return this.#mem;
+    }
+
+    // Returns simulation layout.
+    get layout() {
+        return this.#layout;
     }
 
     // Used by declareGate/declareNet/declareConst/... to declare the ports of those components). Return the port id.

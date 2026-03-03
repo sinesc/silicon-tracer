@@ -32,61 +32,52 @@ app.debug = () => {
     app.config.debugShowCoords = true;
     app.config.debugShowWireBox = true;
 
-    app.toolbar.createActionButton('Dump ASM', 'Outputs simulation code to console.', () => {
-        const sim = app.simulations.current;
-        if (sim) {
-            const portInfo = [];
-            for (const { offset, meta } of sim.engine.nets) {
-                for (const port of meta) {
-                    const gid = port.match(/@(g[a-f0-9]+)@/)[1] ?? null;
-                    const item = app.circuits.current.itemByGID(gid);
-                    if (item) {
-                        portInfo.push('// port ' + item.name + ' @ mem[' + offset + ']');
-                    }
-                }
-            }
-            console.log(sim.engine.debugCode() + portInfo.join("\n"));
-        } else {
-            console.log('No simulation running');
-        }
-    });
-
-    let tick = 0;
-    app.toolbar.createActionButton('Tick', 'Ticks the simulation once', () => {
-        app.config.singleStep = true;
-        app.simulations.current.tick(1);
-        console.clear();
-        console.log('tick ' + (tick++));
-        const mem = app.simulations.current.engine.debugMem();
-        for (const [ k, v ] of Object.entries(mem.io)) {
-            const abbrev = k.replace(/@(g[a-f0-9]+)@/g, (m, h) => ':' + h.substr(1, 6) + ':');
-            console.log(abbrev + ': ' + bin(v));
-        }
-        for (const [ k, v ] of Object.entries(mem.net)) {
-            console.log(k + ': ' + bin(v));
-        }
-        for (const [ k, v ] of Object.entries(mem.clock)) {
-            console.log(k + ': ' + v);
-        }
-    });
-
-    window.bin = function(value) {
+    const bin = window.bin = function(value) {
         let result = '';
-        for (const i of [ 5, 4, 1, 0 ]) {
-            result += ((value & (1 << i)) > 0 ? '1' : '.');
-            if (i === Simulation.ARRAY_BITS / 2) {
+        for (let i = 31; i >= 0; --i) {
+            result += (value & (1 << i)) !== 0 ? '1' : '.';
+            if ((i % 8) === 0) {
                 result += ' ';
             }
         }
+        result += '(' + value + ')';
         return result;
     };
 
-    window.binAll = function(val) {
+    const binAll = window.binAll = function(val) {
+        let result = '';
         for (let i = 0; i < val.length; ++i) {
-            console.log('' + i + ': ' + window.bin(val[i]));
+            result += i.toString().padStart(4, ' ') + ': ' + bin(val[i]) + "\n";
         }
+        console.log(result);
     };
 
+    const sim = () => app.simulations.current.engine;
+    window.mem = () => console.log(binAll(sim().mem));
+    window.layout = () => {
+        console.log('ports', sim().ports);
+        console.log('nets', sim().nets);
+        console.log('net->input', sim().layout.netToInputBitmap);
+        console.log('output->net', sim().layout.outputToNetBitmap);
+        console.log('operations', sim().layout.operations);
+    };
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'F10') {
+            app.config.debugSingleStep = !app.config.debugSingleStep;
+            console.log('DEBUG: app.config.debugSingleStep ' + (app.config.debugSingleStep ? 'enabled.' : 'disabled.'));
+            e.preventDefault();
+        }
+    });
+
+    console.log(`DEBUG mode enabled.
+Hotkeys:
+    F10     enable instruction single stepping
+Commands:
+    mem()            output simulation memory
+    layout()         output simulation layout
+    bin(val)         output val as binary
+    binAll(iterable) output iterable as binary`);
 };
 
 {
