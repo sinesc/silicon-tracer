@@ -212,7 +212,7 @@ Simulations.Simulation = class {
         this.#netList = NetList.identify(this.#circuit, this.#app.circuits.all);
         const newHash = this.#netList.toString();
         const retainMemory = this.#engine && this.#netListHash === newHash;
-        this.#engine = this.#netList.compileSimulation(retainMemory ? this.#engine.rawMem() : null, this.#app.config);
+        this.#engine = this.#netList.compileSimulation(retainMemory ? this.#engine.mem : null, this.#app.config);
         if (!retainMemory) {
             this.#computeCircuitStats();
         }

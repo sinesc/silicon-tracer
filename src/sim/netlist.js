@@ -52,10 +52,7 @@ class NetList {
 
     // Compiles a simulation and returns it.
     compileSimulation(rawMem, config) {
-        assert.object(rawMem, true, (o) => {
-            assert.class(Uint8Array, o.mem8);
-            assert.class(Int32Array, o.mem32);
-        });
+        assert.class(Uint32Array, rawMem, true);
         assert.object(config, false, (o) => {
             assert.bool(o.checkNetConflicts);
             assert.integer(o.targetTPS);
