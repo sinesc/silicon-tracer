@@ -71,10 +71,10 @@ class Simulation {
     #backend;
 
     // Construct a new instance. Enable debug to generate commented code.
-    constructor(debug = false) {
+    constructor(debug = false, backend = 'Javascript') {
         assert.bool(debug);
         this.#debug = debug;
-        this.#backend = new BackendJavascript(debug);
+        this.#backend = backend === 'Wasm' ? new BackendWasm(debug) : new BackendJavascript(debug);
     }
 
     // Declares a net (which inputs/outputs are connected) and returns the net id. Attached IO-names must include their suffixes.

@@ -3,12 +3,14 @@
 const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
+const util = require('util');
 
 const context = vm.createContext({
     Math,
     //Object,
     String,
     Function,
+    TextEncoder: util.TextEncoder,
 });
 
 function loadScript(filePath) {
@@ -32,7 +34,7 @@ let failed = 0;
 function test(name, fn) {
     try {
         fn();
-        console.log(`✓ ${name}`);
+        console.log(`✓ ${name}: ok`);
         passed++;
     } catch (e) {
         console.log(`✗ ${name}: ${e.message}`);
@@ -46,18 +48,20 @@ function time(name, init, fn) {
         const env = init();
         const start = performance.now();
         fn(env);
-        const duration = Math.round(1000 * (performance.now() - start));
+        const duration = Math.round(performance.now() - start);
         console.log(`Δ ${name}: ${duration}ms`);
         passed++;
+        return duration;
     } catch (e) {
         console.log(`✗ ${name}: ${e.message}`);
         failed++;
+        return null;
     }
 }
 
 // Generates a test summary.
 function summary() {
-    console.log(`\n${passed} passed, ${failed} failed`);
+    console.log(`${passed} passed, ${failed} failed`);
     process.exit(failed > 0 ? 1 : 0);
 }
 

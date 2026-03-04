@@ -1,16 +1,6 @@
 const { assert, test, time, readJSON, summary, context: c } = require('./runner');
 
-time("Simulation",
-    () => { 
-        const sim = new c.Simulation();
-        sim.unserialize(readJSON('data/counters.json'));
-        sim.compile();
-        return sim;
-    },
-    (sim) => {
-        sim.simulate(1000);
-    }
-);
+console.log('Tests:');
 
 test("fract", () => {
     const positive = c.Math.fract(2.3);
@@ -19,4 +9,31 @@ test("fract", () => {
     assert(negative < -0.29 && negative > -0.31)
 });
 
+console.log('\nTimings:');
+
+time("Counters simulation (Javascript)",
+    () => { 
+        const sim = new c.Simulation();
+        sim.unserialize(readJSON('data/counters.json'));
+        sim.compile();
+        return sim;
+    },
+    (sim) => {
+        sim.simulate(500_000);
+    }
+);
+
+time("Counters simulation (Wasm)",
+    () => { 
+        const sim = new c.Simulation(false, 'Wasm');
+        sim.unserialize(readJSON('data/counters.json'));
+        sim.compile();
+        return sim;
+    },
+    (sim) => {
+        sim.simulate(500_000);
+    }
+);
+
+console.log('\nSummary:');
 summary();
