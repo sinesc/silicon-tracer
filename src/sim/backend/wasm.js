@@ -280,7 +280,11 @@ class BackendWasm {
             } else if (bitmap.mode === 'duplicate') {
                 // Create mask from single bit: (val << (127-bit)) >>s 127
                 this.#emitV128Shift(emitter, 127 - bitmap.srcBit, false);
-                this.#emitV128Shift(emitter, -127, true);
+                // Smear sign bit (bit 127) across all lanes
+                emitter.emit(WasmEmitter.OP.i32_const); emitter.emitS32(63);
+                emitter.emitSimd(WasmEmitter.OP.i64x2_shr_s);
+                emitter.emitV128Const(0n);
+                emitter.emitShuffle([8, 9, 10, 11, 12, 13, 14, 15, 8, 9, 10, 11, 12, 13, 14, 15]);
 
                 // & destMask
                 let destMask = 0n;
@@ -369,7 +373,11 @@ class BackendWasm {
             // Apply shifts/masks (same logic as emitAssignment)
             if (bitmap.mode === 'duplicate') {
                 this.#emitV128Shift(emitter, 127 - bitmap.srcBit, false);
-                this.#emitV128Shift(emitter, -127, true);
+                // Smear sign bit (bit 127) across all lanes
+                emitter.emit(WasmEmitter.OP.i32_const); emitter.emitS32(63);
+                emitter.emitSimd(WasmEmitter.OP.i64x2_shr_s);
+                emitter.emitV128Const(0n);
+                emitter.emitShuffle([8, 9, 10, 11, 12, 13, 14, 15, 8, 9, 10, 11, 12, 13, 14, 15]);
                 let destMask = 0n;
                 for (const destBit of bitmap.destBit) destMask |= (1n << BigInt(destBit));
                 emitter.emitV128Const(destMask);
