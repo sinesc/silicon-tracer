@@ -52,15 +52,19 @@ app.debug = () => {
         console.log(result);
     };
 
-    const sim = () => app.simulations.current.engine;
-    window.mem = () => console.log(binAll(sim().mem));
+    window.mem = () => console.log(binAll(sim.mem));
     window.layout = () => {
-        console.log('ports', sim().ports);
-        console.log('nets', sim().nets);
-        console.log('net->input', sim().layout.netToInputBitmap);
-        console.log('output->net', sim().layout.outputToNetBitmap);
-        console.log('operations', sim().layout.operations);
+        const sim = app.simulations.current.engine;
+        console.log('probes', sim.probes);
+        console.log('ports', sim.ports);
+        console.log('nets', sim.nets);
+        console.log('net->input', sim.layout.netToInputBitmap);
+        console.log('output->net', sim.layout.outputToNetBitmap);
+        console.log('operations', sim.layout.operations);
     };
+    Object.defineProperty(window, 'cfg', { get: () => app.config });
+    Object.defineProperty(window, 'sim', { get: () => app.simulations.current.engine });
+    
 
     document.addEventListener('keydown', (e) => {
         if (e.key === 'F10') {
@@ -73,7 +77,11 @@ app.debug = () => {
     console.log(`DEBUG mode enabled.
 Hotkeys:
     F10     enable instruction single stepping
-Commands:
+References:
+    app              application
+    cfg              configuration
+    sim              simulation
+Tools:
     mem()            output simulation memory
     layout()         output simulation layout
     bin(val)         output val as binary
