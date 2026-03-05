@@ -91,6 +91,8 @@ class GridItem {
             instance = new TextLabel(app, ...cargs);
         } else if (cname === 'Constant') {
             instance = new Constant(app, ...cargs);
+        } else if (cname === 'Probe') {
+            instance = new Probe(app, ...cargs);
         } else {
             throw new Error('Invalid component type "' + cname + '"');
         }

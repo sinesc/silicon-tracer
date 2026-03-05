@@ -27,6 +27,7 @@ class Application {
             constant: { rotation: 1, },
             toggle: { rotation: 0, },
             momentary: { rotation: 0, },
+            probe: { rotation: 1, },
         },
     };
 
@@ -366,6 +367,9 @@ class Application {
                 ioMenu.createComponentButton('Constant', `<b>Constant value</b>. ${DRAG_MSG}`, (grid, x, y) => {
                     return grid.addItem(new Constant(this, x, y, defaults.constant.rotation));
                 });
+                ioMenu.createComponentButton('Probe', `<b>Net state probe</b>. Displays the state of attached net. ${DRAG_MSG}`, (grid, x, y) => {
+                    return grid.addItem(new Probe(this, x, y, defaults.probe.rotation));
+                });
                 ioMenu.createComponentButton('Pull', `<b>Pull up/down resistor</b>. ${DRAG_MSG}`, (grid, x, y) => {
                     return grid.addItem(new PullResistor(this, x, y, defaults.pull.rotation));
                 });
@@ -519,6 +523,11 @@ class Application {
         this.toolbar.createComponentButton('Splitter', `<b>Wire splitter/joiner</b>. ${DRAG_MSG}`, (grid, x, y) => {
             let numChannels = 8; // TODO: configurable somewhere
             return grid.addItem(new Splitter(this, x, y, defaults.splitter.rotation, numChannels));
+        });
+
+        // add probe
+        this.toolbar.createComponentButton('Probe', `<b>Net state probe</b>. Displays the state of attached net. ${DRAG_MSG}`, (grid, x, y) => {
+            return grid.addItem(new Probe(this, x, y, defaults.probe.rotation));
         });
 
         // add gates

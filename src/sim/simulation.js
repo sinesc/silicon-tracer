@@ -63,6 +63,7 @@ class Simulation {
     #consts = [];
     #nets = { all: [], byPort: {} };
     #ports = { all: [], batchTypes: {}, byBatchComponent: {}, byName: {} };
+    #probes = { byInput: {}, byName: {} };
     #clocks = [];
     #layout = { netToInputBitmap: null, outputToNetBitmap: null, operations: null, pullMasks: null };
     #mem;
@@ -80,12 +81,18 @@ class Simulation {
     // Declares a net (which inputs/outputs are connected) and returns the net id. Attached IO-names must include their suffixes.
     declareNet(attachedIONames) {
         assert.array(attachedIONames, false, (i) => assert.string(i));
-        assert(attachedIONames.length > 0);
-        const net = { id: this.#nets.all.length, elementIndex2: null, elementIndex3: null, bitIndex: null, copiesTo: null, ports: attachedIONames };
+        const ports = attachedIONames.filter((p) => this.#ports.byName[p] !== undefined);
+        const probes = attachedIONames.filter((p) => this.#probes.byInput[p] !== undefined);
+        assert(ports.length > 0 || probes.length > 0);
+        if (ports.length === 0) return null;
+        const net = { id: this.#nets.all.length, elementIndex2: null, elementIndex3: null, bitIndex: null, copiesTo: null, ports };
         this.#nets.all.push(net);
-        for (const ioName of attachedIONames) {
-            assert(this.#nets.byPort[ioName] === undefined, () => `Port ${ioName} already contained in net ${JSON.stringify({ id: this.#nets.byPort[ioName].id, ports: this.#nets.byPort[ioName].ports })}`);
-            this.#nets.byPort[ioName] = net;
+        for (const port of ports) {
+            assert(this.#nets.byPort[port] === undefined, () => `Port ${port} already contained in net ${JSON.stringify({ id: this.#nets.byPort[port].id, ports: this.#nets.byPort[port].ports })}`);
+            this.#nets.byPort[port] = net;
+        }
+        for (const probe of probes) {
+            this.#probes.byInput[probe].netId = net.id;
         }
         return net.id;
     }
@@ -168,7 +175,7 @@ class Simulation {
         }
     }
 
-    // Declares a constant and returns the constant id. Constants can be updated using setConst without recompiling the simulation. Suf, check: (v, f) => v.trim().length > 0fix is appended to the constant's output name.
+    // Declares a constant and returns the constant id. Constants can be updated using setConst without recompiling the simulation.
     declareConst(initialValue, suffix) {
         assert.integer(initialValue, true);
         assert.string(suffix);
@@ -188,6 +195,24 @@ class Simulation {
         port.pullType = type;
     }
 
+    // Declares a probe that can be attached to a net like a port (named 'imput'). Name must be unique. This does not add
+    // simulation complexity as it is essentially just another name for a net.
+    declareProbe(name, suffix) {
+        assert.string(name);
+        assert.string(suffix);
+        assert(this.#probes[name] === undefined, `Probe name "${name}" already defined`);
+        const probe = { name, suffix, netId: null };
+        this.#probes.byName[name] = probe;
+        this.#probes.byInput['input' + suffix] = probe;
+    }
+
+    // Gets the value of a probe by its name.
+    getProbeValue(name) {
+        assert.string(name);
+        const probe = this.#probes.byName[name] ?? error(`Probe name "${name}" is not defined`);
+        return probe.netId === null ? null : this.getNetValue(probe.netId);
+    }
+
     // Serialize simulation parameters.
     serialize() {
         return {
@@ -196,6 +221,7 @@ class Simulation {
             nets: this.#nets.all.map((n) => ({ id: n.id, ports: n.ports })),
             ports: this.#ports.all.map((p) => ({ id: p.id, name: p.name, ioType: p.ioType, isTriState: p.isTriState, detectEdges: p.detectEdges, batchType: p.batchType, batchName: p.batchName, batchComponent: p.batchComponent })),
             clocks: this.#clocks.map((c) => ({ id: c.id, frequency: c.frequency, tps: c.tps, enablePortName: c.enablePortName, outputPortName: c.outputPortName })),
+            probes: this.#probes,
         }
     }
     
@@ -221,7 +247,8 @@ class Simulation {
             this.#ports.byBatchComponent[port.batchComponent][port.batchName] = port; 
             this.#ports.byName[port.name] = port;
         }
-        this.#clocks = serialized.clocks.map((c) => ({ ...c, counterIndex: null, limitIndex: null }));  
+        this.#clocks = serialized.clocks.map((c) => ({ ...c, counterIndex: null, limitIndex: null }));
+        this.#probes = serialized.probes;
     }
 
     // Compiles the circuit and initializes memory, making it ready for simulate().
@@ -339,6 +366,11 @@ class Simulation {
     get ports() {
         return this.#ports.all;
     }
+    
+    // Returns map of defined probes
+    get probes() {
+        return this.#probes.byName;
+    }
 
     // Returns simulation memory.
     get mem() {
@@ -447,6 +479,7 @@ class Simulation {
                 }
             } while (assigned);
         }
+        console.log('missing assignments', this.#nets.all.filter((n) => n.bitIndex === null));
         return globalElementIndex;
     }
 
