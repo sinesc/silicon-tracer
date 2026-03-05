@@ -1,4 +1,11 @@
-const { assert, test, time, readJSON, summary, context: c } = require('./runner');
+const { assert, test, time, readJSON, summary, context: c } = require('./lib/runner');
+
+function initSim(file, backend) {
+    const sim = new c.Simulation(false, backend);
+    sim.unserialize(readJSON(file));
+    sim.compile();
+    return sim;
+}
 
 console.log('Tests:');
 
@@ -11,28 +18,26 @@ test("fract", () => {
 
 console.log('\nTimings:');
 
-time("Counters simulation (Javascript)",
-    () => { 
-        const sim = new c.Simulation();
-        sim.unserialize(readJSON('data/counters.json'));
-        sim.compile();
-        return sim;
-    },
-    (sim) => {
-        sim.simulate(500_000);
-    }
+const simJsCounter = time("Many counters simulation (Javascript)",
+    () => initSim('data/counters.json', 'Javascript'),
+    (sim) => sim.simulate(500_000)
 );
 
-time("Counters simulation (Wasm)",
-    () => { 
-        const sim = new c.Simulation(false, 'Wasm');
-        sim.unserialize(readJSON('data/counters.json'));
-        sim.compile();
-        return sim;
-    },
-    (sim) => {
-        sim.simulate(500_000);
-    }
+time("Many counters simulation (Wasm)",
+    () => initSim('data/counters.json', 'Wasm'),
+    (sim) => sim.simulate(500_000),
+    simJsCounter
+);
+
+const simJsMinimal = time("Minimal static simulation (Javascript)",
+    () => initSim('data/minimal.json', 'Javascript'),
+    (sim) => sim.simulate(50_000_000)
+);
+
+time("Minimal static simulation (Wasm)",
+    () => initSim('data/minimal.json', 'Wasm'),
+    (sim) => sim.simulate(50_000_000),
+    simJsMinimal
 );
 
 console.log('\nSummary:');
