@@ -12,10 +12,12 @@ class Probe extends SimulationComponent {
     #labelElement;
     name = '';
 
-    constructor(app, x, y, rotation) {
+    constructor(app, x, y, rotation, name = null) {
+        assert.string(name, true);
         super(app, x, y, rotation, { 'top': [ 'input' ], 'left': [ null ] }, 'probe');
         this.#input = this.portByName('input');
         this.#input.label = '';
+        this.name = name ?? '';
     }
 
     // Link port to a grid, enabling it to be rendered.
@@ -30,14 +32,13 @@ class Probe extends SimulationComponent {
     serialize() {
         return {
             ...super.serialize(),
-            '#a': [ this.x, this.y, this.rotation ],
-            name: this.name,
+            '#a': [ this.x, this.y, this.rotation, this.name ],
         };
     }
 
     // Declare component simulation item.
     declare(sim, config, suffix) {
-        return sim.declareProbe(this.name, suffix); 
+        return sim.declareProbe(this.name, suffix);
         // FIXME: probes in subcircuits that are used multiple times will have the same name.
         // those will still display correctly here, but sim.getProbeValue() will return the last set value
         // a possible solution might be to have labeled subcomponents and then make probes accessible by path

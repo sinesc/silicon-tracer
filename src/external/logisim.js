@@ -394,7 +394,11 @@ class LogiSim {
             } else if (rawComp.name === 'Text') {
                 const item = new TextLabel(this.#app, x, y, rotation(rawComp.facing ?? 'east') + 3, 200, rawComp.text);
                 circuit.addItem(item);
-            } else if ([ 'Probe', 'NoConnect' ].includes(rawComp.name)) {
+            } else if (rawComp.name === 'Probe') {
+                const item = new Probe(this.#app, x, y, rotation(rawComp.facing ?? 'east') + 3, rawComp.label);
+                offsetPort(item, 'input');
+                circuit.addItem(item);
+            } else if ([ 'NoConnect' ].includes(rawComp.name)) {
                 const item = new TextLabel(this.#app, x, y, rotation(rawComp.facing ?? 'east') + 3, 200, rawComp.name, 'medium', 4);
                 circuit.addItem(item);
                 // since these aren't required for the circuit to work we'll not generate a problems log entry for them
