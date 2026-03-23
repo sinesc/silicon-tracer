@@ -8,36 +8,46 @@ class BackendJavascript {
     #tickCode = '';
     #initCode = '';
     #debug;
+    #mem;
 
     constructor(debug = false) {
         this.#debug = debug;
     }
 
-    // Allocates memory for the simulation.
-    allocateMemory(size) {
-        if (typeof SharedArrayBuffer !== 'undefined') {
-            return new Uint32Array(new SharedArrayBuffer(size * 4));
-        } else {
-            return new Uint32Array(size);
-        }
+    setMem(mem) {
+        this.#mem = mem;
     }
 
-    // Adds code to the tick function.
-    addTick(code) {
-        this.#tickCode += code;
+    allocMem(requiredMemory) {
+        this.#mem = new Uint32Array(requiredMemory);
     }
 
-    // Adds code to the initialization block.
-    addInit(code) {
-        this.#initCode += code;
+    // Returns current simulation memory.
+    get mem() {
+        return this.#mem;
     }
 
-    // Returns a formatted comment string.
-    comment(text) {
-        return this.#debug && text ? ` // ${text}` : '';
+    // Sets a bit in memory.
+    setBit(elementIndex, bitIndex) {
+        this.#mem[elementIndex] |= 1 << bitIndex;
     }
 
-    // Compiles a logic expression (gate/builtin) into an operation object.
+    // Clears a bit in memory.
+    clearBit(elementIndex, bitIndex) {
+        this.#mem[elementIndex] &= ~(1 << bitIndex);
+    }
+
+    // Gets value of a bit in memory.
+    getBit(elementIndex, bitIndex) {
+        return (this.#mem[elementIndex] & (1 << bitIndex)) !== 0 ? 1 : 0;
+    }
+
+    // Sets a clock parameter.
+    setClockParam(index, value) {
+        this.#mem[index] = value;
+    }
+
+    // Compiles a logic expression (gate/builtin) into an operation object to be emitted later.
     compileLogic(dest, expression, ports, comment) {
         const portModifierRegex = /(\?|\+|\-|\b)([a-z]+)\b/gi;
         const replacer = (_, mode, name) => {
@@ -55,26 +65,24 @@ class BackendJavascript {
                 return `mem[${port.elementIndex2}]`;
             }
         };
-
         let code;
-        if (dest.type === 'signal') {
+        if (dest.type === 'assign') {
+            // generate logic operation code
             code = `mem[${dest.index}] = ${expression.replace(portModifierRegex, replacer)}`;
-        } else if (dest.type === 'value') {
-            code = `${dest.name} = ${expression.replace(portModifierRegex, replacer)}`;
         } else if (dest.type === 'backup') {
+            // generate backup code (to make previous value available) for logic operations that require it for edge detection
             code = `mem[${dest.index}] = mem[${dest.srcIndex}]`;
         }
-
         return { code, comment, constant: dest.constant };
     }
 
     // Emits a compiled logic operation.
     emitLogic(operation) {
-        const line = operation.code + this.comment(operation.comment) + '\n';
+        const line = operation.code + this.#comment(operation.comment) + '\n';
         if (operation.constant) {
-            this.addInit(line);
+            this.#initCode += line;
         } else {
-            this.addTick(line);
+            this.#tickCode += line;
         }
     }
 
@@ -92,12 +100,12 @@ class BackendJavascript {
         code += `if (${counter} > ${limit}) {`; // check for underflow (unsigned wrap-around)
         code += `${counter} = ${limit};`;
         code += `if ((${enableElem} >>> ${enableBit}) & 1) { ${outputElem} ^= (1 << ${outputBit}); }`;
-        code += `}` + this.comment(`clock ${clock.id}`) + '\n';
-        this.addTick(code);
+        code += `}` + this.#comment(`clock ${clock.id}`) + '\n';
+        this.#tickCode += code;
     }
 
     // Emits assignment (Net->Input).
-    emitAssignment(destElementIndex, bitmaps, comment) {
+    emitNetToInput(destElementIndex, bitmaps, comment) {
         let expr = '';
         for (const bitmap of bitmaps) {
             const srcMem = `mem[${bitmap.srcElementIndex2}]`;
@@ -135,7 +143,7 @@ class BackendJavascript {
                 }
             }
         }
-        this.addTick(`mem[${destElementIndex}] = ${expr.slice(3)}` + this.comment(comment) + '\n');
+        this.#tickCode += `mem[${destElementIndex}] = ${expr.slice(3)}` + this.#comment(comment) + '\n';
     }
 
     // Emits output to net assignment (Value or Signal).
@@ -208,11 +216,11 @@ class BackendJavascript {
             result = '0';
         }
 
-        const line = `mem[${destElementIndex}] = ${result}` + this.comment(comment) + '\n';
+        const line = `mem[${destElementIndex}] = ${result}` + this.#comment(comment) + '\n';
         if (isConstant && mode === 'signal') {
-            this.addInit(line);
+            this.#initCode += line;
         } else {
-            this.addTick(line);
+            this.#tickCode += line;
         }
     }
 
@@ -227,13 +235,18 @@ class BackendJavascript {
             let code = '';
             code += `${value} = (${value} & ${signal}) | (${pullUp} & ~${signal});`;
             code += `${signal} |= ${active}`;
-            code += this.comment('pull resistors') + '\n';
-            this.addTick(code);
+            code += this.#comment('pull resistors') + '\n';
+            this.#tickCode += code;
         }
     }
 
+    // Returns a formatted comment string.
+    #comment(text) {
+        return this.#debug && text ? ` // ${text}` : '';
+    }
+
     // Finalizes and returns the simulation function.
-    compile(mem) {
+    compile() {
         let code = "'use strict';(mem) => (ticks) => {\n";
         code += this.#initCode;
         code += "ticks |= 0;\n";
@@ -241,11 +254,11 @@ class BackendJavascript {
         code += this.#tickCode;
         code += "}\n";
         code += "}\n";
-        return eval(code)(mem);
+        return eval(code)(this.#mem);
     }
 
     // Compiles step generator.
-    compileStep(mem) {
+    compileStep() {
         // Inject yield for debugger
         const debugTick = this.#tickCode.split('\n').join("\nif (yield) debugger;\n");
         let code = "'use strict';(function*(mem) {\n";
@@ -253,6 +266,6 @@ class BackendJavascript {
         code += debugTick;
         code += '})';
         const generator = eval(code);
-        return generator(mem);
+        return generator(this.#mem);
     }
 }

@@ -64,28 +64,42 @@ app.debug = () => {
     };
     Object.defineProperty(window, 'cfg', { get: () => app.config });
     Object.defineProperty(window, 'sim', { get: () => app.simulations.current.engine });
-    
+
+    window.currentIssue = function(backend = 'js') {
+        app.config.singleStep = true;
+        //app.config.backend = backend; // TODO not yet working
+        //app.simulation.current.markDirty();
+        const sim = app.simulations.current.engine;
+        sim.setConstValue(0, 1); // ON port
+        sim.setClockFrequency(0, 0, 5); // 5 ticks per cycle
+
+    };
 
     document.addEventListener('keydown', (e) => {
         if (e.key === 'F10') {
-            app.config.debugSingleStep = !app.config.debugSingleStep;
-            console.log('DEBUG: app.config.debugSingleStep ' + (app.config.debugSingleStep ? 'enabled.' : 'disabled.'));
+            if (e.shiftKey) {
+                app.simulation.current.markDirty();
+            } else {
+                app.config.debugSingleStep = !app.config.debugSingleStep;
+                console.log('DEBUG: app.config.debugSingleStep ' + (app.config.debugSingleStep ? 'enabled.' : 'disabled.'));
+            }
             e.preventDefault();
         }
     });
 
     console.log(`DEBUG mode enabled.
 Hotkeys:
-    F10     enable instruction single stepping
+    F10             enable instruction single stepping
+    SHIFT+F10       recompile simulation
 References:
-    app              application
-    cfg              configuration
-    sim              simulation
+    app             application
+    cfg             configuration
+    sim             simulation
 Tools:
-    mem()            output simulation memory
-    layout()         output simulation layout
-    bin(val)         output val as binary
-    binAll(iterable) output iterable as binary`);
+    mem()           output simulation memory
+    layout()        output simulation layout
+    bin(val)        output val as binary
+    binAll(iter)    output iterable as binary`);
 };
 
 {

@@ -7,7 +7,6 @@ const util = require('util');
 
 const context = vm.createContext({
     Math,
-    //Object,
     String,
     Function,
     TextEncoder: util.TextEncoder,
@@ -27,8 +26,21 @@ loadScript('src/sim/backend/wasm.js');
 loadScript('src/sim/netlist.js');
 loadScript('src/sim/simulation.js');
 
+// Add helper to create Simulation from outside the VM context
+// This bypasses cross-realm object issues by accepting just a backend string
+vm.runInContext(`
+    function createSimulationWithBackend(backendStr) {
+        return new Simulation({ backend: backendStr });
+    }
+`, context);
+
 let passed = 0;
 let failed = 0;
+let debugMode = false;
+
+function setDebugMode(enabled) {
+    debugMode = enabled;
+}
 
 // Tests given function, reports error message on exception.
 function test(name, fn) {
@@ -37,7 +49,11 @@ function test(name, fn) {
         console.log(`✓ ${name}: ok`);
         passed++;
     } catch (e) {
-        console.log(`✗ ${name}: ${e.message}`);
+        if (debugMode) {
+            console.log(`✗ ${name}: ${e.stack}`);
+        } else {
+            console.log(`✗ ${name}: ${e.message}`);
+        }
         failed++;
     }
 }
@@ -59,7 +75,11 @@ function time(name, init, fn, compare = null) {
         passed++;
         return duration;
     } catch (e) {
-        console.log(`✗ ${name}: ${e.message}`);
+        if (debugMode) {
+            console.log(`✗ ${name}: ${e.stack}`);
+        } else {
+            console.log(`✗ ${name}: ${e.message}`);
+        }
         failed++;
         return null;
     }
@@ -68,6 +88,9 @@ function time(name, init, fn, compare = null) {
 // Generates a test summary.
 function summary() {
     console.log(`${passed} passed, ${failed} failed`);
+    if (failed > 0) {
+        console.log('Use --debug to see failure stack traces');
+    }
     process.exit(failed > 0 ? 1 : 0);
 }
 
@@ -82,4 +105,4 @@ function readJSON(filePath) {
     return JSON.parse(raw);
 }
 
-module.exports = { assert, test, time, readJSON, summary, context };
+module.exports = { assert, test, time, readJSON, summary, context, setDebugMode, createSimulationWithBackend: context.createSimulationWithBackend };

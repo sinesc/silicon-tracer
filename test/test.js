@@ -7,7 +7,20 @@ function initSim(file, backend) {
     return sim;
 }
 
-console.log('Tests:');
+const { assert, test, time, readJSON, summary, context: c, createSimulationWithBackend } = require('./lib/runner');
+
+if (debug) {
+    require('./lib/runner').setDebugMode(true);
+}
+
+function initSim(file, backend) {
+    const sim = createSimulationWithBackend(backend);
+    sim.unserialize(readJSON(file));
+    sim.compile();
+    return sim;
+}
+
+console.log('Misc tests:');
 
 test("fract", () => {
     const positive = c.Math.fract(2.3);
@@ -16,7 +29,7 @@ test("fract", () => {
     assert(negative < -0.29 && negative > -0.31)
 });
 
-console.log('\nTimings:');
+console.log('Simulation tests:');
 
 const simJsCounter = time("Many counters simulation (Javascript)",
     () => initSim('data/counters.json', 'Javascript'),
@@ -39,6 +52,12 @@ time("Minimal static simulation (Wasm)",
     (sim) => sim.simulate(50_000_000),
     simJsMinimal
 );
+
+/*time("Minimal static simulation (Wasm)",
+    () => initSim('data/minimal.json', 'wasm'),
+    (sim) => sim.simulate(50_000_000),
+    simJsMinimal
+);*/
 
 console.log('\nSummary:');
 summary();

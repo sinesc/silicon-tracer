@@ -22,7 +22,7 @@ class WasmEmitter {
         global_get: 0x23,
         global_set: 0x24,
 
-        // Memory
+        // Memory - i32 ops
         i32_load: 0x28,
         i32_store: 0x36,
 
@@ -61,6 +61,46 @@ class WasmEmitter {
         i32_shr_u: 0x76,
         i32_rotl: 0x77,
         i32_rotr: 0x78,
+
+        // Memory - i64 ops
+        i64_load: 0x29,
+        i64_store: 0x37,
+
+        // I64 Constants
+        i64_const: 0x42,
+
+        // I64 Comparison
+        i64_eqz: 0x50,
+        i64_eq: 0x51,
+        i64_ne: 0x52,
+        i64_lt_s: 0x53,
+        i64_lt_u: 0x54,
+        i64_gt_s: 0x55,
+        i64_gt_u: 0x56,
+        i64_le_s: 0x57,
+        i64_le_u: 0x58,
+        i64_ge_s: 0x59,
+        i64_ge_u: 0x5a,
+
+        // I64 Arithmetic & Logic
+        i64_clz: 0x79,
+        i64_ctz: 0x7a,
+        i64_popcnt: 0x7b,
+        i64_add: 0x7c,
+        i64_sub: 0x7d,
+        i64_mul: 0x7e,
+        i64_div_s: 0x7f,
+        i64_div_u: 0x80,
+        i64_rem_s: 0x81,
+        i64_rem_u: 0x82,
+        i64_and: 0x83,
+        i64_or: 0x84,
+        i64_xor: 0x85,
+        i64_shl: 0x86,
+        i64_shr_s: 0x87,
+        i64_shr_u: 0x88,
+        i64_rotl: 0x89,
+        i64_rotr: 0x8a,
 
         // SIMD (prefix 0xfd)
         v128_load: 0x00,
@@ -144,14 +184,9 @@ class WasmEmitter {
         }
     }
 
-    // Emit a SIMD prefix.
-    emitSimdPrefix() {
-        this.emit(WasmEmitter.SIMD_PREFIX);
-    }
-
     // Emit a SIMD instruction from its opcode.
     emitSimd(opcode) {
-        this.emitSimdPrefix();
+        this.emit(WasmEmitter.SIMD_PREFIX);
         this.emitU32(opcode);
     }
 
@@ -180,6 +215,72 @@ class WasmEmitter {
             }
             this.emit(byte | 0x80);
         }
+    }
+
+    // Emit an unsigned LEB128 64-bit integer.
+    emitU64(val) {
+        val = BigInt(val);
+        let bytes = [];
+        do {
+            let byte = Number(val & 0x7Fn);
+            val >>= 7n;
+            if (val !== 0n) {
+                byte |= 0x80;
+            }
+            bytes.push(byte);
+        } while (val !== 0n);
+        // Reverse to MSB-first order (LEB128 is little-endian)
+        for (let i = bytes.length - 1; i >= 0; i--) {
+            this.emit(bytes[i]);
+        }
+    }
+
+    // Emit a signed LEB128 64-bit integer.
+    emitS64(val) {
+        val = BigInt(val);
+        let done = false;
+        for (let i = 0; i < 9 && !done; i++) {
+            let byte = Number(val & 0x7Fn);
+            let continuation = (val >> 7n) !== 0n && (val >> 7n) !== -1n;
+            let signExtension = false;
+            let remaining = val >> 7n;
+            if (remaining === 0n || remaining === -1n) {
+                let signBit = Number(val >> 6n) & 1;
+                if ((remaining === 0n && (byte & 0x40) === 0) ||
+                    (remaining === -1n && (byte & 0x40) !== 0)) {
+                    done = true;
+                }
+            }
+            if (!done) {
+                byte |= 0x80;
+            }
+            this.emit(byte);
+        }
+    }
+
+    // Emit a 64-bit constant (i64.const).
+    emitI64Constant(val) {
+        this.emit(WasmEmitter.OP.i64_const);
+        // i64.const takes exactly 8 bytes (little-endian)
+        val = BigInt(val);
+        for (let i = 0; i < 8; i++) {
+            this.emit(Number(val & 0xffn));
+            val >>= 8n;
+        }
+    }
+
+    // Emit i64 load operation with alignment.
+    emitI64Load(alignment = 3) {
+        this.emit(WasmEmitter.OP.i64_load);
+        this.emit(alignment); // alignment (3 = 8 bytes)
+        this.emitU32(0); // offset
+    }
+
+    // Emit i64 store operation with alignment and offset.
+    emitI64Store(alignment = 3, offset = 0) {
+        this.emit(WasmEmitter.OP.i64_store);
+        this.emit(alignment); // alignment (3 = 8 bytes)
+        this.emitU32(offset);
     }
 
     // Emit a 128-bit constant (v128.const). Accepts a BigInt or an array of 16 bytes.

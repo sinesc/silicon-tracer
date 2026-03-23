@@ -5,16 +5,16 @@
  *
  * PORT: Ports are inputs or outputs of components (e.g. gates, constants, built-ins). They are the connection points between components and nets. All ports have unique names (a concatenation of a given name and the component suffix).
  * NET: Nets connect component ports. Ports can either output to a net or read input from it. The state of a net can be "0", "1" or "not set" (when there are no active output to the net).
- * GATE: Gates are circuit components that perform a simple logic operation. Each simulation tick a gate first reads from its inputs, computes the result and writes it to the output. Only then do the inputs read from the nets they are
- * attached to. This is done to simulate gate delay. Gate functions are defined in GATE_MAP. Gate output ports are binary with the only possible states being "0" and "1".
+ * GATE: Gates are circuit components with ports and define a logic function for each of their output ports, e.g. for an AND gate: `q = a & b`. Each simulation tick a gate first reads from its inputs, computes the result and writes
+ * it to the output. Only then do the inputs read from the nets they are attached to. This is done to simulate gate delay. Gate functions are defined in GATE_MAP. Gate output ports are binary with the only possible states being "0" and "1".
  * BUILTIN: Builtins are basic digital components that - like gates - have ports that connect to nets. Their functions are defined in BUILTIN_MAP. Builtin output ports support Tri-state logic, their outputs can be "0", "1" or "high impedance" ("not set").
  * Like gates they read from their inputs before the inputs read from the nets they are attached to in order to simulate delay.
  *
- * APPROACH: We store the states of all nets and ports in one single Uint32Array where each bit of each element stores the state of a port or a net. On the #ports/#nets definitions we store the memory element index in `elementIndex2` and the bit-index in
- * bitIndex`. For tri-state logic we use an additional array element `elementIndex3` to store whether the port/net is high-impedance(0) or driven(1) (at the same bit-index). In the BUILTIN_MAP the logic expression for this state is defined in the 'signals' field.
- * When a port needs to detect edges we add another element `elementIndexP` that contains the previous state so that edges can be detected.
- * To optimize simulation performance, all gates/builtins of the same type (e.g. 'and', 'or') are grouped so that a single evaluation of a gate/builtin expression on a Uint32Array element can compute up to 64 components at once.
- * However, since we need to copy the current net states to the component inputs each tick, we also group nets by their attached component inputs so that we can ideally also copy up to 64-nets to the attached inputs at once.  Of course this will not always
+ * APPROACH: We store the states of all nets and ports in one single typed array where each bit of each element stores the state of a port or a net. We keep track of the bit/element locations in `#ports` and `#nets`. The `elementIndex2` property contains the `#mem` element
+ * index of a net/port and `bitIndex` the bit-index within the element. For tri-state logic we use an additional `#mem` array element to store whether the port/net is high-impedance(0) or driven(1) and keep track of the location in `elementIndex3` (bit-index is the same).
+ * In the BUILTIN_MAP the logic expression for this state is defined in the 'signals' field. When a port needs to detect edges we add another `#mem` element that contains the previous state so that edges can be detected and keep track of the in `elementIndexP` property.
+ * To optimize simulation performance, all gates/builtins of the same type (e.g. 'and', 'or') are grouped/batched so that a single evaluation of a gate/builtin expression on a typed array element can compute up to N components at once (e.g. 32 for a Uint32Array).
+ * However, since we need to copy the current net states to the component inputs each tick, we also group nets by their attached component inputs so that we can ideally also copy up to N nets to the attached inputs at once.  Of course this will not always
  * be possible (e.g. a net can be attached to multiple gate inputs) so we generate an optimized layout that tries align as many net bits with their connected input ports as possible.
  */
 
@@ -58,24 +58,43 @@ class Simulation {
         demux3      : { outputs: { qa: '(~select & data)', qb: '(select & data)' }, signals: { qa: 'enable & ~select', qb: 'enable & select' }, inputs: [ 'select', 'enable', 'data' ] },
     };
 
-    #debug;
+    // Gate operation templates, populated lazily during gate declaration.
     #functors = {};
+
+    // Declared constants.
     #consts = [];
+
+    // Declared nets.
     #nets = { all: [], byPort: {} };
+
+    // Declared ports (in various groupings to simplify lookup).
     #ports = { all: [], batchTypes: {}, byBatchComponent: {}, byName: {} };
+
+    // Declared probes (in various groupings to simplify lookup).
     #probes = { byInput: {}, byName: {} };
+
+    // Declared clocks.
     #clocks = [];
+
+    // Computed simulation memory layout, operations, etc...
     #layout = { netToInputBitmap: null, outputToNetBitmap: null, operations: null, pullMasks: null };
-    #mem;
+
+    // Compiled tick function.
     #compiledTicks;
+
+    // Single step debug functionality, if supported by the backend.
     #compiledStep = { generator: null, iterator: null };
+
+    // Backend reference.
     #backend;
 
     // Construct a new instance. Enable debug to generate commented code.
-    constructor(debug = false, backend = 'Javascript') {
-        assert.bool(debug);
-        this.#debug = debug;
-        this.#backend = backend === 'Wasm' ? new BackendWasm(debug) : new BackendJavascript(debug);
+    constructor(config) {
+        assert.object(config, true);
+        const cfg = Object.assign({}, { debug: false, backend: 'js', checkNetConflicts: false /* TODO */ }, config ?? {});
+        assert.bool(cfg.debug);
+        assert.enum([ 'js', 'wasm' ], cfg.backend);
+        this.#backend = cfg.backend === 'wasm' ? new BackendWasm(cfg.debug) : new BackendJavascript(cfg.debug);
     }
 
     // Declares a net (which inputs/outputs are connected) and returns the net id. Attached IO-names must include their suffixes.
@@ -153,17 +172,18 @@ class Simulation {
         return clock.id;
     }
 
-    // Sets/changes the frequency of a defined clock.
+    // Sets/changes the frequency of a defined clock. If frequency is 0 then tps will instead
+    // be interpreted as the number of ticks it takes for the clock to flip output state.
     setClockFrequency(id, frequency = null, tps = null) {
         assert.integer(id);
-        assert.number(frequency, true);
-        assert.integer(tps, true);
+        assert.number(frequency, true, 0);
+        assert.integer(tps, true, 1);
         const clock = this.#clocks[id];
         if (frequency !== null) clock.frequency = frequency;
         if (tps !== null) clock.tps = tps;
-        if (this.#mem && clock.limitIndex !== null) {
-            const ticks = Math.floor(clock.tps / clock.frequency / 2);
-            this.#mem[clock.limitIndex] = ticks;
+        if (clock.limitIndex !== null) {
+            const ticks = frequency === 0 ? tps : Math.floor(clock.tps / clock.frequency / 2);
+            this.#backend.setClockParam(clock.limitIndex, ticks);
         }
     }
 
@@ -224,7 +244,7 @@ class Simulation {
             probes: this.#probes,
         }
     }
-    
+
     // Unserialize simulation from parameters.
     unserialize(serialized) {
         this.#functors = serialized.functors;
@@ -239,12 +259,12 @@ class Simulation {
         this.#ports.all = serialized.ports.map((p) => ({ ...p, bitIndex: null, elementIndex2: null, elementIndex3: null, elementIndexP: null }));
         this.#ports.batchTypes = {};
         this.#ports.byBatchComponent = {};
-        this.#ports.byName = {};        
-        for (const port of this.#ports.all) {   
+        this.#ports.byName = {};
+        for (const port of this.#ports.all) {
             this.#ports.batchTypes[port.batchType] ??= {};
-            this.#ports.batchTypes[port.batchType][port.batchComponent] = true; // TODO: refactor to set      
+            this.#ports.batchTypes[port.batchType][port.batchComponent] = true; // TODO: refactor to set
             this.#ports.byBatchComponent[port.batchComponent] ??= {};
-            this.#ports.byBatchComponent[port.batchComponent][port.batchName] = port; 
+            this.#ports.byBatchComponent[port.batchComponent][port.batchName] = port;
             this.#ports.byName[port.name] = port;
         }
         this.#clocks = serialized.clocks.map((c) => ({ ...c, counterIndex: null, limitIndex: null }));
@@ -252,24 +272,18 @@ class Simulation {
     }
 
     // Compiles the circuit and initializes memory, making it ready for simulate().
-    compile(rawMem = null) {
-        assert.class(Uint32Array, rawMem, true);
+    compile(previous = null) {
+        assert.class(Simulation, previous, true);
         const requiredMemory = this.#generateMemoryLayout();
         this.#generateOperations();
-        if (rawMem && rawMem.length !== requiredMemory) {
-            throw new Error('Incompatible memory size');
-        }
-        this.#mem = rawMem ?? this.#backend.allocateMemory(requiredMemory);
-        this.#compileTicks();
-        if (!rawMem) {
-            const elementsPerEntry = this.#backend.constructor.BITS_PER_ELEMENT / 32;
+        if (!this.#compileTicks(requiredMemory, previous)) {
             for (const [ index, constant ] of pairs(this.#consts)) {
                 this.setConstValue(index, constant.initialValue);
             }
             for (const clock of this.#clocks) {
                 const ticks = Math.floor(clock.tps / clock.frequency / 2);
-                this.#mem[clock.limitIndex * elementsPerEntry] = ticks;
-                this.#mem[clock.counterIndex * elementsPerEntry] = ticks;
+                this.#backend.setClockParam(clock.limitIndex, ticks);
+                this.#backend.setClockParam(clock.counterIndex, ticks);
             }
         }
     }
@@ -291,32 +305,48 @@ class Simulation {
         }
     }
 
+    // Resets simulation memory.
+    reset() {
+        const clearBit = (elementIndex, bitIndex) => {
+            if (elementIndex !== null) {
+                this.#backend.clearBit(elementIndex, bitIndex);
+            }
+        };
+
+        // Reset all net memory elements
+        for (const net of this.#nets.all) {
+            clearBit(net.elementIndex2, net.bitIndex);
+            clearBit(net.elementIndex3, net.bitIndex);
+        }
+
+        // Reset all port memory elements
+        for (const port of this.#ports.all) {
+            // Skip constant ports - they should maintain their values after reset
+            if (port.batchType === 'const') continue;
+            clearBit(port.elementIndex2, port.bitIndex);
+            clearBit(port.elementIndex3, port.bitIndex);
+            clearBit(port.elementIndexP, port.bitIndex);
+        }
+    }
+
     // Sets the value of a defined constant by its id.
     setConstValue(id, value) {
         assert.integer(id);
         assert.integer(value, true);
         const constant = this.#consts[id] ?? error('Unknown constant');
         const port = this.#ports.byName[constant.output];
-
-        const elementsPerEntry = this.#backend.constructor.BITS_PER_ELEMENT / 32;
-        const dwordOffset = Math.floor(port.bitIndex / 32);
-        const bitInDword = port.bitIndex % 32;
-        const bit = 1 << bitInDword;
-
         if (port.elementIndex2 !== null) {
-            const memIndex = port.elementIndex2 * elementsPerEntry + dwordOffset;
             if (value) {
-                this.#mem[memIndex] |= bit;
+                this.#backend.setBit(port.elementIndex2, port.bitIndex);
             } else {
-                this.#mem[memIndex] &= ~bit;
+                this.#backend.clearBit(port.elementIndex2, port.bitIndex);
             }
         }
         if (port.elementIndex3 !== null) {
-            const memIndex = port.elementIndex3 * elementsPerEntry + dwordOffset;
             if (value !== null) {
-                this.#mem[memIndex] |= bit;
+                this.#backend.setBit(port.elementIndex3, port.bitIndex);
             } else {
-                this.#mem[memIndex] &= ~bit;
+                this.#backend.clearBit(port.elementIndex3, port.bitIndex);
             }
         }
     }
@@ -327,12 +357,7 @@ class Simulation {
         const constant = this.#consts[id] ?? error('Unknown constant');
         const port = this.#ports.byName[constant.output];
         if (port.elementIndex2 !== null) {
-            const elementsPerEntry = this.#backend.constructor.BITS_PER_ELEMENT / 32;
-            const dwordOffset = Math.floor(port.bitIndex / 32);
-            const bitInDword = port.bitIndex % 32;
-            const bit = 1 << bitInDword;
-            const memIndex = port.elementIndex2 * elementsPerEntry + dwordOffset;
-            return (this.#mem[memIndex] & bit) !== 0 ? 1 : 0;
+            return this.#backend.getBit(port.elementIndex2, port.bitIndex);
         }
         return null;
     }
@@ -342,16 +367,9 @@ class Simulation {
         assert.integer(id);
         const net = this.#nets.all[id] ?? error('Unknown net');
         if (net.elementIndex2 !== null) {
-            const elementsPerEntry = this.#backend.constructor.BITS_PER_ELEMENT / 32;
-            const dwordOffset = Math.floor(net.bitIndex / 32);
-            const bitInDword = net.bitIndex % 32;
-            const bit = 1 << bitInDword;
-
-            const memIndex3 = net.elementIndex3 * elementsPerEntry + dwordOffset;
-            const isDriven = (this.#mem[memIndex3] & bit) !== 0;
+            const isDriven = this.#backend.getBit(net.elementIndex3, net.bitIndex);
             if (isDriven) {
-                const memIndex2 = net.elementIndex2 * elementsPerEntry + dwordOffset;
-                return (this.#mem[memIndex2] & bit) !== 0 ? 1 : 0;
+                return this.#backend.getBit(net.elementIndex2, net.bitIndex);
             }
         }
         return null;
@@ -366,20 +384,35 @@ class Simulation {
     get ports() {
         return this.#ports.all;
     }
-    
+
     // Returns map of defined probes
     get probes() {
         return this.#probes.byName;
     }
 
-    // Returns simulation memory.
-    get mem() {
-        return this.#mem;
+    // Returns a list of defined constants.
+    get consts() {
+        return this.#consts;
+    }
+
+    // Returns map of defined probes
+    get probes() {
+        return this.#probes.byName;
+    }
+
+    // Returns a list of defined clocks.
+    get clocks() {
+        return this.#clocks;
     }
 
     // Returns simulation layout.
     get layout() {
         return this.#layout;
+    }
+
+    // Returns simulation memory.
+    get mem() {
+        return this.#backend.mem;
     }
 
     // Used by declareGate/declareNet/declareConst/... to declare the ports of those components). Return the port id.
@@ -479,7 +512,8 @@ class Simulation {
                 }
             } while (assigned);
         }
-        console.log('missing assignments', this.#nets.all.filter((n) => n.bitIndex === null));
+        const checkMissing = this.#nets.all.filter((n) => n.bitIndex === null);
+        assert(checkMissing.length === 0, () => 'Missing assignments: ' + JSON.stringify(checkMissing));
         return globalElementIndex;
     }
 
@@ -698,7 +732,7 @@ class Simulation {
                     // value
                     const operationId2 = `${port.batchType}:${port.batchName}:${port.elementIndex2}`;
                     if (!operations[operationId2]) {
-                        const dest = { type: 'signal', index: port.elementIndex2 };
+                        const dest = { type: 'assign', index: port.elementIndex2 };
                         operations[operationId2] = this.#backend.compileLogic(dest, functor.outputs[port.batchName], ports, `compute ${port.batchName} for ${port.batchType}`);
                     }
 
@@ -708,11 +742,11 @@ class Simulation {
                         if (!operations[operationId3]) {
                             const expressionStr = functor.signals?.[port.batchName];
                             if (expressionStr) {
-                                 const dest = { type: 'signal', index: port.elementIndex3 };
+                                const dest = { type: 'assign', index: port.elementIndex3 };
                                 operations[operationId3] = this.#backend.compileLogic(dest, expressionStr, ports, `compute signal ${port.batchName} for ${port.batchType}`);
                             } else {
                                 // always driven if signal expression is empty string but isTriState is true
-                                const dest = { type: 'signal', index: port.elementIndex3, constant: true };
+                                const dest = { type: 'assign', index: port.elementIndex3, constant: true };
                                 operations[operationId3] = this.#backend.compileLogic(dest, '~0', ports, `compute signal ${port.batchName} for ${port.batchType}`);
                             }
                         }
@@ -769,12 +803,10 @@ class Simulation {
     // Compiles code for a single simulation tick.
     #compileTick() {
 
-        // step 1: generate code to compute output values from inputs
+        // step 1: generate code to compute output values from inputs and update clocks
         for (const operation of values(this.#layout.operations)) {
             this.#backend.emitLogic(operation);
         }
-
-        // step 1.5: update clocks
         for (const clock of this.#clocks) {
             const enablePort = this.#ports.byName[clock.enablePortName];
             const outputPort = this.#ports.byName[clock.outputPortName];
@@ -784,37 +816,44 @@ class Simulation {
         // step2: set inputs from nets
         const inputGrouped = this.#groupBitmapsByDest(this.#layout.netToInputBitmap);
         for (const [destElementIndex, group] of pairs(inputGrouped)) {
-            this.#backend.emitAssignment(destElementIndex, group, 'net to input');
+            this.#backend.emitNetToInput(destElementIndex, group, 'net to input');
         }
 
-        // step3: set nets from outputs
+        // step3: set nets values and signal state from outputs
         const outputBitmaps = this.#layout.outputToNetBitmap;
-        // value
         const valueGrouped = this.#groupBitmapsByDest(outputBitmaps, 'destElementIndex2');
         for (const [destElementIndex, group] of pairs(valueGrouped)) {
             this.#backend.emitOutputToNet(destElementIndex, group, 'value', 'output to net value');
         }
-        // signal
         const signalGrouped = this.#groupBitmapsByDest(outputBitmaps, 'destElementIndex3');
         for (const [destElementIndex, group] of pairs(signalGrouped)) {
             if (destElementIndex === 'null') continue;
             this.#backend.emitOutputToNet(destElementIndex, group, 'signal', 'output to net signal');
         }
 
-        // step 4: apply pull resistors
+        // step 4: apply pull resistors if their nets arent'd driven yet
         this.#backend.emitPullResistors(this.#layout.pullMasks);
     }
 
     // Compiles and sets the internal simulation tick function.
-    #compileTicks() {
+    #compileTicks(requiredMemory, previous) {
         this.#compileTick();
-        this.#compiledTicks = this.#backend.compile(this.#mem);
+        let usingExisting;
+        if (previous && previous.mem && previous.mem.length === requiredMemory) {
+            this.#backend.setMem(previous.mem);
+            usingExisting = true;
+        } else {
+            this.#backend.allocMem(requiredMemory);
+            usingExisting = false;
+        }
+        this.#compiledTicks = this.#backend.compile();
+        return usingExisting;
     }
 
     // Compiles and sets the internal simulation tick function.
     #compileStep() {
         this.#compileTick();
-        const iterator = this.#backend.compileStep(this.#mem);
+        const iterator = this.#backend.compileStep();
         this.#compiledStep = { generator: null, iterator };
     }
 }

@@ -212,7 +212,13 @@ Simulations.Simulation = class {
         this.#netList = NetList.identify(this.#circuit, this.#app.circuits.all);
         const newHash = this.#netList.toString();
         const retainMemory = this.#engine && this.#netListHash === newHash;
-        this.#engine = this.#netList.compileSimulation(retainMemory ? this.#engine.mem : null, this.#app.config);
+        const config = this.#app.config;
+        this.#engine = this.#netList.compileSimulation(retainMemory ? this.#engine : null, {
+            debug:              config.debugCompileComments,
+            checkNetConflicts:  config.checkNetConflicts,
+            backend:            config.simulationBackend,
+            targetTPS:          config.targetTPS,
+        });
         if (!retainMemory) {
             this.#computeCircuitStats();
         }

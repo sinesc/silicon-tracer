@@ -50,15 +50,16 @@ class NetList {
         return '@' + gid + '@' + instanceId;
     }
 
-    // Compiles a simulation and returns it.
-    compileSimulation(rawMem, config) {
-        assert.class(Uint32Array, rawMem, true);
+    // Compiles a simulation and returns it. If a previous simulation is given the new simulation will
+    // attempt to reuse the memory of the old one without resetting it.
+    compileSimulation(previous, config) {
+        assert.class(Simulation, previous, true);
         assert.object(config, false, (o) => {
             assert.bool(o.checkNetConflicts);
             assert.integer(o.targetTPS);
-            assert.bool(o.debugCompileComments);
+            assert.bool(o.debug);
         });
-        const sim = new Simulation(config.debugCompileComments, config.checkNetConflicts);
+        const sim = new Simulation(config);
 
         // Determine component duplication counts
         const componentCounts = {};
@@ -100,7 +101,7 @@ class NetList {
         if (config.debugSerializeSimulation) {
             console.log(JSON.stringify(sim.serialize()));
         }
-        sim.compile(rawMem);
+        sim.compile(previous);
         this.statsCompiledNets = sim.nets.length;
         return sim;
     }

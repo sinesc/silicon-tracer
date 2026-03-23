@@ -9,6 +9,7 @@ class Application {
         singleStep: false,
         checkNetConflicts: true,
         lockSimulation: false,
+        simulationBackend: 'js',
         debugCompileComments: false,
         debugShowGid: false,
         debugShowCoords: false,
