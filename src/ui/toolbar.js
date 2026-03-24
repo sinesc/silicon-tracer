@@ -3,17 +3,25 @@
 // Handles tool/menubar.
 class Toolbar {
 
+    // Application reference.
     #app;
+
+    // The toolbar element.
     #element;
+
+    // Array of menu state toggle functions.
     #menuStates;
+
+    // The curently open menu button.
     #menuOpen = null;
 
-    constructor(app, parent) {
+    // Creates a new toolpar within the given DOM parent.
+    constructor(app, domParent) {
         assert.class(Application, app);
-        assert.class(Node, parent);
+        assert.class(Node, domParent);
         this.#app = app;
         this.#menuStates = new WeakUnorderedSet();
-        this.#element = html(parent, 'div', 'toolbar');
+        this.#element = html(domParent, 'div', 'toolbar');
     }
 
     // Returns the DOM Node.
@@ -29,6 +37,8 @@ class Toolbar {
     // Removes all buttons from the toolbar.
     clear() {
         this.#element.textContent = '';
+        this.#menuOpen = null;
+        this.#menuStates = new WeakUnorderedSet();
     }
 
     // Creates a button that can be dragged onto the grid.
@@ -51,7 +61,7 @@ class Toolbar {
         return [ button ];
     }
 
-    // Creates a button that can be clicked to trigger an action.
+    // Creates a button that can be clicked to trigger an action. Returns [ <button-element> ].
     createActionButton(label, hoverMessage, action) {
         assert.string(label);
         assert.string(hoverMessage);
@@ -69,7 +79,7 @@ class Toolbar {
         return [ button ];
     }
 
-    // Creates a button that can be toggled on or off. Returns a function that sets/returns the current button state.
+    // Creates a button that can be toggled on or off. Returns [ <button-element>, <state-fn> ].
     createToggleButton(label, hoverMessage, defaultState, action) {
         assert.string(label);
         assert.string(hoverMessage);
@@ -80,19 +90,17 @@ class Toolbar {
         return [ button, stateFn ];
     }
 
-    // Creates a menu-button to open/close a sub-toolbar acting as a menu. Returns a new toolbar
-    // as well as a state function to get/set the menu state.
+    // Creates a menu-button to open/close a sub-toolbar acting as a menu. Returns [ <button-element>, <state-fn>, <menu-sub-toolbar> ].
     createMenuButton(label, hoverMessage, openAction) {
         return this.#createMenuButton(label, hoverMessage, openAction, 'toolbar-menu-root toolbar-menu-', true, true);
     }
 
-    // Creates a menu-category to open/close a sub-menu. Returns a new toolbar
-    // as well as a state function to get/set the menu state.
+    // Creates a menu-category to open/close a sub-menu. Returns [ <category-element>, <state-fn>, <category-sub-toolbar> ].
     createMenuCategory(label, hoverMessage, openAction) {
         return this.#createMenuButton(label, hoverMessage, openAction, 'toolbar-menu-category toolbar-menu-', false, false);
     }
 
-    // Creates a separator
+    // Creates a separator. Returns [ <separator-element> ].
     createSeparator() {
         const separator = html(this.#element, 'div', 'toolbar-separator');
         return [ separator ];
