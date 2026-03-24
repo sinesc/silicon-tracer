@@ -10,6 +10,7 @@ class Splitter extends VirtualComponent {
         { name: 'numSplits', label: 'Number of n-ports', type: 'int', check: (v, f) => { const p = Number.parseSI(v, true); return isFinite(p) && p >= 2 && p <= 64; } },
         { name: 'ordering', label: 'Order of n-ports', type: 'select', options: { ltr: "0 ... n", rtl: "n ... 0" } },
         { name: 'orientation', label: 'Position of single port', type: 'select', options: { start: "Opposite of n0", middle: "Middle", end: "Opposite of nMax" } },
+        { name: 'spacing', label: 'Pin spacing', type: 'select', options: { 0: "None", 1: "One", 2: "Two" } },
         { name: 'gapPosition', label: 'Pin gap (when n-ports is even)', type: 'select', options: { start: "Next to n0", middle: "Middle", end: "Next to nMax", none: "None (rotation snaps)" } },
         ...Component.EDIT_DIALOG,
     ];
@@ -18,24 +19,26 @@ class Splitter extends VirtualComponent {
     #gapPosition;
     #orientation;
     #ordering;
+    #spacing;
 
-    constructor(app, x, y, rotation, numSplits, gapPosition = 'none', orientation = 'start', ordering = 'ltr') {
+    constructor(app, x, y, rotation, numSplits, gapPosition = 'none', orientation = 'start', ordering = 'ltr', spacing = 0) {
         assert.number(numSplits);
         assert.enum([ 'start', 'middle', 'end', 'none' ], gapPosition);
         assert.enum([ 'start', 'middle', 'end' ], orientation);
-        const { left, right/*, channelMap*/ } = Splitter.#generatePorts(numSplits, gapPosition, orientation, ordering);
+        const { left, right/*, channelMap*/ } = Splitter.#generatePorts(numSplits, gapPosition, orientation, ordering, spacing);
         super(app, x, y, rotation, { 'left': left, 'right': right }, 'splitter', null);
         this.#numSplits = numSplits;
         this.#gapPosition = gapPosition;
         this.#orientation = orientation;
         this.#ordering = ordering;
+        this.#spacing = spacing;
     }
 
     // Serializes the object for writing to disk.
     serialize() {
         return {
             ...super.serialize(),
-            '#a': [ this.x, this.y, this.rotation, this.#numSplits, this.#gapPosition, this.#orientation, this.#ordering ],
+            '#a': [ this.x, this.y, this.rotation, this.#numSplits, this.#gapPosition, this.#orientation, this.#ordering, this.#spacing ],
         };
     }
 
@@ -48,16 +51,17 @@ class Splitter extends VirtualComponent {
 
     // Handle edit hotkey.
     async onEdit() {
-        const config = await dialog("Configure splitter", Splitter.#EDIT_DIALOG, { numSplits: this.#numSplits, gapPosition: this.#gapPosition, orientation: this.#orientation, ordering: this.#ordering, rotation: this.rotation });
+        const config = await dialog("Configure splitter", Splitter.#EDIT_DIALOG, { numSplits: this.#numSplits, gapPosition: this.#gapPosition, orientation: this.#orientation, ordering: this.#ordering, spacing: '' + this.#spacing, rotation: this.rotation });
         if (config) {
             const grid = this.grid;
             this.unlink();
-            const { left, right } = Splitter.#generatePorts(config.numSplits, config.gapPosition, config.orientation, config.ordering);
+            const { left, right } = Splitter.#generatePorts(config.numSplits, config.gapPosition, config.orientation, config.ordering, config.spacing);
             this.setPortsFromNames({ 'left': left, 'right': right });
             this.#numSplits = config.numSplits;
             this.#gapPosition = config.gapPosition;
             this.#orientation = config.orientation;
             this.#ordering = config.ordering;
+            this.#spacing = Number.parseInt(config.spacing);
             this.link(grid);
             this.rotation = config.rotation; // needs to be on grid for rotation to properly update x/y/width/height
             this.redraw();
@@ -65,7 +69,7 @@ class Splitter extends VirtualComponent {
     }
 
     // Generates splitter port layout based on number of inputs.
-    static #generatePorts(numSplits, gapPosition, orientation, ordering) {
+    static #generatePorts(numSplits, gapPosition, orientation, ordering, spacing) {
 
         // compute blank spot if n-port count is even
         let blankAt = -1;
@@ -86,7 +90,6 @@ class Splitter extends VirtualComponent {
         const singlePortAt = orientation === 'middle' ? Math.round((numSlots - 1) / 2) : (orientation === 'start' ? numSlots - 1 : 0);
 
         // generate ports arrays
-        //const channelMap = { };
         const left = [];
         const right = [];
         let split = 0;
@@ -99,19 +102,24 @@ class Splitter extends VirtualComponent {
             } else {
                 const name = Splitter.MULTI_PORT_TEMPLATE.replace('{i}', '' + (ordering === 'ltr' ? split : numSplits - 1 - split));
                 left.push(name);
-                //channelMap[name] = 1;
                 split += 1;
             }
 
             // 1 side
             if (i === singlePortAt) {
                 right.push(Splitter.SINGLE_PORT_NAME);
-                //channelMap['1'] = 1;
-            } else if (right.length === 0 || right[right.length -1] !== '1') {
+            } else if (right.length === 0 || right[right.length - 1 - spacing] !== Splitter.SINGLE_PORT_NAME) {
                 right.push(null);
             }
-        }
 
+            if (i < numSlots - 1) {
+                for (let s = 0; s < spacing; ++s) {
+                    left.push(null);
+                    right.push(null);
+                }
+            }
+        }
+console.log(left, right);
         return { left, right/*, channelMap*/ };
     }
 }

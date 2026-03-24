@@ -292,7 +292,8 @@ class LogiSim {
                 const rawAppear = rawComp.appear ?? 'left';
                 const ordering = rawFacing === 'west' || rawFacing === 'north' ? 'rtl' : 'ltr';
                 const orientation = rawAppear === 'left' ? (ordering === 'ltr' ? 'end' : 'start') : (rawAppear === 'right' ? (ordering === 'ltr' ? 'start' : 'end') : 'middle');
-                const splitter = new Splitter(this.#app, x, y, rotation(rawFacing) + 1, numSplits, 'none', orientation, ordering);
+                const spacing = Number.parseInt(rawComp.spacing ?? '1') - 1;
+                const splitter = new Splitter(this.#app, x, y, rotation(rawFacing) + 1, numSplits, 'none', orientation, ordering, spacing);
                 const offsets = splitterOffsets[rawAppear][rawFacing];
                 splitter.x -= Math.ceil(splitter.width * offsets.x / Grid.SPACING) * Grid.SPACING;
                 splitter.y -= Math.ceil(splitter.height * offsets.y / Grid.SPACING) * Grid.SPACING;

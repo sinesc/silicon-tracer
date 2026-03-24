@@ -110,15 +110,15 @@ class CustomComponent extends VirtualComponent {
     async onEdit() {
         const circuit = this.app.circuits.byUID(this.uid) ?? {};
         const componentPreview = Circuits.makeComponentPreview(this.app, circuit);
-        const result = await dialog("Configure custom component", CustomComponent.EDIT_DIALOG, { spacing: '' + this.#portSpacing, gap: this.#portGap, parity: this.#portParity, rotation: this.rotation }, { onChange: componentPreview });
-        if (result) {
+        const config = await dialog("Configure custom component", CustomComponent.EDIT_DIALOG, { spacing: '' + this.#portSpacing, gap: this.#portGap, parity: this.#portParity, rotation: this.rotation }, { onChange: componentPreview });
+        if (config) {
             const grid = this.grid;
             this.unlink();
-            this.#portSpacing = Number.parseInt(result.spacing);
-            this.#portGap = result.gap;
-            this.#portParity = result.parity;
+            this.#portSpacing = Number.parseInt(config.spacing);
+            this.#portGap = config.gap;
+            this.#portParity = config.parity;
             this.link(grid);
-            this.rotation = result.rotation;
+            this.rotation = config.rotation;
             this.redraw();
         }
     }
