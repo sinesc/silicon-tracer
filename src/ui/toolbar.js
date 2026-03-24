@@ -6,18 +6,18 @@ class ToolbarItem {
     #element;
     #stateFn;
     #toolbar;
-    #openAction;
-    constructor(parent, element, stateFn = null, toolbar = null, openAction = null) {
+    #menuStateFn;
+    constructor(parent, element, stateFn = null, toolbar = null, menuStateFn = null) {
         assert.class(Toolbar, parent);
         assert.class(Node, element);
         assert.function(stateFn, true);
         assert.class(Toolbar, toolbar, true);
-        assert.function(openAction, true);
+        assert.function(menuStateFn, true);
         this.#parent = parent;
         this.#element = element;
         this.#stateFn = stateFn;
         this.#toolbar = toolbar;
-        this.#openAction = openAction;
+        this.#menuStateFn = menuStateFn;
     }
     get parent() {
         return this.#parent;
@@ -29,14 +29,23 @@ class ToolbarItem {
         return this.#toolbar;
     }
     get path() {
-        return this.#toolbar.path;
+        return this.#toolbar?.path ?? this.#parent.path;
+    }
+    get stateFn() {
+        return this.#stateFn;
     }
     state(newState) {
         return this.#stateFn(newState);
     }
+    menuState(newState) {
+        assert(this.#menuStateFn, 'This item does not contain a sub-toolbar');
+        return this.#menuStateFn(newState, this);
+    }
     open() {
-        assert(this.#toolbar, 'This item does not contain a sub-toolbar');
-        this.#openAction(this.#toolbar);
+        return this.menuState(true);
+    }
+    close() {
+        return this.menuState(false);
     }
     clear() {
         assert(this.#toolbar, 'This item does not contain a sub-toolbar');
@@ -65,6 +74,10 @@ class ToolbarItem {
     createSeparator(...args) {
         assert(this.#toolbar, 'This item does not contain a sub-toolbar');
         return this.#toolbar.createSeparator(...args);
+    }
+    setSubToolbar(subToolbar, menuStateFn) {
+        this.#toolbar = subToolbar;
+        this.#menuStateFn = menuStateFn;
     }
 }
 
@@ -160,9 +173,9 @@ class Toolbar {
         assert.string(hoverMessage);
         assert.bool(defaultState);
         assert.function(action);
-        const [ button, stateFn ] = this.#createToggleButton(label, hoverMessage, defaultState, action);
-        this.#element.appendChild(button);
-        return new ToolbarItem(this, button, stateFn);
+        const item = this.#createToggleButton(label, hoverMessage, defaultState, action);
+        this.#element.appendChild(item.node);
+        return item;
     }
 
     // Creates a menu-button to open/close a sub-toolbar acting as a menu.
@@ -187,18 +200,19 @@ class Toolbar {
         assert.string(hoverMessage);
         assert.function(openAction);
         let actionFn;
-        const [ button, stateFn ] = this.#createToggleButton(label, hoverMessage, false, actionFn = (open, toolbarItem) => {
+        const item = this.#createToggleButton(label, hoverMessage, false, actionFn = (open, toolbarItem) => {
+            assert.class(ToolbarItem, toolbarItem);
             if (open) {
                 if (openAction) {
                     openAction(toolbarItem);
                 }
                 // close other menus
                 for (const otherstateFn of this.#menuStates) {
-                    if (otherstateFn !== stateFn) {
+                    if (otherstateFn !== item.stateFn) {
                         otherstateFn(false);
                     }
                 }
-                this.#menuOpen = button;
+                this.#menuOpen = item.node;
                 // close menu on click outside of menu
                 if (documentCloses) {
                     document.onclick = (e) => {
@@ -206,7 +220,7 @@ class Toolbar {
                         e.stopPropagation();
                         document.onclick = null;
                         this.#menuOpen = null;
-                        stateFn(false);
+                        item.state(false);
                     }
                 }
             } else if (documentCloses) {
@@ -214,34 +228,34 @@ class Toolbar {
                 this.#menuOpen = null;
             }
         });
-        this.#menuStates.add(stateFn);
-        button.classList.add(...(classPrefix + 'button').split(' '));
-        const subToolbarContainer = html(button, 'div', classPrefix + 'container');
-        // hover-open: modify mouse-enter to open another menu if one is already open, modify stateFn to disable hover-open when a menu is intentionally closed
+        this.#menuStates.add(item.stateFn);
+        item.node.classList.add(...(classPrefix + 'button').split(' '));
+        const subToolbarContainer = html(item.node, 'div', classPrefix + 'container');
+        // hover-open: modify mouse-enter to open another menu if one is already open, modify item.state to disable hover-open when a menu is intentionally closed
         if (hoverOpens) {
-            const originalMouseEnter = button.onmouseenter;
-            button.onmouseenter = (e) => {
-                if (this.#menuOpen && this.#menuOpen !== button) {
-                    button.onclick(e);
+            const originalMouseEnter = item.node.onmouseenter;
+            item.node.onmouseenter = (e) => {
+                if (this.#menuOpen && this.#menuOpen !== item.node) {
+                    item.node.onclick(e);
                 }
-                originalMouseEnter.call(button, e);
+                originalMouseEnter.call(item.node, e);
             };
         }
-        this.#element.appendChild(button);
+        this.#element.appendChild(item.node);
         const subToolbar = new Toolbar(this.#app, subToolbarContainer);
         subToolbar.#path = this.#path + ' / ' + label;
-        let toolbarItem;
         const menuStateFn = (state) => {
-            if (!state) {
-                this.#menuOpen = null;
-            }
-            let resultState = stateFn(state);
+            let resultState = item.state(state);
             if (state !== undefined) {
-                actionFn(state, toolbarItem);
+                if (!state) {
+                    this.#menuOpen = null;
+                }
+                actionFn(state, item);
             }
             return resultState;
         };
-        return toolbarItem = new ToolbarItem(this, button, stateFn, subToolbar, menuStateFn);
+        item.setSubToolbar(subToolbar, menuStateFn);
+        return item;
     }
 
     // Creates a toggle button and returns the button element as well as a function that sets/returns the current button state.
@@ -256,16 +270,17 @@ class Toolbar {
             }
             return state;
         };
-        button.onclick= (e) => {
+        const item = new ToolbarItem(this, button, stateFn);
+        item.node.onclick= (e) => {
             e.preventDefault();
             e.stopPropagation();
             if (!button.classList.contains('toolbar-menu-button-disabled')) {
-                stateFn(!state);
-                action(state, this);
+                stateFn(!state); // note this modifies "state" so action() below also receives the negated state
+                action(state, item);
             }
         };
-        button.onmouseenter = () => this.#app.setStatus(hoverMessage);
-        button.onmouseleave = () => this.#app.clearStatus();
-        return [ button, stateFn ];
+        item.node.onmouseenter = () => this.#app.setStatus(hoverMessage);
+        item.node.onmouseleave = () => this.#app.clearStatus();
+        return item;
     }
 }

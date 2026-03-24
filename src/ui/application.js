@@ -204,7 +204,7 @@ class Application {
     #initMenu() {
 
         // Add file operations to toolbar
-        const fileMenu = this.toolbar.createMenuButton('File', 'File operations menu. <i>LMB</i> Open menu.', () => {
+        this.toolbar.createMenuButton('File', 'File operations menu. <i>LMB</i> Open menu.', (fileMenu) => {
             fileMenu.clear();
             // Open circuit file.
             fileMenu.createActionButton('Open...', 'Close all circuits and load new circuits from a file.', async () => {
@@ -266,7 +266,7 @@ class Application {
         });
 
         // Circuit selection menu
-        const circuitMenu = this.toolbar.createMenuButton('Circuit', 'Circuit management menu. <i>LMB</i> Open menu.', () => {
+        this.toolbar.createMenuButton('Circuit', 'Circuit management menu. <i>LMB</i> Open menu.', (circuitMenu) => {
             const circuitList = this.circuits.list();
             circuitMenu.clear();
             // Create new circuit.
@@ -309,14 +309,13 @@ class Application {
         });
 
         // Component selection menu
-        const componentMenu = this.toolbar.createMenuButton('Component', 'Component palette. <i>LMB</i> Open menu.', (menu) => {
+        this.toolbar.createMenuButton('Component', 'Component palette. <i>LMB</i> Open menu.', (componentMenu) => {
             componentMenu.clear();
             const DRAG_MSG = '<i>LMB</i> Drag to move onto grid.';
             const defaults = this.config.placementDefaults;
 
             // routing/utilities
-            const routingMenu = componentMenu.createMenuCategory('Routing &amp; labeling', 'Ports, tunnels, splitters, text. <i>LMB</i> Open category.', (menu) => {
-            console.log(menu.path);
+            componentMenu.createMenuCategory('Routing &amp; labeling', 'Ports, tunnels, splitters, text. <i>LMB</i> Open category.', (routingMenu) => {
                 routingMenu.clear();
                 routingMenu.createComponentButton('Port', `<b>Component IO pin</b>. ${DRAG_MSG}`, (grid, x, y) => {
                     return grid.addItem(new Port(this, x, y, defaults.port.rotation))
@@ -332,10 +331,9 @@ class Application {
                     return grid.addItem(new TextLabel(this, x, y, defaults.textlabel.rotation ));
                 });
             });
-            routingMenu.open();
 
             // add gates
-            const gatesMenu = componentMenu.createMenuCategory('Basic gates', 'Basic gates. <i>LMB</i> Open category.', () => {
+            componentMenu.createMenuCategory('Basic gates', 'Basic gates. <i>LMB</i> Open category.', (gatesMenu) => {
                 gatesMenu.clear();
                 for (const [ gateType, { joinOp } ] of Object.entries(Simulation.GATE_MAP)) {
                     const gateLabel = gateType.toUpperFirst();
@@ -347,7 +345,7 @@ class Application {
             });
 
             // add extra gate-like builtins
-            const builtinMenu = componentMenu.createMenuCategory('Basic components', 'Latches, muxes, ... <i>LMB</i> Open category.', () => {
+            componentMenu.createMenuCategory('Basic components', 'Latches, muxes, ... <i>LMB</i> Open category.', (builtinMenu) => {
                 builtinMenu.clear();
                 const builtins = [];
                 for (const builtinType of keys(Simulation.BUILTIN_MAP)) {
@@ -362,7 +360,7 @@ class Application {
             });
 
             // io/utilities
-            const ioMenu = componentMenu.createMenuCategory('IO/Control', 'Clocks, constants, ... <i>LMB</i> Open category.', () => {
+            componentMenu.createMenuCategory('IO/Control', 'Clocks, constants, ... <i>LMB</i> Open category.', (ioMenu) => {
                 ioMenu.clear();
                 ioMenu.createComponentButton('Clock', `<b>Clock</b>. ${DRAG_MSG}`, (grid, x, y) => {
                     return grid.addItem(new Clock(this, x, y, defaults.clock.rotation));
@@ -389,7 +387,7 @@ class Application {
                 componentMenu.createSeparator();
             }
             for (const [ lid, label ] of this.circuits.libraries) {
-                const libraryMenu = componentMenu.createMenuCategory(label, label + ' components. <i>LMB</i> Open category.', () => {
+                componentMenu.createMenuCategory(label, label + ' components. <i>LMB</i> Open category.', (libraryMenu) => {
                     libraryMenu.clear();
                     const componentList = this.circuits.list(lid);
                     // Switch component. Generate menu items for each component.
@@ -415,10 +413,7 @@ class Application {
         });
 
         // Simulation menu
-        let updateSimulationMenu;
-        const simulationMenu = this.toolbar.createMenuButton('Simulation', 'Simulation management menu. <i>LMB</i> Open menu.', () => updateSimulationMenu());
-
-        updateSimulationMenu = () => {
+        this.toolbar.createMenuButton('Simulation', 'Simulation management menu. <i>LMB</i> Open menu.', (simulationMenu) => {
             simulationMenu.clear();
             const toggleAction = () => {
                 const sim = this.simulations.current;
@@ -439,7 +434,7 @@ class Application {
                     this.config.singleStep = false;
                     this.simulations.select(this.circuits.current, this.config.autoCompile);
                 }
-                updateSimulationMenu();
+                simulationMenu.open(); // update menu
             });
             // Recompile simulation to flag conflicting networks (and show them in UI).
             simulationMenu.createToggleButton('Show net conflicts', 'Networks with conflicting gate outputs will be highlighted. Increases simulation complexity.', this.config.checkNetConflicts, (enabled) => {
@@ -448,12 +443,12 @@ class Application {
                 if (enabled) {
                     this.simulations.select(this.circuits.current, this.config.autoCompile);
                 }
-                updateSimulationMenu();
+                simulationMenu.open();
             });
             // Lock simulation.
             simulationMenu.createToggleButton('Lock simulation', 'Prevents accidental changes from resetting the simulation. Does not prevent the changes but they won\'t be included in the simulation.', this.config.lockSimulation, (enabled) => {
                 this.config.lockSimulation = enabled;
-                updateSimulationMenu();
+                simulationMenu.open();
             });
             // Simulate current grid
             simulationMenu.createActionButton(toggleButtonText(toggleAction()), 'Toggle simulation on/off.', () => {
@@ -499,7 +494,7 @@ class Application {
                 });
                 button.node.classList.toggle('toolbar-menu-button-disabled', isCurrent);
             }
-        };
+        });
     }
 
     // Initialize tool bar entries.
