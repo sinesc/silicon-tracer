@@ -2,39 +2,33 @@
 
 // An item of a toolbar (e.g. a button or menu)
 class ToolbarItem {
-    #parent;
-    #element;
-    #stateFn;
     #toolbar;
-    #menuStateFn;
-    constructor(parent, element, stateFn = null, toolbar = null, menuStateFn = null) {
-        assert.class(Toolbar, parent);
+    #node;
+    #stateFn;
+    #subToolbar = null;
+    #menuStateFn = null;
+    constructor(toolbar, element, stateFn = null) {
+        assert.class(Toolbar, toolbar);
         assert.class(Node, element);
         assert.function(stateFn, true);
-        assert.class(Toolbar, toolbar, true);
-        assert.function(menuStateFn, true);
-        this.#parent = parent;
-        this.#element = element;
-        this.#stateFn = stateFn;
         this.#toolbar = toolbar;
-        this.#menuStateFn = menuStateFn;
-    }
-    get parent() {
-        return this.#parent;
-    }
-    get node() {
-        return this.#element;
+        this.#node = element;
+        this.#stateFn = stateFn;
     }
     get toolbar() {
         return this.#toolbar;
     }
+    get node() {
+        return this.#node;
+    }
     get path() {
-        return this.#toolbar?.path ?? this.#parent.path;
+        return this.#subToolbar?.path ?? this.#toolbar.path;
     }
     get stateFn() {
         return this.#stateFn;
     }
     state(newState) {
+        assert(this.#stateFn, 'This item does not have state');
         return this.#stateFn(newState);
     }
     menuState(newState) {
@@ -48,35 +42,37 @@ class ToolbarItem {
         return this.menuState(false);
     }
     clear() {
-        assert(this.#toolbar, 'This item does not contain a sub-toolbar');
-        return this.#toolbar.clear();
+        assert(this.#subToolbar, 'This item does not contain a sub-toolbar');
+        return this.#subToolbar.clear();
     }
     createComponentButton(...args) {
-        assert(this.#toolbar, 'This item does not contain a sub-toolbar');
-        return this.#toolbar.createComponentButton(...args);
+        assert(this.#subToolbar, 'This item does not contain a sub-toolbar');
+        return this.#subToolbar.createComponentButton(...args);
     }
     createActionButton(...args) {
-        assert(this.#toolbar, 'This item does not contain a sub-toolbar');
-        return this.#toolbar.createActionButton(...args);
+        assert(this.#subToolbar, 'This item does not contain a sub-toolbar');
+        return this.#subToolbar.createActionButton(...args);
     }
     createToggleButton(...args) {
-        assert(this.#toolbar, 'This item does not contain a sub-toolbar');
-        return this.#toolbar.createToggleButton(...args);
+        assert(this.#subToolbar, 'This item does not contain a sub-toolbar');
+        return this.#subToolbar.createToggleButton(...args);
     }
     createMenuButton(...args) {
-        assert(this.#toolbar, 'This item does not contain a sub-toolbar');
-        return this.#toolbar.createMenuButton(...args);
+        assert(this.#subToolbar, 'This item does not contain a sub-toolbar');
+        return this.#subToolbar.createMenuButton(...args);
     }
     createMenuCategory(...args) {
-        assert(this.#toolbar, 'This item does not contain a sub-toolbar');
-        return this.#toolbar.createMenuCategory(...args);
+        assert(this.#subToolbar, 'This item does not contain a sub-toolbar');
+        return this.#subToolbar.createMenuCategory(...args);
     }
     createSeparator(...args) {
-        assert(this.#toolbar, 'This item does not contain a sub-toolbar');
-        return this.#toolbar.createSeparator(...args);
+        assert(this.#subToolbar, 'This item does not contain a sub-toolbar');
+        return this.#subToolbar.createSeparator(...args);
     }
     setSubToolbar(subToolbar, menuStateFn) {
-        this.#toolbar = subToolbar;
+        assert.class(Toolbar, subToolbar, true);
+        assert.function(menuStateFn, true);
+        this.#subToolbar = subToolbar;
         this.#menuStateFn = menuStateFn;
     }
 }
@@ -99,7 +95,10 @@ class Toolbar {
     // Textual path of this toolbar (concatentation of parent and current toolbar labels).
     #path = '';
 
+    // Parent toolbar.
     #parent = null;
+
+    // Menu states by textual path.
     #states = {};
 
     // Creates a new toolpar within the given DOM parent.
@@ -123,6 +122,7 @@ class Toolbar {
         return this.#element.parentNode;
     }
 
+    // Returns textual toolbar path.
     get path() {
         return this.#path;
     }
@@ -216,7 +216,7 @@ class Toolbar {
         let actionFn;
         const item = this.#createToggleButton(label, hoverMessage, false, actionFn = (open, toolbarItem) => {
             assert.class(ToolbarItem, toolbarItem);
-            this.root.#states[item.parent.path] = open ? item.path : null;// remember state
+            this.root.#states[item.toolbar.path] = open ? item.path : null;// remember state
             if (open) {
                 if (openAction) {
                     openAction(toolbarItem);
@@ -271,7 +271,7 @@ class Toolbar {
         };
         item.setSubToolbar(subToolbar, menuStateFn);
         // restore last menu state from textual path (since the menu objects are recreated each time they are not comparable)
-        if (this.root.#states[item.parent.path] === item.path) {
+        if (this.root.#states[item.toolbar.path] === item.path) {
             menuStateFn(true);
         }
         return item;
