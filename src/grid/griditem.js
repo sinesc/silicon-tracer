@@ -43,10 +43,10 @@ class GridItem {
         if (!readable) {
             return 'g' + crypto.randomUUID().replaceAll('-', '');
         } else {
-            return generateWord(5, 10);            
+            return generateWord(5, 10);
         }
     }
-    
+
     // Serializes the object for writing to disk.
     serialize() {
         return {
@@ -319,23 +319,29 @@ class GridItem {
 
     // Registers a drag event source with optional additional arguments to pass with each event to onDrag().
     registerMouseAction(element, ...args) {
-        element.onmousedown = this.#handleMouseDown.bind(this, args);
+        if (this.grid && !this.grid.passive) {
+            element.onmousedown = this.#handleMouseDown.bind(this, args);
+        }
     }
 
     // Trigger item drag (e.g. when dragging from template into the grid).
     dragStart(x, y, ...args) {
-        document.onmousemove = this.#handleDragMove.bind(this, args);
-        document.onmouseup = this.#handleDragStop.bind(this, args);
-        document.body.classList.add('dragging');
-        this.onDrag(x, y, 'start', ...args);
+        if (this.grid && !this.grid.passive) {
+            document.onmousemove = this.#handleDragMove.bind(this, args);
+            document.onmouseup = this.#handleDragStop.bind(this, args);
+            document.body.classList.add('dragging');
+            this.onDrag(x, y, 'start', ...args);
+        }
     }
 
     // Trigger item drag cancellation.
     dragStop(x, y, ...args) {
-        document.onmouseup = null;
-        document.onmousemove = null;
-        document.body.classList.remove('dragging');
-        this.onDrag(x, y, 'stop', ...args);
+        if (this.grid && !this.grid.passive) {
+            document.onmouseup = null;
+            document.onmousemove = null;
+            document.body.classList.remove('dragging');
+            this.onDrag(x, y, 'stop', ...args);
+        }
     }
 
     // Called when mouse drag or click starts.

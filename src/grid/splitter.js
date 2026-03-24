@@ -119,7 +119,7 @@ class Splitter extends VirtualComponent {
                 }
             }
         }
-console.log(left, right);
+
         return { left, right/*, channelMap*/ };
     }
 }

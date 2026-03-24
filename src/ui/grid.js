@@ -23,6 +23,7 @@ class Grid {
     #circuit;
     #netColor = 1;
     #debugElement;
+    #passive;
 
     #infoBox = {
         element: null,
@@ -38,12 +39,13 @@ class Grid {
         assert.class(Node, parent);
         this.#app = app;
         this.#element = html(parent, 'div', 'grid');
-        this.#element.onmousedown = this.#handleDragStart.bind(this);
-        this.#element.onwheel = this.#handleZoom.bind(this);
         this.#infoBox.element = html(this.#element, 'div', 'grid-info', '');
         this.#selectionElement = html(this.#element, 'div', 'grid-selection hidden');
         this.#debugElement = html(this.#element, 'div', 'debug-info');
+        this.#passive = passive;
         if (!passive) {
+            this.#element.onmousedown = this.#handleDragStart.bind(this);
+            this.#element.onwheel = this.#handleZoom.bind(this);
             document.addEventListener('mousemove', this.#debugHandleMouse.bind(this));
             document.addEventListener('keydown', this.#handleKeyDown.bind(this));
             document.addEventListener('keyup', this.#handleKeyUp.bind(this));
@@ -331,6 +333,16 @@ class Grid {
         ];
     }
 
+    // Returns whether grid editing is disabled.
+    get passive() {
+        return this.#passive;
+    }
+
+    // Invalidate the current selection. Needs to be called after changes to selection to recompute center point.
+    invalidateSelection() {
+        this.#selectionCenter = null;
+    }
+
     // Applies net colors to component ports on the grid.
     #applyNetColors() {
         const netList = NetList.identify(this.#circuit);
@@ -419,11 +431,11 @@ class Grid {
             e.preventDefault();
         }
     }
-    
+
     // Called when a key is released
     #handleKeyUp(e) {
         // only send up if target previously received down
-        if (this.#hotkeyTarget && this.#hotkeyTarget.keysDown[e.key]) {            
+        if (this.#hotkeyTarget && this.#hotkeyTarget.keysDown[e.key]) {
             const { gridItem, args, keysDown } = this.#hotkeyTarget;
             keysDown[e.key] = false;
             if (gridItem.onHotkey(e.key, 'up', ...args)) {
@@ -447,10 +459,7 @@ class Grid {
         this.offsetY -= mouseGridY - mouseGridYAfter;
     }
 
-    invalidateSelection() {
-        this.#selectionCenter = null;
-    }
-
+    // Compute selection center point for rotation.
     #computeSelectionCenter() {
         // find bounding box
         let bounds = { x1: Number.MAX_SAFE_INTEGER, y1: Number.MAX_SAFE_INTEGER, x2: Number.MIN_SAFE_INTEGER, y2: Number.MIN_SAFE_INTEGER };
