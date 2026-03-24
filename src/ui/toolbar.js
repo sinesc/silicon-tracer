@@ -1,5 +1,73 @@
 "use strict";
 
+// An item of a toolbar (e.g. a button or menu)
+class ToolbarItem {
+    #parent;
+    #element;
+    #stateFn;
+    #toolbar;
+    #openAction;
+    constructor(parent, element, stateFn = null, toolbar = null, openAction = null) {
+        assert.class(Toolbar, parent);
+        assert.class(Node, element);
+        assert.function(stateFn, true);
+        assert.class(Toolbar, toolbar, true);
+        assert.function(openAction, true);
+        this.#parent = parent;
+        this.#element = element;
+        this.#stateFn = stateFn;
+        this.#toolbar = toolbar;
+        this.#openAction = openAction;
+    }
+    get parent() {
+        return this.#parent;
+    }
+    get node() {
+        return this.#element;
+    }
+    get toolbar() {
+        return this.#toolbar;
+    }
+    get path() {
+        return this.#toolbar.path;
+    }
+    state(newState) {
+        return this.#stateFn(newState);
+    }
+    open() {
+        assert(this.#toolbar, 'This item does not contain a sub-toolbar');
+        this.#openAction(this.#toolbar);
+    }
+    clear() {
+        assert(this.#toolbar, 'This item does not contain a sub-toolbar');
+        return this.#toolbar.clear();
+    }
+    createComponentButton(...args) {
+        assert(this.#toolbar, 'This item does not contain a sub-toolbar');
+        return this.#toolbar.createComponentButton(...args);
+    }
+    createActionButton(...args) {
+        assert(this.#toolbar, 'This item does not contain a sub-toolbar');
+        return this.#toolbar.createActionButton(...args);
+    }
+    createToggleButton(...args) {
+        assert(this.#toolbar, 'This item does not contain a sub-toolbar');
+        return this.#toolbar.createToggleButton(...args);
+    }
+    createMenuButton(...args) {
+        assert(this.#toolbar, 'This item does not contain a sub-toolbar');
+        return this.#toolbar.createMenuButton(...args);
+    }
+    createMenuCategory(...args) {
+        assert(this.#toolbar, 'This item does not contain a sub-toolbar');
+        return this.#toolbar.createMenuCategory(...args);
+    }
+    createSeparator(...args) {
+        assert(this.#toolbar, 'This item does not contain a sub-toolbar');
+        return this.#toolbar.createSeparator(...args);
+    }
+}
+
 // Handles tool/menubar.
 class Toolbar {
 
@@ -14,6 +82,9 @@ class Toolbar {
 
     // The curently open menu button.
     #menuOpen = null;
+
+    // Textual path of this toolbar (concatentation of parent and current toolbar labels).
+    #path = '';
 
     // Creates a new toolpar within the given DOM parent.
     constructor(app, domParent) {
@@ -32,6 +103,10 @@ class Toolbar {
     // Returns the parent DOM Node.
     get parentNode() {
         return this.#element.parentNode;
+    }
+
+    get path() {
+        return this.#path;
     }
 
     // Removes all buttons from the toolbar.
@@ -58,10 +133,10 @@ class Toolbar {
         };
         button.onmouseenter = () => this.#app.setStatus(hoverMessage);
         button.onmouseleave = () => this.#app.clearStatus();
-        return [ button ];
+        return new ToolbarItem(this, button);
     }
 
-    // Creates a button that can be clicked to trigger an action. Returns [ <button-element> ].
+    // Creates a button that can be clicked to trigger an action.
     createActionButton(label, hoverMessage, action) {
         assert.string(label);
         assert.string(hoverMessage);
@@ -76,10 +151,10 @@ class Toolbar {
         };
         button.onmouseenter = () => this.#app.setStatus(hoverMessage);
         button.onmouseleave = () => this.#app.clearStatus();
-        return [ button ];
+        return new ToolbarItem(this, button);
     }
 
-    // Creates a button that can be toggled on or off. Returns [ <button-element>, <state-fn> ].
+    // Creates a button that can be toggled on or off.
     createToggleButton(label, hoverMessage, defaultState, action) {
         assert.string(label);
         assert.string(hoverMessage);
@@ -87,35 +162,35 @@ class Toolbar {
         assert.function(action);
         const [ button, stateFn ] = this.#createToggleButton(label, hoverMessage, defaultState, action);
         this.#element.appendChild(button);
-        return [ button, stateFn ];
+        return new ToolbarItem(this, button, stateFn);
     }
 
-    // Creates a menu-button to open/close a sub-toolbar acting as a menu. Returns [ <button-element>, <state-fn>, <menu-sub-toolbar> ].
+    // Creates a menu-button to open/close a sub-toolbar acting as a menu.
     createMenuButton(label, hoverMessage, openAction) {
         return this.#createSubToolbar(label, hoverMessage, openAction, 'toolbar-menu-root toolbar-menu-', true, true);
     }
 
-    // Creates a menu-category to open/close a sub-menu. Returns [ <category-element>, <state-fn>, <category-sub-toolbar> ].
+    // Creates a menu-category to open/close a sub-menu.
     createMenuCategory(label, hoverMessage, openAction) {
         return this.#createSubToolbar(label, hoverMessage, openAction, 'toolbar-menu-category toolbar-menu-', false, false);
     }
 
-    // Creates a separator. Returns [ <separator-element> ].
+    // Creates a separator.
     createSeparator() {
         const separator = html(this.#element, 'div', 'toolbar-separator');
-        return [ separator ];
+        return new ToolbarItem(this, separator);
     }
 
-    // Creates a menu or submenu/category. Returns a new toolbar as well as a state function to get/set the menu state.
+    // Creates a menu or submenu/category.
     #createSubToolbar(label, hoverMessage, openAction, classPrefix, hoverOpens, documentCloses) {
         assert.string(label);
         assert.string(hoverMessage);
         assert.function(openAction);
         let actionFn;
-        const [ button, stateFn ] = this.#createToggleButton(label, hoverMessage, false, actionFn = (open) => {
+        const [ button, stateFn ] = this.#createToggleButton(label, hoverMessage, false, actionFn = (open, toolbarItem) => {
             if (open) {
                 if (openAction) {
-                    openAction();
+                    openAction(toolbarItem);
                 }
                 // close other menus
                 for (const otherstateFn of this.#menuStates) {
@@ -152,19 +227,21 @@ class Toolbar {
                 originalMouseEnter.call(button, e);
             };
         }
+        this.#element.appendChild(button);
+        const subToolbar = new Toolbar(this.#app, subToolbarContainer);
+        subToolbar.#path = this.#path + ' / ' + label;
+        let toolbarItem;
         const menuStateFn = (state) => {
             if (!state) {
                 this.#menuOpen = null;
             }
             let resultState = stateFn(state);
             if (state !== undefined) {
-                actionFn(state);
+                actionFn(state, toolbarItem);
             }
             return resultState;
         };
-        this.#element.appendChild(button);
-        const subToolbar = new Toolbar(this.#app, subToolbarContainer);
-        return [ button, menuStateFn, subToolbar ];
+        return toolbarItem = new ToolbarItem(this, button, stateFn, subToolbar, menuStateFn);
     }
 
     // Creates a toggle button and returns the button element as well as a function that sets/returns the current button state.
@@ -184,7 +261,7 @@ class Toolbar {
             e.stopPropagation();
             if (!button.classList.contains('toolbar-menu-button-disabled')) {
                 stateFn(!state);
-                action(state);
+                action(state, this);
             }
         };
         button.onmouseenter = () => this.#app.setStatus(hoverMessage);

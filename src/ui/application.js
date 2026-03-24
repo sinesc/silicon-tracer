@@ -204,11 +204,11 @@ class Application {
     #initMenu() {
 
         // Add file operations to toolbar
-        const [ , fileMenuState, fileMenu ] = this.toolbar.createMenuButton('File', 'File operations menu. <i>LMB</i> Open menu.', () => {
+        const fileMenu = this.toolbar.createMenuButton('File', 'File operations menu. <i>LMB</i> Open menu.', () => {
             fileMenu.clear();
             // Open circuit file.
             fileMenu.createActionButton('Open...', 'Close all circuits and load new circuits from a file.', async () => {
-                fileMenuState(false);
+                fileMenu.state(false);
                 if (!this.haveChanges || await unsavedDialog('Click Ok to discard and open another project anyway or Cancel to abort.')) {
                     await this.circuits.loadFile(true);
                     this.simulations.clear();
@@ -218,35 +218,35 @@ class Application {
                 }
             });
             // Open and merge circuits from file to currently loaded circuits.
-            const [ addButton ] = fileMenu.createActionButton('Merge...', 'Load additional circuits from a file, keeping open circuits.', async () => {
-                fileMenuState(false);
+            const addButton = fileMenu.createActionButton('Merge...', 'Load additional circuits from a file, keeping open circuits.', async () => {
+                fileMenu.state(false);
                 await this.circuits.loadFile(false, false);
                 this.haveChanges = true;
             });
-            addButton.classList.toggle('toolbar-menu-button-disabled', this.circuits.allEmpty());
+            addButton.node.classList.toggle('toolbar-menu-button-disabled', this.circuits.allEmpty());
             // Open as library
             fileMenu.createActionButton('Add library...', 'Add circuits in file as library components. These are accessible via the <i>Component</i> menu and do not show in <i>Circuit</i>.', async () => {
-                fileMenuState(false);
+                fileMenu.state(false);
                 await this.circuits.loadFile(false, false, true);
                 this.haveChanges = true;
             });
             // Import circuits and add to currently loaded circuits.
             fileMenu.createActionButton('Import...', 'Import files produced by other applications.', async () => {
-                fileMenuState(false);
+                fileMenu.state(false);
                 await this.circuits.importFile();
                 this.haveChanges = true;
             });
             fileMenu.createSeparator();
             // Save circuits to last opened file.
-            const [ saveButton ] = fileMenu.createActionButton(this.circuits.fileName ? 'Save <i>' + this.circuits.fileName + '</i>' : 'Save', 'Save circuits to file.', async () => {
-                fileMenuState(false);
+            const saveButton = fileMenu.createActionButton(this.circuits.fileName ? 'Save <i>' + this.circuits.fileName + '</i>' : 'Save', 'Save circuits to file.', async () => {
+                fileMenu.state(false);
                 await this.circuits.saveFile();
                 this.haveChanges = false;
             });
-            saveButton.classList.toggle('toolbar-menu-button-disabled', !this.circuits.fileName);
+            saveButton.node.classList.toggle('toolbar-menu-button-disabled', !this.circuits.fileName);
             // Save circuits as new file.
             fileMenu.createActionButton('Save as...', 'Save circuits to a new file.', async () => {
-                fileMenuState(false);
+                fileMenu.state(false);
                 await this.circuits.saveFileAs();
                 this.haveChanges = false;
                 document.title = this.circuits.fileName + ' - Silicon Tracer';
@@ -254,7 +254,7 @@ class Application {
             fileMenu.createSeparator();
             // Close circuits.
             fileMenu.createActionButton('Close', 'Close all open circuits.', async () => {
-                fileMenuState(false);
+                fileMenu.state(false);
                 if (!this.haveChanges || await unsavedDialog('Click Ok to close it anyway or Cancel to abort.')) {
                     this.circuits.closeFile();
                     this.simulations.clear();
@@ -266,20 +266,20 @@ class Application {
         });
 
         // Circuit selection menu
-        const [ , circuitMenuState, circuitMenu ] = this.toolbar.createMenuButton('Circuit', 'Circuit management menu. <i>LMB</i> Open menu.', () => {
+        const circuitMenu = this.toolbar.createMenuButton('Circuit', 'Circuit management menu. <i>LMB</i> Open menu.', () => {
             const circuitList = this.circuits.list();
             circuitMenu.clear();
             // Create new circuit.
             circuitMenu.createActionButton('New...', 'Create a new circuit.', async () => {
-                circuitMenuState(false);
+                circuitMenu.state(false);
                 if (await this.circuits.create()) {
                     this.simulations.select(this.circuits.current, this.config.autoCompile);
                     this.haveChanges = true;
                 }
             });
             // Remove current circuit.
-            const [ button ] = circuitMenu.createActionButton(`Remove "${this.circuits.current.label}"`, circuitList.length <= 1 ? 'Cannot remove last remaining circuit.' : 'Remove current circuit.', async () => {
-                circuitMenuState(false);
+            const button = circuitMenu.createActionButton(`Remove "${this.circuits.current.label}"`, circuitList.length <= 1 ? 'Cannot remove last remaining circuit.' : 'Remove current circuit.', async () => {
+                circuitMenu.state(false);
                 if (await confirmDialog('Confirm deletion',`Delete "${this.circuits.current.label}" from project?`)) {
                     this.simulations.delete(this.circuits.current);
                     this.circuits.delete(this.circuits.current.uid);
@@ -287,35 +287,36 @@ class Application {
                     this.haveChanges = true;
                 }
             });
-            button.classList.toggle('toolbar-menu-button-disabled', circuitList.length <= 1);
+            button.node.classList.toggle('toolbar-menu-button-disabled', circuitList.length <= 1);
             circuitMenu.createSeparator();
             // Switch circuit. Generate menu items for each circuit.
             for (const [ uid, label ] of circuitList) {
                 const isCurrentGrid = uid === this.grid.circuit.uid; // grid circuit may be different from current circuit when navigating through simulation subcomponents
                 // place circuit as component
                 if (uid !== this.grid.circuit.uid && !this.circuits.subcircuitUIDs(uid).has(this.grid.circuit.uid)) {
-                    const [ componentButton ] = circuitMenu.createComponentButton('&#9094;', label + '. <i>LMB</i> Drag to move onto grid.', (grid, x, y) => grid.addItem(new CustomComponent(this, x, y, 0, uid)));
-                    componentButton.classList.add('toolbar-circuit-place');
+                    const componentButton = circuitMenu.createComponentButton('&#9094;', label + '. <i>LMB</i> Drag to move onto grid.', (grid, x, y) => grid.addItem(new CustomComponent(this, x, y, 0, uid)));
+                    componentButton.node.classList.add('toolbar-circuit-place');
                 }
                 // circuit select
-                const [ switchButton ] = circuitMenu.createActionButton(label, isCurrentGrid ? 'This is the current circuit on the grid' : 'Switch grid to circuit "' + label + '".', () => {
-                    circuitMenuState(false);
+                const switchButton  = circuitMenu.createActionButton(label, isCurrentGrid ? 'This is the current circuit on the grid' : 'Switch grid to circuit "' + label + '".', () => {
+                    circuitMenu.state(false);
                     this.circuits.select(uid);
                     this.simulations.select(this.circuits.current, this.config.autoCompile);
                 });
-                switchButton.classList.add(!isCurrentGrid ? 'toolbar-circuit-select' : 'toolbar-circuit-select-fullrow');
-                switchButton.classList.toggle('toolbar-menu-button-disabled', isCurrentGrid);
+                switchButton.node.classList.add(!isCurrentGrid ? 'toolbar-circuit-select' : 'toolbar-circuit-select-fullrow');
+                switchButton.node.classList.toggle('toolbar-menu-button-disabled', isCurrentGrid);
             }
         });
 
         // Component selection menu
-        const [ , componentMenuState, componentMenu ] = this.toolbar.createMenuButton('Component', 'Component palette. <i>LMB</i> Open menu.', () => {
+        const componentMenu = this.toolbar.createMenuButton('Component', 'Component palette. <i>LMB</i> Open menu.', (menu) => {
             componentMenu.clear();
             const DRAG_MSG = '<i>LMB</i> Drag to move onto grid.';
             const defaults = this.config.placementDefaults;
 
             // routing/utilities
-            const [ , routingMenuState, routingMenu ] = componentMenu.createMenuCategory('Routing &amp; labeling', 'Ports, tunnels, splitters, text. <i>LMB</i> Open category.', () => {
+            const routingMenu = componentMenu.createMenuCategory('Routing &amp; labeling', 'Ports, tunnels, splitters, text. <i>LMB</i> Open category.', (menu) => {
+            console.log(menu.path);
                 routingMenu.clear();
                 routingMenu.createComponentButton('Port', `<b>Component IO pin</b>. ${DRAG_MSG}`, (grid, x, y) => {
                     return grid.addItem(new Port(this, x, y, defaults.port.rotation))
@@ -331,9 +332,10 @@ class Application {
                     return grid.addItem(new TextLabel(this, x, y, defaults.textlabel.rotation ));
                 });
             });
+            routingMenu.open();
 
             // add gates
-            const [ , gatesMenuState, gatesMenu ] = componentMenu.createMenuCategory('Basic gates', 'Basic gates. <i>LMB</i> Open category.', () => {
+            const gatesMenu = componentMenu.createMenuCategory('Basic gates', 'Basic gates. <i>LMB</i> Open category.', () => {
                 gatesMenu.clear();
                 for (const [ gateType, { joinOp } ] of Object.entries(Simulation.GATE_MAP)) {
                     const gateLabel = gateType.toUpperFirst();
@@ -345,7 +347,7 @@ class Application {
             });
 
             // add extra gate-like builtins
-            const [ , builtinMenuState, builtinMenu ] = componentMenu.createMenuCategory('Basic components', 'Latches, muxes, ... <i>LMB</i> Open category.', () => {
+            const builtinMenu = componentMenu.createMenuCategory('Basic components', 'Latches, muxes, ... <i>LMB</i> Open category.', () => {
                 builtinMenu.clear();
                 const builtins = [];
                 for (const builtinType of keys(Simulation.BUILTIN_MAP)) {
@@ -360,7 +362,7 @@ class Application {
             });
 
             // io/utilities
-            const [ , ioMenuState, ioMenu ] = componentMenu.createMenuCategory('IO/Control', 'Clocks, constants, ... <i>LMB</i> Open category.', () => {
+            const ioMenu = componentMenu.createMenuCategory('IO/Control', 'Clocks, constants, ... <i>LMB</i> Open category.', () => {
                 ioMenu.clear();
                 ioMenu.createComponentButton('Clock', `<b>Clock</b>. ${DRAG_MSG}`, (grid, x, y) => {
                     return grid.addItem(new Clock(this, x, y, defaults.clock.rotation));
@@ -387,7 +389,7 @@ class Application {
                 componentMenu.createSeparator();
             }
             for (const [ lid, label ] of this.circuits.libraries) {
-                const [ , libraryMenuState, libraryMenu ] = componentMenu.createMenuCategory(label, label + ' components. <i>LMB</i> Open category.', () => {
+                const libraryMenu = componentMenu.createMenuCategory(label, label + ' components. <i>LMB</i> Open category.', () => {
                     libraryMenu.clear();
                     const componentList = this.circuits.list(lid);
                     // Switch component. Generate menu items for each component.
@@ -396,17 +398,17 @@ class Application {
                         const isCurrentCircuit = uid === this.circuits.current.uid;
                         // place component as component
                         if (!isCurrentGrid) {
-                            const [ componentButton ] = libraryMenu.createComponentButton('&#9094;', label + '. <i>LMB</i> Drag to move onto grid.', (grid, x, y) => grid.addItem(new CustomComponent(this, x, y, 0, uid)));
-                            componentButton.classList.add('toolbar-circuit-place');
+                            const componentButton = libraryMenu.createComponentButton('&#9094;', label + '. <i>LMB</i> Drag to move onto grid.', (grid, x, y) => grid.addItem(new CustomComponent(this, x, y, 0, uid)));
+                            componentButton.node.classList.add('toolbar-circuit-place');
                         }
                         // component select
-                        const [ switchButton ] = libraryMenu.createActionButton(label, isCurrentCircuit ? 'This is the current component' : 'Switch grid to component "' + label + '".', () => {
-                            componentMenuState(false);
+                        const switchButton = libraryMenu.createActionButton(label, isCurrentCircuit ? 'This is the current component' : 'Switch grid to component "' + label + '".', () => {
+                            componentMenu.state(false);
                             this.circuits.select(uid);
                             this.simulations.select(this.circuits.current, this.config.autoCompile);
                         });
-                        switchButton.classList.add(!isCurrentGrid ? 'toolbar-circuit-select' : 'toolbar-circuit-select-fullrow');
-                        switchButton.classList.toggle('toolbar-menu-button-disabled', isCurrentCircuit);
+                        switchButton.node.classList.add(!isCurrentGrid ? 'toolbar-circuit-select' : 'toolbar-circuit-select-fullrow');
+                        switchButton.node.classList.toggle('toolbar-menu-button-disabled', isCurrentCircuit);
                     }
                 });
             }
@@ -414,7 +416,7 @@ class Application {
 
         // Simulation menu
         let updateSimulationMenu;
-        const [ , simulationMenuState, simulationMenu ] = this.toolbar.createMenuButton('Simulation', 'Simulation management menu. <i>LMB</i> Open menu.', () => updateSimulationMenu());
+        const simulationMenu = this.toolbar.createMenuButton('Simulation', 'Simulation management menu. <i>LMB</i> Open menu.', () => updateSimulationMenu());
 
         updateSimulationMenu = () => {
             simulationMenu.clear();
@@ -455,7 +457,7 @@ class Application {
             });
             // Simulate current grid
             simulationMenu.createActionButton(toggleButtonText(toggleAction()), 'Toggle simulation on/off.', () => {
-                simulationMenuState(false);
+                simulationMenu.state(false);
                 const action = toggleAction();
                 if (action === 'stop') {
                     this.config.autoCompile = false;
@@ -476,7 +478,7 @@ class Application {
             });
             // Configure simulation speed.
             simulationMenu.createActionButton(`Set ticks/s limit (${Number.formatSI(this.config.targetTPS)})...`, 'Configure simulation speed.', async () => {
-                simulationMenuState(false);
+                simulationMenu.state(false);
                 const result = await dialog('Simulation speed', [ { label: "Ticks per second", name: "targetTPS", type: "int", check: (v, f) => { const p = Number.parseSI(v); return Number.isInteger(p) && p >= 1; } } ], { targetTPS: Number.formatSI(this.config.targetTPS, true) });
                 if (result) {
                     this.config.targetTPS = result.targetTPS;
@@ -489,13 +491,13 @@ class Application {
             }
             for (const [ uid, label ] of this.simulations.list()) {
                 const isCurrent = uid === this.simulations.current?.uid;
-                const [ button ] = simulationMenu.createActionButton(label, isCurrent ? 'This is the current simulation' : 'Switch to/resume simulation "' + label + '".', () => {
-                    simulationMenuState(false);
+                const button = simulationMenu.createActionButton(label, isCurrent ? 'This is the current simulation' : 'Switch to/resume simulation "' + label + '".', () => {
+                    simulationMenu.state(false);
                     this.circuits.select(uid);
                     this.config.singleStep = false;
                     this.simulations.select(this.circuits.current, this.config.autoCompile);
                 });
-                button.classList.toggle('toolbar-menu-button-disabled', isCurrent);
+                button.node.classList.toggle('toolbar-menu-button-disabled', isCurrent);
             }
         };
     }
