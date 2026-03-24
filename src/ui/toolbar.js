@@ -99,13 +99,18 @@ class Toolbar {
     // Textual path of this toolbar (concatentation of parent and current toolbar labels).
     #path = '';
 
+    #parent = null;
+    #states = {};
+
     // Creates a new toolpar within the given DOM parent.
-    constructor(app, domParent) {
+    constructor(app, domParent, parent = null) {
         assert.class(Application, app);
         assert.class(Node, domParent);
+        assert.class(Toolbar, parent, true);
         this.#app = app;
         this.#menuStates = new WeakUnorderedSet();
         this.#element = html(domParent, 'div', 'toolbar');
+        this.#parent = parent;
     }
 
     // Returns the DOM Node.
@@ -120,6 +125,15 @@ class Toolbar {
 
     get path() {
         return this.#path;
+    }
+
+    // Returns the root toolbar.
+    get root() {
+        let current = this;
+        while (current.#parent !== null) {
+            current = this.#parent;
+        }
+        return current;
     }
 
     // Removes all buttons from the toolbar.
@@ -202,6 +216,7 @@ class Toolbar {
         let actionFn;
         const item = this.#createToggleButton(label, hoverMessage, false, actionFn = (open, toolbarItem) => {
             assert.class(ToolbarItem, toolbarItem);
+            this.root.#states[item.parent.path] = open ? item.path : null;// remember state
             if (open) {
                 if (openAction) {
                     openAction(toolbarItem);
@@ -242,7 +257,7 @@ class Toolbar {
             };
         }
         this.#element.appendChild(item.node);
-        const subToolbar = new Toolbar(this.#app, subToolbarContainer);
+        const subToolbar = new Toolbar(this.#app, subToolbarContainer, this);
         subToolbar.#path = this.#path + ' / ' + label;
         const menuStateFn = (state) => {
             let resultState = item.state(state);
@@ -255,6 +270,10 @@ class Toolbar {
             return resultState;
         };
         item.setSubToolbar(subToolbar, menuStateFn);
+        // restore last menu state from textual path (since the menu objects are recreated each time they are not comparable)
+        if (this.root.#states[item.parent.path] === item.path) {
+            menuStateFn(true);
+        }
         return item;
     }
 
