@@ -92,12 +92,12 @@ class Toolbar {
 
     // Creates a menu-button to open/close a sub-toolbar acting as a menu. Returns [ <button-element>, <state-fn>, <menu-sub-toolbar> ].
     createMenuButton(label, hoverMessage, openAction) {
-        return this.#createMenuButton(label, hoverMessage, openAction, 'toolbar-menu-root toolbar-menu-', true, true);
+        return this.#createSubToolbar(label, hoverMessage, openAction, 'toolbar-menu-root toolbar-menu-', true, true);
     }
 
     // Creates a menu-category to open/close a sub-menu. Returns [ <category-element>, <state-fn>, <category-sub-toolbar> ].
     createMenuCategory(label, hoverMessage, openAction) {
-        return this.#createMenuButton(label, hoverMessage, openAction, 'toolbar-menu-category toolbar-menu-', false, false);
+        return this.#createSubToolbar(label, hoverMessage, openAction, 'toolbar-menu-category toolbar-menu-', false, false);
     }
 
     // Creates a separator. Returns [ <separator-element> ].
@@ -107,11 +107,12 @@ class Toolbar {
     }
 
     // Creates a menu or submenu/category. Returns a new toolbar as well as a state function to get/set the menu state.
-    #createMenuButton(label, hoverMessage, openAction, classPrefix, hoverOpens, documentCloses) {
+    #createSubToolbar(label, hoverMessage, openAction, classPrefix, hoverOpens, documentCloses) {
         assert.string(label);
         assert.string(hoverMessage);
         assert.function(openAction);
-        const [ button, stateFn ] = this.#createToggleButton(label, hoverMessage, false, (open) => {
+        let actionFn;
+        const [ button, stateFn ] = this.#createToggleButton(label, hoverMessage, false, actionFn = (open) => {
             if (open) {
                 if (openAction) {
                     openAction();
@@ -155,7 +156,11 @@ class Toolbar {
             if (!state) {
                 this.#menuOpen = null;
             }
-            return stateFn(state);
+            let resultState = stateFn(state);
+            if (state !== undefined) {
+                actionFn(state);
+            }
+            return resultState;
         };
         this.#element.appendChild(button);
         const subToolbar = new Toolbar(this.#app, subToolbarContainer);
