@@ -20,16 +20,16 @@ window.addEventListener("beforeunload", (event) => {
 
 // add 'Open example' button on github demo
 if (location.hostname === 'sinesc.github.io' && location.pathname === '/silicon-tracer/') {
-    const [ exampleButton ] = app.toolbar.createActionButton('Open example', 'Loads an example circuit.', async () => {
+    const loadExample = app.toolbar.createActionButton('Open example', 'Loads an example circuit.', async () => {
         const response = await fetch('https://sinesc.github.io/silicon-tracer/doc/basics.stc');
         const content = await response.json();
         const uid = app.circuits.unserialize(content);
         app.circuits.select(uid);
         app.simulations.select(app.circuits.current, app.config.autoCompile);
-        exampleButton.classList.add('toolbar-menu-button-disabled', 'example-button-fade');
-        setTimeout(() => exampleButton.remove(), 1500);
+        loadExample.node.classList.add('toolbar-menu-button-disabled', 'example-button-fade');
+        setTimeout(() => loadExample.node.remove(), 1500);
     });
-    exampleButton.classList.add('example-button');
+    loadExample.node.classList.add('example-button');
 }
 
 // dev/debug stuff
