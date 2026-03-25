@@ -205,6 +205,16 @@ class Circuits {
         return this.#circuits[uid] ?? null;
     }
 
+    // Returns circuit by label (and LID).
+    byLabel(label, lid = null) {
+        for (const circuit of values(this.#circuits)) {
+            if (circuit.label === label && circuit.lid === lid) {
+                return circuit;
+            }
+        }
+        return null;
+    }
+
     // Adds a circuit.
     add(circuit) {
         assert.class(Circuits.Circuit, circuit);
@@ -258,6 +268,12 @@ class Circuits {
         lid ??= Circuits.generateLID();
         this.#libraries[lid] = { label, packaged };
         return lid;
+    }
+
+    // Finds packaged library by its label and returns the LID.
+    packagedLibraryByLabel(label) {
+        const result = pairs(this.#libraries).find(([ lid, library ]) => library.label === label && library.packaged);
+        return result?.[0] ?? null;
     }
 
     // Returns a map(lid=>label) of libraries.

@@ -8,12 +8,14 @@ class LogiSim {
     #fileHandle;
     #numImported = 0;
     #problems;
+    #libSeries74;
 
     static async import(app, fileHandle, text) {
         const instance = new LogiSim();
         instance.#app = app;
         instance.#fileHandle = fileHandle;
         instance.#problems = new Set();
+        instance.#libSeries74 = app.circuits.packagedLibraryByLabel('Series74');
         const project = XML.parse(text).project;
         await instance.#importFile(null, project, 'Your project');
         if (instance.#problems.size > 0) {
@@ -30,7 +32,6 @@ class LogiSim {
             app.circuits.select(circuit.uid);
             app.simulations.select(app.circuits.current, app.config.autoCompile);
         }
-
         infoDialog('Import complete', `Your project has been imported. ${instance.#numImported} circuits have been added to the Circuit and/or Component menus.`);
     }
 
@@ -248,6 +249,7 @@ class LogiSim {
             const isLogiSimBuiltIn = rawComp.lib !== undefined && libs[rawComp.lib] === null;
             const libLid = rawComp.lib === undefined ? lid : (libs[rawComp.lib] ?? 'missing');
             const layoutId = libLid !== 'missing' ? libLid + ':' + rawComp.name : null;
+            let tmp;
             if (!isLogiSimBuiltIn && layoutId !== null && this.#layouts[layoutId].uid) {
                 // custom component
                 const meta = this.#layouts[layoutId];
@@ -403,6 +405,18 @@ class LogiSim {
                 const item = new TextLabel(this.#app, x, y, rotation(rawComp.facing ?? 'east') + 3, 200, rawComp.name, 'medium', 4);
                 circuit.addItem(item);
                 // since these aren't required for the circuit to work we'll not generate a problems log entry for them
+            } else if (tmp = this.#app.circuits.byLabel(rawComp.name, this.#libSeries74)) {
+                const rot = (rotation(rawComp.facing) + 0) & 3;
+                const item = new CustomComponent(this.#app, 0, 0, rot, tmp.uid, null, null, 1);
+                const offsets = [
+                    { x: -2, y: -item.height / Grid.SPACING },
+                    { x: 0, y: -2 },
+                    { x: -2, y: 0 },
+                    { x: -item.width / Grid.SPACING, y: -2 },
+                ];
+                item.x = x + offsets[rot].x * Grid.SPACING - 0.5 * Grid.SPACING;
+                item.y = y + offsets[rot].y * Grid.SPACING - 0.5 * Grid.SPACING;
+                circuit.addItem(item);
             } else {
                 const item = new TextLabel(this.#app, x, y, rotation(rawComp.facing ?? 'east') + 3, 200, rawComp.name, 'medium', 4);
                 circuit.addItem(item);
