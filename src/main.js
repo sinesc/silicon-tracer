@@ -10,6 +10,14 @@ window.addEventListener("beforeunload", (event) => {
     }
 });
 
+// load built-in libraries
+{
+    for (let content of loadFiles) {
+        const fileLid = app.circuits.addLibrary(content.label, null, true);
+        app.circuits.unserialize(content, fileLid);
+    }
+}
+
 // add 'Open example' button on github demo
 if (location.hostname === 'sinesc.github.io' && location.pathname === '/silicon-tracer/') {
     const [ exampleButton ] = app.toolbar.createActionButton('Open example', 'Loads an example circuit.', async () => {

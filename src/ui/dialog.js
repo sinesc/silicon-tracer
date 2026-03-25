@@ -16,6 +16,7 @@ function dialog(title, fields, data, extraOptions) {
         float: { check: (v, f) => Number.isFinite(Number.parseSI(v)), apply: (v, f) => Number.parseSI(v) },
         string: { check: (v, f) => String.isString(v), apply: (v, f) => v },
         select: { check: (v, f) => Object.keys(f.options).includes(v), apply: (v, f) => v },
+        bool: { check: (v, f) => v === 'true' || v === 'false', apply: (v, f) => v === 'true' },
     };
 
     // build html form
@@ -79,6 +80,9 @@ function dialog(title, fields, data, extraOptions) {
             let fieldElement
             if (field.type === 'select') {
                 fieldElement = html(rowRight, 'select', 'dialog-row-select', { name: field.name, options: field.options, value: data[field.name] });
+                fieldElement.onchange = triggerOnChange;
+            } else if (field.type === 'bool') {
+                fieldElement = html(rowRight, 'select', 'dialog-row-select', { name: field.name, options: { 'true': 'Yes', 'false': 'No' }, value: data[field.name] ? 'true' : 'false' });
                 fieldElement.onchange = triggerOnChange;
             } else {
                 fieldElement = html(rowRight, 'input', 'dialog-row-input', { name: field.name, value: data[field.name] });

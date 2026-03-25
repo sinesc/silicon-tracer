@@ -5,9 +5,10 @@ class Circuits {
 
     static EDIT_DIALOG = [
         { name: 'label', label: 'Circuit label', type: 'string' },
-        { name: 'spacing', label: 'Default pin spacing', type: 'select', options: { 0: "None", 1: "One", 2: "Two" } },
+        { name: 'spacing', label: 'Default pin spacing', type: 'select', options: { 0: "None", 1: "One", 2: "Two" }, apply: (v, f) => Number.parseInt(v) },
         { name: 'gap', label: 'Default pin gap', type: 'select', options: { start: "Top or left", middle: "Middle", end: "Bottom or right" } },
         { name: 'parity', label: 'Default side lengths', type: 'select', options: { auto: "Automatic", none: "Mixed (rotation snaps)", even: "Even", odd: "Odd" } },
+        { name: 'visibleInLib', label: 'Visible when loaded as library', type: 'bool' },
     ];
 
     static STRINGIFY_SPACE = "\t";
@@ -26,9 +27,13 @@ class Circuits {
 
     // Creates a new circuit.
     async create() {
-        const config = await dialog("Create circuit", Circuits.EDIT_DIALOG, { label: this.#generateName(), gap: 'middle', parity: 'automatic', spacing: 0 });
+        const config = await dialog("Create circuit", Circuits.EDIT_DIALOG, { label: this.#generateName(), spacing: '0', gap: 'middle', parity: 'automatic', visibleInLib: true });
         if (config) {
             const circuit = new Circuits.Circuit(config.label);
+            circuit.portConfig.spacing = config.spacing;
+            circuit.portConfig.gap = config.gap;
+            circuit.portConfig.parity = config.parity;
+            circuit.visibleInLib = config.visibleInLib;
             this.#circuits[circuit.uid] = circuit;
             this.select(circuit.uid);
             return true;
@@ -43,14 +48,13 @@ class Circuits {
         const haveCircuits = !this.allEmpty();
         const [ handle ] = await File.openFile(this.#fileHandle);
         const file = await handle.getFile();
-        const content = JSON.parse(await file.text());
+        const content = Circuits.#decodeJSON(await file.text());
         let fileLid = null;
         if (clear) {
-            this.#circuits = {};
-            this.#libraries = {};
+            this.#clear();
         }
-        if (asLibrary) {            
-            fileLid = app.circuits.addLibrary(file.name.replace(/\.stc/, ''));
+        if (asLibrary) {
+            fileLid = app.circuits.addLibrary(content.label ?? file.name.replace(/\.stc/, ''));
         }
         const newCircuitUID = this.unserialize(content, fileLid);
         if (switchTo) {
@@ -80,13 +84,16 @@ class Circuits {
     // Saves circuits to previously opened file. Will fall back to file dialog if necessary.
     async saveFile() {
         let writable;
+        let label;
         if (!this.#fileHandle || !File.verifyPermission(this.#fileHandle)) {
             const handle = await File.saveAs();
+            label = handle.name.replace(/\.stc/, '');
             writable = await handle.createWritable();
         } else {
+            label = this.#fileHandle.name.replace(/\.stc/, '');
             writable = await this.#fileHandle.createWritable();
         }
-        await writable.write(JSON.stringify(this.#serialize(), null, Circuits.STRINGIFY_SPACE));
+        await writable.write(Circuits.#encodeJSON(this.#serialize(label)));
         await writable.close();
     }
 
@@ -95,7 +102,8 @@ class Circuits {
         const all = this.list();
         const handle = await File.saveAs(this.#fileName ?? all[0][1]);
         const writable = await handle.createWritable();
-        await writable.write(JSON.stringify(this.#serialize(), null, Circuits.STRINGIFY_SPACE));
+        const label = handle.name.replace(/\.stc/, '');
+        await writable.write(Circuits.#encodeJSON(this.#serialize(label)));
         await writable.close();
         // make this the new file handle
         this.#fileHandle = handle;
@@ -146,12 +154,19 @@ class Circuits {
         const circuit = this.byUID(uid);
         const componentPreview = Circuits.makeComponentPreview(this.#app, circuit);
         // show configuration dialog and preview
-        const result = await dialog("Configure circuit", Circuits.EDIT_DIALOG, { label: circuit.label, spacing: '' + circuit.portConfig.spacing, gap: circuit.portConfig.gap, parity: circuit.portConfig.parity }, { onChange: componentPreview });
+        const result = await dialog("Configure circuit", Circuits.EDIT_DIALOG, {
+            label: circuit.label,
+            spacing: '' + circuit.portConfig.spacing,
+            gap: circuit.portConfig.gap,
+            parity: circuit.portConfig.parity,
+            visibleInLib: circuit.visibleInLib,
+        }, { onChange: componentPreview });
         if (result) {
             circuit.label = result.label;
             circuit.portConfig.spacing = Number.parseInt(result.spacing);
             circuit.portConfig.gap = result.gap;
             circuit.portConfig.parity = result.parity;
+            circuit.visibleInLib = result.visibleInLib;
             this.#app.grid.setCircuitLabel(result.label);
             this.#app.grid.setSimulationLabel(result.label);
             return true;
@@ -198,19 +213,17 @@ class Circuits {
 
     // Returns a map(uid=>label) of loaded circuits or library circuits.
     list(lid = null) {
-        const circuits = Object.values(this.#circuits).filter((c) => c.lid === lid).map((c) => [ c.uid, c.label ]);
+        const circuits = Object.values(this.#circuits).filter((c) => c.lid === lid && (lid === null || c.visibleInLib)).map((c) => [ c.uid, c.label ]);
         circuits.sort((a, b) => a[1].localeCompare(b[1], 'en', { numeric: true }));
         return circuits;
     }
 
     // Clear all circuits and create a new empty circuit (always need one for the grid).
-    clear() {
-        this.#circuits = {};
+    clear() { // TODO: rename to "reset"
+        this.#clear();
         const label = this.#generateName();
         const circuit = new Circuits.Circuit(label);
         this.#circuits[circuit.uid] = circuit;
-        this.#currentCircuit = circuit.uid;
-        this.#libraries = {};
         this.select(circuit.uid);
     }
 
@@ -239,17 +252,17 @@ class Circuits {
     }
 
     // Add library identifier.
-    addLibrary(label, lid = null) {
+    addLibrary(label, lid = null, packaged = false) {
         assert.string(label);
         assert.string(lid, true);
         lid ??= Circuits.generateLID();
-        this.#libraries[lid] = label;
+        this.#libraries[lid] = { label, packaged };
         return lid;
     }
 
     // Returns a map(lid=>label) of libraries.
     get libraries() {
-        return pairs(this.#libraries);
+        return pairs(Object.map(this.#libraries, (k, v) => v.label));
     }
 
     // Generate a library id.
@@ -258,22 +271,26 @@ class Circuits {
     }
 
     // Serializes loaded circuits for saving to file.
-    #serialize() {
-        return { version: 3, currentUID: this.#currentCircuit, circuits: Object.values(this.#circuits).map((c) => c.serialize()), libraries: this.#libraries };
+    #serialize(label) {
+        return {
+            version: 4,
+            label,
+            currentUID: this.#currentCircuit,
+            circuits: Object.values(this.#circuits).map((c) => c.serialize()),
+            libraries: Object.map(Object.filter(this.#libraries, (k, v) => !v.packaged), (k, v) => v.label),
+        };
     }
 
     // Unserializes circuits from file.
-    unserialize(content, setLid = null) {
+    unserialize(content, setLid = null, packaged = false) {
         assert.object(content);
         assert.string(setLid, true);
         for (const [ lid, label ] of pairs(content.libraries ?? {})) {
-            this.#libraries[lid] = label;
+            this.#libraries[lid] = { label, packaged };
         }
         for (const serialized of content.circuits) {
             // skip circuits that were already unserialized recursively by GridItem's dependency check for CustomComponents.
-            // also skip library components starting with a "#" (these are intended to be used for demos/examples etc. that 
-            // you wouldn't want in the library menu).
-            if (!this.#circuits[serialized.uid] && !(setLid && serialized.label.startsWith('#'))) {
+            if (!this.#circuits[serialized.uid]) {
                 Circuits.Circuit.unserialize(this.#app, serialized, content.circuits, setLid);
             }
         }
@@ -294,6 +311,35 @@ class Circuits {
         return foundUIDs;
     }
 
+    // Clear all circuits/libraries (except packaged).
+    #clear() {
+        // remove all circuits except for those defined in packaged libraries
+        this.#circuits ??= {};
+        for (const [ uid, circuit ] of pairs(this.#circuits)) {
+            if (circuit.lid === null || !this.#libraries[circuit.lid].packaged) {
+                delete this.#circuits[uid];
+            }
+        }
+        // remove all non-packaged libraries
+        this.#libraries ??= {};
+        for (const [ lid, library ] of pairs(this.#libraries)) {
+            if (!library.packaged) {
+                delete this.#libraries[lid];
+            }
+        }
+    }
+
+    // Decode optionally JSON-P wrapped JSON.
+    static #decodeJSON(text) {
+        return JSON.parse(text.replace(/^loadFiles.push\(\s*(.+)\)\s*$/s, "$1"));
+    }
+
+    // Encode as JSON-P so that the saved files can also be loaded via script tag (for library inclusion).
+    static #encodeJSON(object) {
+        const json = JSON.stringify(object, null, Circuits.STRINGIFY_SPACE);
+        return `loadFiles.push(\n${json}\n)`;
+    }
+
     // Returns a generated name if the given name is empty.
     #generateName(name) {
         return name || 'New circuit #' + (count(this.#circuits) + 1);
@@ -306,12 +352,13 @@ Circuits.Circuit = class {
     uid;
     gridConfig;
     portConfig;
+    visibleInLib;
 
     #data;
     #gidLookup;
     #lid;
 
-    constructor(label, uid = null, data = [], gridConfig = {}, portConfig = {}, lid = null) {
+    constructor(label, uid = null, data = [], gridConfig = {}, portConfig = {}, lid = null, visibleInLib = true) {
         assert.string(label),
         assert.string(uid, true);
         assert.string(lid, true);
@@ -321,6 +368,7 @@ Circuits.Circuit = class {
         this.label = label;
         this.uid = uid ?? 'u' + crypto.randomUUID().replaceAll('-', '');
         this.#lid = lid;
+        this.visibleInLib = visibleInLib;
         this.#data = data;
         this.gridConfig = Object.assign({}, { zoom: 1.25, offsetX: 0, offsetY: 0 }, gridConfig);
         this.portConfig = Object.assign({}, { spacing: 0, gap: "middle", parity: "auto" }, portConfig);
@@ -378,7 +426,7 @@ Circuits.Circuit = class {
     // Serializes a circuit for saving to file.
     serialize() {
         const data = this.#data.map((item) => item.serialize());
-        return { label: this.label, uid: this.uid, data, gridConfig: this.gridConfig, portConfig: this.portConfig, lid: this.#lid };
+        return { label: this.label, uid: this.uid, data, gridConfig: this.gridConfig, portConfig: this.portConfig, lid: this.#lid, visibleInLib: this.visibleInLib };
     }
 
     // Unserializes circuit from decoded JSON-object and adds it to Circuits. Dependencies of CustomComponents will also be added.
@@ -387,7 +435,7 @@ Circuits.Circuit = class {
         assert.object(rawCircuit);
         assert.string(setLid, true);
         const items = rawCircuit.data.map((item) => GridItem.unserialize(app, item, rawOthers, setLid));
-        const circuit = new Circuits.Circuit(rawCircuit.label, rawCircuit.uid, items, rawCircuit.gridConfig, rawCircuit.portConfig, rawCircuit.lid ?? setLid);
+        const circuit = new Circuits.Circuit(rawCircuit.label, rawCircuit.uid, items, rawCircuit.gridConfig, rawCircuit.portConfig, rawCircuit.lid ?? setLid, rawCircuit.visibleInLib ?? true);
         Wire.compact(circuit);
         app.circuits.add(circuit);
     }
