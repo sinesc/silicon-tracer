@@ -398,7 +398,7 @@ class LogiSim {
                 const item = new TextLabel(this.#app, x, y, rotation(rawComp.facing ?? 'east') + 3, 200, rawComp.text);
                 circuit.addItem(item);
             } else if (rawComp.name === 'Probe') {
-                const item = new Probe(this.#app, x, y, rotation(rawComp.facing ?? 'east') + 3, rawComp.label);
+                const item = new Probe(this.#app, x, y, rotation(rawComp.facing ?? 'east'), rawComp.label);
                 offsetPort(item, 'input');
                 circuit.addItem(item);
             } else if ([ 'NoConnect' ].includes(rawComp.name)) {
