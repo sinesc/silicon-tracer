@@ -115,7 +115,7 @@ class Circuits {
     closeFile() {
         this.#fileHandle = null;
         this.#fileName = null;
-        this.clear();
+        this.reset();
     }
 
     // Creates a component preview handler that can be passed as onChange callback to a dialog.
@@ -219,7 +219,7 @@ class Circuits {
     }
 
     // Clear all circuits and create a new empty circuit (always need one for the grid).
-    clear() { // TODO: rename to "reset"
+    reset() {
         this.#clear();
         const label = this.#generateName();
         const circuit = new Circuits.Circuit(label);

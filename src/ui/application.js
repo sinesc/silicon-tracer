@@ -72,7 +72,7 @@ class Application {
         this.#initFocusMonitor();
         this.#initRenderLoop();
         this.#initHotkeys();
-        this.circuits.clear();
+        this.circuits.reset();
         this.simulations.select(this.circuits.current, this.config.autoCompile);
     }
 
