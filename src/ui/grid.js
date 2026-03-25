@@ -44,11 +44,10 @@ class Grid {
         this.#debugElement = html(this.#element, 'div', 'debug-info');
         this.#passive = passive;
         if (!passive) {
+            this.#initHotkeys();
             this.#element.onmousedown = this.#handleDragStart.bind(this);
             this.#element.onwheel = this.#handleZoom.bind(this);
             document.addEventListener('mousemove', this.#debugHandleMouse.bind(this));
-            document.addEventListener('keydown', this.#handleKeyDown.bind(this));
-            document.addEventListener('keyup', this.#handleKeyUp.bind(this));
         }
     }
 
@@ -373,11 +372,13 @@ class Grid {
         }
     }
 
-    // Called when a key is pressed and then repeatedly while being held.
-    async #handleKeyDown(e) {
-        const sim = this.#app.simulations.current;
-        if (e.ctrlKey && e.key === 'v') {
-            // check paste hotkey before item hotkeys
+    // Registers required grid hotkeys with application.
+    #initHotkeys() {
+        this.#app.registerHotkey('r', 'down', () => this.#selection.length > 0, () => {
+            this.#rotateSelection();
+            this.#app.simulations.markDirty(this.#circuit);
+        });
+        this.#app.registerHotkey('ctrl+v', 'down', null, async () => {
             const serialized = JSON.parse(await navigator.clipboard.readText());
             const items = serialized.map((item) => GridItem.unserialize(this.#app, item));
             for (const item of items) {
@@ -387,61 +388,46 @@ class Grid {
             this.#selection = items;
             this.invalidateSelection();
             this.#app.simulations.markDirty(this.#circuit);
-        } else if (this.#selection.length > 0) {
-            // check selection hotkeys before item hotkeys
-            if (e.key === 'Delete' || (e.ctrlKey && [ 'x', 'c' ].includes(e.key))) {
-                // CTRL+C/X/V checked before hotkey target specific keys
-                if (e.key === 'c' || e.key === 'x') {
-                    await navigator.clipboard.writeText(JSON.stringify(this.#selection.map((item) => item.serialize())));
+        });
+        this.#app.registerHotkey('ctrl+c', 'down', () => this.#selection.length > 0, async () => {
+            await this.#copySelection();
+        });
+        this.#app.registerHotkey('ctrl+x', 'down', () => this.#selection.length > 0, async () => {
+            await this.#copySelection();
+            this.#deleteSelection();
+        });
+        this.#app.registerHotkey('Delete', 'down', () => this.#selection.length > 0, () => this.#deleteSelection());
+        this.#app.registerHotkey(null, 'press', () => this.#hotkeyTarget, (e) => {
+            if (e.type === 'keydown') {
+                // handle target specific hotkeys
+                const { gridItem, args, keysDown } = this.#hotkeyTarget;
+                keysDown[e.key] = true;
+                gridItem.onHotkey(e.key, 'down', ...args);
+            } else {
+                // only send up if target previously received down
+                if (this.#hotkeyTarget && this.#hotkeyTarget.keysDown[e.key]) {
+                    const { gridItem, args, keysDown } = this.#hotkeyTarget;
+                    keysDown[e.key] = false;
+                    gridItem.onHotkey(e.key, 'up', ...args);
                 }
-                if (e.key === 'Delete' || e.key === 'x') {
-                    this.#circuit.detachSimulation();
-                    for (const item of this.#selection) {
-                        this.removeItem(item, false);
-                    }
-                    this.#selection = [];
-                    this.invalidateSelection();
-                    this.#app.simulations.markDirty(this.#circuit);
-                }
-            } else if (e.key === 'r') {
-                this.#rotateSelection();
-                this.#app.simulations.markDirty(this.#circuit);
             }
-        } else if (this.#hotkeyTarget) {
-            // handle target specific hotkeys
-            const { gridItem, args, keysDown } = this.#hotkeyTarget;
-            keysDown[e.key] = true;
-            if (gridItem.onHotkey(e.key, 'down', ...args)) {
-                e.preventDefault();
-            }
-        } else if (e.key === 'e') {
+        });
+        this.#app.registerHotkey('e', 'down', null, (e) => {
             this.#app.circuits.edit(this.#circuit.uid);
             this.#dirty |= Grid.#DIRTY_OVERLAY;
-            e.preventDefault();
-        } else if (e.key === 'w' && sim) {
+        });
+        this.#app.registerHotkey('w', 'down', () => this.#app.simulations.current, (e) => {
             // switch to parent simulation instance // TODO: when not simulating this should switch to the previous circuit. this requires adding a navigation history
+            const sim = this.#app.simulations.current;
             const parentInstanceId = sim.parentInstanceId;
             if (parentInstanceId !== null) {
                 sim.reattach(parentInstanceId);
             }
-            e.preventDefault();
-        } else if (e.key >= '0' && e.key <= '9') {
+        });
+        this.#app.registerHotkey(null, 'down', (e) => e.key >= '0' && e.key <= '9', (e) => {
             this.#netColor = parseInt(e.key);
             this.#app.updateStatus();
-            e.preventDefault();
-        }
-    }
-
-    // Called when a key is released
-    #handleKeyUp(e) {
-        // only send up if target previously received down
-        if (this.#hotkeyTarget && this.#hotkeyTarget.keysDown[e.key]) {
-            const { gridItem, args, keysDown } = this.#hotkeyTarget;
-            keysDown[e.key] = false;
-            if (gridItem.onHotkey(e.key, 'up', ...args)) {
-                e.preventDefault();
-            }
-        }
+        });
     }
 
     // Called on mouse wheel change, updates zoom level.
@@ -499,6 +485,20 @@ class Grid {
                 item.setEndpoints(start.x, start.y, end.x, end.y);
             }
         }
+    }
+
+    #copySelection() {
+        return navigator.clipboard.writeText(JSON.stringify(this.#selection.map((item) => item.serialize())));
+    }
+
+    #deleteSelection() {
+        this.#circuit.detachSimulation();
+        for (const item of this.#selection) {
+            this.removeItem(item, false);
+        }
+        this.#selection = [];
+        this.invalidateSelection();
+        this.#app.simulations.markDirty(this.#circuit);
     }
 
     // Renders a selection box in grid-div-relative coordinates and sets 'selected' property on components

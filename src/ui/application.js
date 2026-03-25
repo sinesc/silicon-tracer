@@ -37,6 +37,7 @@ class Application {
     circuits;
     simulations;
     haveChanges = false;
+    #hotkeyDefs = [];
 
     #status = {
         element: null,
@@ -59,6 +60,8 @@ class Application {
     constructor(gridParent, toolbarParent) {
         assert.class(Node, gridParent);
         assert.class(Node, toolbarParent);
+        document.addEventListener('keydown', this.#handleHotkey.bind(this));
+        document.addEventListener('keyup', this.#handleHotkey.bind(this));
         this.grid = new Grid(this, gridParent);
         this.toolbar = new Toolbar(this, toolbarParent);
         this.circuits = new Circuits(this);
@@ -68,6 +71,7 @@ class Application {
         this.#initToolbar();
         this.#initFocusMonitor();
         this.#initRenderLoop();
+        this.#initHotkeys();
         this.circuits.clear();
         this.simulations.select(this.circuits.current, this.config.autoCompile);
     }
@@ -126,6 +130,44 @@ class Application {
         }
         this.#status.element.classList.add('app-status-faded');
         this.#status.timer = setTimeout(() => this.setStatus(), Grid.STATUS_DELAY);
+    }
+
+    // Registers a hotkey (e.g. 'ctrl+v', 'ctrl+alt+x', ...) with an optional condition check to trigger the given handler.
+    // If hotkey is null the handler will be called whenever the condition is met.
+    registerHotkey(hotkey, mode, condition, handler) {
+        assert.string(hotkey, true);
+        assert.function(condition, true);
+        assert.enum([ 'up', 'down', 'press' ], mode);
+        assert.function(handler);
+        // parse hotkey string into key definition
+        let keyDef = { catchAll: hotkey === null, ctrlKey: false, altKey: false, shiftKey: false, key: null, condition: condition ?? (() => true), handler, mode };
+        if (hotkey !== null) {
+            for (let part of hotkey.split('+')) {
+                if (part === 'ctrl') {
+                    keyDef.ctrlKey = true;
+                } else if (part === 'alt') {
+                    keyDef.altKey = true;
+                } else if (part === 'shift') {
+                    keyDef.shiftKey = true;
+                } else {
+                    keyDef.key = part;
+                }
+            }
+        }
+        this.#hotkeyDefs.push(keyDef);
+    }
+
+    // Called when a key is pressed and then repeatedly while being held.
+    #handleHotkey(e) {
+        for (let keyDef of this.#hotkeyDefs) {
+            if ((keyDef.catchAll || (e.key === keyDef.key && e.ctrlKey === keyDef.ctrlKey && e.altKey === keyDef.altKey && e.shiftKey === keyDef.shiftKey)) && keyDef.condition(e)) {
+                if ((e.type === 'keydown' && keyDef.mode !== 'up') || (e.type === 'keyup' && keyDef.mode !== 'down')) {
+                    keyDef.handler(e);
+                }
+                e.preventDefault();
+                break;
+            }
+        }
     }
 
     // Called periodically to update stats overlay.
@@ -200,7 +242,7 @@ class Application {
         }
     }
 
-    // Initialize main menu entries.
+    // Create main menu entries.
     #initMenu() {
 
         // Add file operations to toolbar
@@ -497,7 +539,7 @@ class Application {
         });
     }
 
-    // Initialize tool bar entries.
+    // Create tool bar entries.
     #initToolbar() {
         const DRAG_MSG = '<i>LMB</i> Drag to move onto grid.';
         const defaults = this.config.placementDefaults;
@@ -536,6 +578,14 @@ class Application {
                 return grid.addItem(new Gate(this, x, y, defaults[gateType]?.rotation ?? defaults.gate.rotation, gateType, joinOp !== null ? numInputs : 1));
             });
         }
+    }
+
+    // Define hotkey actions.
+    #initHotkeys() {
+        this.registerHotkey('ctrl+s', 'down', null, async (e) => {
+            await this.circuits.saveFile();
+            this.haveChanges = false;
+        });
     }
 
     // Initialize render loop and other periodic events.

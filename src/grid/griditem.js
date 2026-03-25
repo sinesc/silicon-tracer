@@ -211,7 +211,7 @@ class GridItem {
         return false;
     }
 
-    // Implement to handle hover hotkey events. Return true to prevent parent/default action.
+    // Implement to handle hover hotkey events. Should call parent and exit early on true result.
     onHotkey(key, action, ...args) {
         return false;
     }
