@@ -38,7 +38,7 @@ It is fully usable offline (download the repository and open index.html in a bro
 
 ## Screenshot
 
-![Nonsense circuit](https://sinesc.github.io/silicon-tracer/doc/neon.png)
+![Nonsense circuit](https://sinesc.github.io/silicon-tracer/res/doc/neon.png)
 
 Nonsense circuit showing a few custom components, splitters, tunnels and gates.
 
