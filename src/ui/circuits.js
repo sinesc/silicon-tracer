@@ -88,16 +88,16 @@ class Circuits {
     // Saves circuits to previously opened file. Will fall back to file dialog if necessary.
     async saveFile() {
         let writable;
-        let label;
+        let name;
         if (!this.#fileHandle || !File.verifyPermission(this.#fileHandle)) {
             const handle = await File.saveAs();
-            label = handle.name.replace(/\.stc/, '');
+            name = handle.name;
             writable = await handle.createWritable();
         } else {
-            label = this.#fileHandle.name.replace(/\.stc/, '');
+            name = this.#fileHandle.name;
             writable = await this.#fileHandle.createWritable();
         }
-        await writable.write(Circuits.#encodeJSON(this.#serialize(label)));
+        await writable.write(Circuits.#encodeJSON(this.#serialize(File.makeLabel(name))));
         await writable.close();
     }
 
@@ -106,8 +106,7 @@ class Circuits {
         const all = this.list();
         const handle = await File.saveAs(this.#fileName ?? all[0][1]);
         const writable = await handle.createWritable();
-        const label = handle.name.replace(/\.stc/, '');
-        await writable.write(Circuits.#encodeJSON(this.#serialize(label)));
+        await writable.write(Circuits.#encodeJSON(this.#serialize(File.makeLabel(handle.name))));
         await writable.close();
         // make this the new file handle
         this.#fileHandle = handle;

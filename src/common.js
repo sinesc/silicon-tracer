@@ -611,6 +611,10 @@ class File {
     static makeName(name) {
         return (name || 'unnamed').replace(/\.stc$/, '').replace(/[^a-zA-Z0-9\-\_]/g, '-').replace(/^-+/, '') + '.stc';
     }
+
+    static makeLabel(filename) {
+        return filename.replace(/\.stc/, '').replace(/([a-z0-9])([A-Z])/g, "$1 $2");
+    }
 }
 
 // XML parser class.

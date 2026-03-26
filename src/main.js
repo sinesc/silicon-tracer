@@ -73,6 +73,12 @@ app.debug = () => {
     Object.defineProperty(window, 'cfg', { get: () => app.config });
     Object.defineProperty(window, 'sim', { get: () => app.simulations.current.engine });
 
+    window.renameAll = function(search, replace) {
+        for (const circuit of values(app.circuits.all)) {
+            circuit.label = circuit.label.replace(search, replace);
+        }
+    };
+
     window.currentIssue = function(backend = 'js') {
         app.config.singleStep = true;
         //app.config.backend = backend; // TODO not yet working
@@ -107,7 +113,8 @@ Tools:
     mem()           output simulation memory
     layout()        output simulation layout
     bin(val)        output val as binary
-    binAll(iter)    output iterable as binary`);
+    binAll(iter)    output iterable as binary
+    renameAll(s,r)  rename all circuits using regex/replace`);
 };
 
 {

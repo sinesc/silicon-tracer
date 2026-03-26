@@ -415,7 +415,7 @@ class LogiSim {
                 const item = new TextLabel(this.#app, x, y, rotation(rawComp.facing ?? 'east') + 3, 200, rawComp.name, 'medium', 4);
                 circuit.addItem(item);
                 // since these aren't required for the circuit to work we'll not generate a problems log entry for them
-            } else if (tmp = this.#app.circuits.byLabel(rawComp.name, this.#lib74SeriesLogic)) {
+            } else if (tmp = this.#app.circuits.byLabel(rawComp.name.replace(/^74/, '74x'), this.#lib74SeriesLogic)) {
                 const rot = (rotation(rawComp.facing) + 0) & 3;
                 const item = new CustomComponent(this.#app, 0, 0, rot, tmp.uid, null, null, 1);
                 const offsets = [
