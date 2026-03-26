@@ -3,12 +3,21 @@
 // Circuit management. Handles loading/saving/selecting circuits.
 class Circuits {
 
-    static EDIT_DIALOG = [
+    static CREATE_DIALOG = [
         { name: 'label', label: 'Circuit label', type: 'string' },
         { name: 'spacing', label: 'Default pin spacing', type: 'select', options: { 0: "None", 1: "One", 2: "Two" }, apply: (v, f) => Number.parseInt(v) },
-        { name: 'gap', label: 'Default pin gap', type: 'select', options: { start: "Top or left", middle: "Middle", end: "Bottom or right" } },
         { name: 'parity', label: 'Default side lengths', type: 'select', options: { auto: "Automatic", none: "Mixed (rotation snaps)", even: "Even", odd: "Odd" } },
+        { name: 'gap', label: 'Default pin gap (when not mixed)', type: 'select', options: { start: "Top or left", middle: "Middle", end: "Bottom or right" } },
         { name: 'visibleInLib', label: 'Visible when loaded as library', type: 'bool' },
+    ];
+
+    static EDIT_DIALOG = [
+        ...Circuits.CREATE_DIALOG,
+        { separator: true, text: 'Optional comma-separated lists of custom port positions. Blank entries create gaps, e.g. <code>a,,b,c</code> creates a gap between a and b.' },
+        { name: 'top', label: 'Top ports', type: 'string' },
+        { name: 'right', label: 'Right ports ', type: 'string' },
+        { name: 'bottom', label: 'Bottom ports', type: 'string' },
+        { name: 'left', label: 'Left ports', type: 'string' },
     ];
 
     static STRINGIFY_SPACE = "\t";
@@ -27,7 +36,7 @@ class Circuits {
 
     // Creates a new circuit.
     async create() {
-        const config = await dialog("Create circuit", Circuits.EDIT_DIALOG, { label: this.#generateName(), spacing: '0', gap: 'middle', parity: 'automatic', visibleInLib: true });
+        const config = await dialog("Create circuit", Circuits.CREATE_DIALOG, { label: this.#generateName(), spacing: '0', gap: 'middle', parity: 'automatic', visibleInLib: true });
         if (config) {
             const circuit = new Circuits.Circuit(config.label);
             circuit.portConfig.spacing = config.spacing;
@@ -145,9 +154,16 @@ class Circuits {
             data.rotation ??= 0;
             // replace item on each dialog change, temporarily rename circuit to current value in dialog (bit of a hack but avoids special purpose changes to Circuit/CustomComponent)
             const backupLabel = circuit.label;
+            const backupPlacement = circuit.portConfig.placement;
             circuit.label = data.label;
+            if (data.top !== undefined) { // intentionally not defined in component edit
+                circuit.portConfig.placement = { top: data.top, right: data.right, bottom: data.bottom, left: data.left };
+            }
             grid.addItem(new CustomComponent(app, 3 * Grid.SPACING, 2 * Grid.SPACING, data.rotation, circuit.uid, data.parity, data.gap, Number.parseInt(data.spacing)));
             grid.render();
+            if (data.top !== undefined) {
+                circuit.portConfig.placement = backupPlacement;
+            }
             circuit.label = backupLabel;
         };
     }
@@ -163,6 +179,10 @@ class Circuits {
             gap: circuit.portConfig.gap,
             parity: circuit.portConfig.parity,
             visibleInLib: circuit.visibleInLib,
+            top: circuit.portConfig.placement.top,
+            right: circuit.portConfig.placement.right,
+            bottom: circuit.portConfig.placement.bottom,
+            left: circuit.portConfig.placement.left,
         }, { onChange: componentPreview });
         if (result) {
             circuit.label = result.label;
@@ -170,6 +190,10 @@ class Circuits {
             circuit.portConfig.gap = result.gap;
             circuit.portConfig.parity = result.parity;
             circuit.visibleInLib = result.visibleInLib;
+            circuit.portConfig.placement.top = result.top;
+            circuit.portConfig.placement.right = result.right;
+            circuit.portConfig.placement.bottom = result.bottom;
+            circuit.portConfig.placement.left = result.left;
             this.#app.grid.setCircuitLabel(result.label);
             this.#app.grid.setSimulationLabel(result.label);
             return true;
@@ -398,6 +422,7 @@ Circuits.Circuit = class {
         this.#data = data;
         this.gridConfig = Object.assign({}, { zoom: 1.25, offsetX: 0, offsetY: 0 }, gridConfig);
         this.portConfig = Object.assign({}, { spacing: 0, gap: "middle", parity: "auto" }, portConfig);
+        this.portConfig.placement = Object.assign({}, { top: '', right: '', bottom: '', left: '' }, portConfig.placement ?? {});
         this.#gidLookup = new Map(data.map((v) => [ v.gid, new WeakRef(v) ]));
     }
 

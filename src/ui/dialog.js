@@ -57,7 +57,8 @@ function dialog(title, fields, data, extraOptions) {
     for (const field of values(fields)) {
         if (field.text) {
             const rowElement = html(tableElement, 'tr', 'dialog-row');
-            html(rowElement, 'td', 'dialog-row-label', field.text);
+            const dataElement = html(rowElement, 'td', 'dialog-row-label dialog-row-' + (field.separator ? 'separator' : 'full'), field.text);
+            dataElement.setAttribute('colspan', 2);
         } else {
             // check field definition
             assert.string(field.name);

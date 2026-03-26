@@ -7,8 +7,8 @@ class CustomComponent extends VirtualComponent {
         //{ name: 'label', label: 'Component label', type: 'string' },
         ...Component.EDIT_DIALOG,
         { name: 'spacing', label: 'Pin spacing', type: 'select', options: { 0: "None", 1: "One", 2: "Two" } },
-        { name: 'gap', label: 'Pin gap', type: 'select', options: { start: "Top or left", middle: "Middle", end: "Bottom or right" } },
         { name: 'parity', label: 'Side lengths', type: 'select', options: { auto: "Automatic", none: "Mixed (rotation snaps)", even: "Even", odd: "Odd" } },
+        { name: 'gap', label: 'Pin gap (when not mixed)', type: 'select', options: { start: "Top or left", middle: "Middle", end: "Bottom or right" } },
     ];
 
     // Circuit UID for the circuit represented by this custom component.
@@ -125,15 +125,35 @@ class CustomComponent extends VirtualComponent {
 
     // Generates port outline for the circuit's component representation.
     static #generatePorts(circuit, parity, gap, spacing) {
-        // get ports from circuit
-        const ports = circuit.items.filter((i) => i instanceof Port);
+        // pre-populate outline with custom placed ports
+        const usedPorts = new Set();
+        const validPorts = circuit.items.filter((p) => p instanceof Port).map((p) => p.name).toArray();
         const outline = { 'left': [], 'right': [], 'top': [], 'bottom': [] };
-        for (const item of ports) {
-            // side of the component-port on port-components is opposite of where the port-component is facing
-            const side = Component.SIDES[(item.rotation + 2) % 4];
-            // keep track of position so we can arrange ports on component by position in schematic
-            const sort = side === 'left' || side === 'right' ? item.y : item.x;
-            outline[side].push([ sort, item.name ]);
+        for (const side of [ 'top', 'right', 'bottom', 'left' ]) {
+            const customPortList = circuit.portConfig.placement[side].trim();
+            if (customPortList !== '') {
+                const portNames = customPortList.split(',').map((s) => s.trim());
+                for (const name of portNames) {
+                    if (name !== '') {
+                        if (usedPorts.has(name) || !validPorts.includes(name)) {
+                            continue;
+                        }
+                        usedPorts.add(name);
+                    }
+                    outline[side].push(name);
+                }
+            }
+        }
+        // collect remaining ports into their default sides
+        for (const item of circuit.items) {
+            if (item instanceof Port && !usedPorts.has(item.name)) {
+                usedPorts.add(item.name);
+                // side of the component-port on port-components is opposite of where the port-component is facing
+                const side = Component.SIDES[(item.rotation + 2) % 4];
+                // keep track of position so we can arrange ports on component by position in schematic
+                const sort = side === 'left' || side === 'right' ? item.y : item.x;
+                outline[side].push([ sort, item.name ]);
+            }
         }
         // determine if edges need to be even or odd length (for rotation to work properly, edges need to be either all odd or all even length)
         let height = Math.max(1, outline.left.length, outline.right.length);
@@ -150,30 +170,44 @@ class CustomComponent extends VirtualComponent {
         // arrange ports as specified
         for (const side of Object.keys(outline)) {
             let ports = outline[side];
-            // sort by position
-            ports.sort(([a,], [b,]) => a - b);
-            ports = ports.map(([sort, label]) => label);
+            // separate custom ports (strings) from auto-ports (arrays)
+            const customSidePorts = [];
+            const autoPorts = [];
+            for (const p of ports) {
+                if (typeof p === 'string') {
+                    customSidePorts.push(p !== '' ? p : null);
+                } else {
+                    autoPorts.push(p);
+                }
+            }
+            // sort auto ports by position
+            autoPorts.sort(([a,], [b,]) => a - b);
+            const autoPortsOnly = autoPorts.map(([sort, label]) => label);
             // determine expected length of side (number of required ports) and actual number of ports
+            const totalPorts = customSidePorts.length + autoPortsOnly.length;
             const length = side === 'left' || side === 'right' ? height : width;
-            const available = length - ports.length;
+            const available = length - totalPorts;
             // prepare additional ports to insert on the outside and/or center (or wherever configured) of the side
             const edgePorts = (new Array(Math.floor(available / 2))).fill(null);
             const centerPorts = available % 2 === 1 ? [ null ] : [];
             // insert ports according to configured position
-            ports = [ ...edgePorts, ...ports, ...edgePorts ];
-            const position = gap === 'middle' ? ports.length / 2 : (gap === 'start' ? 0 : ports.length);
-            ports.splice(position, 0, ...centerPorts);
+            const combined = [ ...customSidePorts, ...autoPortsOnly ];
+            const result = [ ...edgePorts, ...combined, ...edgePorts ];
+            const position = gap === 'middle' ? result.length / 2 : (gap === 'start' ? 0 : result.length);
+            result.splice(position, 0, ...centerPorts);
             // insert spacing
             if (spacing > 0) {
-                const result = [];
-                for (let i = 0; i < ports.length; ++i) {
-                    result.push(ports[i]);
-                    if (i < ports.length - 1) {
+                const spaced = [];
+                for (let i = 0; i < result.length; ++i) {
+                    spaced.push(result[i]);
+                    if (i < result.length - 1) {
                         for (let s = 0; s < spacing; ++s) {
-                            result.push(null);
+                            spaced.push(null);
                         }
                     }
                 }
+                ports = spaced;
+            } else {
                 ports = result;
             }
             outline[side] = ports;

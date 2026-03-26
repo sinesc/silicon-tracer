@@ -335,6 +335,22 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
 .dialog-container.info-dialog .dialog-row-label, .dialog-container.confirm-dialog .dialog-row-label {
     line-height: 1.2;
     color: #ddd;
+    max-width: none;
+}
+.dialog-row-label.dialog-row-full {
+    padding: 0;
+    line-height: 1.2;
+    color: #ddd;
+    max-width: 400px;
+}
+.dialog-row-label.dialog-row-separator {
+    padding: 10px 0 0 0;
+    line-height: 1.2;
+    color: #ddd;
+    max-width: 400px;
+}
+.dialog-container .dialog-row-mask {
+    text-align: right;
 }
 .dialog-container .dialog-row-mask input, .dialog-container .dialog-row-mask select {
     outline: 1px solid var(--component-border-color);
