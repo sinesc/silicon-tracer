@@ -284,12 +284,14 @@ class LogiSim {
                 circuit.addItem(item);
             } else if (rawComp.name === 'Pin' && rawCircuit.appear) {
                 // replace pins with tunnels leading to properly laid out ports to make CustomComponent outline match the logisim component
-                const item = new Tunnel(this.#app, x, y, rotation(rawComp.facing));
-                offsetPort(item, '');
+                //const item = new Tunnel(this.#app, x, y, rotation(rawComp.facing));
+                //offsetPort(item, '');
+                const item = new Port(this.#app, x, y, rotation(rawComp.facing));
+                offsetPort(item, 'q');
                 const baseName = rawComp.label || 'unnamed-' + crypto.randomUUID().replaceAll('-', '').slice(0, 8);
-                item.name = 'pin-' + baseName;
+                item.name = /*'pin-' +*/ baseName;
                 const pinRef = rawComp.loc.slice(1, -1);
-                portMap[pinRef] = { pin: pinRef, tunnelName: item.name, portName: baseName };
+                portMap[pinRef] = { pin: pinRef, /*tunnelName: item.name,*/ portName: baseName };
                 circuit.addItem(item);
             } else if (rawComp.name === 'Pin' && !rawCircuit.appear) {
                 // circuit has no custom appearance configuration and we don't support the logisim default appearances yet, place ports where the file indicates
@@ -450,25 +452,44 @@ class LogiSim {
         const expandY = (r) => direction(r).y * Grid.SPACING * expansion;
         const offsetPort = LogiSim.#offsetPort;
         let errorPos = 0;
+        const sides = {
+            top: (new Array((layout.maxX - layout.minX) / Grid.SPACING - 1)).fill(null),
+            right: (new Array((layout.maxY - layout.minY) / Grid.SPACING - 1)).fill(null),
+            bottom: (new Array((layout.maxX - layout.minX) / Grid.SPACING - 1)).fill(null),
+            left: (new Array((layout.maxY - layout.minY) / Grid.SPACING - 1)).fill(null),
+        };
         for (const layoutPort of layout.ports) {
             // determine port rotation by position on bounding box
             const mapping = portMap[layoutPort.pin];
             if (mapping) {
-                let rotation = 0;
-                if (layoutPort.x === layout.minX && layoutPort.y > 0 && layoutPort.y < layout.maxY) { // on top line but not in corner
-                    rotation = 0;
+                //let rotation;
+                let side;
+                if (layoutPort.x === layout.minX && layoutPort.y > 0 && layoutPort.y < layout.maxY) { // on line but not in corner
+                    //rotation = 0;
+                    side = 'left';
                 } else if (layoutPort.y === layout.minY && layoutPort.x > 0 && layoutPort.x < layout.maxX) {
-                    rotation = 1;
+                    //rotation = 1;
+                    side = 'top';
                 } else if (layoutPort.x === layout.maxX && layoutPort.y > 0 && layoutPort.y < layout.maxY) {
-                    rotation = 2;
+                    //rotation = 2;
+                    side = 'right';
                 } else if (layoutPort.y === layout.maxY && layoutPort.x > 0 && layoutPort.x < layout.maxX) {
-                    rotation = 3;
+                    //rotation = 3;
+                    side = 'bottom';
                 } else {
                     circuit.addItem(new TextLabel(this.#app, Grid.SPACING * 40, -(globalOffsetY - layout.minY * scale) + errorPos * Grid.SPACING, 0, 800, `Port ${mapping.portName} could not be placed on the outline of the component.`, 'small', 4));
                     this.#problems.add(circuit.label);
                     errorPos += 1;
                     continue;
                 }
+                let index;
+                if (side === 'top' || side === 'bottom') {
+                    index = (layoutPort.x - layout.minX) / Grid.SPACING - 1;
+                } else {
+                    index = (layoutPort.y - layout.minY) / Grid.SPACING - 1;
+                }
+                sides[side][index] = mapping.portName;
+                /*
                 // port
                 const port = new Port(this.#app, scale * layoutPort.x - globalOffsetX - expandX(rotation + 1), scale * layoutPort.y - globalOffsetY - expandY(rotation + 1), rotation + 1);
                 offsetPort(port, 'q');
@@ -484,8 +505,14 @@ class LogiSim {
                 offsetPort(tunnel, '');
                 tunnel.name = mapping.tunnelName;
                 circuit.addItem(tunnel);
+                */
             }
         }
+        circuit.portConfig.placement.top = sides.top.join(',');
+        circuit.portConfig.placement.right = sides.right.join(',');
+        circuit.portConfig.placement.bottom = sides.bottom.join(',');
+        circuit.portConfig.placement.left = sides.left.join(',');
+        /*
         // fill in unoccupied positions with dummy ports (item.name='') on the component outline
         const occupied = new Set(layout.ports.map((p) => `${p.x},${p.y}`));
         const addDummy = (x, y, rotation) => {
@@ -508,6 +535,7 @@ class LogiSim {
         // add a note about how the outline works
         const portExplainer = '^^^ Scroll up ^^^ Import has replaced circuit pins with tunnels connected to the ports above to allow for placing the ports such that the resulting component shape matches the original shape and properly connects to existing circuits.';
         circuit.addItem(new TextLabel(this.#app, Grid.SPACING, Grid.SPACING, 0, 800, portExplainer, 'small', 3));
+        */
     }
 
 }
