@@ -127,7 +127,7 @@ class CustomComponent extends VirtualComponent {
     static #generatePorts(circuit, parity, gap, spacing) {
         // pre-populate outline with custom placed ports
         const usedPorts = new Set();
-        const validPorts = circuit.items.filter((p) => p instanceof Port).map((p) => p.name).toArray();
+        const validPorts = circuit.items.filter((p) => p instanceof Port && p.name !== '').map((p) => p.name).toArray();
         const outline = { 'left': [], 'right': [], 'top': [], 'bottom': [] };
         for (const side of [ 'top', 'right', 'bottom', 'left' ]) {
             const customPortList = circuit.portConfig.placement[side].trim();
@@ -147,7 +147,9 @@ class CustomComponent extends VirtualComponent {
         // collect remaining ports into their default sides
         for (const item of circuit.items) {
             if (item instanceof Port && !usedPorts.has(item.name)) {
-                usedPorts.add(item.name);
+                if (item.name !== '') {
+                    usedPorts.add(item.name);
+                }
                 // side of the component-port on port-components is opposite of where the port-component is facing
                 const side = Component.SIDES[(item.rotation + 2) % 4];
                 // keep track of position so we can arrange ports on component by position in schematic
