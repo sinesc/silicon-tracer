@@ -1,7 +1,7 @@
 loadFiles.push(
 {
 	"version": 4,
-	"label": "Series74",
+	"label": "74 Series Logic",
 	"currentUID": "u6fe7c26408d34eb58ec60bc7a514c49f",
 	"circuits": [
 		{

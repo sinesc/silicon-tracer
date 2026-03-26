@@ -260,7 +260,7 @@ class Application {
     #initMenu() {
 
         // Add file operations to toolbar
-        this.toolbar.createMenuButton('File', 'File operations menu. <i>LMB</i> Open menu.', (fileMenu) => {
+        this.toolbar.createMenuButton('File', 'File operations menu.', (fileMenu) => {
             fileMenu.clear();
             // Open circuit file.
             fileMenu.createActionButton('Open...', 'Close all circuits and load new circuits from a file.', async () => {
@@ -309,7 +309,7 @@ class Application {
             });
             fileMenu.createSeparator();
             // Close circuits.
-            fileMenu.createActionButton('Close', 'Close all open circuits. Holt CTRL to include packaged libraries.', async () => {
+            fileMenu.createActionButton('Close', 'Close all open circuits. Hold <i>CTRL</i> to include packaged libraries.', async () => {
                 fileMenu.state(false);
                 if (!this.haveChanges || await unsavedDialog('Click Ok to close it anyway or Cancel to abort.')) {
                     this.circuits.closeFile(this.modifierKeys.ctrlKey);
@@ -322,7 +322,7 @@ class Application {
         });
 
         // Circuit selection menu
-        this.toolbar.createMenuButton('Circuit', 'Circuit management menu. <i>LMB</i> Open menu.', (circuitMenu) => {
+        this.toolbar.createMenuButton('Circuit', 'Circuit management menu.', (circuitMenu) => {
             const circuitList = this.circuits.list();
             circuitMenu.clear();
             // Create new circuit.
@@ -365,13 +365,13 @@ class Application {
         });
 
         // Component selection menu
-        this.toolbar.createMenuButton('Component', 'Component palette. <i>LMB</i> Open menu.', (componentMenu) => {
+        this.toolbar.createMenuButton('Component', 'Component palette.', (componentMenu) => {
             componentMenu.clear();
             const DRAG_MSG = '<i>LMB</i> Drag to move onto grid.';
             const defaults = this.config.placementDefaults;
 
             // routing/utilities
-            componentMenu.createMenuCategory('Routing &amp; labeling', 'Ports, tunnels, splitters, text. <i>LMB</i> Open category.', (routingMenu) => {
+            componentMenu.createMenuCategory('Routing &amp; labeling', 'Ports, tunnels, splitters, text.', (routingMenu) => {
                 routingMenu.clear();
                 routingMenu.createComponentButton('Port', `<b>Component IO pin</b>. ${DRAG_MSG}`, (grid, x, y) => {
                     return grid.addItem(new Port(this, x, y, defaults.port.rotation))
@@ -389,7 +389,7 @@ class Application {
             });
 
             // add gates
-            componentMenu.createMenuCategory('Basic gates', 'Basic gates. <i>LMB</i> Open category.', (gatesMenu) => {
+            componentMenu.createMenuCategory('Basic gates', 'Basic gates.', (gatesMenu) => {
                 gatesMenu.clear();
                 for (const [ gateType, { joinOp } ] of Object.entries(Simulation.GATE_MAP)) {
                     const gateLabel = gateType.toUpperFirst();
@@ -401,7 +401,7 @@ class Application {
             });
 
             // add extra gate-like builtins
-            componentMenu.createMenuCategory('Basic components', 'Latches, muxes, ... <i>LMB</i> Open category.', (builtinMenu) => {
+            componentMenu.createMenuCategory('Basic components', 'Latches, muxes, ...', (builtinMenu) => {
                 builtinMenu.clear();
                 const builtins = [];
                 for (const builtinType of keys(Simulation.BUILTIN_MAP)) {
@@ -416,7 +416,7 @@ class Application {
             });
 
             // io/utilities
-            componentMenu.createMenuCategory('IO/Control', 'Clocks, constants, ... <i>LMB</i> Open category.', (ioMenu) => {
+            componentMenu.createMenuCategory('IO/Control', 'Clocks, constants, ...', (ioMenu) => {
                 ioMenu.clear();
                 ioMenu.createComponentButton('Clock', `<b>Clock</b>. ${DRAG_MSG}`, (grid, x, y) => {
                     return grid.addItem(new Clock(this, x, y, defaults.clock.rotation));
@@ -443,7 +443,7 @@ class Application {
                 componentMenu.createSeparator();
             }
             for (const [ lid, label ] of this.circuits.libraries) {
-                componentMenu.createMenuCategory(label, label + ' components. <i>LMB</i> Open category.', (libraryMenu) => {
+                componentMenu.createMenuCategory(label, label + ' components.', (libraryMenu) => {
                     libraryMenu.clear();
                     const componentList = this.circuits.list(lid);
                     // Switch component. Generate menu items for each component.
@@ -469,7 +469,7 @@ class Application {
         });
 
         // Simulation menu
-        this.toolbar.createMenuButton('Simulation', 'Simulation management menu. <i>LMB</i> Open menu.', (simulationMenu) => {
+        this.toolbar.createMenuButton('Simulation', 'Simulation management menu.', (simulationMenu) => {
             simulationMenu.clear();
             const toggleAction = () => {
                 const sim = this.simulations.current;

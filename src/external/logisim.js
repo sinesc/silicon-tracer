@@ -8,25 +8,35 @@ class LogiSim {
     #fileHandle;
     #numImported = 0;
     #problems;
-    #libSeries74;
+    #missing;
+    #lib74SeriesLogic;
 
     static async import(app, fileHandle, text) {
         const instance = new LogiSim();
         instance.#app = app;
         instance.#fileHandle = fileHandle;
         instance.#problems = new Set();
-        instance.#libSeries74 = app.circuits.packagedLibraryByLabel('Series74');
+        instance.#missing = new Set();
+        instance.#lib74SeriesLogic = app.circuits.packagedLibraryByLabel('74 Series Logic');
         const project = XML.parse(text).project;
         await instance.#importFile(null, project, 'Your project');
-        if (instance.#problems.size > 0) {
+        if (instance.#problems.size > 0 || instance.#missing.size > 0) {
             const circuit = new Circuits.Circuit("# Import issues");
             let y = 0;
             circuit.addItem(new TextLabel(app, Grid.SPACING, y += Grid.SPACING, 0,600, 'Issues detected during import', 'medium', null));
+            y += Grid.SPACING;
             circuit.addItem(new TextLabel(app, Grid.SPACING, y += Grid.SPACING, 0,600, 'The following circuits may require manual attention.\Unsupported components or unplaceable ports have been marked in red within the circuits.', 'small', null));
             y += Grid.SPACING;
             for (const label of values(instance.#problems)) {
                 circuit.addItem(new TextLabel(app, 2*Grid.SPACING, y += Grid.SPACING, 0, 600, '- ' + label, 'small', null));
             }
+            y += Grid.SPACING;
+            circuit.addItem(new TextLabel(app, Grid.SPACING, y += Grid.SPACING, 0,600, 'The following components were missing.', 'small', null));
+            y += Grid.SPACING;
+            for (const label of values(instance.#missing)) {
+                circuit.addItem(new TextLabel(app, 2*Grid.SPACING, y += Grid.SPACING, 0, 600, '- ' + label, 'small', null));
+            }
+            y += Grid.SPACING;
             circuit.addItem(new TextLabel(app, Grid.SPACING, y += Grid.SPACING, 0,600, 'This document is for your information only. You can delete it via Circuit > Remove "# Import issues" once you don\'t need it anymore.', 'small', null));
             app.circuits.add(circuit);
             app.circuits.select(circuit.uid);
@@ -405,7 +415,7 @@ class LogiSim {
                 const item = new TextLabel(this.#app, x, y, rotation(rawComp.facing ?? 'east') + 3, 200, rawComp.name, 'medium', 4);
                 circuit.addItem(item);
                 // since these aren't required for the circuit to work we'll not generate a problems log entry for them
-            } else if (tmp = this.#app.circuits.byLabel(rawComp.name, this.#libSeries74)) {
+            } else if (tmp = this.#app.circuits.byLabel(rawComp.name, this.#lib74SeriesLogic)) {
                 const rot = (rotation(rawComp.facing) + 0) & 3;
                 const item = new CustomComponent(this.#app, 0, 0, rot, tmp.uid, null, null, 1);
                 const offsets = [
@@ -422,6 +432,7 @@ class LogiSim {
                 circuit.addItem(item);
                 // unsupported component type that might be required for the circuit to work, add log entry
                 this.#problems.add(rawCircuit.name);
+                this.#missing.add(rawComp.name);
             }
         }
         return portMap;
