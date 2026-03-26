@@ -6,7 +6,6 @@ class ToolbarItem {
     #node;
     #stateFn;
     #subToolbar = null;
-    #menuStateFn = null;
     constructor(toolbar, element, stateFn = null) {
         assert.class(Toolbar, toolbar);
         assert.class(Node, element);
@@ -31,15 +30,11 @@ class ToolbarItem {
         assert(this.#stateFn, 'This item does not have state');
         return this.#stateFn(newState);
     }
-    menuState(newState) {
-        assert(this.#menuStateFn, 'This item does not contain a sub-toolbar');
-        return this.#menuStateFn(newState, this);
-    }
     open() {
-        return this.menuState(true);
+        return this.state(true);
     }
     close() {
-        return this.menuState(false);
+        return this.state(false);
     }
     clear() {
         assert(this.#subToolbar, 'This item does not contain a sub-toolbar');
@@ -69,11 +64,9 @@ class ToolbarItem {
         assert(this.#subToolbar, 'This item does not contain a sub-toolbar');
         return this.#subToolbar.createSeparator(...args);
     }
-    setSubToolbar(subToolbar, menuStateFn) {
+    setSubToolbar(subToolbar) {
         assert.class(Toolbar, subToolbar, true);
-        assert.function(menuStateFn, true);
         this.#subToolbar = subToolbar;
-        this.#menuStateFn = menuStateFn;
     }
 }
 
@@ -213,8 +206,7 @@ class Toolbar {
         assert.string(label);
         assert.string(hoverMessage);
         assert.function(openAction);
-        let actionFn;
-        const item = this.#createToggleButton(label, hoverMessage, false, actionFn = (open, toolbarItem) => {
+        const item = this.#createToggleButton(label, hoverMessage, false, (open, toolbarItem) => {
             assert.class(ToolbarItem, toolbarItem);
             this.root.#states[item.toolbar.path] = open ? item.path : null;// remember state
             if (open) {
@@ -224,7 +216,7 @@ class Toolbar {
                 // close other menus
                 for (const otherstateFn of this.#menuStates) {
                     if (otherstateFn !== item.stateFn) {
-                        otherstateFn(false);
+                        otherstateFn(false, false);
                     }
                 }
                 this.#menuOpen = item.node;
@@ -238,8 +230,10 @@ class Toolbar {
                         item.state(false);
                     }
                 }
-            } else if (documentCloses) {
-                document.onclick = null;
+            } else {
+                if (documentCloses) {
+                    document.onclick = null;
+                }
                 this.#menuOpen = null;
             }
         });
@@ -259,20 +253,10 @@ class Toolbar {
         this.#element.appendChild(item.node);
         const subToolbar = new Toolbar(this.#app, subToolbarContainer, this);
         subToolbar.#path = this.#path + ' / ' + label;
-        const menuStateFn = (state) => {
-            let resultState = item.state(state);
-            if (state !== undefined) {
-                if (!state) {
-                    this.#menuOpen = null;
-                }
-                actionFn(state, item);
-            }
-            return resultState;
-        };
-        item.setSubToolbar(subToolbar, menuStateFn);
+        item.setSubToolbar(subToolbar);
         // restore last menu state from textual path (since the menu objects are recreated each time they are not comparable)
         if (this.root.#states[item.toolbar.path] === item.path) {
-            menuStateFn(true);
+            item.state(true);
         }
         return item;
     }
@@ -281,11 +265,14 @@ class Toolbar {
     #createToggleButton(label, hoverMessage, defaultState, action) {
         let state = defaultState;
         const button = html(null, 'div', `toolbar-button toolbar-toggle-button toolbar-toggle-button-${state ? 'on' : 'off'}`, '<div class="toolbar-button-label">' + label + '</div>');
-        const stateFn = (newState) => {
+        const stateFn = (newState, triggerAction = true) => {
             if (newState !== undefined) {
                 button.classList.remove(state ? 'toolbar-toggle-button-on' : 'toolbar-toggle-button-off');
                 state = newState;
                 button.classList.add(state ? 'toolbar-toggle-button-on' : 'toolbar-toggle-button-off');
+                if (triggerAction) {
+                    action(state, item);
+                }
             }
             return state;
         };
@@ -294,8 +281,7 @@ class Toolbar {
             e.preventDefault();
             e.stopPropagation();
             if (!button.classList.contains('toolbar-menu-button-disabled')) {
-                stateFn(!state); // note this modifies "state" so action() below also receives the negated state
-                action(state, item);
+                stateFn(!state);
             }
         };
         item.node.onmouseenter = () => this.#app.setStatus(hoverMessage);
