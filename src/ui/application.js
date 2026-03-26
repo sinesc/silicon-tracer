@@ -39,6 +39,12 @@ class Application {
     haveChanges = false;
     #hotkeyDefs = [];
 
+    #modifierKeys = {
+        ctrlKey: false,
+        altKey: false,
+        shiftKey: false,
+    };
+
     #status = {
         element: null,
         message: null,
@@ -157,8 +163,16 @@ class Application {
         this.#hotkeyDefs.push(keyDef);
     }
 
+    // Returns status of modifier-keys.
+    get modifierKeys() {
+        return this.#modifierKeys;
+    }
+
     // Called when a key is pressed and then repeatedly while being held.
     #handleHotkey(e) {
+        this.#modifierKeys.ctrlKey = e.ctrlKey;
+        this.#modifierKeys.altKey = e.altKey;
+        this.#modifierKeys.shiftKey = e.shiftKey;
         for (let keyDef of this.#hotkeyDefs) {
             if ((keyDef.catchAll || (e.key === keyDef.key && e.ctrlKey === keyDef.ctrlKey && e.altKey === keyDef.altKey && e.shiftKey === keyDef.shiftKey)) && keyDef.condition(e)) {
                 if ((e.type === 'keydown' && keyDef.mode !== 'up') || (e.type === 'keyup' && keyDef.mode !== 'down')) {
@@ -295,10 +309,10 @@ class Application {
             });
             fileMenu.createSeparator();
             // Close circuits.
-            fileMenu.createActionButton('Close', 'Close all open circuits.', async () => {
+            fileMenu.createActionButton('Close', 'Close all open circuits. Holt CTRL to include packaged libraries.', async () => {
                 fileMenu.state(false);
                 if (!this.haveChanges || await unsavedDialog('Click Ok to close it anyway or Cancel to abort.')) {
-                    this.circuits.closeFile();
+                    this.circuits.closeFile(this.modifierKeys.ctrlKey);
                     this.simulations.clear();
                     this.simulations.select(this.circuits.current, this.config.autoCompile);
                     this.haveChanges = false;

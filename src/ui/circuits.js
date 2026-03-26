@@ -112,10 +112,10 @@ class Circuits {
     }
 
     // Clears all circuits and closes the currently open file.
-    closeFile() {
+    closeFile(removeLibraries = false) {
         this.#fileHandle = null;
         this.#fileName = null;
-        this.reset();
+        this.reset(removeLibraries);
     }
 
     // Creates a component preview handler that can be passed as onChange callback to a dialog.
@@ -207,6 +207,8 @@ class Circuits {
 
     // Returns circuit by label (and LID).
     byLabel(label, lid = null) {
+        assert.string(label);
+        assert.string(lid, true);
         for (const circuit of values(this.#circuits)) {
             if (circuit.label === label && circuit.lid === lid) {
                 return circuit;
@@ -223,14 +225,16 @@ class Circuits {
 
     // Returns a map(uid=>label) of loaded circuits or library circuits.
     list(lid = null) {
+        assert.string(lid, true);
         const circuits = Object.values(this.#circuits).filter((c) => c.lid === lid && (lid === null || c.visibleInLib)).map((c) => [ c.uid, c.label ]);
         circuits.sort((a, b) => a[1].localeCompare(b[1], 'en', { numeric: true }));
         return circuits;
     }
 
     // Clear all circuits and create a new empty circuit (always need one for the grid).
-    reset() {
-        this.#clear();
+    reset(removeLibraries = false) {
+        assert.bool(removeLibraries);
+        this.#clear(removeLibraries);
         const label = this.#generateName();
         const circuit = new Circuits.Circuit(label);
         this.#circuits[circuit.uid] = circuit;
@@ -328,18 +332,18 @@ class Circuits {
     }
 
     // Clear all circuits/libraries (except packaged).
-    #clear() {
+    #clear(removeLibraries = false) {
         // remove all circuits except for those defined in packaged libraries
         this.#circuits ??= {};
         for (const [ uid, circuit ] of pairs(this.#circuits)) {
-            if (circuit.lid === null || !this.#libraries[circuit.lid].packaged) {
+            if (removeLibraries || circuit.lid === null || !this.#libraries[circuit.lid].packaged) {
                 delete this.#circuits[uid];
             }
         }
         // remove all non-packaged libraries
         this.#libraries ??= {};
         for (const [ lid, library ] of pairs(this.#libraries)) {
-            if (!library.packaged) {
+            if (removeLibraries || !library.packaged) {
                 delete this.#libraries[lid];
             }
         }

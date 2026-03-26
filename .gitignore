@@ -1,6 +1,6 @@
 .vscode/
 .zed/
 .devcontainer/
-res/examples/dev/
+res/dev/
 notes.md
 opencode.jsonc
