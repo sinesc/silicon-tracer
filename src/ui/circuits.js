@@ -54,9 +54,10 @@ class Circuits {
             this.#clear();
         }
         if (asLibrary) {
-            fileLid = app.circuits.addLibrary(content.label ?? file.name.replace(/\.stc/, ''));
+            fileLid = this.addLibrary(content.label ?? file.name.replace(/\.stc/, ''));
         }
-        const newCircuitUID = this.unserialize(content, fileLid);
+        const errors = [];
+        const newCircuitUID = this.unserialize(content, fileLid, false, errors);
         if (switchTo) {
             this.select(newCircuitUID);
         }
@@ -66,6 +67,9 @@ class Circuits {
             if (!asLibrary) {
                 this.#fileName = file.name;
             }
+        }
+        if (errors.length > 0) {
+            await infoDialog('File errors detected', '<b>Some components or component types used in the file are missing or unsupported.</b><br><br>Please check the the loaded circuits carefully as <b><u>you will lose the missing/unsupported components</u></b> if you save the file now. If you have unloaded packaged libraries (via CTRL+Close) the circuits might depend on those. Otherwise, if you are not on the latest version of Silicon Tracer updating might fix the issue.');
         }
     }
 
@@ -292,26 +296,29 @@ class Circuits {
 
     // Serializes loaded circuits for saving to file.
     #serialize(label) {
+        const packaged = pairs(this.#libraries).filter(([ lid, library ]) => library.packaged).map(([ lid, library ]) => lid).toArray();
         return {
             version: 4,
             label,
             currentUID: this.#currentCircuit,
-            circuits: Object.values(this.#circuits).map((c) => c.serialize()),
+            circuits: Object.values(this.#circuits).filter((c) => !packaged.includes(c.lid)).map((c) => c.serialize()),
             libraries: Object.map(Object.filter(this.#libraries, (k, v) => !v.packaged), (k, v) => v.label),
         };
     }
 
     // Unserializes circuits from file.
-    unserialize(content, setLid = null, packaged = false) {
+    unserialize(content, setLid = null, packaged = false, errors = []) {
         assert.object(content);
         assert.string(setLid, true);
+        assert.bool(packaged);
+        assert.array(errors);
         for (const [ lid, label ] of pairs(content.libraries ?? {})) {
             this.#libraries[lid] = { label, packaged };
         }
         for (const serialized of content.circuits) {
             // skip circuits that were already unserialized recursively by GridItem's dependency check for CustomComponents.
             if (!this.#circuits[serialized.uid]) {
-                Circuits.Circuit.unserialize(this.#app, serialized, content.circuits, setLid);
+                Circuits.Circuit.unserialize(this.#app, serialized, content.circuits, setLid, errors);
             }
         }
         return content.currentUID;
@@ -443,18 +450,19 @@ Circuits.Circuit = class {
         return this.#lid;
     }
 
-    // Serializes a circuit for saving to file.
+    // Serializes the circuit for saving to file.
     serialize() {
         const data = this.#data.map((item) => item.serialize());
         return { label: this.label, uid: this.uid, data, gridConfig: this.gridConfig, portConfig: this.portConfig, lid: this.#lid, visibleInLib: this.visibleInLib };
     }
 
     // Unserializes circuit from decoded JSON-object and adds it to Circuits. Dependencies of CustomComponents will also be added.
-    static unserialize(app, rawCircuit, rawOthers, setLid = null) {
+    static unserialize(app, rawCircuit, rawOthers, setLid = null, errors = []) {
         assert.class(Application, app);
         assert.object(rawCircuit);
         assert.string(setLid, true);
-        const items = rawCircuit.data.map((item) => GridItem.unserialize(app, item, rawOthers, setLid));
+        assert.array(errors);
+        const items = rawCircuit.data.map((item) => GridItem.unserialize(app, item, rawOthers, setLid, errors));
         const circuit = new Circuits.Circuit(rawCircuit.label, rawCircuit.uid, items, rawCircuit.gridConfig, rawCircuit.portConfig, rawCircuit.lid ?? setLid, rawCircuit.visibleInLib ?? true);
         Wire.compact(circuit);
         app.circuits.add(circuit);

@@ -55,7 +55,7 @@ class GridItem {
     }
 
     // Unserializes a circuit item to a grid idem.
-    static unserialize(app, item, rawOthers, setLid = null) {
+    static unserialize(app, item, rawOthers, setLid = null, errors = []) {
         assert.class(Application, app);
         assert.object(item);
         assert.string(setLid, true);
@@ -76,11 +76,21 @@ class GridItem {
             instance = new Wire(app, ...cargs);
         } else if (cname === 'CustomComponent') {
             const uid = cargs[3];
+            let missing = false;
             if (!app.circuits.byUID(uid)) {
                 const rawCircuit = rawOthers.find((o) => o.uid === uid);
-                Circuits.Circuit.unserialize(app, rawCircuit, rawOthers, setLid); // TODO: add max recursion depth
+                if (rawCircuit) {
+                    Circuits.Circuit.unserialize(app, rawCircuit, rawOthers, setLid, errors); // TODO: add max recursion depth
+                } else {
+                    missing = true;
+                }
             }
-            instance = new CustomComponent(app, ...cargs);
+            if (missing) {
+                instance = new TextLabel(app, cargs[0] ?? 0, cargs[1] ?? 0, 0, 200, 'Missing custom component ' + uid, 'small', 4);
+                errors.push([ 'missing', uid ]);
+            } else {
+                instance = new CustomComponent(app, ...cargs);
+            }
         } else if (cname === 'Splitter') {
             instance = new Splitter(app, ...cargs);
         } else if (cname === 'Tunnel') {
@@ -94,7 +104,7 @@ class GridItem {
         } else if (cname === 'Probe') {
             instance = new Probe(app, ...cargs);
         } else {
-            throw new Error('Invalid component type "' + cname + '"');
+            errors.push([ 'invalid', cname ]);
         }
         for (const [ k, v ] of Object.entries(item)) {
             if (k.slice(0, 1) !== '#') {
