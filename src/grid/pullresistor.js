@@ -10,9 +10,9 @@ class PullResistor extends SimulationComponent {
 
     #direction = 'down';
 
-    constructor(app, x, y, rotation, direction = 'down', numChannels = 1) {
+    constructor(app, x, y, rotation, direction = 'down') {
         assert.enum([ "up", "down" ], direction);
-        super(app, x, y, rotation, { right: ['q'] }, 'pull', numChannels);
+        super(app, x, y, rotation, { right: ['q'] }, 'pull', 1);
         this.portByName('q').label = '';
         this.#direction = direction;
     }

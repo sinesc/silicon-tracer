@@ -17,16 +17,14 @@ class Gate extends SimulationComponent {
 
     inputs;
     output;
-    #numChannels;
 
-    constructor(app, x, y, rotation, type, numInputs, numChannels = 1) {
+    constructor(app, x, y, rotation, type, numInputs) {
         assert.integer(numInputs);
         const { left, right, inputs, output } = Gate.#generatePorts(numInputs);
         const ioTypes = Object.fromEntries([ ...inputs.map((i) => [ i, 'in' ]), [ output, 'out'] ]);
-        super(app, x, y, rotation, { 'left': left, 'right': right }, type, numChannels, ioTypes);
+        super(app, x, y, rotation, { 'left': left, 'right': right }, type, 1, ioTypes);
         this.inputs = inputs;
         this.output = output;
-        this.#numChannels = numChannels;
     }
 
     // Serializes the object for writing to disk.
@@ -57,7 +55,7 @@ class Gate extends SimulationComponent {
             const { left, right, inputs, output } = Gate.#generatePorts(config.numInputs ?? this.inputs.length);
             const grid = this.grid;
             this.unlink();
-            this.setPortsFromNames({ 'left': left, 'right': right }, this.#numChannels);
+            this.setPortsFromNames({ 'left': left, 'right': right }, 1);
             this.type = config.type;
             this.inputs = inputs;
             this.app.config.placementDefaults[this.type] ??= {};

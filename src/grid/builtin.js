@@ -34,15 +34,13 @@ class Builtin extends SimulationComponent {
     };
 
     gates;
-    #numChannels;
 
-    constructor(app, x, y, rotation, type, numChannels = 1) {
+    constructor(app, x, y, rotation, type) {
         type = Builtin.#LEGACY_RENAME[type] ?? type;
         const { left, right, inputs, outputs } = Builtin.#generatePorts(type);
         const ioTypes = Object.fromEntries([ ...inputs.map((i) => [ i, 'in' ]), ...outputs.map((o) => [ o, 'out' ]) ]);
         const meta = Builtin.META_INFO[type];
-        super(app, x, y, rotation, meta?.layoutOverride ?? { 'left': left, 'right': right }, type, numChannels, ioTypes);
-        this.#numChannels = numChannels;
+        super(app, x, y, rotation, meta?.layoutOverride ?? { 'left': left, 'right': right }, type, 1, ioTypes);
         this.gates = meta.gateCount ?? 0;
     }
 

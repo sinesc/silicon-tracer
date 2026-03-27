@@ -26,7 +26,7 @@ class Splitter extends VirtualComponent {
         assert.enum([ 'start', 'middle', 'end', 'none' ], gapPosition);
         assert.enum([ 'start', 'middle', 'end' ], orientation);
         const { left, right/*, channelMap*/ } = Splitter.#generatePorts(numSplits, gapPosition, orientation, ordering, spacing);
-        super(app, x, y, rotation, { 'left': left, 'right': right }, 'splitter', null);
+        super(app, x, y, rotation, { 'left': left, 'right': right }, 'splitter');
         this.#numSplits = numSplits;
         this.#gapPosition = gapPosition;
         this.#orientation = orientation;

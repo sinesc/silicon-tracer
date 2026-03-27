@@ -194,19 +194,19 @@ class Component extends GridItem {
     #rotation = 0;
     #portLabelCharPos;
 
-    constructor(app, x, y, rotation, ports, type, numChannels = null, ioTypes = null) {
+    constructor(app, x, y, rotation, ports, type, portChannels = null, portIoTypes = null) {
         assert.integer(rotation);
         assert.string(type);
         super(app, x, y);
         this.#rotation = rotation & 3;
         this.#type = type;
-        this.setPortsFromNames(ports, numChannels, ioTypes);
+        this.setPortsFromNames(ports, portChannels, portIoTypes);
     }
 
     // Builds ComponentPort instances from map of list of ports.
-    buildPortsFromNames(portNames, portChannels = null, ioTypes = null) {
+    buildPortsFromNames(portNames, portChannels = null, portIoTypes = null) {
         assert.object(portNames);
-        assert.object(ioTypes, true);
+        assert.object(portIoTypes, true);
         if (!Number.isInteger(portChannels)) {
             assert.object(portChannels, true);
         }
@@ -218,12 +218,12 @@ class Component extends GridItem {
             }
         }
         // convert port names to ComponentPort instances
-        return Object.map(ports, (side, sidePorts) => sidePorts.map((name, index) => new ComponentPort(name, side, index, Number.isInteger(portChannels) ? portChannels : (portChannels?.[name] ?? null), ioTypes?.[name] ?? null)));
+        return Object.map(ports, (side, sidePorts) => sidePorts.map((name, index) => new ComponentPort(name, side, index, Number.isInteger(portChannels) ? portChannels : (portChannels?.[name] ?? null), portIoTypes?.[name] ?? null)));
     }
 
     // Sets port names/locations and optionally channels per port or for all ports.
-    setPortsFromNames(portNames, portChannels = null, ioTypes = null) {
-        this.#ports = this.buildPortsFromNames(portNames, portChannels, ioTypes);
+    setPortsFromNames(portNames, portChannels = null, portIoTypes = null) {
+        this.#ports = this.buildPortsFromNames(portNames, portChannels, portIoTypes);
         this.updateDimensions();
         this.#findPortLabelCharPos();
     }
