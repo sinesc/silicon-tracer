@@ -381,6 +381,11 @@ class Grid {
         this.#app.registerHotkey('ctrl+v', 'down', null, async () => {
             const serialized = JSON.parse(await navigator.clipboard.readText());
             const items = serialized.map((item) => GridItem.unserialize(this.#app, item));
+            // clear old selection
+            for (const item of this.#circuit.items) {
+                item.selected = false;
+            }
+            // select pasted items
             for (const item of items) {
                 this.addItem(item);
                 item.selected = true;
