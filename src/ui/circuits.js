@@ -5,10 +5,11 @@ class Circuits {
 
     static CREATE_DIALOG = [
         { name: 'label', label: 'Circuit label', type: 'string' },
-        { name: 'spacing', label: 'Default pin spacing', type: 'select', options: { 0: "None", 1: "One", 2: "Two" }, apply: (v, f) => Number.parseInt(v) },
-        { name: 'parity', label: 'Default side lengths', type: 'select', options: { auto: "Automatic", none: "Mixed (rotation snaps)", even: "Even", odd: "Odd" } },
-        { name: 'gap', label: 'Default pin gap (when not mixed)', type: 'select', options: { start: "Top or left", middle: "Middle", end: "Bottom or right" } },
         { name: 'visibleInLib', label: 'Visible when loaded as library', type: 'bool' },
+        { separator: true, text: 'Default settings. These can be overriden per placed component.' },
+        { name: 'spacing', label: 'Pin spacing', type: 'select', options: { 0: "None", 1: "One", 2: "Two" }, apply: (v, f) => Number.parseInt(v) },
+        { name: 'parity', label: 'Side lengths', type: 'select', options: { auto: "Automatic", none: "Mixed (rotation snaps)", even: "Even", odd: "Odd" } },
+        { name: 'gap', label: 'Pin gap (when lengths not mixed)', type: 'select', options: { start: "Top or left", middle: "Middle", end: "Bottom or right" } },
     ];
 
     static EDIT_DIALOG = [
