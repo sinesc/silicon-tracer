@@ -58,6 +58,9 @@ class Simulation {
         demux3      : { outputs: { qa: '(~select & data)', qb: '(select & data)' }, signals: { qa: 'enable & ~select', qb: 'enable & select' }, inputs: [ 'select', 'enable', 'data' ] },
     };
 
+    // Userdefined custom builtins.
+    #customBuiltinMap = {};
+
     // Gate operation templates, populated lazily during gate declaration.
     #functors = {};
 
@@ -136,11 +139,27 @@ class Simulation {
         }
     }
 
+    // Creates a new builtin type.
+    defineBuiltin(type, inputs, outputs, signals) {
+        assert.string(type);
+        assert.array(inputs, false, (i) => assert.string(i));
+        assert.object(outputs);
+        assert.object(signals);
+        assert(!this.hasBuiltin(type), 'Builtin already defined');
+        this.#customBuiltinMap[type] = { inputs, outputs, signals };
+    }
+
+    // Returns whether the given builtin (provided or userdefined) exists.
+    hasBuiltin(type) {
+        assert.string(type);
+        return !!Simulation.BUILTIN_MAP[type] || !!this.#customBuiltinMap[type];
+    }
+
     // Declares a basic builtin gate-like function. Suffix is appended to the builtin's pre-defined IO-names.
     declareBuiltin(type, suffix) {
         assert.string(type);
         assert.string(suffix);
-        const rules = Simulation.BUILTIN_MAP[type];
+        const rules = Simulation.BUILTIN_MAP[type] ?? this.#customBuiltinMap[type] ?? error('Undefined builtin');
         for (const input of rules.inputs) {
             const detectEdges = values(rules.outputs).map((eq) => eq.includes(`+${input}`) || eq.includes(`-${input}`)).some((t) => t);
             this.#declarePort(input, suffix, 'i', false, detectEdges, type);
