@@ -19,7 +19,7 @@ class Application {
         placementDefaults: {
             port: { rotation: 1, },
             tunnel: { rotation: 1, },
-            splitter: { rotation: 0, },
+            splitter: { rotation: 0, numSplits: 8 },
             clock: { rotation: 0, },
             pull: { rotation: 1, },
             gate: { rotation: 0, numInputs: 2 },
@@ -377,8 +377,7 @@ class Application {
                     return grid.addItem(new Port(this, x, y, defaults.port.rotation))
                 });
                 routingMenu.createComponentButton('Splitter', `<b>Wire splitter/joiner</b>. ${DRAG_MSG}`, (grid, x, y) => {
-                    let numChannels = 8; // TODO: configurable somewhere
-                    return grid.addItem(new Splitter(this, x, y, defaults.splitter.rotation, numChannels));
+                    return grid.addItem(new Splitter(this, x, y, defaults.splitter.rotation, defaults.splitter.numSplits));
                 });
                 routingMenu.createComponentButton('Tunnel', `<b>Network tunnel</b>. ${DRAG_MSG}`, (grid, x, y) => {
                     return grid.addItem(new Tunnel(this, x, y, defaults.tunnel.rotation))
@@ -575,8 +574,7 @@ class Application {
 
         // add a splitter component
         this.toolbar.createComponentButton('Splitter', `<b>Wire splitter/joiner</b>. ${DRAG_MSG}`, (grid, x, y) => {
-            let numChannels = 8; // TODO: configurable somewhere
-            return grid.addItem(new Splitter(this, x, y, defaults.splitter.rotation, numChannels));
+            return grid.addItem(new Splitter(this, x, y, defaults.splitter.rotation, defaults.splitter.numSplits));
         });
 
         // add probe
