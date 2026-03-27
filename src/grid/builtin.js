@@ -23,7 +23,7 @@ class Builtin extends SimulationComponent {
         atflipflop: { label: 'T flip-flop, async. reset', gateCount: 14, layoutOverride: { left: [ 'clock', null, 't' ], right: [ null, 'q', null ], top: [ 'set' ], bottom: [ 'reset' ] } },
         srflipflop: { label: 'SR flip-flop', gateCount: 9, layoutOverride: null },
         asrflipflop: { label: 'SR flip-flop, async. reset', gateCount: 12, layoutOverride: { left: [ 'clock', 'r', 's' ], right: [ null, 'q', null ], top: [ 'set' ], bottom: [ 'reset' ] } },
-        switch: { label: 'Switch', gateCount: 0, layoutOverride: { left: [ 'data' ], right: [ 'q' ], top: [ null ], bottom: [ 'close' ] } },
+        //switch: { label: 'Switch', gateCount: 0, layoutOverride: { left: [ 'data' ], right: [ 'q' ], top: [ null ], bottom: [ 'close' ] } },
         buffer3: { label: 'Tri-state buffer', gateCount: 1, layoutOverride: { left: [ 'data' ], right: [ 'q' ], top: [ null ], bottom: [ 'enable' ] } },
         not3: { label: 'Tri-state inverter', gateCount: 1, layoutOverride: { left: [ 'data' ], right: [ 'q' ], top: [ null ], bottom: [ 'enable' ] } },
         adder: { label: 'Full adder', gateCount: 5, layoutOverride: null },

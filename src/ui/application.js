@@ -404,8 +404,8 @@ class Application {
             componentMenu.createMenuCategory('Basic components', 'Latches, muxes, ...', (builtinMenu) => {
                 builtinMenu.clear();
                 const builtins = [];
-                for (const builtinType of keys(Simulation.BUILTIN_MAP)) {
-                    builtins.push([ builtinType, Builtin.META_INFO?.[builtinType]?.label ?? builtinType.toUpperFirst() ]);
+                for (const [ builtinType, builtin ] of pairs(Builtin.META_INFO)) {
+                    builtins.push([ builtinType, builtin.label ?? builtinType.toUpperFirst() ]);
                 }
                 builtins.sort((a, b) => a[1].localeCompare(b[1], 'en', { numeric: true }));
                 for (const [ builtinType, builtinLabel ] of values(builtins)) {
