@@ -1,5 +1,7 @@
+loadFiles.push(
 {
-	"version": 3,
+	"version": 4,
+	"label": "8bit",
 	"currentUID": "u92dd5e134cb342a69bdd8370a4415c15",
 	"circuits": [
 		{
@@ -124,7 +126,8 @@
 						8,
 						"none",
 						"start",
-						"rtl"
+						"rtl",
+						0
 					]
 				},
 				{
@@ -136,7 +139,8 @@
 						8,
 						"none",
 						"start",
-						"ltr"
+						"ltr",
+						0
 					]
 				},
 				{
@@ -663,7 +667,7 @@
 						530,
 						130,
 						0,
-						"latch"
+						"dlatch"
 					]
 				},
 				{
@@ -672,7 +676,7 @@
 						530,
 						210,
 						0,
-						"latch"
+						"dlatch"
 					]
 				},
 				{
@@ -681,7 +685,7 @@
 						530,
 						290,
 						0,
-						"latch"
+						"dlatch"
 					]
 				},
 				{
@@ -690,7 +694,7 @@
 						530,
 						370,
 						0,
-						"latch"
+						"dlatch"
 					]
 				},
 				{
@@ -699,7 +703,7 @@
 						530,
 						450,
 						0,
-						"latch"
+						"dlatch"
 					]
 				},
 				{
@@ -708,7 +712,7 @@
 						530,
 						530,
 						0,
-						"latch"
+						"dlatch"
 					]
 				},
 				{
@@ -717,7 +721,7 @@
 						530,
 						610,
 						0,
-						"latch"
+						"dlatch"
 					]
 				},
 				{
@@ -726,7 +730,7 @@
 						530,
 						690,
 						0,
-						"latch"
+						"dlatch"
 					]
 				}
 			],
@@ -736,10 +740,18 @@
 				"offsetY": 0
 			},
 			"portConfig": {
+				"spacing": 0,
 				"gap": "middle",
-				"parity": "odd"
+				"parity": "odd",
+				"placement": {
+					"top": "",
+					"right": "",
+					"bottom": "",
+					"left": ""
+				}
 			},
-			"lid": null
+			"lid": null,
+			"visibleInLib": true
 		},
 		{
 			"label": "Flip-flop8",
@@ -860,7 +872,7 @@
 						530,
 						130,
 						0,
-						"flipflop"
+						"dflipflop"
 					]
 				},
 				{
@@ -869,7 +881,7 @@
 						530,
 						210,
 						0,
-						"flipflop"
+						"dflipflop"
 					]
 				},
 				{
@@ -878,7 +890,7 @@
 						530,
 						290,
 						0,
-						"flipflop"
+						"dflipflop"
 					]
 				},
 				{
@@ -887,7 +899,7 @@
 						530,
 						370,
 						0,
-						"flipflop"
+						"dflipflop"
 					]
 				},
 				{
@@ -896,7 +908,7 @@
 						530,
 						450,
 						0,
-						"flipflop"
+						"dflipflop"
 					]
 				},
 				{
@@ -905,7 +917,7 @@
 						530,
 						530,
 						0,
-						"flipflop"
+						"dflipflop"
 					]
 				},
 				{
@@ -914,7 +926,7 @@
 						530,
 						610,
 						0,
-						"flipflop"
+						"dflipflop"
 					]
 				},
 				{
@@ -923,7 +935,7 @@
 						530,
 						690,
 						0,
-						"flipflop"
+						"dflipflop"
 					]
 				},
 				{
@@ -935,7 +947,8 @@
 						8,
 						"none",
 						"start",
-						"rtl"
+						"rtl",
+						0
 					]
 				},
 				{
@@ -947,7 +960,8 @@
 						8,
 						"none",
 						"start",
-						"ltr"
+						"ltr",
+						0
 					]
 				},
 				{
@@ -1475,10 +1489,18 @@
 				"offsetY": 0
 			},
 			"portConfig": {
+				"spacing": 0,
 				"gap": "middle",
-				"parity": "odd"
+				"parity": "odd",
+				"placement": {
+					"top": "",
+					"right": "",
+					"bottom": "",
+					"left": ""
+				}
 			},
-			"lid": null
+			"lid": null,
+			"visibleInLib": true
 		},
 		{
 			"label": "Buffer8",
@@ -1602,7 +1624,8 @@
 						8,
 						"none",
 						"start",
-						"rtl"
+						"rtl",
+						0
 					]
 				},
 				{
@@ -1614,7 +1637,8 @@
 						8,
 						"none",
 						"start",
-						"ltr"
+						"ltr",
+						0
 					]
 				},
 				{
@@ -2294,10 +2318,18 @@
 				"offsetY": 0
 			},
 			"portConfig": {
+				"spacing": 0,
 				"gap": "middle",
-				"parity": "odd"
+				"parity": "odd",
+				"placement": {
+					"top": "",
+					"right": "",
+					"bottom": "",
+					"left": ""
+				}
 			},
-			"lid": null
+			"lid": null,
+			"visibleInLib": true
 		},
 		{
 			"label": "#Tester",
@@ -2312,7 +2344,8 @@
 						8,
 						"none",
 						"middle",
-						"ltr"
+						"ltr",
+						0
 					]
 				},
 				{
@@ -2324,7 +2357,8 @@
 						8,
 						"none",
 						"middle",
-						"rtl"
+						"rtl",
+						0
 					]
 				},
 				{
@@ -2335,18 +2369,20 @@
 						0,
 						"u0bcb532dca4e43e7ba32375dad8111f4",
 						"odd",
-						"middle"
+						"middle",
+						0
 					]
 				},
 				{
 					"#c": "CustomComponent",
 					"#a": [
-						410,
+						430,
 						-30,
 						0,
 						"u814c0bfd98a640c0b8ccc0b0ed74b2d4",
 						"odd",
-						"middle"
+						"middle",
+						0
 					]
 				},
 				{
@@ -2382,12 +2418,13 @@
 				{
 					"#c": "CustomComponent",
 					"#a": [
-						450,
-						270,
+						550,
+						-30,
 						0,
 						"uf1cc3c1b28394902a2f2b119c0c805f3",
 						"odd",
-						"middle"
+						"middle",
+						0
 					]
 				},
 				{
@@ -2397,7 +2434,7 @@
 						170,
 						3
 					],
-					"name": ""
+					"name": "p"
 				},
 				{
 					"#c": "Port",
@@ -2406,7 +2443,7 @@
 						210,
 						3
 					],
-					"name": ""
+					"name": "q"
 				},
 				{
 					"#c": "Port",
@@ -2415,7 +2452,7 @@
 						250,
 						3
 					],
-					"name": ""
+					"name": "r"
 				},
 				{
 					"#c": "Port",
@@ -2424,7 +2461,7 @@
 						290,
 						3
 					],
-					"name": ""
+					"name": "s"
 				},
 				{
 					"#c": "Port",
@@ -2433,7 +2470,7 @@
 						330,
 						3
 					],
-					"name": ""
+					"name": "t"
 				},
 				{
 					"#c": "Port",
@@ -2442,7 +2479,7 @@
 						370,
 						3
 					],
-					"name": ""
+					"name": "u"
 				},
 				{
 					"#c": "Port",
@@ -2451,7 +2488,7 @@
 						410,
 						3
 					],
-					"name": ""
+					"name": "v"
 				},
 				{
 					"#c": "Port",
@@ -2460,7 +2497,7 @@
 						450,
 						3
 					],
-					"name": ""
+					"name": "x"
 				},
 				{
 					"#c": "Wire",
@@ -2599,7 +2636,7 @@
 						450,
 						1
 					],
-					"name": ""
+					"name": "h"
 				},
 				{
 					"#c": "Port",
@@ -2608,7 +2645,7 @@
 						410,
 						1
 					],
-					"name": ""
+					"name": "g"
 				},
 				{
 					"#c": "Port",
@@ -2617,7 +2654,7 @@
 						370,
 						1
 					],
-					"name": ""
+					"name": "f"
 				},
 				{
 					"#c": "Port",
@@ -2626,7 +2663,7 @@
 						330,
 						1
 					],
-					"name": ""
+					"name": "e"
 				},
 				{
 					"#c": "Port",
@@ -2635,7 +2672,7 @@
 						290,
 						1
 					],
-					"name": ""
+					"name": "d"
 				},
 				{
 					"#c": "Port",
@@ -2644,7 +2681,7 @@
 						250,
 						1
 					],
-					"name": ""
+					"name": "c"
 				},
 				{
 					"#c": "Port",
@@ -2653,7 +2690,7 @@
 						210,
 						1
 					],
-					"name": ""
+					"name": "b"
 				},
 				{
 					"#c": "Port",
@@ -2662,7 +2699,7 @@
 						170,
 						1
 					],
-					"name": ""
+					"name": "a"
 				},
 				{
 					"#c": "Wire",
@@ -2941,7 +2978,7 @@
 						110,
 						1
 					],
-					"name": ""
+					"name": "enable"
 				},
 				{
 					"#c": "Wire",
@@ -2970,11 +3007,20 @@
 				"offsetY": 118.4
 			},
 			"portConfig": {
+				"spacing": 0,
 				"gap": "start",
-				"parity": "auto"
+				"parity": "auto",
+				"placement": {
+					"top": "",
+					"right": "",
+					"bottom": "",
+					"left": ""
+				}
 			},
-			"lid": null
+			"lid": null,
+			"visibleInLib": true
 		}
 	],
 	"libraries": {}
 }
+)
