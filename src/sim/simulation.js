@@ -703,6 +703,7 @@ class Simulation {
         const rawBitmaps = [];
         for (const port of ports) {
             const net = this.#nets.byPort[port.name];
+            if (!net) continue;
             if (port.name === net.copiesTo) continue;
             bitmap = { mode: null, srcBit: net.bitIndex, destBit: port.bitIndex, srcElementIndex2: net.elementIndex2, destElementIndex2: port.elementIndex2 };
             rawBitmaps.push(bitmap);
