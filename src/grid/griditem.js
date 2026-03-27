@@ -334,12 +334,28 @@ class GridItem {
         }
     }
 
+    // Hack to store onclick handler during drag&drop operations to avoid sporadic click actions.
+    // This fixes 'dragging tunnel from menu closes menu'.
+    #onClickBackup;
+
+    // Backup onclick handler during drag operation.
+    #backupOnClick() {
+        this.#onClickBackup = document.onclick;
+        document.onclick = null;
+    }
+
+    // Restore onclick handler after drag operation.
+    #restoreOnClick() {
+        setTimeout(() => document.onclick = this.#onClickBackup, 10);
+    }
+
     // Trigger item drag (e.g. when dragging from template into the grid).
     dragStart(x, y, ...args) {
         if (this.grid && !this.grid.passive) {
             document.onmousemove = this.#handleDragMove.bind(this, args);
             document.onmouseup = this.#handleDragStop.bind(this, args);
             document.body.classList.add('dragging');
+            this.#backupOnClick();
             this.onDrag(x, y, 'start', ...args);
         }
     }
@@ -351,6 +367,7 @@ class GridItem {
             document.onmousemove = null;
             document.body.classList.remove('dragging');
             this.onDrag(x, y, 'stop', ...args);
+            this.#restoreOnClick();
         }
     }
 
@@ -369,6 +386,7 @@ class GridItem {
             document.onmousemove = this.#handleDragMove.bind(this, args);
             document.onmouseup = this.#handleDragStop.bind(this, args);
             document.body.classList.add('dragging');
+            this.#backupOnClick();
             this.onDrag(dragStartX, dragStartY, 'start', ...args);
         };
     }
@@ -400,6 +418,7 @@ class GridItem {
         document.body.classList.remove('dragging');
         const [ dragCurrentX, dragCurrentY ] = this.grid.screenToGrid(e.clientX, e.clientY);
         this.onDrag(dragCurrentX, dragCurrentY, 'stop', ...args);
+        this.#restoreOnClick();
     }
 
     // Called when mouse hovers over a registered element, sets the grids status message.
