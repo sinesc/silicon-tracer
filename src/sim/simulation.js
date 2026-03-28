@@ -216,13 +216,23 @@ class Simulation {
     }
 
     // Declares a constant and returns the constant id. Constants can be updated using setConst without recompiling the simulation.
-    declareConst(initialValue, suffix) {
+    declareConst(initialValue, suffix, name = null) {
         assert.integer(initialValue, true);
         assert.string(suffix);
-        const constant = { id: this.#consts.length, initialValue, output: 'q' + suffix }
+        assert.string(name, true);
+        if (name !== null) {
+            assert(this.#consts.find((c) => c.name === name) === undefined, `Constant name "${name}" already defined`);
+        }
+        const constant = { id: this.#consts.length, initialValue, output: 'q' + suffix, name }
         this.#consts.push(constant);
         this.#declarePort('q', suffix, 'o', true, false, 'const');
         return constant.id;
+    }
+
+    // Gets the id of a named constant.
+    getConstId(name) {
+        assert.string(name);
+        return (this.#consts.find((c) => c.name === name) ?? error(`Constant name "${name}" is not defined`)).id;
     }
 
     // Declares a push/pull resistor. Suffix is appended to the resistory's `q` output.
