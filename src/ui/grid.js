@@ -374,8 +374,15 @@ class Grid {
 
     // Registers required grid hotkeys with application.
     #initHotkeys() {
-        this.#app.registerHotkey('r', 'down', () => this.#selection.length > 0, () => {
-            this.#rotateSelection();
+
+        // global hotkeys, override hover target hotkeys
+        this.#app.registerHotkey('ctrl+a', 'down', null, async () => {
+            this.#selection = [];
+            for (const item of this.#circuit.items) {
+                item.selected = true;
+                this.#selection.push(item);
+            }
+            this.invalidateSelection();
             this.#app.simulations.markDirty(this.#circuit);
         });
         this.#app.registerHotkey('ctrl+v', 'down', null, async () => {
@@ -401,7 +408,13 @@ class Grid {
             await this.#copySelection();
             this.#deleteSelection();
         });
+        this.#app.registerHotkey('r', 'down', () => this.#selection.length > 0, () => {
+            this.#rotateSelection();
+            this.#app.simulations.markDirty(this.#circuit);
+        });
         this.#app.registerHotkey('Delete', 'down', () => this.#selection.length > 0, () => this.#deleteSelection());
+
+        // send to hover target
         this.#app.registerHotkey(null, 'press', () => this.#hotkeyTarget, (e) => {
             if (e.type === 'keydown') {
                 // handle target specific hotkeys
@@ -417,6 +430,8 @@ class Grid {
                 }
             }
         });
+
+        // below hotkeys only trigger when there is no hover target
         this.#app.registerHotkey('e', 'down', null, (e) => {
             this.#app.circuits.edit(this.#circuit.uid);
             this.#dirty |= Grid.#DIRTY_OVERLAY;
