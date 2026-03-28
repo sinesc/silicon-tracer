@@ -168,7 +168,7 @@ class GridItem {
     renderNetState() { }
 
     // Call after the grid item is modified to ensure the component is fully redrawn and the simulation is updated.
-    redraw(recompile = true, beforeRender = null) {
+    redraw(recompile = true, beforeRender = null) { // FIXME: this ignores recompile, does too many things. add e.g. dirty(), dirtySimulation(), dirtyChanges()?
         assert.bool(recompile);
         assert.function(beforeRender, true);
         if (beforeRender) {

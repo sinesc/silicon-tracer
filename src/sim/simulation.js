@@ -12,6 +12,7 @@
  *
  * APPROACH: We store the states of all nets and ports in one single typed array where each bit of each element stores the state of a port or a net. We keep track of the bit/element locations in `#ports` and `#nets`. The `elementIndex2` property contains the `#mem` element
  * index of a net/port and `bitIndex` the bit-index within the element. For tri-state logic we use an additional `#mem` array element to store whether the port/net is high-impedance(0) or driven(1) and keep track of the location in `elementIndex3` (bit-index is the same).
+ * For net conflict detection we use another `#mem` array element to store whether a conflict occurred and keep track of the location in `elementIndexC` (bit-index is the same).
  * In the BUILTIN_MAP the logic expression for this state is defined in the 'signals' field. When a port needs to detect edges we add another `#mem` element that contains the previous state so that edges can be detected and keep track of the in `elementIndexP` property.
  * To optimize simulation performance, all gates/builtins of the same type (e.g. 'and', 'or') are grouped/batched so that a single evaluation of a gate/builtin expression on a typed array element can compute up to N components at once (e.g. 32 for a Uint32Array).
  * However, since we need to copy the current net states to the component inputs each tick, we also group nets by their attached component inputs so that we can ideally also copy up to N nets to the attached inputs at once.  Of course this will not always
@@ -94,7 +95,7 @@ class Simulation {
     // Construct a new instance. Enable debug to generate commented code.
     constructor(config) {
         assert.object(config, true);
-        const cfg = Object.assign({}, { debug: false, backend: 'js', checkNetConflicts: false /* TODO */ }, config ?? {});
+        const cfg = Object.assign({}, { debug: false, backend: 'js', checkNetConflicts: true }, config ?? {});
         assert.bool(cfg.debug);
         assert.enum([ 'js', 'wasm' ], cfg.backend);
         this.#backend = cfg.backend === 'wasm' ? new BackendWasm(cfg.debug) : new BackendJavascript(cfg.debug);
@@ -107,7 +108,7 @@ class Simulation {
         const probes = attachedIONames.filter((p) => this.#probes.byInput[p] !== undefined);
         assert(ports.length > 0 || probes.length > 0);
         if (ports.length === 0) return null;
-        const net = { id: this.#nets.all.length, elementIndex2: null, elementIndex3: null, bitIndex: null, copiesTo: null, ports };
+        const net = { id: this.#nets.all.length, elementIndex2: null, elementIndex3: null, elementIndexC: null, bitIndex: null, copiesTo: null, ports };
         this.#nets.all.push(net);
         for (const port of ports) {
             assert(this.#nets.byPort[port] === undefined, () => `Port ${port} already contained in net ${JSON.stringify({ id: this.#nets.byPort[port].id, ports: this.#nets.byPort[port].ports })}`);
@@ -268,7 +269,7 @@ class Simulation {
     unserialize(serialized) {
         this.#functors = serialized.functors;
         this.#consts = serialized.consts;
-        this.#nets.all = serialized.nets.map((n) => ({ ...n, elementIndex2: null, elementIndex3: null, bitIndex: null, copiesTo: null }));
+        this.#nets.all = serialized.nets.map((n) => ({ ...n, elementIndex2: null, elementIndex3: null, elementIndexC: null, bitIndex: null, copiesTo: null }));
         this.#nets.byPort = {};
         for (const net of this.#nets.all) {
             for (const port of net.ports) {
@@ -336,6 +337,7 @@ class Simulation {
         for (const net of this.#nets.all) {
             clearBit(net.elementIndex2, net.bitIndex);
             clearBit(net.elementIndex3, net.bitIndex);
+            clearBit(net.elementIndexC, net.bitIndex);
         }
 
         // Reset all port memory elements
@@ -388,6 +390,10 @@ class Simulation {
         if (net.elementIndex2 !== null) {
             const isDriven = this.#backend.getBit(net.elementIndex3, net.bitIndex);
             if (isDriven) {
+                const hasConflict = this.#backend.getBit(net.elementIndexC, net.bitIndex);
+                if (hasConflict) {
+                    return -1;
+                }
                 return this.#backend.getBit(net.elementIndex2, net.bitIndex);
             }
         }
@@ -498,7 +504,7 @@ class Simulation {
     // Assigns nets to elements/bits.
     #assignNetLocations(globalElementIndex) {
         const ports = this.#ports.all.toSorted((a, b) => compare(a.elementIndex2, b.elementIndex2) || compare(a.bitIndex, b.bitIndex));
-        let elementIndex = { n2: -1, n3: -1 };
+        let elementIndex = { n2: -1, n3: -1, nc: -1 };
         let assigned;
         for (const ioType of ['i', 'o']) {
             do {
@@ -515,6 +521,7 @@ class Simulation {
                     if (port.bitIndex <= lastAssignedBitIndex) {
                         elementIndex.n2 = globalElementIndex++;
                         elementIndex.n3 = globalElementIndex++;
+                        elementIndex.nc = globalElementIndex++;
                         lastAssignedBitIndex = this.#backend.constructor.BITS_PER_ELEMENT;
                     }
                     // ensure each bit index within the current mem array element is only assigned once
@@ -522,6 +529,7 @@ class Simulation {
                         candidateNet.bitIndex = port.bitIndex;
                         candidateNet.elementIndex2 = elementIndex.n2;
                         candidateNet.elementIndex3 = elementIndex.n3;
+                        candidateNet.elementIndexC = elementIndex.nc;
                         if (port.ioType === 'i') {
                             candidateNet.copiesTo = port.name;
                         }
@@ -726,7 +734,7 @@ class Simulation {
         for (const port of ports) {
             const net = this.#nets.byPort[port.name];
             if (!net) continue;
-            bitmap = { mode: null, srcBit: port.bitIndex, destBit: net.bitIndex, srcElementIndex2: port.elementIndex2, srcElementIndex3: port.elementIndex3, destElementIndex2: net.elementIndex2, destElementIndex3: net.elementIndex3 };
+            bitmap = { mode: null, srcBit: port.bitIndex, destBit: net.bitIndex, srcElementIndex2: port.elementIndex2, srcElementIndex3: port.elementIndex3, destElementIndex2: net.elementIndex2, destElementIndex3: net.elementIndex3, destElementIndexC: net.elementIndexC };
             rawBitmaps.push(bitmap);
         }
         // optimize and re-order for code generation
