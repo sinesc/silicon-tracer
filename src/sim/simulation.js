@@ -62,6 +62,9 @@ class Simulation {
     // Userdefined custom builtins.
     #customBuiltinMap = {};
 
+    // Whether to emit net conflict detection code during compilation.
+    #checkNetConflicts = true;
+
     // Gate operation templates, populated lazily during gate declaration.
     #functors = {};
 
@@ -98,6 +101,8 @@ class Simulation {
         const cfg = Object.assign({}, { debug: false, backend: 'js', checkNetConflicts: true }, config ?? {});
         assert.bool(cfg.debug);
         assert.enum([ 'js', 'wasm' ], cfg.backend);
+        assert.bool(cfg.checkNetConflicts);
+        this.#checkNetConflicts = cfg.checkNetConflicts;
         this.#backend = cfg.backend === 'wasm' ? new BackendWasm(cfg.debug) : new BackendJavascript(cfg.debug);
     }
 
@@ -869,7 +874,16 @@ class Simulation {
             this.#backend.emitOutputToNet(destElementIndex, group, 'signal', 'output to net signal');
         }
 
-        // step 4: apply pull resistors if their nets arent'd driven yet
+        // step 4: detect net conflicts (more than one active driver on the same net)
+        if (this.#checkNetConflicts) {
+            const conflictGrouped = this.#groupBitmapsByDest(outputBitmaps, 'destElementIndexC');
+            for (const [destElementIndex, group] of pairs(conflictGrouped)) {
+                if (destElementIndex === 'null') continue;
+                this.#backend.emitConflict(destElementIndex, group, 'net conflict detection');
+            }
+        }
+
+        // step 5: apply pull resistors if their nets arent'd driven yet
         this.#backend.emitPullResistors(this.#layout.pullMasks);
     }
 

@@ -224,6 +224,81 @@ class BackendJavascript {
         }
     }
 
+    // Emits conflict detection: sets a bit in the conflict element when more than one active driver targets the same net bit.
+    emitConflict(destElementIndex, bitmaps, comment) {
+        // First pass: compute static accumulator and conflict mask for always-driven (non-tristate) ports.
+        // Uses acc & mask pattern so a single driver produces staticConflict = 0.
+        let staticAcc = 0;
+        let staticConflict = 0;
+        const dynamicExprs = [];
+
+        for (const bitmap of bitmaps) {
+            const isAlwaysDriven = bitmap.srcElementIndex3 == null;
+            if (isAlwaysDriven) {
+                let mask = 0;
+                if (bitmap.mode === 'duplicate') {
+                    for (const destBit of bitmap.destBit) { mask |= (1 << destBit); }
+                } else if (bitmap.mode === 'offset') {
+                    const offset = bitmap.destBit;
+                    let srcMask = 0;
+                    for (const srcBit of bitmap.srcBit) { srcMask |= 1 << srcBit; }
+                    mask = offset < 0 ? (srcMask >>> -offset) : (srcMask << offset);
+                } else {
+                    mask = (1 << bitmap.destBit);
+                }
+                staticConflict |= (staticAcc & mask);
+                staticAcc |= mask;
+            } else {
+                // Tristate port: build signal expression from srcElementIndex3.
+                const srcMem3 = `mem[${bitmap.srcElementIndex3}]`;
+                let expr;
+                if (bitmap.mode === 'duplicate') {
+                    let destMask = 0;
+                    for (const destBit of bitmap.destBit) { destMask |= 1 << destBit; }
+                    expr = `(-((${srcMem3} >>> ${bitmap.srcBit}) & 1) & 0x${(destMask >>> 0).toString(16)})`;
+                } else if (bitmap.mode === 'offset') {
+                    const offset = bitmap.destBit;
+                    let srcMask = 0;
+                    for (const srcBit of bitmap.srcBit) { srcMask |= 1 << srcBit; }
+                    const shift = offset < 0 ? '>>> ' + (-offset) : '<< ' + offset;
+                    expr = `((${srcMem3} & 0x${(srcMask >>> 0).toString(16)}) ${shift})`;
+                } else {
+                    const shiftVal = bitmap.destBit - bitmap.srcBit;
+                    const mask = (1 << bitmap.srcBit) >>> 0;
+                    if (shiftVal === 0) {
+                        expr = `(${srcMem3} & 0x${mask.toString(16)})`;
+                    } else {
+                        const shift = shiftVal < 0 ? '>>> ' + (-shiftVal) : '<< ' + shiftVal;
+                        expr = `((${srcMem3} & 0x${mask.toString(16)}) ${shift})`;
+                    }
+                }
+                dynamicExprs.push(expr);
+            }
+        }
+
+        // Build a single assignment expression using acc & s_i accumulation so the result
+        // is computed fresh each tick (no stale bits from previous ticks).
+        // acc starts with staticAcc (always-driven bits already seen).
+        const conflictTerms = [];
+        let accExpr = staticAcc !== 0 ? `0x${(staticAcc >>> 0).toString(16)}` : null;
+        for (const s of dynamicExprs) {
+            if (accExpr !== null) {
+                conflictTerms.push(`(${accExpr} & ${s})`);
+            }
+            accExpr = accExpr !== null ? `(${accExpr} | ${s})` : s;
+        }
+
+        // Combine static and dynamic conflict terms into one expression.
+        let fullExpr = staticConflict !== 0 ? `0x${(staticConflict >>> 0).toString(16)}` : '';
+        for (const term of conflictTerms) {
+            fullExpr = fullExpr ? `${fullExpr} | ${term}` : term;
+        }
+
+        if (fullExpr) {
+            this.#tickCode += `mem[${destElementIndex}] = ${fullExpr}` + this.#comment(comment) + '\n';
+        }
+    }
+
     // Emits pull resistors.
     emitPullResistors(pullMasks) {
         for (const [index2, mask] of pairs(pullMasks)) {

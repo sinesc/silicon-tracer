@@ -1,1 +1,113 @@
-{"functors":{"and[2]":{"outputs":{"q":"a & b"},"signals":null}},"consts":[{"id":0,"initialValue":1,"output":"q@g1c42eecb40424866a1c42ae47412821c@0_0"},{"id":1,"initialValue":1,"output":"q@g8c1ac37709324eb4a69d3e2919090255@0_0"},{"id":2,"initialValue":null,"output":"q@gee51a401602d47ddbfefbc32c22637c5@0_0"}],"nets":[{"id":0,"ports":["q@gee51a401602d47ddbfefbc32c22637c5@0_0","q@gbda8ae29ba9f41ca826e945b4ae0ff2a@0_0"]},{"id":1,"ports":["q@g8c1ac37709324eb4a69d3e2919090255@0_0","b@gbda8ae29ba9f41ca826e945b4ae0ff2a@0_0"]},{"id":2,"ports":["a@gbda8ae29ba9f41ca826e945b4ae0ff2a@0_0","q@g1c42eecb40424866a1c42ae47412821c@0_0"]}],"ports":[{"id":0,"name":"q@g1c42eecb40424866a1c42ae47412821c@0_0","ioType":"o","isTriState":true,"detectEdges":false,"batchType":"const","batchName":"q","batchComponent":"@g1c42eecb40424866a1c42ae47412821c@0_0"},{"id":1,"name":"a@gbda8ae29ba9f41ca826e945b4ae0ff2a@0_0","ioType":"i","isTriState":false,"detectEdges":false,"batchType":"and[2]","batchName":"a","batchComponent":"@gbda8ae29ba9f41ca826e945b4ae0ff2a@0_0"},{"id":2,"name":"b@gbda8ae29ba9f41ca826e945b4ae0ff2a@0_0","ioType":"i","isTriState":false,"detectEdges":false,"batchType":"and[2]","batchName":"b","batchComponent":"@gbda8ae29ba9f41ca826e945b4ae0ff2a@0_0"},{"id":3,"name":"q@gbda8ae29ba9f41ca826e945b4ae0ff2a@0_0","ioType":"o","isTriState":false,"detectEdges":false,"batchType":"and[2]","batchName":"q","batchComponent":"@gbda8ae29ba9f41ca826e945b4ae0ff2a@0_0"},{"id":4,"name":"q@g8c1ac37709324eb4a69d3e2919090255@0_0","ioType":"o","isTriState":true,"detectEdges":false,"batchType":"const","batchName":"q","batchComponent":"@g8c1ac37709324eb4a69d3e2919090255@0_0"},{"id":5,"name":"q@gee51a401602d47ddbfefbc32c22637c5@0_0","ioType":"o","isTriState":true,"detectEdges":false,"batchType":"const","batchName":"q","batchComponent":"@gee51a401602d47ddbfefbc32c22637c5@0_0"}],"clocks":[]}
+{
+    "functors": {
+        "and[2]": {
+            "outputs": {
+                "q": "a & b"
+            },
+            "signals": null
+        }
+    },
+    "consts": [
+        {
+            "id": 0,
+            "initialValue": 1,
+            "output": "q@g1c42eecb40424866a1c42ae47412821c@0_0"
+        },
+        {
+            "id": 1,
+            "initialValue": 1,
+            "output": "q@g8c1ac37709324eb4a69d3e2919090255@0_0"
+        },
+        {
+            "id": 2,
+            "initialValue": null,
+            "output": "q@gee51a401602d47ddbfefbc32c22637c5@0_0"
+        }
+    ],
+    "nets": [
+        {
+            "id": 0,
+            "ports": [
+                "q@gee51a401602d47ddbfefbc32c22637c5@0_0",
+                "q@gbda8ae29ba9f41ca826e945b4ae0ff2a@0_0"
+            ]
+        },
+        {
+            "id": 1,
+            "ports": [
+                "q@g8c1ac37709324eb4a69d3e2919090255@0_0",
+                "b@gbda8ae29ba9f41ca826e945b4ae0ff2a@0_0"
+            ]
+        },
+        {
+            "id": 2,
+            "ports": [
+                "a@gbda8ae29ba9f41ca826e945b4ae0ff2a@0_0",
+                "q@g1c42eecb40424866a1c42ae47412821c@0_0"
+            ]
+        }
+    ],
+    "ports": [
+        {
+            "id": 0,
+            "name": "q@g1c42eecb40424866a1c42ae47412821c@0_0",
+            "ioType": "o",
+            "isTriState": true,
+            "detectEdges": false,
+            "batchType": "const",
+            "batchName": "q",
+            "batchComponent": "@g1c42eecb40424866a1c42ae47412821c@0_0"
+        },
+        {
+            "id": 1,
+            "name": "a@gbda8ae29ba9f41ca826e945b4ae0ff2a@0_0",
+            "ioType": "i",
+            "isTriState": false,
+            "detectEdges": false,
+            "batchType": "and[2]",
+            "batchName": "a",
+            "batchComponent": "@gbda8ae29ba9f41ca826e945b4ae0ff2a@0_0"
+        },
+        {
+            "id": 2,
+            "name": "b@gbda8ae29ba9f41ca826e945b4ae0ff2a@0_0",
+            "ioType": "i",
+            "isTriState": false,
+            "detectEdges": false,
+            "batchType": "and[2]",
+            "batchName": "b",
+            "batchComponent": "@gbda8ae29ba9f41ca826e945b4ae0ff2a@0_0"
+        },
+        {
+            "id": 3,
+            "name": "q@gbda8ae29ba9f41ca826e945b4ae0ff2a@0_0",
+            "ioType": "o",
+            "isTriState": false,
+            "detectEdges": false,
+            "batchType": "and[2]",
+            "batchName": "q",
+            "batchComponent": "@gbda8ae29ba9f41ca826e945b4ae0ff2a@0_0"
+        },
+        {
+            "id": 4,
+            "name": "q@g8c1ac37709324eb4a69d3e2919090255@0_0",
+            "ioType": "o",
+            "isTriState": true,
+            "detectEdges": false,
+            "batchType": "const",
+            "batchName": "q",
+            "batchComponent": "@g8c1ac37709324eb4a69d3e2919090255@0_0"
+        },
+        {
+            "id": 5,
+            "name": "q@gee51a401602d47ddbfefbc32c22637c5@0_0",
+            "ioType": "o",
+            "isTriState": true,
+            "detectEdges": false,
+            "batchType": "const",
+            "batchName": "q",
+            "batchComponent": "@gee51a401602d47ddbfefbc32c22637c5@0_0"
+        }
+    ],
+    "clocks": []
+}

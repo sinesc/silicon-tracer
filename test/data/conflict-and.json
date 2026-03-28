@@ -1,0 +1,135 @@
+{
+    "functors": {
+        "and[2]": {
+            "outputs": {
+                "q": "a & b"
+            },
+            "signals": null
+        }
+    },
+    "consts": [
+        {
+            "id": 0,
+            "initialValue": 1,
+            "output": "q@g569fceb577694da3bee8d17217b97d62@0_0",
+            "name": "cB"
+        },
+        {
+            "id": 1,
+            "initialValue": 1,
+            "output": "q@gf6055e23738d48ab82914367ea438d9b@0_0",
+            "name": "cA"
+        }
+    ],
+    "nets": [
+        {
+            "id": 0,
+            "ports": [
+                "q@gf6055e23738d48ab82914367ea438d9b@0_0",
+                "a@g88d652381cdf4ab7be055c29f5e6f161@0_0"
+            ]
+        },
+        {
+            "id": 1,
+            "ports": [
+                "b@g88d652381cdf4ab7be055c29f5e6f161@0_0",
+                "q@g569fceb577694da3bee8d17217b97d62@0_0"
+            ]
+        },
+        {
+            "id": 2,
+            "ports": [
+                "q@g88d652381cdf4ab7be055c29f5e6f161@0_0"
+            ]
+        }
+    ],
+    "ports": [
+        {
+            "id": 0,
+            "name": "q@g569fceb577694da3bee8d17217b97d62@0_0",
+            "ioType": "o",
+            "isTriState": true,
+            "detectEdges": false,
+            "batchType": "const",
+            "batchName": "q",
+            "batchComponent": "@g569fceb577694da3bee8d17217b97d62@0_0"
+        },
+        {
+            "id": 1,
+            "name": "a@g88d652381cdf4ab7be055c29f5e6f161@0_0",
+            "ioType": "i",
+            "isTriState": false,
+            "detectEdges": false,
+            "batchType": "and[2]",
+            "batchName": "a",
+            "batchComponent": "@g88d652381cdf4ab7be055c29f5e6f161@0_0"
+        },
+        {
+            "id": 2,
+            "name": "b@g88d652381cdf4ab7be055c29f5e6f161@0_0",
+            "ioType": "i",
+            "isTriState": false,
+            "detectEdges": false,
+            "batchType": "and[2]",
+            "batchName": "b",
+            "batchComponent": "@g88d652381cdf4ab7be055c29f5e6f161@0_0"
+        },
+        {
+            "id": 3,
+            "name": "q@g88d652381cdf4ab7be055c29f5e6f161@0_0",
+            "ioType": "o",
+            "isTriState": false,
+            "detectEdges": false,
+            "batchType": "and[2]",
+            "batchName": "q",
+            "batchComponent": "@g88d652381cdf4ab7be055c29f5e6f161@0_0"
+        },
+        {
+            "id": 4,
+            "name": "q@gf6055e23738d48ab82914367ea438d9b@0_0",
+            "ioType": "o",
+            "isTriState": true,
+            "detectEdges": false,
+            "batchType": "const",
+            "batchName": "q",
+            "batchComponent": "@gf6055e23738d48ab82914367ea438d9b@0_0"
+        }
+    ],
+    "clocks": [],
+    "probes": {
+        "byInput": {
+            "input@ga738c6d02c454d3cab73317180e7ae39@0_0": {
+                "name": "pQ",
+                "suffix": "@ga738c6d02c454d3cab73317180e7ae39@0_0",
+                "netId": 2
+            },
+            "input@g9853ddc5161540e8a00843b4e0761b52@0_0": {
+                "name": "pB",
+                "suffix": "@g9853ddc5161540e8a00843b4e0761b52@0_0",
+                "netId": 1
+            },
+            "input@ga39f53417ca64c9a833e41d64cacacbd@0_0": {
+                "name": "pA",
+                "suffix": "@ga39f53417ca64c9a833e41d64cacacbd@0_0",
+                "netId": 0
+            }
+        },
+        "byName": {
+            "pQ": {
+                "name": "pQ",
+                "suffix": "@ga738c6d02c454d3cab73317180e7ae39@0_0",
+                "netId": 2
+            },
+            "pB": {
+                "name": "pB",
+                "suffix": "@g9853ddc5161540e8a00843b4e0761b52@0_0",
+                "netId": 1
+            },
+            "pA": {
+                "name": "pA",
+                "suffix": "@ga39f53417ca64c9a833e41d64cacacbd@0_0",
+                "netId": 0
+            }
+        }
+    }
+}
