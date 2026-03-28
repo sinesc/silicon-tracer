@@ -89,5 +89,35 @@ const simJsMinimal = time("Minimal static simulation (Javascript)",
     simJsMinimal
 );*/
 
+test("net conflicts", () => {
+    const sim = initSim('data/conflict.json', 'js');
+    const cInput   = sim.getConstId('cInput');
+    const cEnable1 = sim.getConstId('cEnable1');
+    const cEnable2 = sim.getConstId('cEnable2');
+
+    // No conflict: only cEnable1 active — pOutput should equal cInput, pIntermediate should be undriven
+    sim.setConstValue(cInput, 1);
+    sim.setConstValue(cEnable1, 1);
+    sim.setConstValue(cEnable2, 0);
+    sim.simulate(5);
+    assert(sim.getProbeValue('pOutput') === 1, `pOutput should equal cInput (1) with only cEnable1 active, got ${sim.getProbeValue('pOutput')}`);
+    assert(sim.getProbeValue('pIntermediate') === null, `pIntermediate should be undriven when cEnable2 is low, got ${sim.getProbeValue('pIntermediate')}`);
+
+    // No conflict: only cEnable2 active — pOutput should equal cInput, pIntermediate should equal cInput
+    sim.setConstValue(cEnable1, 0);
+    sim.setConstValue(cEnable2, 1);
+    sim.simulate(5);
+    assert(sim.getProbeValue('pOutput') === 1, `pOutput should equal cInput (1) with only cEnable2 active, got ${sim.getProbeValue('pOutput')}`);
+    assert(sim.getProbeValue('pIntermediate') === 1, `pIntermediate should equal cInput (1) when cEnable2 is high, got ${sim.getProbeValue('pIntermediate')}`);
+
+    // Conflict: both enables active — pOutput should be -1 (conflict), pIntermediate should still equal cInput
+    // NOTE: net conflict detection is not yet fully implemented; the pOutput assertion is expected to fail for now.
+    sim.setConstValue(cEnable1, 1);
+    sim.setConstValue(cEnable2, 1);
+    sim.simulate(5);
+    assert(sim.getProbeValue('pIntermediate') === 1, `pIntermediate should equal cInput (1) with both enables active, got ${sim.getProbeValue('pIntermediate')}`);
+    assert(sim.getProbeValue('pOutput') === -1, `pOutput should be -1 (conflict) when both enables are active, got ${sim.getProbeValue('pOutput')}`);
+});
+
 console.log('\nSummary:');
 summary();
