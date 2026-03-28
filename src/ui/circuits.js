@@ -37,7 +37,7 @@ class Circuits {
 
     // Creates a new circuit.
     async create() {
-        const config = await dialog("Create circuit", Circuits.CREATE_DIALOG, { label: this.#generateName(), spacing: '0', gap: 'middle', parity: 'automatic', visibleInLib: true });
+        const config = await dialog("Create circuit", Circuits.CREATE_DIALOG, { label: this.#generateLabel(), spacing: '0', gap: 'middle', parity: 'automatic', visibleInLib: true });
         if (config) {
             const circuit = new Circuits.Circuit(config.label);
             circuit.portConfig.spacing = config.spacing;
@@ -263,7 +263,7 @@ class Circuits {
     reset(removeLibraries = false) {
         assert.bool(removeLibraries);
         this.#clear(removeLibraries);
-        const label = this.#generateName();
+        const label = this.#generateLabel();
         const circuit = new Circuits.Circuit(label);
         this.#circuits[circuit.uid] = circuit;
         this.select(circuit.uid);
@@ -391,9 +391,14 @@ class Circuits {
         return `loadFiles.push(\n${json}\n)`;
     }
 
-    // Returns a generated name if the given name is empty.
-    #generateName(name) {
-        return name || 'New circuit #' + (count(this.#circuits) + 1);
+    // Returns a generated circuit label.
+    #generateLabel() {
+        let id = 1;
+        let name;
+        while (this.byLabel(name = `New circuit #${id}`, null) !== null) {
+            ++id;
+        }
+        return name;
     }
 }
 
