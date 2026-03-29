@@ -426,7 +426,7 @@ class Application {
                 ioMenu.createComponentButton('Probe', `<b>Net state probe</b>. Displays the state of attached net. ${DRAG_MSG}`, (grid, x, y) => {
                     return grid.addItem(new Probe(this, x, y, defaults.probe.rotation));
                 });
-                ioMenu.createComponentButton('Pull', `<b>Pull up/down resistor</b>. ${DRAG_MSG}`, (grid, x, y) => {
+                ioMenu.createComponentButton('Pull resistor', `<b>Pull up/down resistor</b>. ${DRAG_MSG}`, (grid, x, y) => {
                     return grid.addItem(new PullResistor(this, x, y, defaults.pull.rotation));
                 });
                 ioMenu.createComponentButton('Toggle switch', `<b>Toggle switch</b> with permanently saved state. ${DRAG_MSG}`, (grid, x, y) => {
