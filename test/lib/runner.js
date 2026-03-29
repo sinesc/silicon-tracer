@@ -62,6 +62,7 @@ const APPLICATION_STUB = `
         config = {
             debugCompileComments: false,
             checkNetConflicts: true,
+            breakOnConflict: false,
             targetTPS: 10000,
             debug: false,
         };
@@ -92,7 +93,7 @@ vm.runInContext(`
         return new Simulation({ backend: backendStr });
     }
 
-    function _compileCircuit(jsonText, circuitLabel, backend) {
+    function _compileCircuit(jsonText, circuitLabel, backend, configOverrides) {
         // Strip optional JSON-P wrapper (same logic as Circuits.#decodeJSON)
         const content = JSON.parse(jsonText.replace(/^loadFiles\\.push\\(\\s*(.+)\\)\\s*$/s, '$1'));
         const app = new Application();
@@ -102,13 +103,14 @@ vm.runInContext(`
             : app.circuits.byUID(content.currentUID);
         if (!circuit) throw new Error('Circuit not found: ' + circuitLabel);
         const netList = NetList.identify(circuit, app.circuits.all);
-        return netList.compileSimulation(null, {
+        return netList.compileSimulation(null, Object.assign({
             backend: backend || 'js',
             checkNetConflicts: true,
+            breakOnConflict: false,
             targetTPS: 10000,
             debug: false,
             debugSerializeSimulation: false,
-        });
+        }, configOverrides || {}));
     }
 `, context);
 
@@ -185,10 +187,10 @@ function readJSON(filePath) {
 
 // Loads a .stc circuit file, identifies its nets, compiles and returns the simulation.
 // circuitLabel selects a named circuit from the file; defaults to the file's currentUID circuit.
-function compileCircuit(filePath, circuitLabel = null, backend = 'js') {
+function compileCircuit(filePath, circuitLabel = null, backend = 'js', configOverrides = null) {
     const fullpath = path.resolve(__dirname, '../' + filePath);
     const text = fs.readFileSync(fullpath, 'utf-8');
-    return context._compileCircuit(text, circuitLabel, backend);
+    return context._compileCircuit(text, circuitLabel, backend, configOverrides);
 }
 
 module.exports = { assert, test, time, readJSON, summary, context, setDebugMode, createSimulationWithBackend: context.createSimulationWithBackend, compileCircuit };

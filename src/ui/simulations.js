@@ -178,9 +178,10 @@ Simulations.Simulation = class {
     }
 
     // Ticks the current simulation for the given amount of ticks.
+    // Returns 1 if a break-on-conflict fired mid-run, 0 otherwise.
     tick(ticks) {
         assert.integer(ticks);
-        this.#engine.simulate(ticks);
+        return this.#engine.simulate(ticks);
     }
 
     // Returns whether the simulation includes the given circuit.
@@ -216,6 +217,7 @@ Simulations.Simulation = class {
         this.#engine = this.#netList.compileSimulation(retainMemory ? this.#engine : null, {
             debug:              config.debugCompileComments,
             checkNetConflicts:  config.checkNetConflicts,
+            breakOnConflict:    config.breakOnConflict,
             backend:            config.simulationBackend,
             targetTPS:          config.targetTPS,
         });

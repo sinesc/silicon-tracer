@@ -9,6 +9,7 @@ class BackendJavascript {
     #initCode = '';
     #debug;
     #mem;
+    #conflictIndices = new Set();
 
     constructor(debug = false) {
         this.#debug = debug;
@@ -200,7 +201,15 @@ class BackendJavascript {
 
         if (fullExpr) {
             this.#tickCode += `mem[${destElementIndex}] = ${fullExpr}` + this.#comment(comment) + '\n';
+            this.#conflictIndices.add(destElementIndex);
         }
+    }
+
+    // Emits a break-on-conflict check: ORs all conflict elements and breaks the tick loop early if any bit is set.
+    emitBreakOnConflict() {
+        if (this.#conflictIndices.size === 0) return;
+        const orExpr = [...this.#conflictIndices].map(i => `mem[${i}]`).join(' | ');
+        this.#tickCode += `if (${orExpr}) { return 1; }` + this.#comment('break on conflict') + '\n';
     }
 
     // Emits pull resistors.
@@ -265,6 +274,7 @@ class BackendJavascript {
     }
 
     // Finalizes and returns the simulation function.
+    // The returned function returns 1 if a break-on-conflict fired, 0 otherwise.
     compile() {
         let code = "'use strict';(mem) => (ticks) => {\n";
         code += this.#initCode;
@@ -272,6 +282,7 @@ class BackendJavascript {
         code += "for (let i = 0; i < ticks; ++i) {\n"
         code += this.#tickCode;
         code += "}\n";
+        code += "return 0;\n";
         code += "}\n";
         return eval(code)(this.#mem);
     }

@@ -8,6 +8,7 @@ class Application {
         autoCompile: true,
         singleStep: false,
         checkNetConflicts: true,
+        breakOnConflict: false,
         lockSimulation: false,
         simulationBackend: 'js',
         debugCompileComments: false,
@@ -241,15 +242,22 @@ class Application {
         let elapsed;
         do  {
             let ticksNow = Math.min(tickLimit, ticks - ticksDone);
-            sim.tick(ticksNow);
+            const broke = sim.tick(ticksNow);
             ticksDone += ticksNow;
             elapsed = performance.now() - start;
+            if (broke) {
+                this.config.singleStep = true;
+                return ticksDone;
+            }
         } while (ticksDone < ticks && elapsed < maxTiming && (tickLimit *= 10));
         // based on elapsed time and number of performed ticks we compute how many ticks we should be able to do in the timelimit.
         if (ticks > ticksDone) {
             const maxTicks = ticksDone * ((this.#renderLoop.refresh.med - elapsed) / elapsed) * this.#renderLoop.loadLimit;
             const stillDoable = 0 | Math.min(ticks - ticksDone, maxTicks);
-            sim.tick(stillDoable);
+            const broke = sim.tick(stillDoable);
+            if (broke) {
+                this.config.singleStep = true;
+            }
             return stillDoable + ticksDone;
         } else {
             return ticksDone;
@@ -548,10 +556,19 @@ class Application {
             // Recompile simulation to flag conflicting networks (and show them in UI).
             debuggerMenu.createToggleButton('Show net conflicts', 'Networks with conflicting gate outputs will be highlighted. Increases simulation complexity.', this.config.checkNetConflicts, (enabled) => {
                 this.config.checkNetConflicts = enabled;
+                if (!enabled) this.config.breakOnConflict = false;
                 this.simulations.markDirty(null);
                 if (enabled) {
                     this.simulations.select(this.circuits.current, this.config.autoCompile);
                 }
+                debuggerMenu.open();
+            });
+            // Pause simulation when a net conflict is detected.
+            debuggerMenu.createToggleButton('Break on conflict', 'Pause simulation when a net conflict is detected. Enables "Show net conflicts".', this.config.breakOnConflict, (enabled) => {
+                this.config.breakOnConflict = enabled;
+                if (enabled) this.config.checkNetConflicts = true;
+                this.simulations.markDirty(null);
+                this.simulations.select(this.circuits.current, this.config.autoCompile);
                 debuggerMenu.open();
             });
             debuggerMenu.createSeparator();

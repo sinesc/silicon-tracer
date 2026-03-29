@@ -113,6 +113,73 @@ test("no false positive conflict on AND gate output", () => {
     assert(sim.getProbeValue('pQ') === 1, `pQ should be 1 (1 & 1), got ${sim.getProbeValue('pQ')}`);
 });
 
+test("delayed conflict (clock-driven)", () => {
+    const sim = compileCircuit('data/tests.stc', 'DelayedConflict');
+    // targetTPS=10000 in runner, clock=1Hz → one full clock period = 10000 ticks.
+    // The 4-bit counter advances on each rising edge. Conflict occurs when q0 and q3
+    // are both high, i.e. at counter values 9 (1001) and 11 (1011).
+    const ticksPerCycle = 10000;
+
+    // Initial state: no conflict
+    sim.simulate(5);
+    assert(sim.getProbeValue('pConflict') !== -1, `no initial conflict`);
+
+    // Cycles 1–8: counter values 1–8, q3 and q0 never simultaneously high → no conflict
+    for (let cycle = 1; cycle <= 8; cycle++) {
+        sim.simulate(ticksPerCycle);
+        assert(sim.getProbeValue('pConflict') !== -1, `no conflict at cycle ${cycle}`);
+    }
+
+    // Cycle 9: counter reaches 9 (binary 1001, q0=1 q3=1) → conflict
+    sim.simulate(ticksPerCycle);
+    assert(sim.getProbeValue('pConflict') === -1, `conflict at cycle 9 (count 9, q0 and q3 both high), got ${sim.getProbeValue('pConflict')}`);
+
+    // Cycle 10: counter advances to 10 (binary 1010, q0=0) → conflict clears
+    sim.simulate(ticksPerCycle);
+    assert(sim.getProbeValue('pConflict') !== -1, `conflict clears at cycle 10 (count 10, q0 low), got ${sim.getProbeValue('pConflict')}`);
+
+    // Cycle 11: counter reaches 11 (binary 1011, q0=1 q3=1) → conflict resumes
+    sim.simulate(ticksPerCycle);
+    assert(sim.getProbeValue('pConflict') === -1, `conflict at cycle 11 (count 11, q0 and q3 both high), got ${sim.getProbeValue('pConflict')}`);
+});
+
+test("break on conflict (clock-driven)", () => {
+    const sim = compileCircuit('data/tests.stc', 'DelayedConflict', 'js', { breakOnConflict: true });
+    // Same circuit as above but with breakOnConflict enabled.
+    // simulate() should return 0 while no conflict is active, 1 when the tick loop breaks.
+    const ticksPerCycle = 10000;
+
+    // Initial state: no break
+    assert(sim.simulate(5) === 0, `no break before clock starts`);
+
+    // Cycles 1–8: no conflict → simulate returns 0 each time
+    for (let cycle = 1; cycle <= 8; cycle++) {
+        assert(sim.simulate(ticksPerCycle) === 0, `no break at cycle ${cycle}`);
+    }
+
+    // Cycle 9: conflict → simulate breaks early (returns 1)
+    assert(sim.simulate(ticksPerCycle) === 1, `break triggered at cycle 9 (count 9)`);
+
+    // After the break, the simulation is stuck at the conflicting state (count 9).
+    // Tick one step at a time until the conflict clears (counter advances to count 10).
+    // One clock period (~10000 ticks) is needed to advance past count 9.
+    let cleared = false;
+    for (let t = 0; t < ticksPerCycle * 2; t++) {
+        if (sim.simulate(1) === 0) { cleared = true; break; }
+    }
+    assert(cleared, `conflict should clear once counter advances past count 9`);
+
+    // One full cycle with count 10 (q0=0) produces no conflict
+    assert(sim.simulate(ticksPerCycle) === 0, `no break at count 10`);
+
+    // The next conflict (count 11, binary 1011, q0=1 q3=1) is reached shortly after
+    let breakAgain = false;
+    for (let t = 0; t < ticksPerCycle * 2; t++) {
+        if (sim.simulate(1) === 1) { breakAgain = true; break; }
+    }
+    assert(breakAgain, `conflict should recur at count 11 (q0 and q3 both high again)`);
+});
+
 console.log('\nSimulation timings:');
 
 const simJsCounter = time("Many counters simulation (Javascript)",

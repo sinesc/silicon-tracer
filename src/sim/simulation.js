@@ -65,6 +65,9 @@ class Simulation {
     // Whether to emit net conflict detection code during compilation.
     #checkNetConflicts = true;
 
+    // Whether to break the tick loop early when a conflict is detected.
+    #breakOnConflict = false;
+
     // Gate operation templates, populated lazily during gate declaration.
     #functors = {};
 
@@ -98,11 +101,13 @@ class Simulation {
     // Construct a new instance. Enable debug to generate commented code.
     constructor(config) {
         assert.object(config, true);
-        const cfg = Object.assign({}, { debug: false, backend: 'js', checkNetConflicts: true }, config ?? {});
+        const cfg = Object.assign({}, { debug: false, backend: 'js', checkNetConflicts: true, breakOnConflict: false }, config ?? {});
         assert.bool(cfg.debug);
         assert.enum([ 'js', 'wasm' ], cfg.backend);
         assert.bool(cfg.checkNetConflicts);
+        assert.bool(cfg.breakOnConflict);
         this.#checkNetConflicts = cfg.checkNetConflicts;
+        this.#breakOnConflict = cfg.breakOnConflict;
         this.#backend = cfg.backend === 'wasm' ? new BackendWasm(cfg.debug) : new BackendJavascript(cfg.debug);
     }
 
@@ -324,8 +329,9 @@ class Simulation {
     }
 
     // Runs the simulation for the given number of ticks.
+    // Returns 1 if a break-on-conflict fired mid-run, 0 otherwise.
     simulate(ticks = 1) {
-        this.#compiledTicks(ticks);
+        return this.#compiledTicks(ticks);
     }
 
     // Steps through the compiled simulation line by line, optionally invoking the JS debugger each step.
@@ -624,7 +630,8 @@ class Simulation {
                     srcElementIndex2: entry.srcElementIndex2,
                     srcElementIndex3: entry.srcElementIndex3,
                     destElementIndex2: entry.destElementIndex2,
-                    destElementIndex3: entry.destElementIndex3
+                    destElementIndex3: entry.destElementIndex3,
+                    destElementIndexC: entry.destElementIndexC
                 });
                 matchedIndices.forEach(idx => skippedIndices.add(idx));
             }
@@ -669,7 +676,8 @@ class Simulation {
                     srcElementIndex2: entry.srcElementIndex2,
                     srcElementIndex3: entry.srcElementIndex3,
                     destElementIndex2: entry.destElementIndex2,
-                    destElementIndex3: entry.destElementIndex3
+                    destElementIndex3: entry.destElementIndex3,
+                    destElementIndexC: entry.destElementIndexC
                 });
                 matchedIndices.forEach(idx => skippedIndices.add(idx));
             }
@@ -880,6 +888,9 @@ class Simulation {
             for (const [destElementIndex, group] of pairs(conflictGrouped)) {
                 if (destElementIndex === 'null') continue;
                 this.#backend.emitConflict(destElementIndex, group, 'net conflict detection');
+            }
+            if (this.#breakOnConflict) {
+                this.#backend.emitBreakOnConflict();
             }
         }
 
