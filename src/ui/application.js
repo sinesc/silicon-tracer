@@ -491,15 +491,6 @@ class Application {
                 }
                 simulationMenu.open(); // update menu
             });
-            // Recompile simulation to flag conflicting networks (and show them in UI).
-            simulationMenu.createToggleButton('Show net conflicts', 'Networks with conflicting gate outputs will be highlighted. Increases simulation complexity.', this.config.checkNetConflicts, (enabled) => {
-                this.config.checkNetConflicts = enabled;
-                this.simulations.markDirty(null)
-                if (enabled) {
-                    this.simulations.select(this.circuits.current, this.config.autoCompile);
-                }
-                simulationMenu.open();
-            });
             // Lock simulation.
             simulationMenu.createToggleButton('Lock simulation', 'Prevents accidental changes from resetting the simulation. Does not prevent the changes but they won\'t be included in the simulation.', this.config.lockSimulation, (enabled) => {
                 this.config.lockSimulation = enabled;
@@ -550,6 +541,35 @@ class Application {
                 button.node.classList.toggle('toolbar-menu-button-disabled', isCurrent);
             }
         });
+
+        // Debugger menu
+        this.toolbar.createMenuButton('Debugger', 'Debugging tools.', (debuggerMenu) => {
+            debuggerMenu.clear();
+            // Recompile simulation to flag conflicting networks (and show them in UI).
+            debuggerMenu.createToggleButton('Show net conflicts', 'Networks with conflicting gate outputs will be highlighted. Increases simulation complexity.', this.config.checkNetConflicts, (enabled) => {
+                this.config.checkNetConflicts = enabled;
+                this.simulations.markDirty(null);
+                if (enabled) {
+                    this.simulations.select(this.circuits.current, this.config.autoCompile);
+                }
+                debuggerMenu.open();
+            });
+            debuggerMenu.createSeparator();
+            // Toggle single-step mode. When enabled, T advances by one tick.
+            const stepToggle = debuggerMenu.createToggleButton('Single step', 'Pause simulation and step one tick at a time using <i>T</i>.', this.config.singleStep, (enabled) => {
+                this.config.singleStep = enabled;
+                if (enabled && !this.simulations.current) {
+                    this.simulations.select(this.circuits.current, true);
+                }
+                debuggerMenu.open();
+            });
+            stepToggle.node.classList.toggle('toolbar-menu-button-disabled', !this.simulations.current && !this.config.singleStep);
+            // Advance by one tick. Only usable while single-step mode is active.
+            const stepButton = debuggerMenu.createActionButton('Step', 'Advance simulation by one tick. Hotkey: <i>T</i>.', () => {
+                this.#singleStep();
+            });
+            stepButton.node.classList.toggle('toolbar-menu-button-disabled', !this.config.singleStep);
+        });
     }
 
     // Create tool bar entries.
@@ -592,11 +612,26 @@ class Application {
         }
     }
 
+    // Enables single-step mode (if not already) and advances the simulation by one tick.
+    #singleStep() {
+        if (!this.simulations.current) {
+            this.simulations.select(this.circuits.current, true);
+        }
+        const sim = this.simulations.current;
+        if (!sim) return;
+        this.config.singleStep = true;
+        sim.tick(1);
+        this.grid.markDirty();
+    }
+
     // Define hotkey actions.
     #initHotkeys() {
         this.registerHotkey('ctrl+s', 'down', null, async (e) => {
             await this.circuits.saveFile();
             this.haveChanges = false;
+        });
+        this.registerHotkey('t', 'down', null, () => {
+            this.#singleStep();
         });
     }
 
