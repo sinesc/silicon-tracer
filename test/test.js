@@ -23,7 +23,7 @@ test("fract", () => {
     assert(negative < -0.29 && negative > -0.31)
 });
 
-console.log('Simulation tests:');
+console.log('\nSimulation tests:');
 
 test("reset functionality", () => {
     const sim = initSim('data/minimal.json', 'js');
@@ -64,30 +64,6 @@ test("reset preserves constants", () => {
     assert(sim.getConstValue(1) === 1, `Constant 1 should still be 1 after reset`);
     assert(sim.getConstValue(2) === 1, `Constant 2 should still be 1 after reset`);
 });
-
-console.log('\nSimulation timings:');
-
-const simJsCounter = time("Many counters simulation (Javascript)",
-    () => initSim('data/counters.json', 'js'),
-    (sim) => sim.simulate(500_000)
-);
-
-/*time("Many counters simulation (Wasm)",
-    () => initSim('data/counters.json', 'wasm'),
-    (sim) => sim.simulate(500_000),
-    simJsCounter
-);*/
-
-const simJsMinimal = time("Minimal static simulation (Javascript)",
-    () => initSim('data/minimal.json', 'js'),
-    (sim) => sim.simulate(50_000_000)
-);
-
-/*time("Minimal static simulation (Wasm)",
-    () => initSim('data/minimal.json', 'wasm'),
-    (sim) => sim.simulate(50_000_000),
-    simJsMinimal
-);*/
 
 test("net conflicts", () => {
     const sim = compileCircuit('data/tests.stc', 'ConflictBuffer');
@@ -136,6 +112,30 @@ test("no false positive conflict on AND gate output", () => {
     // Currently a false positive: the implementation incorrectly reports -1 here.
     assert(sim.getProbeValue('pQ') === 1, `pQ should be 1 (1 & 1), got ${sim.getProbeValue('pQ')}`);
 });
+
+console.log('\nSimulation timings:');
+
+const simJsCounter = time("Many counters simulation (Javascript)",
+    () => initSim('data/counters.json', 'js'),
+    (sim) => sim.simulate(500_000)
+);
+
+/*time("Many counters simulation (Wasm)",
+    () => initSim('data/counters.json', 'wasm'),
+    (sim) => sim.simulate(500_000),
+    simJsCounter
+);*/
+
+const simJsMinimal = time("Minimal static simulation (Javascript)",
+    () => initSim('data/minimal.json', 'js'),
+    (sim) => sim.simulate(50_000_000)
+);
+
+/*time("Minimal static simulation (Wasm)",
+    () => initSim('data/minimal.json', 'wasm'),
+    (sim) => sim.simulate(50_000_000),
+    simJsMinimal
+);*/
 
 console.log('\nSummary:');
 summary();
