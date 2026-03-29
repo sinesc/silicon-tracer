@@ -118,29 +118,8 @@ class BackendJavascript {
                     const mask = maskRaw << bitmap.startBit;
                     expr += ` | (${srcMem} & 0x${(mask >>> 0).toString(16)})`;
                 }
-            } else if (bitmap.mode === 'duplicate') {
-                let destMask = 0;
-                for (const destBit of bitmap.destBit) {
-                    destMask |= 1 << destBit;
-                }
-                expr += ` | (-((${srcMem} >>> ${bitmap.srcBit}) & 1) & 0x${(destMask >>> 0).toString(16)})`;
-            } else if (bitmap.mode === 'offset') {
-                const offset = bitmap.destBit;
-                let srcMask = 0;
-                for (const srcBit of bitmap.srcBit) {
-                    srcMask |= 1 << srcBit;
-                }
-                const shift = offset < 0 ? '>>> ' + (-offset) : '<< ' + offset;
-                expr += ` | ((${srcMem} & 0x${(srcMask >>> 0).toString(16)}) ${shift})`;
-            } else if (bitmap.mode === 'single') {
-                const shiftVal = bitmap.destBit - bitmap.srcBit;
-                const mask = (1 << bitmap.srcBit) >>> 0;
-                if (shiftVal === 0) {
-                    expr += ` | (${srcMem} & 0x${mask.toString(16)})`;
-                } else {
-                    const shift = shiftVal < 0 ? '>>> ' + (-shiftVal) : '<< ' + shiftVal;
-                    expr += ` | ((${srcMem} & 0x${mask.toString(16)}) ${shift})`;
-                }
+            } else {
+                expr += ` | ${this.#bitmapExpr(bitmap, srcMem)}`;
             }
         }
         this.#tickCode += `mem[${destElementIndex}] = ${expr.slice(3)}` + this.#comment(comment) + '\n';
@@ -156,24 +135,7 @@ class BackendJavascript {
             const isAlwaysDriven = bitmap.srcElementIndex3 == null;
 
             if (mode === 'signal' && isAlwaysDriven) {
-                if (bitmap.mode === 'duplicate') {
-                    for (const destBit of bitmap.destBit) {
-                        constantValue |= (1 << destBit);
-                    }
-                } else if (bitmap.mode === 'offset') {
-                    const offset = bitmap.destBit;
-                    let srcMask = 0;
-                    for (const srcBit of bitmap.srcBit) {
-                        srcMask |= 1 << srcBit;
-                    }
-                    if (offset < 0) {
-                        constantValue |= (srcMask >>> -offset);
-                    } else {
-                        constantValue |= (srcMask << offset);
-                    }
-                } else if (bitmap.mode === 'single') {
-                    constantValue |= (1 << bitmap.destBit);
-                }
+                constantValue |= this.#bitmapMask(bitmap);
                 continue;
             }
 
@@ -181,31 +143,7 @@ class BackendJavascript {
             const srcMem2 = `mem[${bitmap.srcElementIndex2}]`;
             const srcMem3 = !isAlwaysDriven ? `mem[${bitmap.srcElementIndex3}]` : null;
             const valueExpr = mode === 'value' ? (srcMem3 ? `(${srcMem2} & ${srcMem3})` : srcMem2) : srcMem3;
-
-            if (bitmap.mode === 'duplicate') {
-                let destMask = 0;
-                for (const destBit of bitmap.destBit) {
-                    destMask |= 1 << destBit;
-                }
-                expr += ` | (-((${valueExpr} >>> ${bitmap.srcBit}) & 1) & 0x${(destMask >>> 0).toString(16)})`;
-            } else if (bitmap.mode === 'offset') {
-                const offset = bitmap.destBit;
-                let srcMask = 0;
-                for (const srcBit of bitmap.srcBit) {
-                    srcMask |= 1 << srcBit;
-                }
-                const shift = offset < 0 ? '>>> ' + (-offset) : '<< ' + offset;
-                expr += ` | ((${valueExpr} & 0x${(srcMask >>> 0).toString(16)}) ${shift})`;
-            } else if (bitmap.mode === 'single') {
-                const shiftVal = bitmap.destBit - bitmap.srcBit;
-                const mask = (1 << bitmap.srcBit) >>> 0;
-                if (shiftVal === 0) {
-                    expr += ` | (${valueExpr} & 0x${mask.toString(16)})`;
-                } else {
-                    const shift = shiftVal < 0 ? '>>> ' + (-shiftVal) : '<< ' + shiftVal;
-                    expr += ` | ((${valueExpr} & 0x${mask.toString(16)}) ${shift})`;
-                }
-            }
+            expr += ` | ${this.#bitmapExpr(bitmap, valueExpr)}`;
         }
 
         let result = expr.slice(3);
@@ -226,53 +164,19 @@ class BackendJavascript {
 
     // Emits conflict detection: sets a bit in the conflict element when more than one active driver targets the same net bit.
     emitConflict(destElementIndex, bitmaps, comment) {
-        // First pass: compute static accumulator and conflict mask for always-driven (non-tristate) ports.
+        // Compute static accumulator and conflict mask for always-driven (non-tristate) ports.
         // Uses acc & mask pattern so a single driver produces staticConflict = 0.
         let staticAcc = 0;
         let staticConflict = 0;
         const dynamicExprs = [];
 
         for (const bitmap of bitmaps) {
-            const isAlwaysDriven = bitmap.srcElementIndex3 == null;
-            if (isAlwaysDriven) {
-                let mask = 0;
-                if (bitmap.mode === 'duplicate') {
-                    for (const destBit of bitmap.destBit) { mask |= (1 << destBit); }
-                } else if (bitmap.mode === 'offset') {
-                    const offset = bitmap.destBit;
-                    let srcMask = 0;
-                    for (const srcBit of bitmap.srcBit) { srcMask |= 1 << srcBit; }
-                    mask = offset < 0 ? (srcMask >>> -offset) : (srcMask << offset);
-                } else {
-                    mask = (1 << bitmap.destBit);
-                }
+            if (bitmap.srcElementIndex3 == null) {
+                const mask = this.#bitmapMask(bitmap);
                 staticConflict |= (staticAcc & mask);
                 staticAcc |= mask;
             } else {
-                // Tristate port: build signal expression from srcElementIndex3.
-                const srcMem3 = `mem[${bitmap.srcElementIndex3}]`;
-                let expr;
-                if (bitmap.mode === 'duplicate') {
-                    let destMask = 0;
-                    for (const destBit of bitmap.destBit) { destMask |= 1 << destBit; }
-                    expr = `(-((${srcMem3} >>> ${bitmap.srcBit}) & 1) & 0x${(destMask >>> 0).toString(16)})`;
-                } else if (bitmap.mode === 'offset') {
-                    const offset = bitmap.destBit;
-                    let srcMask = 0;
-                    for (const srcBit of bitmap.srcBit) { srcMask |= 1 << srcBit; }
-                    const shift = offset < 0 ? '>>> ' + (-offset) : '<< ' + offset;
-                    expr = `((${srcMem3} & 0x${(srcMask >>> 0).toString(16)}) ${shift})`;
-                } else {
-                    const shiftVal = bitmap.destBit - bitmap.srcBit;
-                    const mask = (1 << bitmap.srcBit) >>> 0;
-                    if (shiftVal === 0) {
-                        expr = `(${srcMem3} & 0x${mask.toString(16)})`;
-                    } else {
-                        const shift = shiftVal < 0 ? '>>> ' + (-shiftVal) : '<< ' + shiftVal;
-                        expr = `((${srcMem3} & 0x${mask.toString(16)}) ${shift})`;
-                    }
-                }
-                dynamicExprs.push(expr);
+                dynamicExprs.push(this.#bitmapExpr(bitmap, `mem[${bitmap.srcElementIndex3}]`));
             }
         }
 
@@ -312,6 +216,46 @@ class BackendJavascript {
             code += `${signal} |= ${active}`;
             code += this.#comment('pull resistors') + '\n';
             this.#tickCode += code;
+        }
+    }
+
+    // Returns the integer destination bit mask for a bitmap (duplicate/offset/single modes).
+    #bitmapMask(bitmap) {
+        if (bitmap.mode === 'duplicate') {
+            let mask = 0;
+            for (const destBit of bitmap.destBit) { mask |= (1 << destBit); }
+            return mask;
+        } else if (bitmap.mode === 'offset') {
+            const offset = bitmap.destBit;
+            let srcMask = 0;
+            for (const srcBit of bitmap.srcBit) { srcMask |= 1 << srcBit; }
+            return offset < 0 ? (srcMask >>> -offset) : (srcMask << offset);
+        } else {
+            return (1 << bitmap.destBit);
+        }
+    }
+
+    // Returns a shifted/masked expression string that maps srcExpr bits to their destination positions.
+    #bitmapExpr(bitmap, srcExpr) {
+        if (bitmap.mode === 'duplicate') {
+            let destMask = 0;
+            for (const destBit of bitmap.destBit) { destMask |= 1 << destBit; }
+            return `(-((${srcExpr} >>> ${bitmap.srcBit}) & 1) & 0x${(destMask >>> 0).toString(16)})`;
+        } else if (bitmap.mode === 'offset') {
+            const offset = bitmap.destBit;
+            let srcMask = 0;
+            for (const srcBit of bitmap.srcBit) { srcMask |= 1 << srcBit; }
+            const shift = offset < 0 ? '>>> ' + (-offset) : '<< ' + offset;
+            return `((${srcExpr} & 0x${(srcMask >>> 0).toString(16)}) ${shift})`;
+        } else {
+            const shiftVal = bitmap.destBit - bitmap.srcBit;
+            const mask = (1 << bitmap.srcBit) >>> 0;
+            if (shiftVal === 0) {
+                return `(${srcExpr} & 0x${mask.toString(16)})`;
+            } else {
+                const shift = shiftVal < 0 ? '>>> ' + (-shiftVal) : '<< ' + shiftVal;
+                return `((${srcExpr} & 0x${mask.toString(16)}) ${shift})`;
+            }
         }
     }
 
