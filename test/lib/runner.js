@@ -40,7 +40,8 @@ const SKIP_SCRIPTS = new Set([
     'src/ui/toolbar.js',
     'src/ui/dialog.js',
     'src/ui/simulations.js',
-    'src/ui/application.js', // replaced by the stub below
+    // application.js is NOT skipped — its entry in the loop is the insertion
+    // point for the Application stub (the stub replaces it instead of loading it).
     'src/grid/wirebuilder.js', // only used during interactive wire dragging
     'src/external/logisim.js', // import-only feature, not needed for simulation
     'src/main.js',
@@ -91,12 +92,15 @@ vm.runInContext(`
         return new Simulation({ backend: backendStr });
     }
 
-    function _compileCircuit(jsonText, backend) {
+    function _compileCircuit(jsonText, circuitLabel, backend) {
         // Strip optional JSON-P wrapper (same logic as Circuits.#decodeJSON)
         const content = JSON.parse(jsonText.replace(/^loadFiles\\.push\\(\\s*(.+)\\)\\s*$/s, '$1'));
         const app = new Application();
         app.circuits.unserialize(content, null, false, []);
-        const circuit = app.circuits.byUID(content.currentUID);
+        const circuit = circuitLabel
+            ? app.circuits.byLabel(circuitLabel)
+            : app.circuits.byUID(content.currentUID);
+        if (!circuit) throw new Error('Circuit not found: ' + circuitLabel);
         const netList = NetList.identify(circuit, app.circuits.all);
         return netList.compileSimulation(null, {
             backend: backend || 'js',
@@ -180,10 +184,11 @@ function readJSON(filePath) {
 }
 
 // Loads a .stc circuit file, identifies its nets, compiles and returns the simulation.
-function compileCircuit(filePath, backend = 'js') {
+// circuitLabel selects a named circuit from the file; defaults to the file's currentUID circuit.
+function compileCircuit(filePath, circuitLabel = null, backend = 'js') {
     const fullpath = path.resolve(__dirname, '../' + filePath);
     const text = fs.readFileSync(fullpath, 'utf-8');
-    return context._compileCircuit(text, backend);
+    return context._compileCircuit(text, circuitLabel, backend);
 }
 
 module.exports = { assert, test, time, readJSON, summary, context, setDebugMode, createSimulationWithBackend: context.createSimulationWithBackend, compileCircuit };

@@ -1,7 +1,7 @@
 const args = process.argv.slice(2);
 const debug = args.includes('--debug');
 
-const { assert, test, time, readJSON, summary, context: c, createSimulationWithBackend } = require('./lib/runner');
+const { assert, test, time, readJSON, summary, context: c, createSimulationWithBackend, compileCircuit } = require('./lib/runner');
 
 if (debug) {
     require('./lib/runner').setDebugMode(true);
@@ -90,7 +90,7 @@ const simJsMinimal = time("Minimal static simulation (Javascript)",
 );*/
 
 test("net conflicts", () => {
-    const sim = initSim('data/conflict.json', 'js');
+    const sim = compileCircuit('data/tests.stc', 'ConflictBuffer');
     const cInput   = sim.getConstId('cInput');
     const cEnable1 = sim.getConstId('cEnable1');
     const cEnable2 = sim.getConstId('cEnable2');
@@ -120,7 +120,7 @@ test("net conflicts", () => {
 });
 
 test("no false positive conflict on AND gate output", () => {
-    const sim = initSim('data/conflict-and.json', 'js');
+    const sim = compileCircuit('data/tests.stc', 'ConflictGate');
     const cA = sim.getConstId('cA');
     const cB = sim.getConstId('cB');
 
