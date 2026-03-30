@@ -265,7 +265,7 @@ function comparePriority(a, b, priorities) {
             message = typeof message === 'function' ? message() : message;
             throw new Error(message?.replace('%', ty) ?? 'Assertion failed: Expected number, got ' + ty);
         }
-        if ((min !== null && val < min) || (max !== null && val > max)) {
+        if (!allow_null && ((min !== null && val < min) || (max !== null && val > max))) {
             throw new Error(`Assertion failed: Number value ${val} out of specified bounds`);
         }
     }
@@ -277,7 +277,7 @@ function comparePriority(a, b, priorities) {
             message = typeof message === 'function' ? message() : message;
             throw new Error(message?.replace('%', ty) ?? 'Assertion failed: Expected integer, got ' + ty);
         }
-        if ((min !== null && val < min) || (max !== null && val > max)) {
+        if (!allow_null && ((min !== null && val < min) || (max !== null && val > max))) {
             throw new Error(`Assertion failed: Integer value ${val} out of specified bounds`);
         }
     }
