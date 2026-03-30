@@ -7,8 +7,9 @@ class Application {
         targetTPS: 10000,
         autoCompile: true,
         singleStep: false,
-        checkNetConflicts: true,
+        checkNetConflicts: false,
         breakOnConflict: false,
+        breakOnCondition: false,
         breakConditions: [],
         lockSimulation: false,
         simulationBackend: 'js',
@@ -570,6 +571,12 @@ class Application {
                 if (enabled) this.config.checkNetConflicts = true;
                 this.simulations.markDirty(null);
                 this.simulations.select(this.circuits.current, this.config.autoCompile);
+                debuggerMenu.open();
+            });
+            // Pause simulation when any break condition is met.
+            debuggerMenu.createToggleButton('Break on condition', 'Pause simulation when a user-defined probe expression becomes true.', this.config.breakOnCondition, (enabled) => {
+                this.config.breakOnCondition = enabled;
+                this.simulations.markDirty(null);
                 debuggerMenu.open();
             });
             debuggerMenu.createSeparator();

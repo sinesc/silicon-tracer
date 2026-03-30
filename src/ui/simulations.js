@@ -218,7 +218,7 @@ Simulations.Simulation = class {
             debug:              config.debugCompileComments,
             checkNetConflicts:  config.checkNetConflicts,
             breakOnConflict:    config.breakOnConflict,
-            breakConditions:    config.breakConditions,
+            breakConditions:    config.breakOnCondition ? config.breakConditions : [],
             backend:            config.simulationBackend,
             targetTPS:          config.targetTPS,
         });
