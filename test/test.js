@@ -1,7 +1,7 @@
 const args = process.argv.slice(2);
 const debug = args.includes('--debug');
 
-const { assert, test, time, readJSON, summary, context: c, createSimulationWithBackend, compileCircuit } = require('./lib/runner');
+const { assert, test, time, readJSON, summary, context: c, createSimulationWithBackend, compileCircuit, loadCircuitWires } = require('./lib/runner');
 
 if (debug) {
     require('./lib/runner').setDebugMode(true);
@@ -178,6 +178,32 @@ test("break on conflict (clock-driven)", () => {
         if (sim.simulate(1) === 1) { breakAgain = true; break; }
     }
     assert(breakAgain, `conflict should recur at count 11 (q0 and q3 both high again)`);
+});
+
+console.log('\nWire compaction tests:');
+
+test("T-junction produces 3 wires (WireJunction3)", () => {
+    const { wireCount, wireNetIds } = loadCircuitWires('data/tests.stc', 'WireJunction3');
+    assert(wireCount === 3, `expected 3 wires after compaction, got ${wireCount}`);
+    // All three wires must share the same net (they form a connected junction).
+    const ids = new Set(wireNetIds);
+    assert(ids.size === 1, `expected all wires on 1 net, got ${ids.size} distinct net(s)`);
+});
+
+test("X-junction produces 4 wires (WireJunction4)", () => {
+    const { wireCount, wireNetIds } = loadCircuitWires('data/tests.stc', 'WireJunction4');
+    assert(wireCount === 4, `expected 4 wires after compaction, got ${wireCount}`);
+    // All four wires must share the same net.
+    const ids = new Set(wireNetIds);
+    assert(ids.size === 1, `expected all wires on 1 net, got ${ids.size} distinct net(s)`);
+});
+
+test("crossing wires produce 2 unconnected wires (WireCrossing)", () => {
+    const { wireCount, wireNetIds } = loadCircuitWires('data/tests.stc', 'WireCrossing');
+    assert(wireCount === 2, `expected 2 wires after compaction, got ${wireCount}`);
+    // The two wires must be on different nets (they cross but do not connect).
+    const ids = new Set(wireNetIds);
+    assert(ids.size === 2, `expected 2 distinct nets, got ${ids.size}`);
 });
 
 console.log('\nSimulation timings:');

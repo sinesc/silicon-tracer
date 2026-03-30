@@ -63,6 +63,8 @@ const APPLICATION_STUB = `
             debugCompileComments: false,
             checkNetConflicts: true,
             breakOnConflict: false,
+            breakOnCondition: true,
+            breakConditions: [],
             targetTPS: 10000,
             debug: false,
         };
@@ -93,6 +95,24 @@ vm.runInContext(`
         return new Simulation({ backend: backendStr });
     }
 
+    // Loads a circuit (compacting runs as part of unserialize), then returns
+    // wire count and per-wire net IDs so tests can check compaction results.
+    function _loadCircuitWires(jsonText, circuitLabel) {
+        const content = JSON.parse(jsonText.replace(/^loadFiles\\.push\\(\\s*(.+)\\)\\s*$/s, '$1'));
+        const app = new Application();
+        app.circuits.unserialize(content, null, false, []);
+        const circuit = circuitLabel
+            ? app.circuits.byLabel(circuitLabel)
+            : app.circuits.byUID(content.currentUID);
+        if (!circuit) throw new Error('Circuit not found: ' + circuitLabel);
+        const wires = circuit.items.filter(w => w instanceof Wire).toArray();
+        const netList = NetList.identify(circuit);
+        return {
+            wireCount: wires.length,
+            wireNetIds: wires.map(w => netList.findWire(w)),
+        };
+    }
+
     function _compileCircuit(jsonText, circuitLabel, backend, configOverrides) {
         // Strip optional JSON-P wrapper (same logic as Circuits.#decodeJSON)
         const content = JSON.parse(jsonText.replace(/^loadFiles\\.push\\(\\s*(.+)\\)\\s*$/s, '$1'));
@@ -107,6 +127,7 @@ vm.runInContext(`
             backend: backend || 'js',
             checkNetConflicts: true,
             breakOnConflict: false,
+            breakConditions: [],
             targetTPS: 10000,
             debug: false,
             debugSerializeSimulation: false,
@@ -193,4 +214,12 @@ function compileCircuit(filePath, circuitLabel = null, backend = 'js', configOve
     return context._compileCircuit(text, circuitLabel, backend, configOverrides);
 }
 
-module.exports = { assert, test, time, readJSON, summary, context, setDebugMode, createSimulationWithBackend: context.createSimulationWithBackend, compileCircuit };
+// Loads a .stc circuit file and returns wire compaction info: { wireCount, wireNetIds }.
+// wireNetIds is an array of net indices (one per wire); wires sharing a net index are connected.
+function loadCircuitWires(filePath, circuitLabel = null) {
+    const fullpath = path.resolve(__dirname, '../' + filePath);
+    const text = fs.readFileSync(fullpath, 'utf-8');
+    return context._loadCircuitWires(text, circuitLabel);
+}
+
+module.exports = { assert, test, time, readJSON, summary, context, setDebugMode, createSimulationWithBackend: context.createSimulationWithBackend, compileCircuit, loadCircuitWires };

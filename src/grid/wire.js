@@ -248,142 +248,116 @@ class Wire extends GridItem {
     }
 
     // Compact/reduce overlapping wires on the given grid or circuit.
+    // Merges collinear wires that overlap or touch, but splits at any point where a
+    // perpendicular wire has an endpoint (T- and X-junctions).
     static compact(container) {
         assert(container instanceof Grid || container instanceof Circuits.Circuit, 'container must be a Grid or Circuit');
 
-        const preMergedWires = Wire.#getAllWires(container);
-        const intersections = Wire.#findIntersections(preMergedWires);
-        let merged = false;
+        const allWires = container.items.filter((w) => w instanceof Wire).toArray();
+        if (allWires.length === 0) return;
 
-        for (const direction of [ 'h', 'v' ]) {
-            merged ||=  Wire.#mergeWires(container, preMergedWires, direction);
-        }
+        const app = allWires[0].app;
 
-        if (merged) {
-            Wire.#restoreIntersections(container, intersections);
-        }
-    }
-
-    // compact() support. Find intentional intersection points (one wire ending on another).
-    static #findIntersections(allWires) {
-        const intersections = new Map();
-        for (const direction of [ 'h', 'v' ]) {
-            const otherDirection = direction === 'h' ? 'v' : 'h';
-            for (const wire of allWires[direction]) {
-                for (const otherWire of allWires[otherDirection]) {
-                    for (let i = 0; i < 2; ++i) {
-                        // check if endpoint intersects other wire but is not on that wire's end points (we use these intersections to add back points to merged
-                        // wires but that's not necessary if we are already intersecting an endpoint)
-                        if (wire.points[i].onLine(otherWire.points) /*&& otherWire.points[0].c !== wire.points[i].c && otherWire.points[1].c !== wire.points[i].c*/) {
-                            intersections.set(wire.points[i].c, { point: wire.points[i], direction: direction, done: false });
-                        }
-                    }
-                }
-            }
-        }
-        return intersections.values().toArray();
-    }
-
-    // compact() support. Restore intentional intersection points after merging unintentional endpoints.
-    static #restoreIntersections(container, intersections) {
-
-        const isIntersected = (w, d) => {
-            for (const i of intersections) {
-                if (i.direction === d && !i.done && i.point.onLine(w)) {
-                    i.done = true;
-                    return i.point;
-                }
-            }
-            return null;
-        };
-
-        // repeat intersection point insertion until done (wire might have multiple intersection and this
-        // code only handles one each time). //TODO: at some point that should be refactored
-        let created;
-        let paranoiaLimit = 100;
-
-        do {
-            created = false;
-            const postMergedWires = Wire.#getAllWires(container);
-            for (const direction of [ 'h', 'v' ]) {
-                const axis = direction === 'h' ? 'x' : 'y';
-                for (const w of postMergedWires[direction]) {
-                    const intersection = isIntersected(w.points, w.wire.#direction);
-                    if (intersection !== null) {
-                        const app = w.wire.app;
-                        const length1 = intersection[axis] - w.points[0][axis];
-                        if (length1 !== 0) {
-                            container.addItem(new Wire(app, w.points[0].x, w.points[0].y, length1, direction, w.wire.color));
-                            created = true;
-                        }
-                        const length2 = w.points[1][axis] - intersection[axis];
-                        if (length2 !== 0) {
-                            container.addItem(new Wire(app, intersection.x, intersection.y, length2, direction, w.wire.color));
-                            created = true;
-                        }
-                        container.removeItem(w.wire);
-                    }
-                }
-            }
-        } while (created && paranoiaLimit--);
-    }
-
-    // compact() support. Merge overlapping wires.
-    static #mergeWires(container, allWires, direction) {
-
-        const axis = direction === 'h' ? 'x' : 'y';
-        const wires = allWires[direction];
-
-        for (const wp of wires) {
-            if (!wp.active) {
-                continue;
-            }
-            for (const wq of wires) {
-                if (!wq.active || wq.wire === wp.wire) {
-                    continue;
-                }
-                if (wp.points[0].onLine(wq.points)) {
-                    if (wp.points[1].onLine(wq.points)) {
-                        // entirely contained in the other wire, disable wp
-                        wp.active = false;
-                    } else {
-                        // partially outside, enlarge wq, disable wp
-                        const min = Math.min(wp.points[0][axis], wp.points[1][axis], wq.points[0][axis], wq.points[1][axis]);
-                        const max = Math.max(wp.points[0][axis], wp.points[1][axis], wq.points[0][axis], wq.points[1][axis]);
-                        wq.points[0][axis] = min;
-                        wq.points[1][axis] = max;
-                        wp.active = false;
-                    }
-                }
-            }
-        }
-
-        let merged = false;
-
-        for (const w of wires) {
-            if (!w.active) {
-                container.removeItem(w.wire);
-                merged = true;
+        // Pre-compute cut points from the original wire state, before any merging.
+        // A cut is needed wherever a perpendicular wire connects: either its endpoint lies on
+        // this wire's body, or this wire's endpoint lies on the perpendicular wire's body.
+        // Both cases are equivalent junction connections per the wire connectivity rule.
+        // Computed once and never mutated so processing one direction cannot corrupt the other.
+        const hWiresByTrack = new Map(); // y -> [{start, end}]
+        const vWiresByTrack = new Map(); // x -> [{start, end}]
+        for (const wire of allWires) {
+            const [ p1, p2 ] = wire.points();
+            if (wire.#direction === 'h') {
+                const y = p1.y, start = Math.min(p1.x, p2.x), end = Math.max(p1.x, p2.x);
+                if (!hWiresByTrack.has(y)) hWiresByTrack.set(y, []);
+                hWiresByTrack.get(y).push({ start, end });
             } else {
-                const length = w.points[1][axis] - w.points[0][axis];
-                w.wire.setDimensions(w.points[0].x, w.points[0].y, length, direction);
+                const x = p1.x, start = Math.min(p1.y, p2.y), end = Math.max(p1.y, p2.y);
+                if (!vWiresByTrack.has(x)) vWiresByTrack.set(x, []);
+                vWiresByTrack.get(x).push({ start, end });
             }
         }
 
-        return merged;
-    }
-
-    // compact() support. Returns all wires grouped by direction
-    static #getAllWires(container) {
-        return {
-            h: container.items
-                .filter((w) => w instanceof Wire && w.#direction === 'h')
-                .map((w) => ({ active: true, points: w.points(), wire: w }))
-                .toArray(),
-            v: container.items
-                .filter((w) => w instanceof Wire && w.#direction === 'v')
-                .map((w) => ({ active: true, points: w.points(), wire: w }))
-                .toArray(),
+        const addCut = (map, track, pos) => {
+            if (!map.has(track)) map.set(track, new Set());
+            map.get(track).add(pos);
         };
+        const coversPoint = (wires, pos) => wires?.some(w => w.start <= pos && pos <= w.end) ?? false;
+
+        const cutsForH = new Map(); // y -> Set of x
+        const cutsForV = new Map(); // x -> Set of y
+        for (const wire of allWires) {
+            for (const p of wire.points()) {
+                if (wire.#direction === 'v') {
+                    // V endpoint at (p.x, p.y): cuts H track at y=p.y if an H wire body covers p.x.
+                    addCut(cutsForH, p.y, p.x);
+                    // V endpoint at (p.x, p.y): cuts V track at x=p.x if an H wire body covers p.y.
+                    if (coversPoint(hWiresByTrack.get(p.y), p.x)) addCut(cutsForV, p.x, p.y);
+                } else {
+                    // H endpoint at (p.x, p.y): cuts V track at x=p.x if a V wire body covers p.y.
+                    addCut(cutsForV, p.x, p.y);
+                    // H endpoint at (p.x, p.y): cuts H track at y=p.y if a V wire body covers p.x.
+                    if (coversPoint(vWiresByTrack.get(p.x), p.y)) addCut(cutsForH, p.y, p.x);
+                }
+            }
+        }
+
+        for (const direction of [ 'h', 'v' ]) {
+            const isH = direction === 'h';
+            const cuts = isH ? cutsForH : cutsForV;
+
+            // Group wires by their perpendicular coordinate into tracks.
+            const tracks = new Map();
+            for (const wire of allWires) {
+                if (wire.#direction !== direction) continue;
+                const [ p1, p2 ] = wire.points();
+                const trackCoord = isH ? p1.y : p1.x;
+                const start = Math.min(isH ? p1.x : p1.y, isH ? p2.x : p2.y);
+                const end   = Math.max(isH ? p1.x : p1.y, isH ? p2.x : p2.y);
+                if (!tracks.has(trackCoord)) tracks.set(trackCoord, []);
+                tracks.get(trackCoord).push({ wire, start, end });
+            }
+
+            for (const [ trackCoord, track ] of tracks) {
+                track.sort((a, b) => a.start - b.start || b.end - a.end);
+
+                // Find connected groups: wires that overlap or touch (start <= previous groupEnd).
+                let groupStart = track[0].start, groupEnd = track[0].end;
+                let groupWires = [ track[0] ];
+
+                const flushGroup = () => {
+                    // Cut points: perpendicular wire endpoints strictly inside this group's span.
+                    const trackCuts = cuts.get(trackCoord) ?? new Set();
+                    const interiorCuts = [...trackCuts].filter(c => c > groupStart && c < groupEnd);
+                    // Nothing to do if this is a single unmodified wire with no interior cut points.
+                    if (groupWires.length < 2 && interiorCuts.length === 0) return;
+
+                    const splitPoints = [ groupStart,
+                        ...interiorCuts.sort((a, b) => a - b),
+                        groupEnd ];
+
+                    for (const w of groupWires) container.removeItem(w.wire);
+
+                    const color = groupWires[0].wire.color;
+                    for (let i = 0; i < splitPoints.length - 1; i++) {
+                        const from = splitPoints[i], to = splitPoints[i + 1];
+                        container.addItem(new Wire(app, isH ? from : trackCoord, isH ? trackCoord : from, to - from, direction, color));
+                    }
+                };
+
+                for (let i = 1; i < track.length; i++) {
+                    if (track[i].start <= groupEnd) {
+                        groupWires.push(track[i]);
+                        groupEnd = Math.max(groupEnd, track[i].end);
+                    } else {
+                        flushGroup();
+                        groupStart = track[i].start;
+                        groupEnd   = track[i].end;
+                        groupWires = [ track[i] ];
+                    }
+                }
+                flushGroup();
+            }
+        }
     }
 }
