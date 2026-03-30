@@ -2,7 +2,7 @@ loadFiles.push(
 {
 	"version": 4,
 	"label": "tests",
-	"currentUID": "uff10d197b35b47af81bed39f1a13da4c",
+	"currentUID": "u720d53239859453886fcdd992e31275f",
 	"circuits": [
 		{
 			"label": "ConflictBuffer",
@@ -1489,6 +1489,251 @@ loadFiles.push(
 				"zoom": 1.25,
 				"offsetX": -427.2,
 				"offsetY": -154.4
+			},
+			"portConfig": {
+				"spacing": 0,
+				"gap": "middle",
+				"parity": "auto",
+				"placement": {
+					"top": "",
+					"right": "",
+					"bottom": "",
+					"left": ""
+				}
+			},
+			"lid": null,
+			"visibleInLib": true
+		},
+		{
+			"label": "WireJunction3",
+			"uid": "u2ac277465db54e81b856765213156a2d",
+			"data": [
+				{
+					"#c": "Wire",
+					"#a": [
+						170,
+						110,
+						40,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Constant",
+					"#a": [
+						130,
+						90,
+						1,
+						0
+					],
+					"name": "cA"
+				},
+				{
+					"#c": "Probe",
+					"#a": [
+						210,
+						90,
+						3,
+						"pC"
+					]
+				},
+				{
+					"#c": "Probe",
+					"#a": [
+						170,
+						50,
+						2,
+						"pB"
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						190,
+						90,
+						20,
+						"v",
+						1
+					]
+				}
+			],
+			"gridConfig": {
+				"zoom": 1.25,
+				"offsetX": 0,
+				"offsetY": 0
+			},
+			"portConfig": {
+				"spacing": 0,
+				"gap": "middle",
+				"parity": "auto",
+				"placement": {
+					"top": "",
+					"right": "",
+					"bottom": "",
+					"left": ""
+				}
+			},
+			"lid": null,
+			"visibleInLib": true
+		},
+		{
+			"label": "WireJunction4",
+			"uid": "uc0bef4fde33e4074a43f76cc6438af28",
+			"data": [
+				{
+					"#c": "Wire",
+					"#a": [
+						190,
+						90,
+						40,
+						"v",
+						1
+					]
+				},
+				{
+					"#c": "Constant",
+					"#a": [
+						130,
+						90,
+						1,
+						0
+					],
+					"name": "cA"
+				},
+				{
+					"#c": "Probe",
+					"#a": [
+						210,
+						90,
+						3,
+						"pC"
+					]
+				},
+				{
+					"#c": "Probe",
+					"#a": [
+						170,
+						50,
+						2,
+						"pB"
+					]
+				},
+				{
+					"#c": "Probe",
+					"#a": [
+						170,
+						130,
+						0,
+						"pD"
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						170,
+						110,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						190,
+						110,
+						20,
+						"h",
+						1
+					]
+				}
+			],
+			"gridConfig": {
+				"zoom": 1.25,
+				"offsetX": 0,
+				"offsetY": 0
+			},
+			"portConfig": {
+				"spacing": 0,
+				"gap": "middle",
+				"parity": "auto",
+				"placement": {
+					"top": "",
+					"right": "",
+					"bottom": "",
+					"left": ""
+				}
+			},
+			"lid": null,
+			"visibleInLib": true
+		},
+		{
+			"label": "WireCrossing",
+			"uid": "u7000d589ee6d489d8330aa13f8d30835",
+			"data": [
+				{
+					"#c": "Wire",
+					"#a": [
+						190,
+						90,
+						40,
+						"v",
+						1
+					]
+				},
+				{
+					"#c": "Constant",
+					"#a": [
+						130,
+						90,
+						1,
+						0
+					],
+					"name": "cA"
+				},
+				{
+					"#c": "Probe",
+					"#a": [
+						210,
+						90,
+						3,
+						"pC"
+					]
+				},
+				{
+					"#c": "Probe",
+					"#a": [
+						170,
+						130,
+						0,
+						"pD"
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						170,
+						110,
+						40,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Constant",
+					"#a": [
+						170,
+						50,
+						2,
+						1
+					],
+					"name": "cB"
+				}
+			],
+			"gridConfig": {
+				"zoom": 1.25,
+				"offsetX": 0,
+				"offsetY": 0
 			},
 			"portConfig": {
 				"spacing": 0,
