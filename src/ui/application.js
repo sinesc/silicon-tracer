@@ -303,7 +303,7 @@ class Application {
             });
             fileMenu.createSeparator();
             // Save circuits to last opened file.
-            const saveButton = fileMenu.createActionButton(this.circuits.fileName ? 'Save <i>' + this.circuits.fileName + '</i>' : 'Save', 'Save circuits to file.', async () => {
+            const saveButton = fileMenu.createActionButton(this.circuits.fileName ? 'Save <i>' + this.circuits.fileName + '</i>' : 'Save', 'Save circuits to file. Hotkey: <i>CTRL+S</i>', async () => {
                 fileMenu.state(false);
                 await this.circuits.saveFile();
                 this.haveChanges = false;
@@ -574,7 +574,7 @@ class Application {
             });
             debuggerMenu.createSeparator();
             // Toggle single-step mode. When enabled, T advances by one tick.
-            const stepToggle = debuggerMenu.createToggleButton('Single step', 'Pause simulation and step one tick at a time using <i>T</i>.', this.config.singleStep, (enabled) => {
+            const stepToggle = debuggerMenu.createToggleButton('Single step', 'Pause simulation and step one tick at a time using hotkey <i>T</i>.', this.config.singleStep, (enabled) => {
                 this.config.singleStep = enabled;
                 if (enabled && !this.simulations.current) {
                     this.simulations.select(this.circuits.current, true);
@@ -583,15 +583,19 @@ class Application {
             });
             stepToggle.node.classList.toggle('toolbar-menu-button-disabled', !this.simulations.current && !this.config.singleStep);
             // Advance by one tick. Only usable while single-step mode is active.
-            const stepButton = debuggerMenu.createActionButton('Step', 'Advance simulation by one tick. Hotkey: <i>T</i>.', () => {
+            const stepButton = debuggerMenu.createActionButton('Step once', 'Advance simulation by one tick. Hotkey: <i>T</i>.', () => {
                 this.#singleStep();
             });
             stepButton.node.classList.toggle('toolbar-menu-button-disabled', !this.config.singleStep);
             // Break-on-condition expressions.
             debuggerMenu.createSeparator();
-            debuggerMenu.createActionButton('Add condition...', 'Break simulation when a probe expression becomes true.', async () => {
+            const EXPRESSION_HELP = 'Probe labels are available as variables, e.g. <code>!pA &amp;&amp; (pB || pC)</code>. Undriven probes return <code>null</code>, conflicting probes <code>-1</code>.';
+            debuggerMenu.createActionButton('Add condition...', 'Break simulation on a custom probe expression.', async () => {
                 debuggerMenu.state(false);
-                const result = await dialog('Add break condition', [ { label: 'Expression', name: 'expression', type: 'string', check: (v) => v.trim() !== '' } ], { expression: '' });
+                const result = await dialog('Add break condition', [
+                    { text: 'Enter an expression.' + EXPRESSION_HELP },
+                    { label: 'Expression', name: 'expression', type: 'string', check: (v) => v.trim() !== '' }
+                ], { expression: '' });
                 if (result) {
                     this.config.breakConditions.push(result.expression.trim());
                     this.simulations.markDirty(null);
@@ -605,7 +609,10 @@ class Application {
                 const expr = this.config.breakConditions[i];
                 debuggerMenu.createActionButton(expr, 'Click to edit. Clear expression to delete.', async () => {
                     debuggerMenu.state(false);
-                    const result = await dialog('Edit break condition', [ { label: 'Expression', name: 'expression', type: 'string', check: () => true } ], { expression: expr });
+                    const result = await dialog('Edit break condition', [
+                        { text: 'Edit the expression below. Clear expression and confirm to delete. ' + EXPRESSION_HELP },
+                        { label: 'Expression', name: 'expression', type: 'string' }
+                    ], { expression: expr });
                     if (result) {
                         if (result.expression.trim() === '') {
                             this.config.breakConditions.splice(i, 1);

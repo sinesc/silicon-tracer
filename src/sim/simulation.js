@@ -904,7 +904,7 @@ class Simulation {
             const probeMap = {};
             for (const probe of Object.values(this.#probes.byName)) {
                 const net = probe.netId !== null ? this.#nets.all[probe.netId] : null;
-                probeMap[probe.name] = net ? { elementIndex2: net.elementIndex2, bitIndex: net.bitIndex } : null;
+                probeMap[probe.name] = net ? { elementIndex2: net.elementIndex2, elementIndex3: net.elementIndex3, elementIndexC: net.elementIndexC, bitIndex: net.bitIndex } : null;
             }
             for (const expr of this.#breakConditions) {
                 this.#backend.emitBreakOnCondition(expr, probeMap);

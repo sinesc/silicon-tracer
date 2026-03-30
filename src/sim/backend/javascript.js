@@ -209,10 +209,22 @@ class BackendJavascript {
     // probeMap is { [probeName]: { elementIndex2, bitIndex } | null } — null probes are substituted with 0.
     emitBreakOnCondition(expr, probeMap) {
         const names = Object.keys(probeMap).sort((a, b) => b.length - a.length);
-        let translated = expr;
+        // Replace unknown identifiers with null before probe substitution.
+        let translated = expr.replace(/\b[a-zA-Z_$][\w$]*\b/g, (m) => Object.hasOwn(probeMap, m) ? m : 'null');
         for (const name of names) {
             const p = probeMap[name];
-            const replacement = p ? `((mem[${p.elementIndex2}] >>> ${p.bitIndex}) & 1)` : '0';
+            let replacement;
+            if (!p) {
+                replacement = 'null';
+            } else {
+                // Mirror getNetValue(): undriven → null, conflict → -1, otherwise 0/1.
+                const driven  = `((mem[${p.elementIndex3}] >>> ${p.bitIndex}) & 1)`;
+                const value   = `((mem[${p.elementIndex2}] >>> ${p.bitIndex}) & 1)`;
+                const withConflict = p.elementIndexC !== null
+                    ? `((mem[${p.elementIndexC}] >>> ${p.bitIndex}) & 1) ? -1 : ${value}`
+                    : value;
+                replacement = `(${driven} ? (${withConflict}) : null)`;
+            }
             translated = translated.replace(new RegExp('\\b' + name + '\\b', 'g'), replacement);
         }
         try { new Function('mem', `return (${translated})`); }
