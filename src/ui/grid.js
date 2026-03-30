@@ -174,9 +174,10 @@ class Grid {
 
         if (this.#dirty & Grid.#DIRTY_OVERLAY) {
             const isLocked = this.#app.config.lockSimulation ? '<span class="warning">Locked</span> ' : '';
+            const singleStep = this.#app.config.singleStep ? '<span class="warning">Single Step</span> ' : '';
             this.#infoBox.element.innerHTML = `<div class="info-section">Circuit</div><div class="info-title">${this.#infoBox.circuitLabel}</div>` +
                 (!this.#infoBox.circuitDetails ? '' : `<div class="info-details">${this.#infoBox.circuitDetails}</div>`) +
-                (!this.#infoBox.simulationLabel ? '' : `<div class="info-section">${isLocked}Simulation</div><div class="info-title">${this.#infoBox.simulationLabel}</div>`) +
+                (!this.#infoBox.simulationLabel ? '' : `<div class="info-section">${singleStep}${isLocked}Simulation</div><div class="info-title">${this.#infoBox.simulationLabel}</div>`) +
                 (!this.#infoBox.simulationDetails ? '' : `<div class="info-details">${this.#infoBox.simulationDetails}</div>`);
         }
 
