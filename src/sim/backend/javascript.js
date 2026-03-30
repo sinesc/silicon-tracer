@@ -205,6 +205,21 @@ class BackendJavascript {
         }
     }
 
+    // Emits a break-on-condition check: evaluates a user-defined probe expression and breaks the tick loop early if truthy.
+    // probeMap is { [probeName]: { elementIndex2, bitIndex } | null } — null probes are substituted with 0.
+    emitBreakOnCondition(expr, probeMap) {
+        const names = Object.keys(probeMap).sort((a, b) => b.length - a.length);
+        let translated = expr;
+        for (const name of names) {
+            const p = probeMap[name];
+            const replacement = p ? `((mem[${p.elementIndex2}] >>> ${p.bitIndex}) & 1)` : '0';
+            translated = translated.replace(new RegExp('\\b' + name + '\\b', 'g'), replacement);
+        }
+        try { new Function('mem', `return (${translated})`); }
+        catch { return; }
+        this.#tickCode += `if (${translated}) { return 2; }` + this.#comment('break on condition') + '\n';
+    }
+
     // Emits a break-on-conflict check: ORs all conflict elements and breaks the tick loop early if any bit is set.
     emitBreakOnConflict() {
         if (this.#conflictIndices.size === 0) return;
@@ -274,7 +289,7 @@ class BackendJavascript {
     }
 
     // Finalizes and returns the simulation function.
-    // The returned function returns 1 if a break-on-conflict fired, 0 otherwise.
+    // The returned function returns 1 if a break-on-conflict fired, 2 if a break-on-condition fired, 0 otherwise.
     compile() {
         let code = "'use strict';(mem) => (ticks) => {\n";
         code += this.#initCode;

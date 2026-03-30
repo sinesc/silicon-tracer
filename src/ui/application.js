@@ -9,6 +9,7 @@ class Application {
         singleStep: false,
         checkNetConflicts: true,
         breakOnConflict: false,
+        breakConditions: [],
         lockSimulation: false,
         simulationBackend: 'js',
         debugCompileComments: false,
@@ -245,7 +246,7 @@ class Application {
             const broke = sim.tick(ticksNow);
             ticksDone += ticksNow;
             elapsed = performance.now() - start;
-            if (broke) {
+            if (broke) { // 1 = conflict break, 2 = condition break
                 this.config.singleStep = true;
                 return ticksDone;
             }
@@ -255,7 +256,7 @@ class Application {
             const maxTicks = ticksDone * ((this.#renderLoop.refresh.med - elapsed) / elapsed) * this.#renderLoop.loadLimit;
             const stillDoable = 0 | Math.min(ticks - ticksDone, maxTicks);
             const broke = sim.tick(stillDoable);
-            if (broke) {
+            if (broke) { // 1 = conflict break, 2 = condition break
                 this.config.singleStep = true;
             }
             return stillDoable + ticksDone;
@@ -586,6 +587,36 @@ class Application {
                 this.#singleStep();
             });
             stepButton.node.classList.toggle('toolbar-menu-button-disabled', !this.config.singleStep);
+            // Break-on-condition expressions.
+            debuggerMenu.createSeparator();
+            debuggerMenu.createActionButton('Add condition...', 'Break simulation when a probe expression becomes true.', async () => {
+                debuggerMenu.state(false);
+                const result = await dialog('Add break condition', [ { label: 'Expression', name: 'expression', type: 'string', check: (v) => v.trim() !== '' } ], { expression: '' });
+                if (result) {
+                    this.config.breakConditions.push(result.expression.trim());
+                    this.simulations.markDirty(null);
+                    debuggerMenu.open();
+                }
+            });
+            if (this.config.breakConditions.length > 0) {
+                debuggerMenu.createSeparator();
+            }
+            for (let i = 0; i < this.config.breakConditions.length; i++) {
+                const expr = this.config.breakConditions[i];
+                debuggerMenu.createActionButton(expr, 'Click to edit. Clear expression to delete.', async () => {
+                    debuggerMenu.state(false);
+                    const result = await dialog('Edit break condition', [ { label: 'Expression', name: 'expression', type: 'string', check: () => true } ], { expression: expr });
+                    if (result) {
+                        if (result.expression.trim() === '') {
+                            this.config.breakConditions.splice(i, 1);
+                        } else {
+                            this.config.breakConditions[i] = result.expression.trim();
+                        }
+                        this.simulations.markDirty(null);
+                        debuggerMenu.open();
+                    }
+                });
+            }
         });
     }
 

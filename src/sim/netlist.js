@@ -57,6 +57,7 @@ class NetList {
         assert.object(config, false, (o) => {
             assert.bool(o.checkNetConflicts);
             assert.bool(o.breakOnConflict);
+            assert.array(o.breakConditions);
             assert.integer(o.targetTPS);
             assert.bool(o.debug);
         });

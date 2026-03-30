@@ -4,7 +4,7 @@
 class Probe extends SimulationComponent {
 
     static EDIT_DIALOG = [
-        { name: 'name', label: 'Name', type: 'string' },
+        { name: 'name', label: 'Name', type: 'string', check: (v) => /^\w+$/.test(v) },
         ...Component.EDIT_DIALOG,
     ];
 

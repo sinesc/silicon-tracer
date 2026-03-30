@@ -68,6 +68,9 @@ class Simulation {
     // Whether to break the tick loop early when a conflict is detected.
     #breakOnConflict = false;
 
+    // User-defined probe expressions that break the tick loop when truthy.
+    #breakConditions = [];
+
     // Gate operation templates, populated lazily during gate declaration.
     #functors = {};
 
@@ -101,13 +104,15 @@ class Simulation {
     // Construct a new instance. Enable debug to generate commented code.
     constructor(config) {
         assert.object(config, true);
-        const cfg = Object.assign({}, { debug: false, backend: 'js', checkNetConflicts: true, breakOnConflict: false }, config ?? {});
+        const cfg = Object.assign({}, { debug: false, backend: 'js', checkNetConflicts: true, breakOnConflict: false, breakConditions: [] }, config ?? {});
         assert.bool(cfg.debug);
         assert.enum([ 'js', 'wasm' ], cfg.backend);
         assert.bool(cfg.checkNetConflicts);
         assert.bool(cfg.breakOnConflict);
+        assert.array(cfg.breakConditions, false, (i) => assert.string(i));
         this.#checkNetConflicts = cfg.checkNetConflicts;
         this.#breakOnConflict = cfg.breakOnConflict;
+        this.#breakConditions = cfg.breakConditions;
         this.#backend = cfg.backend === 'wasm' ? new BackendWasm(cfg.debug) : new BackendJavascript(cfg.debug);
     }
 
@@ -894,7 +899,19 @@ class Simulation {
             }
         }
 
-        // step 5: apply pull resistors if their nets arent'd driven yet
+        // step 5: break on user-defined probe conditions
+        if (this.#breakConditions.length > 0) {
+            const probeMap = {};
+            for (const probe of Object.values(this.#probes.byName)) {
+                const net = probe.netId !== null ? this.#nets.all[probe.netId] : null;
+                probeMap[probe.name] = net ? { elementIndex2: net.elementIndex2, bitIndex: net.bitIndex } : null;
+            }
+            for (const expr of this.#breakConditions) {
+                this.#backend.emitBreakOnCondition(expr, probeMap);
+            }
+        }
+
+        // step 6: apply pull resistors if their nets arent'd driven yet
         this.#backend.emitPullResistors(this.#layout.pullMasks);
     }
 
