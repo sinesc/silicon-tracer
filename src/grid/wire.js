@@ -43,7 +43,7 @@ class Wire extends GridItem {
         const message = () => {
             const channels = this.netIds?.length ?? 1;
             const kind = channels === 1 ? 'Wire' : `<b>${channels}-bit</b> bus`;
-            return `${kind}. <i>LMB</i> Drag to branch off new wire. <i>DEL</i> Delete, <i>0</i> - <i>9</i> Set net color, ${GridItem.HOTKEYS}.`;
+            return `${kind}. <i>LMB</i> Drag to branch off new wire. <i>SHIFT+LMB</i> Move wire. <i>DEL</i> Delete, <i>0</i> - <i>9</i> Set net color, ${GridItem.HOTKEYS}.`;
         };
         this.setHoverMessage(this.#element, message, { type: 'hover' });
         this.grid.addVisual(this.#element);
@@ -110,7 +110,19 @@ class Wire extends GridItem {
     onDrag(x, y, status, what) {
         if (super.onDrag(x, y, status, what)) {
             return true;
-        } else if (status === 'start') {
+        }
+        if (status === 'start' && this.app.modifierKeys.shiftKey) {
+            what.moving = true;
+            this.limbo = true;
+        }
+        if (what.moving) {
+            if (status === 'stop') {
+                this.limbo = false;
+            }
+            this.onMove(x, y, status, what);
+            return true;
+        }
+        if (status === 'start') {
             this.onConnect(x, y, status, what);
             return true;
         }
