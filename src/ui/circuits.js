@@ -39,7 +39,7 @@ class Circuits {
     async create() {
         const config = await dialog("Create circuit", Circuits.CREATE_DIALOG, { label: this.#generateLabel(), spacing: '0', gap: 'middle', parity: 'automatic', visibleInLib: true });
         if (config) {
-            const circuit = new Circuits.Circuit(config.label);
+            const circuit = new Circuits.Circuit(this.#app, config.label);
             circuit.portConfig.spacing = config.spacing;
             circuit.portConfig.gap = config.gap;
             circuit.portConfig.parity = config.parity;
@@ -145,7 +145,7 @@ class Circuits {
                 const fixedOffsetY = Math.floor(-0.5 * dialogWindow.offsetHeight + 0.5 * previewContainer.offsetHeight)
                 previewContainer.style.transform = `translate(calc(-50% + ${fixedOffsetX}px), calc(-50% + ${fixedOffsetY}px))`;
                 grid = new Grid(app, previewContainer, true);
-                grid.setCircuit(new Circuits.Circuit('preview'));
+                grid.setCircuit(new Circuits.Circuit(app, 'preview'));
             } else {
                 const item = first(grid.circuit.items);
                 grid.removeItem(item);
@@ -264,7 +264,7 @@ class Circuits {
         assert.bool(removeLibraries);
         this.#clear(removeLibraries);
         const label = this.#generateLabel();
-        const circuit = new Circuits.Circuit(label);
+        const circuit = new Circuits.Circuit(this.#app, label);
         this.#circuits[circuit.uid] = circuit;
         this.select(circuit.uid);
     }
@@ -300,6 +300,11 @@ class Circuits {
         lid ??= Circuits.generateLID();
         this.#libraries[lid] = { label, packaged };
         return lid;
+    }
+
+    // Returns whether the given library ID belongs to a packaged library.
+    isPackaged(lid) {
+        return this.#libraries[lid]?.packaged ?? false;
     }
 
     // Finds packaged library by its label and returns the LID.
@@ -410,17 +415,20 @@ Circuits.Circuit = class {
     portConfig;
     visibleInLib;
 
+    #app;
     #data;
     #gidLookup;
     #lid;
 
-    constructor(label, uid = null, data = [], gridConfig = {}, portConfig = {}, lid = null, visibleInLib = true) {
+    constructor(app, label, uid = null, data = [], gridConfig = {}, portConfig = {}, lid = null, visibleInLib = true) {
+        assert.class(Application, app);
         assert.string(label),
         assert.string(uid, true);
         assert.string(lid, true);
         assert.array(data, false, (i) => assert.class(GridItem, i));
         assert.object(gridConfig);
         assert.object(portConfig);
+        this.#app = app;
         this.label = label;
         this.uid = uid ?? 'u' + crypto.randomUUID().replaceAll('-', '');
         this.#lid = lid;
@@ -480,6 +488,11 @@ Circuits.Circuit = class {
         return this.#lid;
     }
 
+    // Returns true if this circuit belongs to a packaged (read-only) library.
+    get readonly() {
+        return this.#app.circuits.isPackaged(this.#lid);
+    }
+
     // Serializes the circuit for saving to file.
     serialize() {
         const data = this.#data.map((item) => item.serialize());
@@ -493,7 +506,7 @@ Circuits.Circuit = class {
         assert.string(setLid, true);
         assert.array(errors);
         const items = rawCircuit.data.map((item) => GridItem.unserialize(app, item, rawOthers, setLid, errors));
-        const circuit = new Circuits.Circuit(rawCircuit.label, rawCircuit.uid, items, rawCircuit.gridConfig, rawCircuit.portConfig, rawCircuit.lid ?? setLid, rawCircuit.visibleInLib ?? true);
+        const circuit = new Circuits.Circuit(app, rawCircuit.label, rawCircuit.uid, items, rawCircuit.gridConfig, rawCircuit.portConfig, rawCircuit.lid ?? setLid, rawCircuit.visibleInLib ?? true);
         Wire.compact(circuit);
         app.circuits.add(circuit);
     }

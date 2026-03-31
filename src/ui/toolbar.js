@@ -145,7 +145,7 @@ class Toolbar {
         button.onmousedown = (e) => {
             e.preventDefault();
             e.stopPropagation();
-            if (!button.classList.contains('toolbar-menu-button-disabled')) {
+            if (!button.classList.contains('toolbar-menu-button-disabled') && !this.#app.grid.readonly) {
                 const [ x, y ] = this.#app.grid.screenToGrid(e.clientX, e.clientY);
                 const component = create(this.#app.grid, x, y);
                 component.dragStart(x, y, { type: "component", grabOffsetX: component.width / 2, grabOffsetY: component.height / 2 });

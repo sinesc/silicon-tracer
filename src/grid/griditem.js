@@ -329,7 +329,7 @@ class GridItem {
 
     // Registers a drag event source with optional additional arguments to pass with each event to onDrag().
     registerMouseAction(element, ...args) {
-        if (this.grid && !this.grid.passive) {
+        if (this.grid && !this.grid.passive && !this.grid.readonly) {
             element.onmousedown = this.#handleMouseDown.bind(this, args);
         }
     }

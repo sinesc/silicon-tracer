@@ -21,7 +21,7 @@ class LogiSim {
         const project = XML.parse(text).project;
         await instance.#importFile(null, project, 'Your project');
         if (instance.#problems.size > 0 || instance.#missing.size > 0) {
-            const circuit = new Circuits.Circuit("# Import issues");
+            const circuit = new Circuits.Circuit(app, "# Import issues");
             let y = 0;
             circuit.addItem(new TextLabel(app, Grid.SPACING, y += Grid.SPACING, 0,600, 'Issues detected during import', 'medium', null));
             y += Grid.SPACING;
@@ -154,7 +154,7 @@ class LogiSim {
     // Creates a blank tracer circuit for the given logisim circuit and generates layout information about the circuits outline (when used as a component).
     #createCircuit(lid, rawCircuit) {
         const parseDim = LogiSim.#parseDim;
-        const circuit = new Circuits.Circuit(rawCircuit.name, null, [], {}, { parity: "none" }, lid);
+        const circuit = new Circuits.Circuit(this.#app, rawCircuit.name, null, [], {}, { parity: "none" }, lid);
         const anchor = rawCircuit.appear?.[0]?.['circ-anchor']?.[0] ?? { x: 0, y: 0, facing: 'east' };
         this.#layouts[lid + ':' + rawCircuit.name] = {
             uid: circuit.uid,

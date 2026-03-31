@@ -177,7 +177,8 @@ class Grid {
         if (this.#dirty & Grid.#DIRTY_OVERLAY) {
             const isLocked = this.#app.config.lockSimulation ? '<span class="warning">Locked</span> ' : '';
             const singleStep = this.#app.config.singleStep ? '<span class="warning">Single Step</span> ' : '';
-            this.#infoBox.element.innerHTML = `<div class="info-section">Circuit</div><div class="info-title">${this.#infoBox.circuitLabel}</div>` +
+            const isReadonly = this.readonly ? '<span class="warning">Read-only</span> ' : '';
+            this.#infoBox.element.innerHTML = `<div class="info-section">${isReadonly}Circuit</div><div class="info-title">${this.#infoBox.circuitLabel}</div>` +
                 (!this.#infoBox.circuitDetails ? '' : `<div class="info-details">${this.#infoBox.circuitDetails}</div>`) +
                 (!this.#infoBox.simulationLabel ? '' : `<div class="info-section">${singleStep}${isLocked}Simulation</div><div class="info-title">${this.#infoBox.simulationLabel}</div>`) +
                 (!this.#infoBox.simulationDetails ? '' : `<div class="info-details">${this.#infoBox.simulationDetails}</div>`);
@@ -340,6 +341,11 @@ class Grid {
         return this.#passive;
     }
 
+    // Returns true when the current circuit is read-only (belongs to a packaged library).
+    get readonly() {
+        return this.#circuit?.readonly ?? false;
+    }
+
     // Invalidate the current selection. Needs to be called after changes to selection to recompute center point.
     invalidateSelection() {
         this.#selectionCenter = null;
@@ -379,7 +385,7 @@ class Grid {
     #initHotkeys() {
 
         // global hotkeys, override hover target hotkeys
-        this.#app.registerHotkey('ctrl+a', 'down', null, async () => {
+        this.#app.registerHotkey('ctrl+a', 'down', () => !this.readonly, async () => {
             this.#selection = [];
             for (const item of this.#circuit.items) {
                 item.selected = true;
@@ -388,7 +394,7 @@ class Grid {
             this.invalidateSelection();
             this.#app.simulations.markDirty(this.#circuit);
         });
-        this.#app.registerHotkey('ctrl+v', 'down', null, async () => {
+        this.#app.registerHotkey('ctrl+v', 'down', () => !this.readonly, async () => {
             const serialized = JSON.parse(await navigator.clipboard.readText());
             const items = serialized.map((item) => GridItem.unserialize(this.#app, item));
             // clear old selection
@@ -404,21 +410,21 @@ class Grid {
             this.invalidateSelection();
             this.#app.simulations.markDirty(this.#circuit);
         });
-        this.#app.registerHotkey('ctrl+c', 'down', () => this.#selection.length > 0, async () => {
+        this.#app.registerHotkey('ctrl+c', 'down', () => !this.readonly && this.#selection.length > 0, async () => {
             await this.#copySelection();
         });
-        this.#app.registerHotkey('ctrl+x', 'down', () => this.#selection.length > 0, async () => {
+        this.#app.registerHotkey('ctrl+x', 'down', () => !this.readonly && this.#selection.length > 0, async () => {
             await this.#copySelection();
             this.#deleteSelection();
         });
-        this.#app.registerHotkey('r', 'down', () => this.#selection.length > 0, () => {
+        this.#app.registerHotkey('r', 'down', () => !this.readonly && this.#selection.length > 0, () => {
             this.#rotateSelection();
             this.#app.simulations.markDirty(this.#circuit);
         });
-        this.#app.registerHotkey('Delete', 'down', () => this.#selection.length > 0, () => this.#deleteSelection());
+        this.#app.registerHotkey('Delete', 'down', () => !this.readonly && this.#selection.length > 0, () => this.#deleteSelection());
 
         // send to hover target
-        this.#app.registerHotkey(null, 'press', () => this.#hotkeyTarget, (e) => {
+        this.#app.registerHotkey(null, 'press', () => !this.readonly && this.#hotkeyTarget, (e) => {
             if (e.type === 'keydown') {
                 // handle target specific hotkeys
                 const { gridItem, args, keysDown } = this.#hotkeyTarget;
@@ -435,7 +441,7 @@ class Grid {
         });
 
         // below hotkeys only trigger when there is no hover target
-        this.#app.registerHotkey('e', 'down', null, (e) => {
+        this.#app.registerHotkey('e', 'down', () => !this.readonly, (e) => {
             this.#app.circuits.edit(this.#circuit.uid);
             this.#dirty |= Grid.#DIRTY_OVERLAY;
         });
@@ -650,6 +656,9 @@ class Grid {
         const shiftDown = e.shiftKey;
         const ctrlDown = e.ctrlKey;
         const altDown = e.altKey;
+        if (e.which === 1 && this.readonly) {
+            return;
+        }
         if (e.which === 1) {
             this.#selectionElement.classList.remove('hidden');
             this.#selectionElement.classList.toggle('grid-selection-trim', altDown);
