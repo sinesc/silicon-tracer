@@ -1,31 +1,30 @@
 # Silicon Tracer
 
-This is a logic circuit simulator intended to eventually be useful for designing circuits with discrete logic components (e.g. 74 series chips) for retro/hobby projects. It is planned to have an EDA software export with the ability to automatically group individual gates to appropriate and ideally minimal 74x-chip-equivalents during export. To achieve good performance it compiles circuits to fully branchless code using only bit-operations.
+This is a logic circuit simulator for designing circuits with discrete logic components (e.g. 74 series chips) for retro/hobby projects. It comes with a LogiSim import and is planned to have an EDA software export with the ability to automatically group individual gates to appropriate and ideally minimal 74x-chip-equivalents during export. To achieve good performance it compiles circuits to fully branchless code using only bit-operations.
 
-It is fully usable offline (download the repository and open index.html in a browser) or [online](https://sinesc.github.io/silicon-tracer/).
+It is fully usable **offline** (download the repository and open index.html in a browser) or [online](https://sinesc.github.io/silicon-tracer/). Regardless of which option is used circuits are always local, no cloud storage.
 
 ## Project status: Getting there.
 
 ### Currently implemented
-- Debugger (highlight conflict, break on conflict, break on expression, single step)
-- Basic **LogiSim import** (see details below).
-- **Subcomponents**. Use circuits as components within circuits.
-- **Transparent wires and ports** (i.e. wires and ports have no properties like directionality or channel counts - they just form a net)
-- **Automatic transparent splitter component**, splits/joins an arbitrary number of wires with arbitrary numbers of channels each, see screenshot below.
-- **Tunnels** connect components of a net without the need to route wires.
-- **Network colors**. Networks can be assigned one of 10 colors.
-- **Conflict detection**. Conflicted networks can be highlighted.
+- **Debugger**: Highlight conflict, break on conflict, break on custom expression, single step.
+- **Component libraries**: Support for both user created and pre-packages libraries (currently includes one open source library for 74x discrete logic chips).
+- **Network colors**: Networks can be assigned one of 10 colors to apply to all wires/ports in the net.
+- **LogiSim import**: See details below.
+- **Subcomponents**: Use circuits as components within circuits.
+- **Transparent ports/tunnels/wires/splitters**: These translate to nothing but nets in the simulation engine. E.g. no directionality on ports.
 - Basic **single channel gates** with configurable number of inputs.
-- **Tri-state** components, e.g. buffer, inverter.
 - **Misc standard components** like full adders, muxes, latches, ...
-- **Text elements**
+- **Tri-state** components, e.g. buffer, inverter, ...
+- **Text elements**: Support different font sizes, rotation and color.
 - Load/save via **local file picker**. Requires Chrome/Edge/Opera, not yet supported in Firefox.
-- **Component libraries** (e.g. 74x discrete logic chips)
 - Context specific **hotkey controlled UI** with currently available hotkeys always shown in the bottom right corner of the screen. For ease of use Hotkeys are clustered around WASD.
 - Component selection, drag&drop, rotation (including selections), deletion, editing.
+- Wire trimming (ALT + mouse drag to select wire segments to trim).
 - Basic simulation statistics like gate and network counts, longest signal path.
 
 ### Todo
+- Standard gate/component symbols, currently everything is boxes
 - RAM/ROM component
 - More 74x components
 - Configurable toolbar
