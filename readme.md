@@ -1,12 +1,13 @@
 # Silicon Tracer
 
-This is a logic circuit simulator intended to eventually be useful for designing circuits with discrete logic components (e.g. 74 series chips) for hobby projects. It is planned to have an EDA software export with the ability to automatically group individual gates to appropriate and ideally minimal 74x-chip-equivalents during export. To achieve good performance it compiles circuits to fully branchless code using only bit-operations.
+This is a logic circuit simulator intended to eventually be useful for designing circuits with discrete logic components (e.g. 74 series chips) for retro/hobby projects. It is planned to have an EDA software export with the ability to automatically group individual gates to appropriate and ideally minimal 74x-chip-equivalents during export. To achieve good performance it compiles circuits to fully branchless code using only bit-operations.
 
 It is fully usable offline (download the repository and open index.html in a browser) or [online](https://sinesc.github.io/silicon-tracer/).
 
 ## Project status: Getting there.
 
 ### Currently implemented
+- Debugger (highlight conflict, break on conflict, break on expression, single step)
 - Basic **LogiSim import** (see details below).
 - **Subcomponents**. Use circuits as components within circuits.
 - **Transparent wires and ports** (i.e. wires and ports have no properties like directionality or channel counts - they just form a net)
@@ -26,9 +27,9 @@ It is fully usable offline (download the repository and open index.html in a bro
 
 ### Todo
 - RAM/ROM component
-- Debugger (break on conflict, break on net condition, single step)
+- More 74x components
 - Configurable toolbar
-- EDA export
+- EDA export, gate refactoring
 - Simulation subcomponent overview (e.g. tree view)
 - Undo/redo system
 - Navigation history (i.e. forward/back)
@@ -44,9 +45,8 @@ Nonsense circuit showing a few custom components, splitters, tunnels and gates.
 
 ## Logisim import
 
-Currently the import supports custom components as well as most items from the "Wiring" and "Gates" categories and generates wrappers/adapters/wires to account for differing component sizes. Due to LogiSim's high number of component appearance options that affect pin positions not all component sizes will be properly placed at this point. Notably, the super large and ridiculously large gate sizes may currently require some manual fixes.
+Currently the import supports custom components as well as most items from the "Wiring", "Gates" and "TTL" categories and generates wrappers/adapters/wires to account for differing component sizes. Due to LogiSim's high number of component appearance options that affect pin positions not all component sizes will be properly placed at this point. Notably, the super large and ridiculously large gate sizes may currently require some manual fixes.
 
 ## Performance
 
-"Should be decent". The current implementation simulates about 900M to 1B gate-timesteps/second on a single core of an AMD Ryzen 7 7800X3D. However, it is currently being rewritten to simulate up to 64 gates in parallel and compute
-an optimized memory layout that minimizes bit operations and memory writes. This should hopefully push the performance well beyond 1B gate-timesteps/second.
+"Should be decent". The current implementation simulates about 8 billion gate-timesteps/second on a single core of an AMD Ryzen 7 7800X3D. This should be sufficient to simulate simple circuits at low MHz frequencies. A planned WASM backend might improve performance further.
