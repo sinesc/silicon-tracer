@@ -21,7 +21,7 @@ window.addEventListener("beforeunload", (event) => {
 // add 'Open example' button on github demo
 if (location.hostname === 'sinesc.github.io' && location.pathname === '/silicon-tracer/') {
     const loadExample = app.toolbar.createActionButton('Open example', 'Loads an example circuit.', async () => {
-        const response = await fetch('https://sinesc.github.io/silicon-tracer/doc/basics.stc');
+        const response = await fetch('https://sinesc.github.io/silicon-tracer/res/examples/basics.stc');
         const content = await response.json();
         const uid = app.circuits.unserialize(content);
         app.circuits.select(uid);
