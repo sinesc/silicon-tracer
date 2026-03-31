@@ -647,6 +647,17 @@ div.circuit-preview > div.grid > div.grid-info {
 .grid-selection.hidden {
     display: none;
 }
+.grid-selection.grid-selection-trim {
+    border-color: #ff8c00;
+    background-color: rgba(255, 140, 0, 0.08);
+}
+.wire-trim-overlay {
+    position: absolute;
+    z-index: 12;
+    pointer-events: none;
+    background-color: #ff6600;
+    opacity: 0.8;
+}
 
 /*
  * Base component and text
