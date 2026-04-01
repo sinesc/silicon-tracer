@@ -103,6 +103,8 @@ class GridItem {
             instance = new Constant(app, ...cargs);
         } else if (cname === 'Probe') {
             instance = new Probe(app, ...cargs);
+        } else if (cname === 'Memory') {
+            instance = new Memory(app, ...cargs);
         } else {
             errors.push([ 'invalid', cname ]);
         }

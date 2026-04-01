@@ -32,6 +32,8 @@ class Application {
             toggle: { rotation: 0, },
             momentary: { rotation: 0, },
             probe: { rotation: 1, },
+            rom: { rotation: 0, addressWidth: 4, dataWidth: 8 },
+            ram: { rotation: 0, addressWidth: 4, dataWidth: 8 },
         },
     };
 
@@ -444,6 +446,12 @@ class Application {
                 });
                 ioMenu.createComponentButton('Momentary switch', `<b>Momentary switch</b>. ${DRAG_MSG}`, (grid, x, y) => {
                     return grid.addItem(new Momentary(this, x, y, defaults.momentary.rotation));
+                });
+                ioMenu.createComponentButton('ROM', `<b>Read-only memory</b>. ${DRAG_MSG}`, (grid, x, y) => {
+                    return grid.addItem(new Memory(this, x, y, defaults.rom.rotation, 'rom', defaults.rom.addressWidth, defaults.rom.dataWidth));
+                });
+                ioMenu.createComponentButton('RAM', `<b>Read/write memory</b>. ${DRAG_MSG}`, (grid, x, y) => {
+                    return grid.addItem(new Memory(this, x, y, defaults.ram.rotation, 'ram', defaults.ram.addressWidth, defaults.ram.dataWidth));
                 });
             });
 

@@ -255,6 +255,100 @@ class BackendJavascript {
         }
     }
 
+    // Emits memory read: consolidates address bits from individual port elements, performs a bounded lookup,
+    // and scatters the result to individual data output port elements.
+    emitMemoryRead(memory, addrPorts, dataOutPorts) {
+        const id = memory.id;
+        const addrMask = ((1 << memory.addressWidth) - 1) >>> 0;
+        const dataWidth = memory.dataWidth;
+        const dataMask = ((1 << dataWidth) - 1) >>> 0;
+        const packShift = Math.log2(BackendJavascript.BITS_PER_ELEMENT / dataWidth);
+        const subMask = (BackendJavascript.BITS_PER_ELEMENT / dataWidth) - 1;
+        const shiftScale = Math.log2(dataWidth);
+
+        let code = '';
+
+        // Consolidate address from individual port elements into a local variable
+        let addrExpr = '';
+        for (let i = 0; i < addrPorts.length; i++) {
+            const port = addrPorts[i];
+            const bit = `((mem[${port.elementIndex2}] >>> ${port.bitIndex}) & 1)`;
+            addrExpr += i === 0 ? bit : ` | (${bit} << ${i})`;
+        }
+        code += `var _ma${id} = ${addrExpr};` + this.#comment(`memory ${id} address`) + '\n';
+
+        // Bounded lookup with packing
+        if (packShift === 0) {
+            // One value per element, no sub-element math needed
+            code += `var _md${id} = mem[${memory.baseOffset} + (_ma${id} & 0x${addrMask.toString(16)})]`;
+        } else {
+            code += `var _md${id} = (mem[${memory.baseOffset} + ((_ma${id} & 0x${addrMask.toString(16)}) >>> ${packShift})] >>> (((_ma${id} & ${subMask}) << ${shiftScale}))) & 0x${dataMask.toString(16)}`;
+        }
+        code += this.#comment(`memory ${id} read`) + ';\n';
+
+        // Scatter result to individual data output port elements
+        for (let i = 0; i < dataOutPorts.length; i++) {
+            const port = dataOutPorts[i];
+            code += `mem[${port.elementIndex2}] = (_md${id} >>> ${i}) & 1` + this.#comment(`memory ${id} do${i}`) + ';\n';
+        }
+
+        this.#tickCode += code;
+    }
+
+    // Emits memory write (RAM only): consolidates address and data-in bits, conditionally writes under write-enable.
+    emitMemoryWrite(memory, addrPorts, dataInPorts, wePort) {
+        const id = memory.id;
+        const addrMask = ((1 << memory.addressWidth) - 1) >>> 0;
+        const dataWidth = memory.dataWidth;
+        const dataMask = ((1 << dataWidth) - 1) >>> 0;
+        const packShift = Math.log2(BackendJavascript.BITS_PER_ELEMENT / dataWidth);
+        const subMask = (BackendJavascript.BITS_PER_ELEMENT / dataWidth) - 1;
+        const shiftScale = Math.log2(dataWidth);
+
+        let code = '';
+
+        // Write-enable check
+        code += `if ((mem[${wePort.elementIndex2}] >>> ${wePort.bitIndex}) & 1) {` + this.#comment(`memory ${id} write-enable`) + '\n';
+
+        // Reuse address variable if already emitted by emitMemoryRead (writeBeforeRead=false),
+        // otherwise consolidate address independently
+        const addrVar = `_ma${id}`;
+        if (!memory.writeBeforeRead) {
+            // Address was already computed by emitMemoryRead
+        } else {
+            let addrExpr = '';
+            for (let i = 0; i < addrPorts.length; i++) {
+                const port = addrPorts[i];
+                const bit = `((mem[${port.elementIndex2}] >>> ${port.bitIndex}) & 1)`;
+                addrExpr += i === 0 ? bit : ` | (${bit} << ${i})`;
+            }
+            code += `var ${addrVar} = ${addrExpr};\n`;
+        }
+
+        // Consolidate data-in from individual port elements
+        let dataExpr = '';
+        for (let i = 0; i < dataInPorts.length; i++) {
+            const port = dataInPorts[i];
+            const bit = `((mem[${port.elementIndex2}] >>> ${port.bitIndex}) & 1)`;
+            dataExpr += i === 0 ? bit : ` | (${bit} << ${i})`;
+        }
+
+        // Write with packing
+        if (packShift === 0) {
+            code += `mem[${memory.baseOffset} + (${addrVar} & 0x${addrMask.toString(16)})] = ${dataExpr}`;
+        } else {
+            const idx = `${memory.baseOffset} + ((${addrVar} & 0x${addrMask.toString(16)}) >>> ${packShift})`;
+            const sh = `((${addrVar} & ${subMask}) << ${shiftScale})`;
+            code += `var _mi${id} = ${idx};\n`;
+            code += `var _ms${id} = ${sh};\n`;
+            code += `mem[_mi${id}] = (mem[_mi${id}] & ~(0x${dataMask.toString(16)} << _ms${id})) | ((${dataExpr}) << _ms${id})`;
+        }
+        code += this.#comment(`memory ${id} write`) + ';\n';
+        code += '}\n';
+
+        this.#tickCode += code;
+    }
+
     // Returns the integer destination bit mask for a bitmap (duplicate/offset/single modes).
     #bitmapMask(bitmap) {
         if (bitmap.mode === 'duplicate') {

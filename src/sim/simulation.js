@@ -77,6 +77,9 @@ class Simulation {
     // Declared constants.
     #consts = [];
 
+    // Declared memory components (ROM/RAM).
+    #memories = [];
+
     // Declared nets.
     #nets = { all: [], byPort: {} };
 
@@ -278,6 +281,87 @@ class Simulation {
         return probe.netId === null ? null : this.getNetValue(probe.netId);
     }
 
+    // Declares a memory component (ROM or RAM). addressWidth and dataWidth must be positive integers, dataWidth must be a power of 2 and <= BITS_PER_ELEMENT.
+    // initialData is an array of integer values (one per address). writeBeforeRead controls whether a simultaneous write+read returns the new value (true) or old value (false).
+    declareMemory(memType, addressWidth, dataWidth, initialData, suffix, writeBeforeRead = true) {
+        assert.enum([ 'rom', 'ram' ], memType);
+        assert.integer(addressWidth, false, 1, 24);
+        assert.integer(dataWidth, false, 1, this.#backend.constructor.BITS_PER_ELEMENT);
+        assert((dataWidth & (dataWidth - 1)) === 0, `dataWidth must be a power of 2, got ${dataWidth}`);
+        assert.array(initialData);
+        assert.string(suffix);
+        assert.bool(writeBeforeRead);
+
+        // Use a unique batchType per memory instance to avoid batching
+        const batchType = 'memory' + suffix;
+
+        // Declare address input ports
+        const addressPortNames = [];
+        for (let i = 0; i < addressWidth; i++) {
+            this.#declarePort('a' + i, suffix, 'i', false, false, batchType);
+            addressPortNames.push('a' + i + suffix);
+        }
+
+        // Declare data output ports
+        const dataOutPortNames = [];
+        for (let i = 0; i < dataWidth; i++) {
+            this.#declarePort('do' + i, suffix, 'o', false, false, batchType);
+            dataOutPortNames.push('do' + i + suffix);
+        }
+
+        // RAM-only ports
+        let dataInPortNames = null;
+        let wePortName = null;
+        if (memType === 'ram') {
+            dataInPortNames = [];
+            for (let i = 0; i < dataWidth; i++) {
+                this.#declarePort('di' + i, suffix, 'i', false, false, batchType);
+                dataInPortNames.push('di' + i + suffix);
+            }
+            this.#declarePort('we', suffix, 'i', false, false, batchType);
+            wePortName = 'we' + suffix;
+        }
+
+        const id = this.#memories.length;
+        const memory = {
+            id, memType, addressWidth, dataWidth, initialData, suffix, writeBeforeRead,
+            addressPortNames, dataOutPortNames, dataInPortNames, wePortName,
+            baseOffset: null, // assigned during memory layout
+        };
+        this.#memories.push(memory);
+        return id;
+    }
+
+    // Sets a value in a declared memory at the given address.
+    setMemoryData(id, address, value) {
+        assert.integer(id);
+        assert.integer(address);
+        assert.integer(value);
+        const memory = this.#memories[id] ?? error('Unknown memory');
+        const bpe = this.#backend.constructor.BITS_PER_ELEMENT;
+        const valuesPerElement = bpe / memory.dataWidth;
+        const elementIndex = memory.baseOffset + (address >>> Math.log2(valuesPerElement));
+        const subIndex = address & (valuesPerElement - 1);
+        const shift = subIndex * memory.dataWidth;
+        const dataMask = (1 << memory.dataWidth) - 1;
+        const mem = this.#backend.mem;
+        mem[elementIndex] = (mem[elementIndex] & ~(dataMask << shift)) | ((value & dataMask) << shift);
+    }
+
+    // Gets a value from a declared memory at the given address.
+    getMemoryData(id, address) {
+        assert.integer(id);
+        assert.integer(address);
+        const memory = this.#memories[id] ?? error('Unknown memory');
+        const bpe = this.#backend.constructor.BITS_PER_ELEMENT;
+        const valuesPerElement = bpe / memory.dataWidth;
+        const elementIndex = memory.baseOffset + (address >>> Math.log2(valuesPerElement));
+        const subIndex = address & (valuesPerElement - 1);
+        const shift = subIndex * memory.dataWidth;
+        const dataMask = (1 << memory.dataWidth) - 1;
+        return (this.#backend.mem[elementIndex] >>> shift) & dataMask;
+    }
+
     // Serialize simulation parameters.
     serialize() {
         return {
@@ -286,6 +370,7 @@ class Simulation {
             nets: this.#nets.all.map((n) => ({ id: n.id, ports: n.ports })),
             ports: this.#ports.all.map((p) => ({ id: p.id, name: p.name, ioType: p.ioType, isTriState: p.isTriState, detectEdges: p.detectEdges, batchType: p.batchType, batchName: p.batchName, batchComponent: p.batchComponent })),
             clocks: this.#clocks.map((c) => ({ id: c.id, frequency: c.frequency, tps: c.tps, enablePortName: c.enablePortName, outputPortName: c.outputPortName })),
+            memories: this.#memories.map((m) => ({ id: m.id, memType: m.memType, addressWidth: m.addressWidth, dataWidth: m.dataWidth, initialData: m.initialData, suffix: m.suffix, writeBeforeRead: m.writeBeforeRead, addressPortNames: m.addressPortNames, dataOutPortNames: m.dataOutPortNames, dataInPortNames: m.dataInPortNames, wePortName: m.wePortName })),
             probes: this.#probes,
         }
     }
@@ -313,6 +398,7 @@ class Simulation {
             this.#ports.byName[port.name] = port;
         }
         this.#clocks = serialized.clocks.map((c) => ({ ...c, counterIndex: null, limitIndex: null }));
+        this.#memories = (serialized.memories ?? []).map((m) => ({ ...m, baseOffset: null }));
         this.#probes = serialized.probes;
     }
 
@@ -330,6 +416,7 @@ class Simulation {
                 this.#backend.setClockParam(clock.limitIndex, ticks);
                 this.#backend.setClockParam(clock.counterIndex, ticks);
             }
+            this.#initMemoryData();
         }
     }
 
@@ -373,6 +460,32 @@ class Simulation {
             clearBit(port.elementIndex2, port.bitIndex);
             clearBit(port.elementIndex3, port.bitIndex);
             clearBit(port.elementIndexP, port.bitIndex);
+        }
+
+        // Reset memory data to initial values
+        this.#initMemoryData();
+    }
+
+    // Writes initial data into all declared memory regions.
+    #initMemoryData() {
+        const bpe = this.#backend.constructor.BITS_PER_ELEMENT;
+        for (const memory of this.#memories) {
+            const valuesPerElement = bpe / memory.dataWidth;
+            const totalEntries = 1 << memory.addressWidth;
+            const elementsNeeded = Math.ceil(totalEntries / valuesPerElement);
+            const dataMask = (1 << memory.dataWidth) - 1;
+            // Clear the entire region first
+            for (let i = 0; i < elementsNeeded; i++) {
+                this.#backend.mem[memory.baseOffset + i] = 0;
+            }
+            // Write initial data values
+            for (let addr = 0; addr < memory.initialData.length && addr < totalEntries; addr++) {
+                const value = memory.initialData[addr] & dataMask;
+                const elementIndex = memory.baseOffset + (addr >>> Math.log2(valuesPerElement));
+                const subIndex = addr & (valuesPerElement - 1);
+                const shift = subIndex * memory.dataWidth;
+                this.#backend.mem[elementIndex] |= (value << shift);
+            }
         }
     }
 
@@ -456,6 +569,11 @@ class Simulation {
         return this.#clocks;
     }
 
+    // Returns a list of defined memories.
+    get memories() {
+        return this.#memories;
+    }
+
     // Returns simulation layout.
     get layout() {
         return this.#layout;
@@ -523,6 +641,19 @@ class Simulation {
         for (const clock of this.#clocks) {
             clock.counterIndex = globalElementIndex++;
             clock.limitIndex = globalElementIndex++;
+        }
+        return globalElementIndex;
+    }
+
+    // Assigns memory data regions to elements. Each memory gets a contiguous block in mem.
+    #assignMemoryLocations(globalElementIndex) {
+        for (const memory of this.#memories) {
+            const bpe = this.#backend.constructor.BITS_PER_ELEMENT;
+            const valuesPerElement = bpe / memory.dataWidth;
+            const totalEntries = 1 << memory.addressWidth;
+            const elementsNeeded = Math.ceil(totalEntries / valuesPerElement);
+            memory.baseOffset = globalElementIndex;
+            globalElementIndex += elementsNeeded;
         }
         return globalElementIndex;
     }
@@ -826,6 +957,7 @@ class Simulation {
         let globalElementIndex = this.#assignPortLocations();
         globalElementIndex = this.#assignClockLocations(globalElementIndex);
         globalElementIndex = this.#assignNetLocations(globalElementIndex);
+        globalElementIndex = this.#assignMemoryLocations(globalElementIndex);
         // DEBUGGING: remove this
         let known = new Set();
         for (const p of this.#ports.all) {
@@ -873,6 +1005,25 @@ class Simulation {
         const inputGrouped = this.#groupBitmapsByDest(this.#layout.netToInputBitmap);
         for (const [destElementIndex, group] of pairs(inputGrouped)) {
             this.#backend.emitNetToInput(destElementIndex, group, 'net to input');
+        }
+
+        // step 2.5: memory access (ROM/RAM)
+        for (const memory of this.#memories) {
+            const addrPorts = memory.addressPortNames.map((n) => this.#ports.byName[n]);
+            const dataOutPorts = memory.dataOutPortNames.map((n) => this.#ports.byName[n]);
+            if (memory.memType === 'ram') {
+                const dataInPorts = memory.dataInPortNames.map((n) => this.#ports.byName[n]);
+                const wePort = this.#ports.byName[memory.wePortName];
+                if (memory.writeBeforeRead) {
+                    this.#backend.emitMemoryWrite(memory, addrPorts, dataInPorts, wePort);
+                    this.#backend.emitMemoryRead(memory, addrPorts, dataOutPorts);
+                } else {
+                    this.#backend.emitMemoryRead(memory, addrPorts, dataOutPorts);
+                    this.#backend.emitMemoryWrite(memory, addrPorts, dataInPorts, wePort);
+                }
+            } else {
+                this.#backend.emitMemoryRead(memory, addrPorts, dataOutPorts);
+            }
         }
 
         // step3: set nets values and signal state from outputs
