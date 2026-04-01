@@ -424,6 +424,11 @@ class Simulation {
         }
     }
 
+    // Returns the generated simulation tick function source code as a string. JS backend only.
+    getCode() {
+        return this.#backend.buildCode();
+    }
+
     // Runs the simulation for the given number of ticks.
     // Returns 1 if a break-on-conflict fired mid-run, 0 otherwise.
     simulate(ticks = 1) {

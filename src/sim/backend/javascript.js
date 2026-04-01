@@ -407,18 +407,23 @@ class BackendJavascript {
         return this.#debug && text ? ` // ${text}` : '';
     }
 
-    // Finalizes and returns the simulation function.
-    // The returned function returns 1 if a break-on-conflict fired, 2 if a break-on-condition fired, 0 otherwise.
-    compile() {
+    // Assembles and returns the simulation tick function source code as a string.
+    buildCode() {
         let code = "'use strict';(mem) => (ticks) => {\n";
         code += this.#initCode;
         code += "ticks |= 0;\n";
-        code += "for (let i = 0; i < ticks; ++i) {\n"
+        code += "for (let i = 0; i < ticks; ++i) {\n";
         code += this.#tickCode;
         code += "}\n";
         code += "return 0;\n";
         code += "}\n";
-        return eval(code)(this.#mem);
+        return code;
+    }
+
+    // Finalizes and returns the simulation function.
+    // The returned function returns 1 if a break-on-conflict fired, 2 if a break-on-condition fired, 0 otherwise.
+    compile() {
+        return eval(this.buildCode())(this.#mem);
     }
 
     // Compiles step generator.
