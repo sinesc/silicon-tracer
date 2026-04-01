@@ -349,6 +349,19 @@ class BackendJavascript {
         this.#tickCode += code;
     }
 
+    // Emits output enable control: sets or clears the driven (elementIndex3) bits for each data output port based on OE.
+    emitMemoryOutputEnable(memory, dataOutPorts, oePort) {
+        const id = memory.id;
+        let code = '';
+        const oeExpr = `((mem[${oePort.elementIndex2}] >>> ${oePort.bitIndex}) & 1)`;
+        code += `var _moe${id} = ${oeExpr};` + this.#comment(`memory ${id} output enable`) + '\n';
+        for (let i = 0; i < dataOutPorts.length; i++) {
+            const port = dataOutPorts[i];
+            code += `mem[${port.elementIndex3}] = _moe${id}` + this.#comment(`memory ${id} do${i} driven`) + ';\n';
+        }
+        this.#tickCode += code;
+    }
+
     // Returns the integer destination bit mask for a bitmap (duplicate/offset/single modes).
     #bitmapMask(bitmap) {
         if (bitmap.mode === 'duplicate') {

@@ -189,13 +189,15 @@ test("ROM read with 2-bit address and 8-bit data", () => {
     // Declare a ROM: 2-bit address (4 entries), 8-bit data, values [0xAA, 0x55, 0xFF, 0x01]
     sim.declareMemory('rom', 2, 8, [0xAA, 0x55, 0xFF, 0x01], suffix);
 
-    // Declare constants for address bits
+    // Declare constants for address bits and output enable
     sim.declareConst(0, '@ca0@0_0');
     sim.declareConst(0, '@ca1@0_0');
+    sim.declareConst(1, '@coe@0_0');
 
-    // Declare nets: connect constants to ROM address inputs
+    // Declare nets: connect constants to ROM address inputs and OE
     sim.declareNet(['q@ca0@0_0', 'a0' + suffix]);
     sim.declareNet(['q@ca1@0_0', 'a1' + suffix]);
+    sim.declareNet(['q@coe@0_0', 'oe' + suffix]);
 
     // Declare probes for data output bits
     for (let i = 0; i < 8; i++) {
@@ -255,6 +257,7 @@ test("RAM write and read back with 2-bit address and 4-bit data", () => {
     sim.declareConst(0, '@cdi2@0_0');
     sim.declareConst(0, '@cdi3@0_0');
     sim.declareConst(0, '@cwe@0_0');
+    sim.declareConst(1, '@coe@0_0');
 
     // Connect constants to RAM ports
     sim.declareNet(['q@ca0@0_0', 'a0' + suffix]);
@@ -264,6 +267,7 @@ test("RAM write and read back with 2-bit address and 4-bit data", () => {
     sim.declareNet(['q@cdi2@0_0', 'di2' + suffix]);
     sim.declareNet(['q@cdi3@0_0', 'di3' + suffix]);
     sim.declareNet(['q@cwe@0_0', 'we' + suffix]);
+    sim.declareNet(['q@coe@0_0', 'oe' + suffix]);
 
     // Probes for data output
     for (let i = 0; i < 4; i++) {
@@ -338,7 +342,9 @@ test("ROM reset restores initial data", () => {
     const suffix = '@rom0@0_0';
     sim.declareMemory('rom', 1, 8, [0x42, 0x99], suffix);
     sim.declareConst(0, '@ca0@0_0');
+    sim.declareConst(1, '@coe@0_0');
     sim.declareNet(['q@ca0@0_0', 'a0' + suffix]);
+    sim.declareNet(['q@coe@0_0', 'oe' + suffix]);
     for (let i = 0; i < 8; i++) {
         sim.declareProbe('do' + i, '@pdo' + i + '@0_0');
         sim.declareNet(['do' + i + suffix, 'input@pdo' + i + '@0_0']);
@@ -379,12 +385,14 @@ test("RAM with 1-bit data width (32 values packed per element)", () => {
     sim.declareConst(0, '@ca2@0_0');
     sim.declareConst(0, '@cdi0@0_0');
     sim.declareConst(0, '@cwe@0_0');
+    sim.declareConst(1, '@coe@0_0');
 
     sim.declareNet(['q@ca0@0_0', 'a0' + suffix]);
     sim.declareNet(['q@ca1@0_0', 'a1' + suffix]);
     sim.declareNet(['q@ca2@0_0', 'a2' + suffix]);
     sim.declareNet(['q@cdi0@0_0', 'di0' + suffix]);
     sim.declareNet(['q@cwe@0_0', 'we' + suffix]);
+    sim.declareNet(['q@coe@0_0', 'oe' + suffix]);
     sim.declareProbe('do0', '@pdo0@0_0');
     sim.declareNet(['do0' + suffix, 'input@pdo0@0_0']);
 
@@ -416,7 +424,9 @@ test("getMemoryData / setMemoryData with packing", () => {
     sim.declareMemory('rom', 3, 4, [0xA, 0xB, 0xC, 0xD, 0xE, 0xF, 0x1, 0x2], suffix);
     // Minimal wiring to compile (need at least one net)
     sim.declareConst(0, '@ca0@0_0');
+    sim.declareConst(1, '@coe@0_0');
     sim.declareNet(['q@ca0@0_0', 'a0' + suffix]);
+    sim.declareNet(['q@coe@0_0', 'oe' + suffix]);
     for (let i = 1; i < 3; i++) {
         sim.declareConst(0, '@ca' + i + '@0_0');
         sim.declareNet(['q@ca' + i + '@0_0', 'a' + i + suffix]);
@@ -440,6 +450,52 @@ test("getMemoryData / setMemoryData with packing", () => {
     // Neighbors should be unaffected
     assert(sim.getMemoryData(0, 2) === 0xC, `addr 2 unaffected: expected 0xC, got 0x${sim.getMemoryData(0, 2).toString(16)}`);
     assert(sim.getMemoryData(0, 4) === 0xE, `addr 4 unaffected: expected 0xE, got 0x${sim.getMemoryData(0, 4).toString(16)}`);
+});
+
+test("ROM output enable controls tri-state output", () => {
+    const sim = createSimulationWithBackend('js');
+    const suffix = '@rom0@0_0';
+    sim.declareMemory('rom', 1, 4, [0xA, 0x5], suffix);
+
+    sim.declareConst(0, '@ca0@0_0');
+    sim.declareConst(1, '@coe@0_0');
+    sim.declareNet(['q@ca0@0_0', 'a0' + suffix]);
+    sim.declareNet(['q@coe@0_0', 'oe' + suffix]);
+
+    for (let i = 0; i < 4; i++) {
+        sim.declareProbe('do' + i, '@pdo' + i + '@0_0');
+        sim.declareNet(['do' + i + suffix, 'input@pdo' + i + '@0_0']);
+    }
+
+    sim.compile();
+
+    const readData = () => {
+        let v = 0;
+        for (let i = 0; i < 4; i++) {
+            const bit = sim.getProbeValue('do' + i);
+            if (bit === 1) v |= (1 << i);
+        }
+        return v;
+    };
+
+    // OE=1: outputs should be driven with address 0 data (0xA)
+    sim.setConstValue(0, 0);
+    sim.setConstValue(1, 1); // OE on
+    sim.simulate(5);
+    assert(readData() === 0xA, `OE=1 addr 0: expected 0xA, got 0x${readData().toString(16)}`);
+
+    // OE=0: outputs should be undriven (null)
+    sim.setConstValue(1, 0); // OE off
+    sim.simulate(5);
+    for (let i = 0; i < 4; i++) {
+        const v = sim.getProbeValue('do' + i);
+        assert(v === null, `OE=0 do${i}: expected null (undriven), got ${v}`);
+    }
+
+    // OE=1 again: outputs should be driven again
+    sim.setConstValue(1, 1); // OE on
+    sim.simulate(5);
+    assert(readData() === 0xA, `OE=1 again addr 0: expected 0xA, got 0x${readData().toString(16)}`);
 });
 
 console.log('\nWire compaction tests:');

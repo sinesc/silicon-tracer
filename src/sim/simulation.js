@@ -302,12 +302,16 @@ class Simulation {
             addressPortNames.push('a' + i + suffix);
         }
 
-        // Declare data output ports
+        // Declare data output ports (tri-state, controlled by output enable)
         const dataOutPortNames = [];
         for (let i = 0; i < dataWidth; i++) {
-            this.#declarePort('do' + i, suffix, 'o', false, false, batchType);
+            this.#declarePort('do' + i, suffix, 'o', true, false, batchType);
             dataOutPortNames.push('do' + i + suffix);
         }
+
+        // Output enable input port
+        this.#declarePort('oe', suffix, 'i', false, false, batchType);
+        const oePortName = 'oe' + suffix;
 
         // RAM-only ports
         let dataInPortNames = null;
@@ -325,7 +329,7 @@ class Simulation {
         const id = this.#memories.length;
         const memory = {
             id, memType, addressWidth, dataWidth, initialData, suffix, writeBeforeRead,
-            addressPortNames, dataOutPortNames, dataInPortNames, wePortName,
+            addressPortNames, dataOutPortNames, oePortName, dataInPortNames, wePortName,
             baseOffset: null, // assigned during memory layout
         };
         this.#memories.push(memory);
@@ -370,7 +374,7 @@ class Simulation {
             nets: this.#nets.all.map((n) => ({ id: n.id, ports: n.ports })),
             ports: this.#ports.all.map((p) => ({ id: p.id, name: p.name, ioType: p.ioType, isTriState: p.isTriState, detectEdges: p.detectEdges, batchType: p.batchType, batchName: p.batchName, batchComponent: p.batchComponent })),
             clocks: this.#clocks.map((c) => ({ id: c.id, frequency: c.frequency, tps: c.tps, enablePortName: c.enablePortName, outputPortName: c.outputPortName })),
-            memories: this.#memories.map((m) => ({ id: m.id, memType: m.memType, addressWidth: m.addressWidth, dataWidth: m.dataWidth, initialData: m.initialData, suffix: m.suffix, writeBeforeRead: m.writeBeforeRead, addressPortNames: m.addressPortNames, dataOutPortNames: m.dataOutPortNames, dataInPortNames: m.dataInPortNames, wePortName: m.wePortName })),
+            memories: this.#memories.map((m) => ({ id: m.id, memType: m.memType, addressWidth: m.addressWidth, dataWidth: m.dataWidth, initialData: m.initialData, suffix: m.suffix, writeBeforeRead: m.writeBeforeRead, addressPortNames: m.addressPortNames, dataOutPortNames: m.dataOutPortNames, oePortName: m.oePortName, dataInPortNames: m.dataInPortNames, wePortName: m.wePortName })),
             probes: this.#probes,
         }
     }
@@ -1011,6 +1015,7 @@ class Simulation {
         for (const memory of this.#memories) {
             const addrPorts = memory.addressPortNames.map((n) => this.#ports.byName[n]);
             const dataOutPorts = memory.dataOutPortNames.map((n) => this.#ports.byName[n]);
+            const oePort = this.#ports.byName[memory.oePortName];
             if (memory.memType === 'ram') {
                 const dataInPorts = memory.dataInPortNames.map((n) => this.#ports.byName[n]);
                 const wePort = this.#ports.byName[memory.wePortName];
@@ -1024,6 +1029,7 @@ class Simulation {
             } else {
                 this.#backend.emitMemoryRead(memory, addrPorts, dataOutPorts);
             }
+            this.#backend.emitMemoryOutputEnable(memory, dataOutPorts, oePort);
         }
 
         // step3: set nets values and signal state from outputs

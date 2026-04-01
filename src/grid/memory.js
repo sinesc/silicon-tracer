@@ -91,8 +91,9 @@ class Memory extends SimulationComponent {
         for (let i = 0; i < addressWidth; i++) {
             left.push('a' + i);
         }
+        left.push(null);
+        left.push('oe');
         if (memType === 'ram') {
-            left.push(null);
             left.push('we');
         }
 
@@ -117,6 +118,7 @@ class Memory extends SimulationComponent {
         for (let i = 0; i < addressWidth; i++) {
             ioTypes['a' + i] = 'in';
         }
+        ioTypes['oe'] = 'in';
         for (let i = 0; i < dataWidth; i++) {
             ioTypes['do' + i] = 'out';
         }
