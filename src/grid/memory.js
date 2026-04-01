@@ -5,31 +5,40 @@ class Memory extends SimulationComponent {
 
     static VALID_DATA_WIDTHS = [ 1, 2, 4, 8, 16, 32 ];
 
-    static #EDIT_DIALOG = [
+    static #ROM_EDIT_DIALOG = [
         { name: 'addressWidth', label: 'Address width (bits)', type: 'int', check: (v) => { const p = Number.parseSI(v, true); return isFinite(p) && p >= 1 && p <= 24; } },
         { name: 'dataWidth', label: 'Data width (bits)', type: 'select', options: { 1: "1", 2: "2", 4: "4", 8: "8", 16: "16", 32: "32" }, apply: (v) => parseInt(v) },
         ...Component.EDIT_DIALOG,
+    ];
+    static #RAM_EDIT_DIALOG = [
+        ...Memory.#ROM_EDIT_DIALOG,
+        { name: 'combinedPorts', label: 'Combined data ports', type: 'bool' },
     ];
 
     #memType;
     #addressWidth;
     #dataWidth;
     #data;
+    #combinedPorts;
 
-    constructor(app, x, y, rotation, memType, addressWidth, dataWidth, data = []) {
+    constructor(app, x, y, rotation, memType, addressWidth, dataWidth, data = [], combinedPorts = true) {
         assert.enum([ 'rom', 'ram' ], memType);
         assert.integer(addressWidth, false, 1, 24);
         assert.integer(dataWidth, false, 1, 32);
         assert((dataWidth & (dataWidth - 1)) === 0, `dataWidth must be a power of 2, got ${dataWidth}`);
 
-        const { left, right, top, bottom } = Memory.#generatePorts(memType, addressWidth, dataWidth);
+        const { left, right, top, bottom } = Memory.#generatePorts(memType, addressWidth, dataWidth, combinedPorts);
         const ioTypes = Memory.#generateIoTypes(memType, addressWidth, dataWidth);
+        const shadowPorts = Memory.#generateShadowPorts(memType, dataWidth, combinedPorts);
         super(app, x, y, rotation, { left, right, top, bottom }, memType, 1, ioTypes);
+        this.setPortsFromNames({ left, right, top, bottom }, 1, ioTypes, shadowPorts);
 
         this.#memType = memType;
         this.#addressWidth = addressWidth;
         this.#dataWidth = dataWidth;
         this.#data = data;
+        this.#combinedPorts = combinedPorts;
+        this.#relabelDataPorts();
     }
 
     get label() {
@@ -41,12 +50,13 @@ class Memory extends SimulationComponent {
     get dataWidth() { return this.#dataWidth; }
     get data() { return this.#data; }
     set data(value) { this.#data = value; }
+    get combinedPorts() { return this.#combinedPorts; }
 
     // Serializes the object for writing to disk.
     serialize() {
         return {
             ...super.serialize(),
-            '#a': [ this.x, this.y, this.rotation, this.#memType, this.#addressWidth, this.#dataWidth, this.#data ],
+            '#a': [ this.x, this.y, this.rotation, this.#memType, this.#addressWidth, this.#dataWidth, this.#data, this.#combinedPorts ],
         };
     }
 
@@ -64,16 +74,20 @@ class Memory extends SimulationComponent {
 
     // Handle edit hotkey.
     async onEdit() {
-        const config = await dialog(`Configure ${this.label}`, Memory.#EDIT_DIALOG, { addressWidth: this.#addressWidth, dataWidth: this.#dataWidth, rotation: this.rotation });
+        const editDialog = this.#memType === 'ram' ? Memory.#RAM_EDIT_DIALOG : Memory.#ROM_EDIT_DIALOG;
+        const config = await dialog(`Configure ${this.label}`, editDialog, { addressWidth: this.#addressWidth, dataWidth: this.#dataWidth, combinedPorts: this.#combinedPorts, rotation: this.rotation });
         if (config) {
-            if (config.addressWidth !== this.#addressWidth || config.dataWidth !== this.#dataWidth) {
+            if (config.addressWidth !== this.#addressWidth || config.dataWidth !== this.#dataWidth || config.combinedPorts !== this.#combinedPorts) {
                 const grid = this.grid;
                 this.unlink();
-                const { left, right, top, bottom } = Memory.#generatePorts(this.#memType, config.addressWidth, config.dataWidth);
+                const { left, right, top, bottom } = Memory.#generatePorts(this.#memType, config.addressWidth, config.dataWidth, config.combinedPorts);
                 const ioTypes = Memory.#generateIoTypes(this.#memType, config.addressWidth, config.dataWidth);
-                this.setPortsFromNames({ left, right, top, bottom }, 1, ioTypes);
-                this.#addressWidth = config.addressWidth;
+                const shadowPorts = Memory.#generateShadowPorts(this.#memType, config.dataWidth, config.combinedPorts);
                 this.#dataWidth = config.dataWidth;
+                this.#combinedPorts = config.combinedPorts;
+                this.setPortsFromNames({ left, right, top, bottom }, 1, ioTypes, shadowPorts);
+                this.#relabelDataPorts();
+                this.#addressWidth = config.addressWidth;
                 this.link(grid);
             }
             this.rotation = config.rotation;
@@ -81,12 +95,13 @@ class Memory extends SimulationComponent {
             const defaultsKey = this.#memType;
             this.app.config.placementDefaults[defaultsKey].addressWidth = config.addressWidth;
             this.app.config.placementDefaults[defaultsKey].dataWidth = config.dataWidth;
+            this.app.config.placementDefaults[defaultsKey].combinedPorts = config.combinedPorts;
             this.app.config.placementDefaults[defaultsKey].rotation = config.rotation;
         }
     }
 
     // Generates port layout for the memory component.
-    static #generatePorts(memType, addressWidth, dataWidth) {
+    static #generatePorts(memType, addressWidth, dataWidth, combinedPorts) {
         const left = [];
         for (let i = 0; i < addressWidth; i++) {
             left.push('a' + i);
@@ -103,13 +118,28 @@ class Memory extends SimulationComponent {
         }
 
         const bottom = [];
-        if (memType === 'ram') {
+        if (memType === 'ram' && !combinedPorts) {
             for (let i = 0; i < dataWidth; i++) {
                 bottom.push('di' + i);
             }
         }
 
         return { left, right, top: [], bottom };
+    }
+
+    // Returns shadow ports structure for RAM with combined ports enabled: di ports co-located with do ports on the right side.
+    static #generateShadowPorts(memType, dataWidth, combinedPorts) {
+        if (memType !== 'ram' || !combinedPorts) return null;
+        return { right: Array.from({ length: dataWidth }, (_, i) => 'di' + i) };
+    }
+
+    // Relabels do ports from 'do0' to 'd0' for display when ports are combined.
+    #relabelDataPorts() {
+        if (!this.#combinedPorts) return;
+        for (let i = 0; i < this.#dataWidth; i++) {
+            const port = this.portByName('do' + i);
+            if (port) port.label = 'd' + i;
+        }
     }
 
     // Generates IO type map for port declaration.

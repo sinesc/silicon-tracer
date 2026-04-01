@@ -12,6 +12,7 @@ class ComponentPort {
     color = null;
     element = null;
     labelElement = null;
+    shadow = false; // shadow ports share coordinates with another port and are not rendered
 
     // Net-id for this item. Directly set by Circuit.attachSimulation()
     netIds = null;
@@ -204,9 +205,12 @@ class Component extends GridItem {
     }
 
     // Builds ComponentPort instances from map of list of ports.
-    buildPortsFromNames(portNames, portChannels = null, portIoTypes = null) {
+    // shadowPorts mirrors the portNames structure: each name at position i on a side is placed at the
+    // same coordinates as portNames[side][i] but marked as shadow (not rendered, participates in netlist only).
+    buildPortsFromNames(portNames, portChannels = null, portIoTypes = null, shadowPorts = null) {
         assert.object(portNames);
         assert.object(portIoTypes, true);
+        assert.object(shadowPorts, true);
         if (!Number.isInteger(portChannels)) {
             assert.object(portChannels, true);
         }
@@ -218,14 +222,26 @@ class Component extends GridItem {
             }
         }
         // convert port names to ComponentPort instances
-        return Object.map(ports, (side, sidePorts) => sidePorts.map((name, index) => new ComponentPort(name, side, index, Number.isInteger(portChannels) ? portChannels : (portChannels?.[name] ?? null), portIoTypes?.[name] ?? null)));
+        const result = Object.map(ports, (side, sidePorts) => sidePorts.map((name, index) => new ComponentPort(name, side, index, Number.isInteger(portChannels) ? portChannels : (portChannels?.[name] ?? null), portIoTypes?.[name] ?? null)));
+        // add shadow ports co-located with their corresponding portNames entries
+        if (shadowPorts) {
+            for (const [ side, names ] of Object.entries(shadowPorts)) {
+                for (let i = 0; i < names.length; i++) {
+                    const name = names[i];
+                    if (!name) continue;
+                    const port = new ComponentPort(name, side, i, Number.isInteger(portChannels) ? portChannels : (portChannels?.[name] ?? 1), portIoTypes?.[name] ?? null);
+                    port.shadow = true;
+                    result[side].push(port);
+                }
+            }
+        }
+        return result;
     }
 
     // Sets port names/locations and optionally channels per port or for all ports.
-    setPortsFromNames(portNames, portChannels = null, portIoTypes = null) {
-        this.#ports = this.buildPortsFromNames(portNames, portChannels, portIoTypes);
+    setPortsFromNames(portNames, portChannels = null, portIoTypes = null, shadowPorts = null) {
+        this.#ports = this.buildPortsFromNames(portNames, portChannels, portIoTypes, shadowPorts);
         this.updateDimensions();
-        this.#findPortLabelCharPos();
     }
 
     // Link component to a grid, enabling it to be rendered.
@@ -237,9 +253,11 @@ class Component extends GridItem {
         this.#element.setAttribute('data-component-type', this.#type);
         this.#inner = html(this.#element, 'div', 'component-inner', `<span>${this.label}</span>`);
         this.registerMouseAction(this.#inner, { type: "component", grabOffsetX: null, grabOffsetY: null });
+        this.#findPortLabelCharPos();
 
         // ports
         for (const item of this.ports) {
+            if (item.shadow) continue; // shadow ports share coordinates with another port and are not rendered
             // TODO: add and call link() method on ComponentPort instead?
             const port = html(this.#element, 'div', 'component-port');
             const message = () => {
@@ -504,8 +522,9 @@ class Component extends GridItem {
 
     // Update component width/height from given ports.
     updateDimensions() {
-        this.width = Math.max(Grid.SPACING * 2, (this.#ports[this.rotatedTop].length + 1) * Grid.SPACING, (this.#ports[this.rotatedBottom].length + 1) * Grid.SPACING);
-        this.height = Math.max(Grid.SPACING * 2, (this.#ports[this.rotatedLeft].length + 1) * Grid.SPACING, (this.#ports[this.rotatedRight].length + 1) * Grid.SPACING);
+        const len = (side) => this.#ports[side].filter((p) => !p.shadow).length;
+        this.width = Math.max(Grid.SPACING * 2, (len(this.rotatedTop) + 1) * Grid.SPACING, (len(this.rotatedBottom) + 1) * Grid.SPACING);
+        this.height = Math.max(Grid.SPACING * 2, (len(this.rotatedLeft) + 1) * Grid.SPACING, (len(this.rotatedRight) + 1) * Grid.SPACING);
     }
 
     // Renders the component onto the grid.
@@ -522,6 +541,7 @@ class Component extends GridItem {
         // don't need to update ports when only moving
         if (this.dirty) {
             for (const port of this.ports) {
+                if (port.shadow) continue;
                 // TODO: refactor into overrideable function.
                 if (this instanceof Port || this instanceof Tunnel || port.name !== '') {
                     port.render(this, this.#portLabelCharPos[port.originalSide]);
@@ -556,6 +576,7 @@ class Component extends GridItem {
     // Renders/updates the current net state of the component ports to the grid.
     renderNetState() {
         for (const item of this.ports) {
+            if (item.shadow) continue;
             const state = this.getNetState(item.netIds);
             if (item.element.getAttribute('data-net-state') !== state) {
                 item.element.setAttribute('data-net-state', state);
@@ -567,16 +588,16 @@ class Component extends GridItem {
     #findPortLabelCharPos() {
         const abbrev = { };
         for (const [ key, rawPorts ] of Object.entries(this.#ports)) {
-            const ports = rawPorts.filter((p) => p.name !== null);
+            const ports = rawPorts.filter((p) => p.name !== null && !p.shadow);
             let pos = 0;
             seeker: do {
                 let known = [];
                 for (const port of ports) {
-                    if (pos > port.name.length) {
+                    if (pos > port.label.length) {
                         pos = 0;
                         break;
                     }
-                    const char = port.name.slice(pos, pos + 1);
+                    const char = port.label.slice(pos, pos + 1);
                     if (known.includes(char)) {
                         ++pos;
                         continue seeker;
