@@ -285,7 +285,7 @@ class Circuits {
         assert.string(uid);
         delete this.#circuits[uid];
         if (uid === this.#currentCircuit) {
-            const fallback = Object.keys(this.#circuits)[0] ?? null;
+            const fallback = (Object.values(this.#circuits).find((c) => c.lid === null)?.uid) ?? Object.keys(this.#circuits)[0] ?? null;
             if (fallback) {
                 this.select(fallback);
             }
