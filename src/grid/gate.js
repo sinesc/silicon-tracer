@@ -42,6 +42,10 @@ class Gate extends SimulationComponent {
         this.setHoverMessage(this.inner, `<b>${this.label}-Gate</b>. <i>E</i> Edit, ${Component.HOTKEYS}.`, { type: 'hover' });
     }
 
+    get actionLabel() {
+        return `${this.label} gate`;
+    }
+
     // Declare component simulation item.
     declare(sim, config, suffix) {
         return sim.declareGate(this.type, this.inputs.length, suffix);
@@ -64,6 +68,7 @@ class Gate extends SimulationComponent {
             this.link(grid);
             this.rotation = config.rotation; // needs to be on grid for rotation to properly update x/y/width/height
             this.redraw();
+            this.grid.trackAction('Edit gate');
         }
     }
 

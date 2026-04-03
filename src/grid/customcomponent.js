@@ -57,6 +57,10 @@ class CustomComponent extends VirtualComponent {
         this.setHoverMessage(this.inner, () => `<b>${this.label}</b>. <i>E</i> Edit, <i>W</i> Switch to sub-circuit ${this.app.simulations.current ? ' simulation, ' : ', '} ${Component.HOTKEYS}.`, { type: 'hover' });
     }
 
+    get actionLabel() {
+        return `"${this.label}" component`;
+    }
+
     // Update ports from circuit.
     updatePorts() {
         const circuit = this.app.circuits.byUID(this.uid) ?? {};
@@ -120,6 +124,7 @@ class CustomComponent extends VirtualComponent {
             this.link(grid);
             this.rotation = config.rotation;
             this.redraw();
+            this.grid.trackAction('Edit custom component');
         }
     }
 

@@ -92,6 +92,7 @@ class WireBuilder extends GridItem { // Note: Not actually a grid item, but uses
             this.app.clearStatus(true);
             this.grid.releaseHotkeyTarget(this, true);
             this.#remove();
+            this.grid.trackAction('Add wire');
             return true;
         }
     }

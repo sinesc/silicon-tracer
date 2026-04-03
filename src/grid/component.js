@@ -373,6 +373,11 @@ class Component extends GridItem {
         return this.#type.toUpperFirst()
     }
 
+    // Returns the label used in undo action descriptions.
+    get actionLabel() {
+        return this.label;
+    }
+
     // Returns the component root element.
     get element() {
         return this.#element;
@@ -420,13 +425,17 @@ class Component extends GridItem {
                 // queue class removal for next render call to avoid brief flickering
                 this.redraw(true, () => this.#element.classList.remove('component-rotate-animation'));
             }, 150);
+            this.grid.trackAction(`Rotate ${this.actionLabel}`);
             return true;
         } else if (key === 'Delete' && what.type === 'hover') {
+            const grid = this.grid;
+            const label = this.actionLabel;
             this.#element.classList.add('component-delete-animation');
             setTimeout(() => {
                 if (this.#element) { // deletion might already be in progress
                     this.#element.classList.remove('component-delete-animation');
-                    this.grid.removeItem(this);
+                    grid.removeItem(this);
+                    grid.trackAction(`Delete ${label}`);
                 }
             }, 150);
             return true;
@@ -496,6 +505,9 @@ class Component extends GridItem {
             return true;
         } else if (what.type === 'component') {
             this.onMove(x, y, status, what);
+            if (status === 'stop') {
+                this.grid.trackAction(what.isNew ? `Add ${this.actionLabel}` : `Move ${this.actionLabel}`);
+            }
             return true;
         } else if (what.type === 'port' && status === 'start') {
             this.onConnect(x, y, status, what);

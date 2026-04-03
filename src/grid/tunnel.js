@@ -46,12 +46,17 @@ class Tunnel extends VirtualComponent {
             this.name = config.name;
             this.rotation = config.rotation;
             this.redraw();
+            this.grid.trackAction('Edit tunnel');
         }
     }
 
     // Override inner component label.
     get label() {
         return '';
+    }
+
+    get actionLabel() {
+        return 'Tunnel';
     }
 
     // Renders the port onto the grid.

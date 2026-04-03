@@ -92,6 +92,7 @@ class Memory extends SimulationComponent {
             }
             this.rotation = config.rotation;
             this.redraw();
+            this.grid.trackAction('Edit memory');
             const defaultsKey = this.#memType;
             this.app.config.placementDefaults[defaultsKey].addressWidth = config.addressWidth;
             this.app.config.placementDefaults[defaultsKey].dataWidth = config.dataWidth;

@@ -52,6 +52,7 @@ class Probe extends SimulationComponent {
             this.name = config.name;
             this.rotation = config.rotation;
             this.redraw();
+            this.grid.trackAction('Edit probe');
         }
     }
 

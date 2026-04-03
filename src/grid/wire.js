@@ -120,6 +120,9 @@ class Wire extends GridItem {
                 this.limbo = false;
             }
             this.onMove(x, y, status, what);
+            if (status === 'stop') {
+                this.grid.trackAction('Move wire');
+            }
             return true;
         }
         if (status === 'start') {

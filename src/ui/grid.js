@@ -79,6 +79,9 @@ class Grid {
         this.#circuit.link(this);
         this.#infoBox.circuitLabel = circuit.label;
         this.#dirty |= Grid.#DIRTY_INNER | Grid.#DIRTY_OUTER | Grid.#DIRTY_OVERLAY;
+        if (!circuit.readonly && circuit.undoStack.currentSnapshot === null) {
+            circuit.undoStack.init(circuit.serializeForUndo());
+        }
     }
 
     // Update circuit label in infobox.
@@ -351,6 +354,84 @@ class Grid {
         this.#selectionCenter = null;
     }
 
+    // Replaces the current selection. Called by Circuit.restoreFromUndo() to reinstate selection after undo/redo.
+    setSelection(items) {
+        this.#selection = items;
+        this.#selectionCenter = null;
+    }
+
+    // Updates the current undo snapshot to reflect the latest selection state.
+    #snapshotSelection() {
+        if (!this.readonly) {
+            this.#circuit.undoStack.updateCurrentSnapshot(this.#circuit.serializeForUndo());
+        }
+    }
+
+    // Logs an action to the undo system unless circuit is unchanged.
+    trackAction(label) {
+        assert.string(label);
+        const circuit = this.#circuit;
+        const before = circuit.undoStack.currentSnapshot;
+        const after = circuit.serializeForUndo();
+        if (JSON.stringify(before) !== JSON.stringify(after)) {
+            circuit.undoStack.push(label, before, after, true);
+            this.#app.haveChanges = true;
+            this.#app.refreshUndoButtons();
+        }
+    }
+
+    // Cuts the current selection and copies it to the clipboard.
+    async actionCutSelection() {
+        if (this.readonly) return;
+        await this.copySelection();
+        this.#deleteSelection();
+        this.trackAction('Cut selection');
+    }
+
+    // Deletes selected items.
+    actionDeleteSelection() {
+        if (this.readonly) return;
+        this.#deleteSelection();
+        this.trackAction('Delete selection');
+    }
+
+    // Pastes items from clipboard.
+    async actionPasteSelection() {
+        if (this.readonly) return;
+        const serialized = JSON.parse(await navigator.clipboard.readText());
+        const items = serialized.map((item) => GridItem.unserialize(this.#app, item));
+        // clear old selection
+        for (const item of this.#circuit.items) {
+            item.selected = false;
+        }
+        // select pasted items
+        for (const item of items) {
+            this.addItem(item);
+            item.selected = true;
+        }
+        this.#selection = items;
+        this.invalidateSelection();
+        this.#app.simulations.markDirty(this.#circuit);
+        this.trackAction('Paste selection');
+    }
+    
+    // Copies selected items to clipboard.
+    copySelection() {
+        return navigator.clipboard.writeText(JSON.stringify(this.#selection.map((item) => item.serialize())));
+    }
+
+    // Deletes selected items.
+    #deleteSelection() {
+        this.#circuit.detachSimulation();
+        for (const item of this.#selection) {
+            this.removeItem(item, false);
+        }
+        this.#selection = [];
+        this.invalidateSelection();
+        this.#app.simulations.markDirty(this.#circuit);
+        this.#app.haveChanges = true;
+    }
+
     // Applies net colors to component ports on the grid.
     #applyNetColors() {
         const netList = NetList.identify(this.#circuit);
@@ -392,36 +473,14 @@ class Grid {
                 this.#selection.push(item);
             }
             this.invalidateSelection();
+            this.#snapshotSelection();
             this.#app.simulations.markDirty(this.#circuit);
         });
-        this.#app.registerHotkey('ctrl+v', 'down', () => !this.readonly, async () => {
-            const serialized = JSON.parse(await navigator.clipboard.readText());
-            const items = serialized.map((item) => GridItem.unserialize(this.#app, item));
-            // clear old selection
-            for (const item of this.#circuit.items) {
-                item.selected = false;
-            }
-            // select pasted items
-            for (const item of items) {
-                this.addItem(item);
-                item.selected = true;
-            }
-            this.#selection = items;
-            this.invalidateSelection();
-            this.#app.simulations.markDirty(this.#circuit);
-        });
-        this.#app.registerHotkey('ctrl+c', 'down', () => !this.readonly && this.#selection.length > 0, async () => {
-            await this.#copySelection();
-        });
-        this.#app.registerHotkey('ctrl+x', 'down', () => !this.readonly && this.#selection.length > 0, async () => {
-            await this.#copySelection();
-            this.#deleteSelection();
-        });
-        this.#app.registerHotkey('r', 'down', () => !this.readonly && this.#selection.length > 0, () => {
-            this.#rotateSelection();
-            this.#app.simulations.markDirty(this.#circuit);
-        });
-        this.#app.registerHotkey('Delete', 'down', () => !this.readonly && this.#selection.length > 0, () => this.#deleteSelection());
+        this.#app.registerHotkey('ctrl+v', 'down', () => !this.readonly, () => this.actionPasteSelection());
+        this.#app.registerHotkey('ctrl+c', 'down', () => !this.readonly && this.#selection.length > 0, () => this.actionCopySelection());
+        this.#app.registerHotkey('ctrl+x', 'down', () => !this.readonly && this.#selection.length > 0, () => this.actionCutSelection());
+        this.#app.registerHotkey('r', 'down', () => !this.readonly && this.#selection.length > 0, () => this.#actionRotateSelection());
+        this.#app.registerHotkey('Delete', 'down', () => !this.readonly && this.#selection.length > 0, () => this.actionDeleteSelection());
 
         // send to hover target
         this.#app.registerHotkey(null, 'press', () => !this.readonly && this.#hotkeyTarget, (e) => {
@@ -495,7 +554,7 @@ class Grid {
     }
 
     // Rotates the current selection 90° around its center.
-    #rotateSelection() {
+    #actionRotateSelection() {
         const center = this.#selectionCenter ??= this.#computeSelectionCenter();
         // rotate items around center
         for (const item of this.#selection) {
@@ -514,20 +573,8 @@ class Grid {
                 item.setEndpoints(start.x, start.y, end.x, end.y);
             }
         }
-    }
-
-    #copySelection() {
-        return navigator.clipboard.writeText(JSON.stringify(this.#selection.map((item) => item.serialize())));
-    }
-
-    #deleteSelection() {
-        this.#circuit.detachSimulation();
-        for (const item of this.#selection) {
-            this.removeItem(item, false);
-        }
-        this.#selection = [];
-        this.invalidateSelection();
         this.#app.simulations.markDirty(this.#circuit);
+        this.trackAction('Rotate selection');
     }
 
     // Normalizes a rectangle given as (x, y, w, h) where w/h may be negative, returning top-left + positive dimensions.
@@ -715,11 +762,12 @@ class Grid {
                 const gy1 = y / this.zoom - this.offsetY;
                 const gx2 = gx1 + w / this.zoom;
                 const gy2 = gy1 + h / this.zoom;
-                this.#executeTrim(gx1, gy1, gx2, gy2);
+                this.trackAction('Trim wires', () => this.#executeTrim(gx1, gy1, gx2, gy2));
             } else {
                 // normal selection: set selected items
                 this.#selection = this.items.filter((c) => c.selected).toArray();
                 this.invalidateSelection();
+                this.#snapshotSelection();
             }
         }
         document.onmouseup = null;

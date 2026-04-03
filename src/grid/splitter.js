@@ -67,6 +67,7 @@ class Splitter extends VirtualComponent {
             this.redraw();
             this.app.config.placementDefaults.splitter.numSplits = config.numSplits;
             this.app.config.placementDefaults.splitter.rotation = config.rotation;
+            this.grid.trackAction('Edit splitter');
         }
     }
 

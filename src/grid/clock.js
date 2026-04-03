@@ -39,7 +39,6 @@ class Clock extends SimulationComponent {
         const config = await dialog("Configure clock", Clock.EDIT_DIALOG, { frequency: Number.formatSI(this.frequency, true), rotation: this.rotation });
         if (config) {
             this.frequency = config.frequency;
-
             if (this.rotation !== config.rotation) {
                 // rotation changed, need to rebuilt sim
                 this.rotation = config.rotation;
@@ -51,6 +50,7 @@ class Clock extends SimulationComponent {
                     sim.engine.setClockFrequency(this.simId, this.frequency);
                 }
             }
+            this.grid.trackAction('Edit clock');
         }
     }
 }

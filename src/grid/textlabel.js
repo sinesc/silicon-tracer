@@ -124,6 +124,9 @@ class TextLabel extends GridItem {
             return true;
         } else if (what.type === 'component') {
             this.onMove(x, y, status, what);
+            if (status === 'stop') {
+                this.grid.trackAction(what.isNew ? 'Add text label' : 'Move text label');
+            }
             return true;
         }
     }
@@ -168,6 +171,7 @@ class TextLabel extends GridItem {
             this.#color = config.color === '-' ? null : Number.parseInt(config.color.slice(1));
             this.#rotation = config.rotation;
             this.redraw();
+            this.grid.trackAction('Edit text label');
         }
     }
 

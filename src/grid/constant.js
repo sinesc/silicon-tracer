@@ -74,6 +74,7 @@ class Constant extends SimulationComponent {
             this.rotation = config.rotation;
             this.state = config.state === '-1' ? null : Number.parseInt(config.state);
             this.redraw(config._changed.some((c) => c !== 'state'));
+            this.grid.trackAction('Edit constant');
         }
     }
 

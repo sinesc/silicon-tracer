@@ -148,7 +148,7 @@ class Toolbar {
             if (!button.classList.contains('toolbar-menu-button-disabled') && !this.#app.grid.readonly) {
                 const [ x, y ] = this.#app.grid.screenToGrid(e.clientX, e.clientY);
                 const component = create(this.#app.grid, x, y);
-                component.dragStart(x, y, { type: "component", grabOffsetX: component.width / 2, grabOffsetY: component.height / 2 });
+                component.dragStart(x, y, { type: "component", grabOffsetX: component.width / 2, grabOffsetY: component.height / 2, isNew: true });
             }
         };
         button.onmouseenter = () => this.#app.setStatus(hoverMessage);
@@ -162,11 +162,11 @@ class Toolbar {
         assert.string(hoverMessage);
         assert.function(action);
         const button = html(this.#element, 'div', 'toolbar-button toolbar-action-button', label);
-        button.onclick= (e) => {
+        button.onclick= async (e) => {
             e.preventDefault();
             e.stopPropagation();
             if (!button.classList.contains('toolbar-menu-button-disabled')) {
-                action();
+                await action();
             }
         };
         button.onmouseenter = () => this.#app.setStatus(hoverMessage);

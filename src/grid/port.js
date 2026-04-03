@@ -92,6 +92,7 @@ class Port extends SimulationComponent {
                 }
             }
             this.redraw();
+            this.app.trackChange('Edit port');
         }
     }
 

@@ -88,6 +88,7 @@ class Toggle extends SimulationComponent {
             this.rotation = config.rotation;
             this.state = config.state === '-1' ? null : Number.parseInt(config.state);
             this.redraw();
+            this.grid.trackAction('Edit toggle switch');
         }
     }
 

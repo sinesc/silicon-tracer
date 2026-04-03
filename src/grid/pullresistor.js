@@ -48,6 +48,7 @@ class PullResistor extends SimulationComponent {
             this.#direction = config.direction;
             this.rotation = config.rotation;
             this.redraw(); // FIXME: this does not result in a change to the netlist hash causing simulation.compile to retain state
+            this.grid.trackAction('Edit pull resistor');
         }
     }
 }

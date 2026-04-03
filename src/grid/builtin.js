@@ -75,6 +75,7 @@ class Builtin extends SimulationComponent {
         if (config) {
             this.rotation = config.rotation;
             this.redraw();
+            this.grid.trackAction('Edit component');
         }
     }
 

@@ -68,9 +68,10 @@ const APPLICATION_STUB = `
             targetTPS: 10000,
             debug: false,
         };
-        grid = { setCircuit() {}, setCircuitLabel() {}, setSimulationLabel() {} };
+        grid = { trackAction() {}, setCircuit() {}, setCircuitLabel() {}, setSimulationLabel() {} };
         simulations = { current: null };
         circuits = null;
+        refreshUndoButtons() {}
         constructor() {
             this.circuits = new Circuits(this);
             // reset() initialises #circuits and creates a placeholder circuit;

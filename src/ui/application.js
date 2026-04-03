@@ -43,6 +43,8 @@ class Application {
     simulations;
     haveChanges = false;
     #hotkeyDefs = [];
+    #undoButton = null;
+    #redoButton = null;
 
     #modifierKeys = {
         ctrlKey: false,
@@ -174,16 +176,16 @@ class Application {
     }
 
     // Called when a key is pressed and then repeatedly while being held.
-    #handleHotkey(e) {
+    async #handleHotkey(e) {
         this.#modifierKeys.ctrlKey = e.ctrlKey;
         this.#modifierKeys.altKey = e.altKey;
         this.#modifierKeys.shiftKey = e.shiftKey;
         for (let keyDef of this.#hotkeyDefs) {
             if ((keyDef.catchAll || (e.key === keyDef.key && e.ctrlKey === keyDef.ctrlKey && e.altKey === keyDef.altKey && e.shiftKey === keyDef.shiftKey)) && keyDef.condition(e)) {
-                if ((e.type === 'keydown' && keyDef.mode !== 'up') || (e.type === 'keyup' && keyDef.mode !== 'down')) {
-                    keyDef.handler(e);
-                }
                 e.preventDefault();
+                if ((e.type === 'keydown' && keyDef.mode !== 'up') || (e.type === 'keyup' && keyDef.mode !== 'down')) {
+                    await keyDef.handler(e);
+                }
                 break;
             }
         }
@@ -333,6 +335,21 @@ class Application {
             });
         });
 
+        // Edit menu with undo/redo/cut/copy/paste
+        this.toolbar.createMenuButton('Edit', 'Edit operations menu.', (editMenu) => {
+            editMenu.clear();
+            this.#undoButton = editMenu.createActionButton('Undo', 'Undo last change. Hotkey: <i>Ctrl+Z</i>.', () => this.#undoAction());
+            this.#redoButton = editMenu.createActionButton('Redo', 'Redo last undone change. Hotkey: <i>Ctrl+Y</i>.', () => this.#redoAction());
+            this.refreshUndoButtons();
+            editMenu.createSeparator();
+            const cutButton = editMenu.createActionButton('Cut', 'Cut selected items. Hotkey: <i>Ctrl+X</i>.', () => this.grid.actionCutSelection());
+            const copyButton = editMenu.createActionButton('Copy', 'Copy selected items to clipboard. Hotkey: <i>Ctrl+C</i>.', () => this.grid.copySelection());
+            const pasteButton = editMenu.createActionButton('Paste', 'Paste items from clipboard. Hotkey: <i>Ctrl+V</i>.', async () => () => this.grid.actionPasteSelection());
+            cutButton.node.classList.toggle('toolbar-menu-button-disabled', this.grid.selection.length === 0 || this.grid.readonly);
+            copyButton.node.classList.toggle('toolbar-menu-button-disabled', this.grid.selection.length === 0);
+            //pasteButton.node.classList.toggle('toolbar-menu-button-disabled', await navigator.clipboard.readText().length === 0); // cannot currently do this without annoying confirmation popup
+        });
+
         // Circuit selection menu
         this.toolbar.createMenuButton('Circuit', 'Circuit management menu.', (circuitMenu) => {
             const circuitList = this.circuits.list();
@@ -349,10 +366,13 @@ class Application {
             const button = circuitMenu.createActionButton(`Remove "${this.circuits.current.label}"`, circuitList.length <= 1 ? 'Cannot remove last remaining circuit.' : 'Remove current circuit.', async () => {
                 circuitMenu.state(false);
                 if (await confirmDialog('Confirm deletion',`Delete "${this.circuits.current.label}" from project?`)) {
-                    this.simulations.delete(this.circuits.current);
-                    this.circuits.delete(this.circuits.current.uid);
+                    const deletedCircuit = this.circuits.current;
+                    this.circuits.globalUndoStack.push(`Delete "${deletedCircuit.label}"`, deletedCircuit.serialize(), null, false);
+                    this.simulations.delete(deletedCircuit);
+                    this.circuits.delete(deletedCircuit.uid);
                     this.simulations.select(this.circuits.current, this.config.autoCompile);
                     this.haveChanges = true;
+                    this.refreshUndoButtons();
                 }
             });
             button.node.classList.toggle('toolbar-menu-button-disabled', circuitList.length <= 1);
@@ -694,6 +714,48 @@ class Application {
         this.grid.markDirty();
     }
 
+    // Updates the undo/redo button labels and enabled state.
+    refreshUndoButtons() {
+        if (!this.#undoButton || !this.#redoButton) return;
+        const perStack = this.circuits.current?.undoStack;
+        const globalStack = this.circuits.globalUndoStack;
+        const useGlobal = globalStack.undoTimestamp > (perStack?.undoTimestamp ?? -Infinity) && globalStack.canUndo;
+        const undoLabel = useGlobal ? globalStack.undoLabel : (perStack?.undoLabel ?? null);
+        const redoLabel = perStack?.redoLabel ?? null;
+        this.#undoButton.node.textContent = undoLabel ? `Undo: ${undoLabel}` : 'Undo';
+        this.#redoButton.node.textContent = redoLabel ? `Redo: ${redoLabel}` : 'Redo';
+        this.#undoButton.node.classList.toggle('toolbar-menu-button-disabled', !undoLabel);
+        this.#redoButton.node.classList.toggle('toolbar-menu-button-disabled', !redoLabel);
+    }
+
+    // Performs undo on the most recently changed stack (per-circuit or global, whichever is newer).
+    #undoAction() {
+        const perStack = this.circuits.current?.undoStack;
+        const globalStack = this.circuits.globalUndoStack;
+        if (globalStack.undoTimestamp > (perStack?.undoTimestamp ?? -Infinity) && globalStack.canUndo) {
+            const { snapshot } = globalStack.undo();
+            this.circuits.restoreDeletedCircuit(snapshot);
+        } else if (perStack?.canUndo) {
+            const { snapshot } = perStack.undo();
+            this.circuits.current.restoreFromUndo(snapshot);
+            this.simulations.markDirty(this.circuits.current);
+            this.haveChanges = true;
+        }
+        this.refreshUndoButtons();
+    }
+
+    // Performs redo on the current circuit's undo stack.
+    #redoAction() {
+        const perStack = this.circuits.current?.undoStack;
+        if (perStack?.canRedo) {
+            const { snapshot } = perStack.redo();
+            this.circuits.current.restoreFromUndo(snapshot);
+            this.simulations.markDirty(this.circuits.current);
+            this.haveChanges = true;
+        }
+        this.refreshUndoButtons();
+    }
+
     // Define hotkey actions.
     #initHotkeys() {
         this.registerHotkey('ctrl+s', 'down', null, async (e) => {
@@ -702,6 +764,12 @@ class Application {
         });
         this.registerHotkey('t', 'down', null, () => {
             this.#singleStep();
+        });
+        this.registerHotkey('ctrl+z', 'down', null, () => {
+            this.#undoAction();
+        });
+        this.registerHotkey('ctrl+y', 'down', null, () => {
+            this.#redoAction();
         });
     }
 

@@ -85,6 +85,7 @@ class Momentary extends SimulationComponent {
             this.#defaultState = Number.parseInt(config.defaultState);
             this.state = this.#defaultState;
             this.redraw();
+            this.grid.trackAction('Edit momentary switch');
         }
     }
 

@@ -201,6 +201,9 @@ class GridItem {
                 item.onMove(x, y, status, what.items[index]);
             }
             this.grid.invalidateSelection();
+            if (status === 'stop') {
+                this.grid.trackAction('Move selection');
+            }
             return true;
         }
         return false;
@@ -279,6 +282,11 @@ class GridItem {
     // Return grid item id.
     get gid() {
         return this.#gid;
+    }
+
+    // Restores the GID from an undo snapshot. Only called by Circuit.restoreFromUndo().
+    restoreGid(gid) {
+        this.#gid = gid;
     }
 
     // Gets the grid-relative screen coordinate/dimensions for this grid item.

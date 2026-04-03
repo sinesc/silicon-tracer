@@ -29,11 +29,15 @@ class Circuits {
     #fileHandle = null;
     #fileName = null;
     #libraries = {};
+    #globalUndoStack = new UndoStack();
 
     constructor(app) {
         assert.class(Application, app);
         this.#app = app;
+        this.#globalUndoStack.init(null);
     }
+
+    get globalUndoStack() { return this.#globalUndoStack; }
 
     // Creates a new circuit.
     async create() {
@@ -197,6 +201,7 @@ class Circuits {
             circuit.portConfig.placement.left = result.left;
             this.#app.grid.setCircuitLabel(result.label);
             this.#app.grid.setSimulationLabel(result.label);
+            this.#app.grid.trackAction('Edit circuit');
             return true;
         }
         return false;
@@ -353,6 +358,15 @@ class Circuits {
         return content.currentUID;
     }
 
+    // Restores a circuit that was previously deleted (from a global undo snapshot).
+    restoreDeletedCircuit(snapshot) {
+        const errors = [];
+        Circuits.Circuit.unserialize(this.#app, snapshot, [], null, errors);
+        this.select(snapshot.uid);
+        this.#app.simulations.select(this.current, this.#app.config.autoCompile);
+        this.#app.haveChanges = true;
+    }
+
     // Returns a list of subcircuit uids contained directly or indirectly within this ciruit.
     subcircuitUIDs(uid) {
         assert.string(uid);
@@ -414,6 +428,7 @@ Circuits.Circuit = class {
     gridConfig;
     portConfig;
     visibleInLib;
+    undoStack = new UndoStack();
 
     #app;
     #data;
@@ -497,6 +512,50 @@ Circuits.Circuit = class {
     serialize() {
         const data = this.#data.map((item) => item.serialize());
         return { label: this.label, uid: this.uid, data, gridConfig: this.gridConfig, portConfig: this.portConfig, lid: this.#lid, visibleInLib: this.visibleInLib };
+    }
+
+    // Serializes circuit state for undo tracking (excludes gridConfig, uid, lid, visibleInLib).
+    serializeForUndo() {
+        const grid = this.#app.grid;
+        const selectedGids = new Set(grid.circuit === this ? grid.selection.map((i) => i.gid) : []);
+        return {
+            label: this.label,
+            portConfig: JSON.parse(JSON.stringify(this.portConfig)),
+            data: this.#data.map((item) => ({ ...item.serialize(), '#gid': item.gid, '#selected': selectedGids.has(item.gid) })),
+        };
+    }
+
+    // Restores circuit state from an undo snapshot produced by serializeForUndo().
+    // Re-links to the grid if this circuit is currently displayed.
+    restoreFromUndo(snapshot) {
+        const grid = this.#app.grid;
+        const isDisplayed = grid.circuit === this;
+        if (isDisplayed) this.unlink();
+        this.#data = [];
+        this.#gidLookup = new Map();
+        this.label = snapshot.label;
+        Object.assign(this.portConfig, snapshot.portConfig);
+        this.portConfig.placement = Object.assign({}, snapshot.portConfig.placement);
+        const selectedGids = new Set();
+        for (const raw of snapshot.data) {
+            const item = GridItem.unserialize(this.#app, raw, [], null, []);
+            if (raw['#gid']) {
+                item.restoreGid(raw['#gid']);
+                if (raw['#selected']) selectedGids.add(raw['#gid']);
+            }
+            this.addItem(item);
+        }
+        Wire.compact(this);
+        if (isDisplayed) {
+            this.link(grid);
+            grid.setCircuitLabel(this.label);
+            grid.setSimulationLabel(this.label);
+            grid.markDirty();
+            // Restore selection: match items by their restored GIDs (wires re-created by Wire.compact won't match).
+            const newSelection = this.#data.filter((item) => selectedGids.has(item.gid));
+            newSelection.forEach((item) => item.selected = true);
+            grid.setSelection(newSelection);
+        }
     }
 
     // Unserializes circuit from decoded JSON-object and adds it to Circuits. Dependencies of CustomComponents will also be added.
