@@ -2,7 +2,7 @@ loadFiles.push(
 {
 	"version": 4,
 	"label": "tests",
-	"currentUID": "u9cdf2fe4a0894c1bac5dc8130527019b",
+	"currentUID": "u88616098537146f485016bba5f3fb7ee",
 	"circuits": [
 		{
 			"label": "ConflictBuffer",
@@ -2655,8 +2655,135 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true
+		},
+		{
+			"label": "WireStraightH",
+			"uid": "u88616098537146f485016bba5f3fb7ee",
+			"data": [
+				{
+					"#c": "Constant",
+					"#a": [
+						130,
+						90,
+						1,
+						0
+					],
+					"name": "c"
+				},
+				{
+					"#c": "Probe",
+					"#a": [
+						210,
+						90,
+						3,
+						"p"
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						170,
+						110,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						190,
+						110,
+						20,
+						"h",
+						1
+					]
+				}
+			],
+			"gridConfig": {
+				"zoom": 1.25,
+				"offsetX": 0,
+				"offsetY": 0
+			},
+			"portConfig": {
+				"spacing": 0,
+				"gap": "middle",
+				"parity": "auto",
+				"placement": {
+					"top": "",
+					"right": "",
+					"bottom": "",
+					"left": ""
+				}
+			},
+			"lid": null,
+			"visibleInLib": true
+		},
+		{
+			"label": "WireStraightV",
+			"uid": "uef50a273de4a483ab6c110d4f76f8804",
+			"data": [
+				{
+					"#c": "Wire",
+					"#a": [
+						190,
+						90,
+						20,
+						"v",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						190,
+						110,
+						20,
+						"v",
+						1
+					]
+				},
+				{
+					"#c": "Probe",
+					"#a": [
+						170,
+						130,
+						0,
+						"p"
+					]
+				},
+				{
+					"#c": "Constant",
+					"#a": [
+						170,
+						50,
+						2,
+						0
+					],
+					"name": "c"
+				}
+			],
+			"gridConfig": {
+				"zoom": 1.25,
+				"offsetX": 0,
+				"offsetY": 0
+			},
+			"portConfig": {
+				"spacing": 0,
+				"gap": "middle",
+				"parity": "auto",
+				"placement": {
+					"top": "",
+					"right": "",
+					"bottom": "",
+					"left": ""
+				}
+			},
+			"lid": null,
+			"visibleInLib": true
 		}
 	],
-	"libraries": {}
+	"libraries": {},
+	"toolbar": []
 }
 )

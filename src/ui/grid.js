@@ -414,7 +414,7 @@ class Grid {
         this.#app.simulations.markDirty(this.#circuit);
         this.trackAction('Paste selection');
     }
-    
+
     // Copies selected items to clipboard.
     copySelection() {
         return navigator.clipboard.writeText(JSON.stringify(this.#selection.map((item) => item.serialize())));
@@ -428,6 +428,7 @@ class Grid {
         }
         this.#selection = [];
         this.invalidateSelection();
+        Wire.compact(this);
         this.#app.simulations.markDirty(this.#circuit);
         this.#app.haveChanges = true;
     }
@@ -477,7 +478,7 @@ class Grid {
             this.#app.simulations.markDirty(this.#circuit);
         });
         this.#app.registerHotkey('ctrl+v', 'down', () => !this.readonly, () => this.actionPasteSelection());
-        this.#app.registerHotkey('ctrl+c', 'down', () => !this.readonly && this.#selection.length > 0, () => this.actionCopySelection());
+        this.#app.registerHotkey('ctrl+c', 'down', () => !this.readonly && this.#selection.length > 0, () => this.copySelection());
         this.#app.registerHotkey('ctrl+x', 'down', () => !this.readonly && this.#selection.length > 0, () => this.actionCutSelection());
         this.#app.registerHotkey('r', 'down', () => !this.readonly && this.#selection.length > 0, () => this.#actionRotateSelection());
         this.#app.registerHotkey('Delete', 'down', () => !this.readonly && this.#selection.length > 0, () => this.actionDeleteSelection());

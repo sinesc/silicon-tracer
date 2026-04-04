@@ -168,7 +168,9 @@ class Wire extends GridItem {
                 if (this.#element) { // deletion might already be in progress
                     this.#element.classList.remove('wire-delete-animation');
                     this.grid.markDirty();
+                    const grid = this.grid;
                     this.grid.removeItem(this);
+                    Wire.compact(grid);
                 }
             }, 150);
             return true;

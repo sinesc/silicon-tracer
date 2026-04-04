@@ -8,7 +8,7 @@ Vanilla JS/HTML/CSS, no framework, no build step. Open `index.html` directly in 
 ## Source Layout
 - `src/common.js` — shared utilities
 - `src/ui/` — UI components: `toolbar.js`, `grid.js`, `dialog.js`, `circuits.js`, `simulations.js`, `undostack.js`
-- `src/grid/` — circuit components: `wire.js`, `gate.js`, `memory.js`, `port.js`, `splitter.js`, `clock.js`, `tunnel.js`, `customcomponent.js`, `probe.js`, `toggle.js`, and more
+- `src/grid/` — circuit components: `wire.js`, `gate.js`, `builtin.js` (flip-flops, latches, ...), `memory.js` (ROM, RAM), `port.js`, `tunnel.js`, `splitter.js`, `clock.js`, `customcomponent.js` (custom circuits as components), `probe.js`, and more
 - `src/sim/netlist.js` — builds nets/ports from circuit graph
 - `src/sim/simulation.js` — simulation orchestration
 - `src/sim/backend/javascript.js` — JS simulation compiler

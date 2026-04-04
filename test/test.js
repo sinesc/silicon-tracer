@@ -524,6 +524,20 @@ test("crossing wires produce 2 unconnected wires (WireCrossing)", () => {
     assert(ids.size === 2, `expected 2 distinct nets, got ${ids.size}`);
 });
 
+test("two touching horizontal wires merge into 1 (WireStraightH)", () => {
+    const { wireCount, wireNetIds } = loadCircuitWires('data/tests.stc', 'WireStraightH');
+    assert(wireCount === 1, `expected 1 wire after compaction, got ${wireCount}`);
+    const ids = new Set(wireNetIds);
+    assert(ids.size === 1, `expected 1 net, got ${ids.size}`);
+});
+
+test("two touching vertical wires merge into 1 (WireStraightV)", () => {
+    const { wireCount, wireNetIds } = loadCircuitWires('data/tests.stc', 'WireStraightV');
+    assert(wireCount === 1, `expected 1 wire after compaction, got ${wireCount}`);
+    const ids = new Set(wireNetIds);
+    assert(ids.size === 1, `expected 1 net, got ${ids.size}`);
+});
+
 console.log('\nSimulation timings:');
 
 const simJsCounter = time("Many counters simulation (Javascript)",
