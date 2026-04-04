@@ -112,6 +112,9 @@ class Toolbar {
     // Trash zone element for unpinning components from the toolbar.
     #trashZone = null;
 
+    // Insertion indicator shown during toolbar reorder drags.
+    #reorderIndicator = null;
+
     // Creates a new toolpar within the given DOM parent.
     constructor(app, domParent, parent = null) {
         assert.class(Application, app);
@@ -166,13 +169,15 @@ class Toolbar {
     }
 
     // Creates a pinned component button (a component dragged onto the toolbar).
-    createPinnedComponentButton(label, hoverMessage, create, onTrash = null) {
+    createPinnedComponentButton(label, hoverMessage, create, onTrash = null, onReorder = null) {
         assert.string(label);
         assert.string(hoverMessage);
         assert.function(create);
         assert.function(onTrash, true);
+        assert.function(onReorder, true);
         const button = this.#makeComponentButtonNode(label, hoverMessage, create, null,
-            onTrash ? () => onTrash(button) : null);
+            onTrash ? () => onTrash(button) : null,
+            onReorder ? () => onReorder() : null);
         button.dataset.pin = '1';
         if (this.#dropZone) {
             this.#element.insertBefore(button, this.#dropZone);
@@ -281,8 +286,37 @@ class Toolbar {
         };
     }
 
+    // Finds the toolbar element to insert before when reordering, or undefined if not over toolbar.
+    #findInsertionTarget(clientX, clientY) {
+        const toolbarRect = this.#element.getBoundingClientRect();
+        if (clientY < toolbarRect.top || clientY > toolbarRect.bottom) return undefined;
+        if (this.#trashZone) {
+            const trashRect = this.#trashZone.getBoundingClientRect();
+            if (clientX >= trashRect.left && clientX <= trashRect.right) return undefined;
+        }
+        for (const btn of this.#element.querySelectorAll('[data-pin]')) {
+            const rect = btn.getBoundingClientRect();
+            if (clientX < rect.left + rect.width / 2) return btn;
+        }
+        return this.#dropZone;
+    }
+
+    // Inserts or moves the reorder indicator before the given element.
+    #showReorderIndicator(insertBefore) {
+        if (!this.#reorderIndicator) {
+            this.#reorderIndicator = document.createElement('div');
+            this.#reorderIndicator.className = 'toolbar-reorder-indicator';
+        }
+        this.#element.insertBefore(this.#reorderIndicator, insertBefore ?? null);
+    }
+
+    // Removes the reorder indicator from the DOM.
+    #hideReorderIndicator() {
+        this.#reorderIndicator?.remove();
+    }
+
     // Creates a button element that can be dragged onto the grid or toolbar.
-    #makeComponentButtonNode(label, hoverMessage, create, onPin = null, onTrash = null) {
+    #makeComponentButtonNode(label, hoverMessage, create, onPin = null, onTrash = null, onReorder = null) {
         const button = html(null, 'div', 'toolbar-button toolbar-component-button', label);
         button.onmousedown = (e) => {
             e.preventDefault();
@@ -299,6 +333,37 @@ class Toolbar {
                 if (onTrash) {
                     const trashZone = this.#app.toolbar.trashZone;
                     if (trashZone) this.#interceptDrop(trashZone, 'dragging-from-toolbar', savedOnClick, component, onTrash);
+                }
+                if (onReorder) {
+                    const moveFn = (moveEvent) => {
+                        const target = this.#findInsertionTarget(moveEvent.clientX, moveEvent.clientY);
+                        if (target !== undefined) {
+                            this.#showReorderIndicator(target);
+                        } else {
+                            this.#hideReorderIndicator();
+                        }
+                    };
+                    document.addEventListener('mousemove', moveFn);
+                    const prevUp = document.onmouseup;
+                    document.onmouseup = (upEvent) => {
+                        document.removeEventListener('mousemove', moveFn);
+                        this.#hideReorderIndicator();
+                        const insertBefore = this.#findInsertionTarget(upEvent.clientX, upEvent.clientY);
+                        if (insertBefore !== undefined) {
+                            document.body.classList.remove('dragging-from-toolbar');
+                            document.body.classList.remove('dragging');
+                            document.onmouseup = null;
+                            document.onmousemove = null;
+                            setTimeout(() => document.onclick = savedOnClick, 10);
+                            this.#app.grid.removeItem(component);
+                            if (insertBefore !== button) {
+                                this.#element.insertBefore(button, insertBefore);
+                            }
+                            onReorder();
+                        } else {
+                            prevUp.call(document, upEvent);
+                        }
+                    };
                 }
             }
         };

@@ -620,6 +620,17 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone {
 body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
     content: '🗑';
 }
+/* Reorder indicator: thin vertical line shown between pinned buttons during reorder drag. */
+.toolbar > .toolbar-reorder-indicator {
+    display: inline-block;
+    vertical-align: middle;
+    width: 2px;
+    height: 1.5em;
+    margin: 0 -1px;
+    background: var(--component-body-hover-color);
+    border-radius: 1px;
+    pointer-events: none;
+}
 /* Use italic tag as quotes */
 .toolbar > .toolbar-button i::before {
     content: '»';

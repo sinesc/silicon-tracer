@@ -190,11 +190,21 @@ class Application {
         this.haveChanges = true;
     }
 
+    // Re-syncs toolbar pin order from the current DOM order of pinned buttons.
+    #syncPinsFromDOM() {
+        const pinElements = [...this.toolbar.node.querySelectorAll('[data-pin]')];
+        this.#toolbarPins = pinElements.map(el => el.__pin).filter(Boolean);
+        this.toolbar.dropZone.classList.toggle('toolbar-drop-zone-has-pins', this.#toolbarPins.length > 0);
+        this.haveChanges = true;
+    }
+
     // Adds a pinned button to the toolbar and records it for serialization.
     #pinButton(label, hoverMessage, create, descriptor) {
         const pin = { label, hoverMessage, descriptor };
-        this.toolbar.createPinnedComponentButton(label, hoverMessage, create,
-            (buttonNode) => this.#removePin(pin, buttonNode));
+        const item = this.toolbar.createPinnedComponentButton(label, hoverMessage, create,
+            (buttonNode) => this.#removePin(pin, buttonNode),
+            () => this.#syncPinsFromDOM());
+        item.node.__pin = pin;
         this.#toolbarPins.push(pin);
         this.toolbar.dropZone.classList.add('toolbar-drop-zone-has-pins');
         this.haveChanges = true;
@@ -213,8 +223,10 @@ class Application {
         for (const pin of (pins ?? [])) {
             const create = GridItem.CLASSES[pin.descriptor['#c']]?.fromDescriptor?.(this, pin.descriptor) ?? null;
             if (create) {
-                this.toolbar.createPinnedComponentButton(pin.label, pin.hoverMessage, create,
-                    (buttonNode) => this.#removePin(pin, buttonNode));
+                const item = this.toolbar.createPinnedComponentButton(pin.label, pin.hoverMessage, create,
+                    (buttonNode) => this.#removePin(pin, buttonNode),
+                    () => this.#syncPinsFromDOM());
+                item.node.__pin = pin;
                 this.#toolbarPins.push(pin);
             }
         }
