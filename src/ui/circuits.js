@@ -60,7 +60,7 @@ class Circuits {
         assert.bool(clear);
         assert.bool(switchTo);
         const haveCircuits = !this.allEmpty();
-        const [ handle ] = await File.openFile(this.#fileHandle);
+        const [ handle ] = await File.open(this.#fileHandle);
         const file = await handle.getFile();
         const content = Circuits.#decodeJSON(await file.text());
         let fileLid = null;
@@ -89,7 +89,7 @@ class Circuits {
 
     // Import file and add circuits to loaded circuits.
     async importFile() {
-        const [ handle ] = await File.importFile(this.#fileHandle);
+        const [ handle ] = await File.open(this.#fileHandle, '.circ');
         const file = await handle.getFile();
         const text = await file.text();
         if (text.includes('This file is intended to be loaded by Logisim')) {

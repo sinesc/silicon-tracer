@@ -554,29 +554,15 @@ class UnionFind {
 
 // Wraps browser file picker API with default options.
 class File {
-    static OPTIONS = {
-        types: [
-            {
-                description: "Silicon Tracer circuit",
-                accept: {
-                    "text/plain": [ ".stc" ],
-                },
-            },
-        ],
-        startIn: 'documents',
-        id: 'circuits',
-    };
-    static IMPORT_OPTIONS = {
-        types: [
-            {
-                description: "Logisim circuit",
-                accept: {
-                    "text/xml": [ ".circ" ],
-                },
-            },
-        ],
-        startIn: 'documents',
-        id: 'imports',
+    static EXTENSIONS = {
+        '.stc': {
+            description: "Silicon Tracer circuit",
+            mimeType: "text/plain",
+        },
+        '.circ': {
+            description: "Logisim circuit",
+            mimeType: "text/xml",
+        },
     };
 
     static async verifyPermission(fileHandle) {
@@ -590,30 +576,43 @@ class File {
         return false;
     }
 
-    static async saveAs(suggestedName) {
+    static async open(existingHandle, extension = '.stc') {
+        const def = File.#makeDef(extension);
+        const options = existingHandle ? { ...def, startIn: existingHandle } : def;
+        return await window.showOpenFilePicker(options);
+    }
+
+    static async saveAs(suggestedName, extension = '.stc') {
         const name = File.makeName(suggestedName);
+        const def = File.#makeDef(extension);
         return await window.showSaveFilePicker({
-            ...File.OPTIONS,
+            ...def,
             suggestedName: name,
         });
     }
 
-    static async openFile(existingHandle) {
-        const options = existingHandle ? { ...File.OPTIONS, startIn: existingHandle } : File.OPTIONS;
-        return await window.showOpenFilePicker(options);
+    static makeName(name, extension = '.stc') {
+        return (name || 'unnamed').replace(new RegExp('\\' + extension + '$'), '').replace(/[^a-zA-Z0-9\-\_]/g, '-').replace(/^-+/, '') + extension;
     }
 
-    static async importFile(existingHandle) {
-        const options = existingHandle ? { ...File.IMPORT_OPTIONS, startIn: existingHandle } : File.IMPORT_OPTIONS;
-        return await window.showOpenFilePicker(options);
+    static makeLabel(filename, extension = '.stc') {
+        return filename.replace(new RegExp('\\' + extension + '$'), '').replace(/([a-z0-9])([A-Z])/g, "$1 $2");
     }
 
-    static makeName(name) {
-        return (name || 'unnamed').replace(/\.stc$/, '').replace(/[^a-zA-Z0-9\-\_]/g, '-').replace(/^-+/, '') + '.stc';
-    }
-
-    static makeLabel(filename) {
-        return filename.replace(/\.stc/, '').replace(/([a-z0-9])([A-Z])/g, "$1 $2");
+    static #makeDef(extension) {
+        const def = File.EXTENSIONS[extension];
+        return {
+            types: [
+                {
+                    description: def.description,
+                    accept: {
+                        [def.mimeType]: [ extension ],
+                    },
+                },
+            ],
+            startIn: 'documents',
+            id: extension.slice(1),
+        };
     }
 }
 

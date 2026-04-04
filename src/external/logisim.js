@@ -105,7 +105,7 @@ class LogiSim {
         if (!ok) {
             return null;
         }
-        [ this.#fileHandle ] = await File.importFile(this.#fileHandle);
+        [ this.#fileHandle ] = await File.open(this.#fileHandle, '.circ');
         const file = await this.#fileHandle.getFile();
         const text = await file.text();
         return XML.parse(text).project;
