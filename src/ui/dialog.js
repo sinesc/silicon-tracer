@@ -17,6 +17,7 @@ function dialog(title, fields, data, extraOptions) {
         string: { check: (v, f) => String.isString(v), apply: (v, f) => v },
         select: { check: (v, f) => Object.keys(f.options).includes(v), apply: (v, f) => v },
         bool: { check: (v, f) => v === 'true' || v === 'false', apply: (v, f) => v === 'true' },
+        textfile: { check: (v, f) => true, apply: (v, f) => v },
     };
 
     // build html form
@@ -85,6 +86,32 @@ function dialog(title, fields, data, extraOptions) {
             } else if (field.type === 'bool') {
                 fieldElement = html(rowRight, 'select', 'dialog-row-select', { name: field.name, options: { 'true': 'Yes', 'false': 'No' }, value: data[field.name] ? 'true' : 'false' });
                 fieldElement.onchange = triggerOnChange;
+            } else if (field.type === 'textfile') {
+                const valueRef = { value: data[field.name], focus() {}, onkeydown: null };
+                const openButton = html(rowRight, 'span', 'dialog-button dialog-button-small', 'Open');
+                const clearButton = html(rowRight, 'span', 'dialog-button dialog-button-small', 'Clear');
+                const infoDiv = html(rowRight, 'div', 'dialog-textfile-info');
+                const updateInfo = () => {
+                    infoDiv.textContent = valueRef.value != null ? `${Number.formatSI(valueRef.value.length)} chars` : 'No file';
+                };
+                updateInfo();
+                openButton.onclick = async () => {
+                    try {
+                        const [ fileHandle ] = await File.open(null, field.extension);
+                        const file = await fileHandle.getFile();
+                        valueRef.value = await file.text();
+                        updateInfo();
+                        triggerOnChange();
+                    } catch (e) {
+                        if (e.name !== 'AbortError') throw e;
+                    }
+                };
+                clearButton.onclick = () => {
+                    valueRef.value = null;
+                    updateInfo();
+                    triggerOnChange();
+                };
+                fieldElement = valueRef;
             } else {
                 fieldElement = html(rowRight, 'input', 'dialog-row-input', { name: field.name, value: data[field.name] });
                 fieldElement.onkeyup = triggerOnChange;
@@ -117,7 +144,9 @@ function dialog(title, fields, data, extraOptions) {
                 resolve(result);
             } else {
                 for (const { element, field } of values(form)) {
-                    element.classList.toggle('dialog-error', errors.includes(field.name));
+                    if (field.type !== 'textfile') {
+                        element.classList.toggle('dialog-error', errors.includes(field.name));
+                    }
                 }
             }
         };
@@ -127,7 +156,7 @@ function dialog(title, fields, data, extraOptions) {
         };
         // handle enter/escape for text inputs
         for (const { element, field } of values(form)) {
-            if (field.type !== 'select') {
+            if (field.type !== 'select' && field.type !== 'textfile') {
                 element.onkeydown = (e) => {
                     e.stopPropagation();
                     if (e.keyCode === 13) {
