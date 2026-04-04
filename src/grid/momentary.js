@@ -116,4 +116,11 @@ class Momentary extends SimulationComponent {
             this.element.setAttribute('data-net-state', state);
         }
     }
+
+    static fromDescriptor(app, _desc) {
+        const d = app.config.placementDefaults;
+        return (grid, x, y) => grid.addItem(new Momentary(app, x, y, d.momentary.rotation));
+    }
 }
+
+GridItem.CLASSES['Momentary'] = Momentary;

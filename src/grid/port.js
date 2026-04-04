@@ -133,4 +133,11 @@ class Port extends SimulationComponent {
             this.element.setAttribute('data-net-state', state);
         }
     }
+
+    static fromDescriptor(app, _desc) {
+        const d = app.config.placementDefaults;
+        return (grid, x, y) => grid.addItem(new Port(app, x, y, d.port.rotation));
+    }
 }
+
+GridItem.CLASSES['Port'] = Port;

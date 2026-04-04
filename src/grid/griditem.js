@@ -5,6 +5,9 @@ class GridItem {
 
     static HOTKEYS = '<i>SHIFT/CTRL+LMB</i> Click to select/deselect';
 
+    // Serializable GridItem subclasses. Registration at the bottom of each subclass file.
+    static CLASSES = {};
+
     // Reference to linked grid, if linked.
     grid = null;
 
@@ -54,7 +57,7 @@ class GridItem {
         };
     }
 
-    // Unserializes a circuit item to a grid idem.
+    // Unserializes a circuit item to a grid item.
     static unserialize(app, item, rawOthers, setLid = null, errors = []) {
         assert.class(Application, app);
         assert.object(item);
@@ -62,19 +65,7 @@ class GridItem {
         const cname = item['#c'];
         const cargs = item['#a'];
         let instance;
-        if (cname === 'Port') { // TODO: meh to have cases here
-            instance = new Port(app, ...cargs);
-        } else if (cname === 'Gate') {
-            instance = new Gate(app, ...cargs);
-        } else if (cname === 'Clock') {
-            instance = new Clock(app, ...cargs);
-        } else if (cname === 'PullResistor') {
-            instance = new PullResistor(app, ...cargs);
-        } else if (cname === 'Builtin') {
-            instance = new Builtin(app, ...cargs);
-        } else if (cname === 'Wire') {
-            instance = new Wire(app, ...cargs);
-        } else if (cname === 'CustomComponent') {
+        if (cname === 'CustomComponent') {
             const uid = cargs[3];
             let missing = false;
             if (!app.circuits.byUID(uid)) {
@@ -86,27 +77,16 @@ class GridItem {
                 }
             }
             if (missing) {
-                instance = new TextLabel(app, cargs[0] ?? 0, cargs[1] ?? 0, 0, 200, 'Missing custom component ' + uid, 'small', 4);
+                instance = new GridItem.CLASSES['TextLabel'](app, cargs[0] ?? 0, cargs[1] ?? 0, 0, 200, 'Missing custom component ' + uid, 'small', 4);
                 errors.push([ 'missing', uid ]);
             } else {
-                instance = new CustomComponent(app, ...cargs);
+                instance = new GridItem.CLASSES['CustomComponent'](app, ...cargs);
             }
-        } else if (cname === 'Splitter') {
-            instance = new Splitter(app, ...cargs);
-        } else if (cname === 'Tunnel') {
-            instance = new Tunnel(app, ...cargs);
-        } else if (cname === 'Toggle') {
-            instance = new Toggle(app, ...cargs);
-        } else if (cname === 'TextLabel') {
-            instance = new TextLabel(app, ...cargs);
-        } else if (cname === 'Constant') {
-            instance = new Constant(app, ...cargs);
-        } else if (cname === 'Probe') {
-            instance = new Probe(app, ...cargs);
-        } else if (cname === 'Memory') {
-            instance = new Memory(app, ...cargs);
+        } else if (GridItem.CLASSES[cname]) {
+            instance = new GridItem.CLASSES[cname](app, ...cargs);
         } else {
             errors.push([ 'invalid', cname ]);
+            return null;
         }
         for (const [ k, v ] of Object.entries(item)) {
             if (k.slice(0, 1) !== '#') {

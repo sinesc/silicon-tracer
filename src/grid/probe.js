@@ -87,4 +87,11 @@ class Probe extends SimulationComponent {
             this.inner.innerHTML = '<span>' + this.label + '</span>';
         }
     }
+
+    static fromDescriptor(app, _desc) {
+        const d = app.config.placementDefaults;
+        return (grid, x, y) => grid.addItem(new Probe(app, x, y, d.probe.rotation));
+    }
 }
+
+GridItem.CLASSES['Probe'] = Probe;

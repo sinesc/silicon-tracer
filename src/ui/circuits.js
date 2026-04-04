@@ -268,6 +268,7 @@ class Circuits {
     reset(removeLibraries = false) {
         assert.bool(removeLibraries);
         this.#clear(removeLibraries);
+        this.#app.loadToolbarPins([]);
         const label = this.#generateLabel();
         const circuit = new Circuits.Circuit(this.#app, label);
         this.#circuits[circuit.uid] = circuit;
@@ -337,6 +338,7 @@ class Circuits {
             currentUID: this.#currentCircuit,
             circuits: Object.values(this.#circuits).filter((c) => !packaged.includes(c.lid)).map((c) => c.serialize()),
             libraries: Object.map(Object.filter(this.#libraries, (k, v) => !v.packaged), (k, v) => v.label),
+            toolbar: this.#app.toolbarPins,
         };
     }
 
@@ -354,6 +356,10 @@ class Circuits {
             if (!this.#circuits[serialized.uid]) {
                 Circuits.Circuit.unserialize(this.#app, serialized, content.circuits, setLid, errors);
             }
+        }
+        // restore toolbar pins only when loading the primary file (not a library)
+        if (setLid === null && !packaged) {
+            this.#app.loadToolbarPins(content.toolbar ?? []);
         }
         return content.currentUID;
     }

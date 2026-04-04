@@ -82,4 +82,11 @@ class Tunnel extends VirtualComponent {
             this.element.setAttribute('data-net-state', state);
         }
     }
+
+    static fromDescriptor(app, _desc) {
+        const d = app.config.placementDefaults;
+        return (grid, x, y) => grid.addItem(new Tunnel(app, x, y, d.tunnel.rotation));
+    }
 }
+
+GridItem.CLASSES['Tunnel'] = Tunnel;

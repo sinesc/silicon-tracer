@@ -123,4 +123,13 @@ class Builtin extends SimulationComponent {
 
         return { left, right, inputs, outputs };
     }
+    
+    static fromDescriptor(app, desc) {
+        const d = app.config.placementDefaults;
+        const builtinType = desc['#t'];
+        if (!Builtin.META_INFO[builtinType]) return null;
+        return (grid, x, y) => grid.addItem(new Builtin(app, x, y, d[builtinType]?.rotation ?? d.builtin.rotation, builtinType));
+    }
 }
+
+GridItem.CLASSES['Builtin'] = Builtin;

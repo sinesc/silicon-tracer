@@ -224,4 +224,12 @@ class CustomComponent extends VirtualComponent {
         outline['bottom'].reverse();
         return outline;
     }
+
+    static fromDescriptor(app, desc) {
+        const uid = desc['#u'];
+        if (!app.circuits.byUID(uid)) return null;
+        return (grid, x, y) => grid.addItem(new CustomComponent(app, x, y, 0, uid));
+    }
 }
+
+GridItem.CLASSES['CustomComponent'] = CustomComponent;

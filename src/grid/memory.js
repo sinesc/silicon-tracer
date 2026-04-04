@@ -161,4 +161,17 @@ class Memory extends SimulationComponent {
         }
         return ioTypes;
     }
+    
+    static fromDescriptor(app, desc) {
+        const d = app.config.placementDefaults;
+        const memType = desc['#t'];
+        if (memType === 'rom') {
+            return (grid, x, y) => grid.addItem(new Memory(app, x, y, d.rom.rotation, 'rom', d.rom.addressWidth, d.rom.dataWidth));
+        } else if (memType === 'ram') {
+            return (grid, x, y) => grid.addItem(new Memory(app, x, y, d.ram.rotation, 'ram', d.ram.addressWidth, d.ram.dataWidth, [], d.ram.combinedPorts));
+        }
+        return null;
+    }
 }
+
+GridItem.CLASSES['Memory'] = Memory;

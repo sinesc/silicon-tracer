@@ -53,4 +53,11 @@ class Clock extends SimulationComponent {
             this.grid.trackAction('Edit clock');
         }
     }
+
+    static fromDescriptor(app, _desc) {
+        const d = app.config.placementDefaults;
+        return (grid, x, y) => grid.addItem(new Clock(app, x, y, d.clock.rotation));
+    }
 }
+
+GridItem.CLASSES['Clock'] = Clock;

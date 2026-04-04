@@ -376,3 +376,5 @@ class Wire extends GridItem {
         }
     }
 }
+
+GridItem.CLASSES['Wire'] = Wire;

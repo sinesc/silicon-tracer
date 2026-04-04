@@ -201,4 +201,11 @@ class TextLabel extends GridItem {
         }
         return true;
     }
+    
+    static fromDescriptor(app, _desc) {
+        const d = app.config.placementDefaults;
+        return (grid, x, y) => grid.addItem(new TextLabel(app, x, y, d.textlabel.rotation));
+    }
 }
+
+GridItem.CLASSES['TextLabel'] = TextLabel;

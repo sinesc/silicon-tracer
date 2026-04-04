@@ -46,6 +46,9 @@ class Application {
     #undoButton = null;
     #redoButton = null;
 
+    // Toolbar pins: array of { label, hoverMessage, descriptor } stored in the circuit file.
+    #toolbarPins = [];
+
     #modifierKeys = {
         ctrlKey: false,
         altKey: false,
@@ -80,7 +83,6 @@ class Application {
         this.circuits = new Circuits(this);
         this.simulations = new Simulations(this);
         this.#status.element = html(gridParent, 'div', 'app-status');
-        this.#initMenu();
         this.#initToolbar();
         this.#initFocusMonitor();
         this.#initRenderLoop();
@@ -173,6 +175,50 @@ class Application {
     // Returns status of modifier-keys.
     get modifierKeys() {
         return this.#modifierKeys;
+    }
+
+    // Returns pinned toolbar button descriptors for serialization.
+    get toolbarPins() {
+        return this.#toolbarPins;
+    }
+
+    // Removes a pin entry and its button node from the toolbar.
+    #removePin(pin, buttonNode) {
+        buttonNode.remove();
+        this.#toolbarPins.splice(this.#toolbarPins.indexOf(pin), 1);
+        this.toolbar.dropZone.classList.toggle('toolbar-drop-zone-has-pins', this.#toolbarPins.length > 0);
+        this.haveChanges = true;
+    }
+
+    // Adds a pinned button to the toolbar and records it for serialization.
+    #pinButton(label, hoverMessage, create, descriptor) {
+        const pin = { label, hoverMessage, descriptor };
+        this.toolbar.createPinnedComponentButton(label, hoverMessage, create,
+            (buttonNode) => this.#removePin(pin, buttonNode));
+        this.#toolbarPins.push(pin);
+        this.toolbar.dropZone.classList.add('toolbar-drop-zone-has-pins');
+        this.haveChanges = true;
+    }
+
+    // Creates a component button that supports pinning to the main toolbar.
+    #menuComponentButton(toolbar, label, hoverMessage, create, descriptor, toolbarLabel = label) {
+        return toolbar.createComponentButton(label, hoverMessage, create,
+            () => this.#pinButton(toolbarLabel, hoverMessage, create, descriptor));
+    }
+
+    // Rebuilds pinned toolbar buttons from stored descriptors (called on file load/reset).
+    loadToolbarPins(pins) {
+        this.toolbar.clearPins();
+        this.#toolbarPins = [];
+        for (const pin of (pins ?? [])) {
+            const create = GridItem.CLASSES[pin.descriptor['#c']]?.fromDescriptor?.(this, pin.descriptor) ?? null;
+            if (create) {
+                this.toolbar.createPinnedComponentButton(pin.label, pin.hoverMessage, create,
+                    (buttonNode) => this.#removePin(pin, buttonNode));
+                this.#toolbarPins.push(pin);
+            }
+        }
+        this.toolbar.dropZone.classList.toggle('toolbar-drop-zone-has-pins', this.#toolbarPins.length > 0);
     }
 
     // Called when a key is pressed and then repeatedly while being held.
@@ -270,8 +316,8 @@ class Application {
         }
     }
 
-    // Create main menu entries.
-    #initMenu() {
+    // Create main menu entries and toolbar.
+    #initToolbar() {
 
         // Add file operations to toolbar
         this.toolbar.createMenuButton('File', 'File operations menu.', (fileMenu) => {
@@ -382,7 +428,8 @@ class Application {
                 const isCurrentGrid = uid === this.grid.circuit.uid; // grid circuit may be different from current circuit when navigating through simulation subcomponents
                 // place circuit as component
                 if (uid !== this.grid.circuit.uid && !this.circuits.subcircuitUIDs(uid).has(this.grid.circuit.uid)) {
-                    const componentButton = circuitMenu.createComponentButton('&#9094;', label + '. <i>LMB</i> Drag to move onto grid.', (grid, x, y) => grid.addItem(new CustomComponent(this, x, y, 0, uid)));
+                    const componentButton = this.#menuComponentButton(circuitMenu, '&#9094;', label + '. <i>LMB</i> Drag to move onto grid.',
+                        (grid, x, y) => grid.addItem(new CustomComponent(this, x, y, 0, uid)), { '#c': 'CustomComponent', '#u': uid }, label);
                     componentButton.node.classList.add('toolbar-circuit-place');
                 }
                 // circuit select
@@ -405,18 +452,14 @@ class Application {
             // routing/utilities
             componentMenu.createMenuCategory('Routing &amp; labeling', 'Ports, tunnels, splitters, text.', (routingMenu) => {
                 routingMenu.clear();
-                routingMenu.createComponentButton('Port', `<b>Component IO pin</b>. ${DRAG_MSG}`, (grid, x, y) => {
-                    return grid.addItem(new Port(this, x, y, defaults.port.rotation))
-                });
-                routingMenu.createComponentButton('Splitter', `<b>Wire splitter/joiner</b>. ${DRAG_MSG}`, (grid, x, y) => {
-                    return grid.addItem(new Splitter(this, x, y, defaults.splitter.rotation, defaults.splitter.numSplits));
-                });
-                routingMenu.createComponentButton('Tunnel', `<b>Network tunnel</b>. ${DRAG_MSG}`, (grid, x, y) => {
-                    return grid.addItem(new Tunnel(this, x, y, defaults.tunnel.rotation))
-                });
-                routingMenu.createComponentButton('Text', `<b>Userdefined text message</b>. ${DRAG_MSG}`, (grid, x, y) => {
-                    return grid.addItem(new TextLabel(this, x, y, defaults.textlabel.rotation ));
-                });
+                this.#menuComponentButton(routingMenu, 'Port', `<b>Component IO pin</b>. ${DRAG_MSG}`,
+                    (grid, x, y) => grid.addItem(new Port(this, x, y, defaults.port.rotation)), { '#c': 'Port' });
+                this.#menuComponentButton(routingMenu, 'Splitter', `<b>Wire splitter/joiner</b>. ${DRAG_MSG}`,
+                    (grid, x, y) => grid.addItem(new Splitter(this, x, y, defaults.splitter.rotation, defaults.splitter.numSplits)), { '#c': 'Splitter' });
+                this.#menuComponentButton(routingMenu, 'Tunnel', `<b>Network tunnel</b>. ${DRAG_MSG}`,
+                    (grid, x, y) => grid.addItem(new Tunnel(this, x, y, defaults.tunnel.rotation)), { '#c': 'Tunnel' });
+                this.#menuComponentButton(routingMenu, 'Text', `<b>Userdefined text message</b>. ${DRAG_MSG}`,
+                    (grid, x, y) => grid.addItem(new TextLabel(this, x, y, defaults.textlabel.rotation)), { '#c': 'TextLabel' });
             });
 
             // add gates
@@ -424,10 +467,11 @@ class Application {
                 gatesMenu.clear();
                 for (const [ gateType, { joinOp } ] of Object.entries(Simulation.GATE_MAP)) {
                     const gateLabel = gateType.toUpperFirst();
-                    gatesMenu.createComponentButton(gateLabel, `<b>${gateLabel} gate</b>. ${DRAG_MSG}`, (grid, x, y) => {
-                        let numInputs = defaults[gateType]?.numInputs ?? defaults.gate.numInputs;
-                        return grid.addItem(new Gate(this, x, y, defaults[gateType]?.rotation ?? defaults.gate.rotation, gateType, joinOp !== null ? numInputs : 1));
-                    });
+                    this.#menuComponentButton(gatesMenu, gateLabel, `<b>${gateLabel} gate</b>. ${DRAG_MSG}`,
+                        (grid, x, y) => {
+                            const numInputs = defaults[gateType]?.numInputs ?? defaults.gate.numInputs;
+                            return grid.addItem(new Gate(this, x, y, defaults[gateType]?.rotation ?? defaults.gate.rotation, gateType, joinOp !== null ? numInputs : 1));
+                        }, { '#c': 'Gate', '#t': gateType });
                 }
             });
 
@@ -440,39 +484,31 @@ class Application {
                 }
                 builtins.sort((a, b) => a[1].localeCompare(b[1], 'en', { numeric: true }));
                 for (const [ builtinType, builtinLabel ] of values(builtins)) {
-                    builtinMenu.createComponentButton(builtinLabel, `<b>${builtinLabel}</b> builtin. ${DRAG_MSG}`, (grid, x, y) => {
-                        return grid.addItem(new Builtin(this, x, y, defaults[builtinType]?.rotation ?? defaults.builtin.rotation, builtinType));
-                    });
+                    this.#menuComponentButton(builtinMenu, builtinLabel, `<b>${builtinLabel}</b> builtin. ${DRAG_MSG}`,
+                        (grid, x, y) => grid.addItem(new Builtin(this, x, y, defaults[builtinType]?.rotation ?? defaults.builtin.rotation, builtinType)),
+                        { '#c': 'Builtin', '#t': builtinType });
                 }
             });
 
             // io/utilities
             componentMenu.createMenuCategory('IO/Control', 'Clocks, constants, ...', (ioMenu) => {
                 ioMenu.clear();
-                ioMenu.createComponentButton('Clock', `<b>Clock</b>. ${DRAG_MSG}`, (grid, x, y) => {
-                    return grid.addItem(new Clock(this, x, y, defaults.clock.rotation));
-                });
-                ioMenu.createComponentButton('Constant', `<b>Constant value</b>. ${DRAG_MSG}`, (grid, x, y) => {
-                    return grid.addItem(new Constant(this, x, y, defaults.constant.rotation));
-                });
-                ioMenu.createComponentButton('Probe', `<b>Net state probe</b>. Displays the state of attached net. ${DRAG_MSG}`, (grid, x, y) => {
-                    return grid.addItem(new Probe(this, x, y, defaults.probe.rotation));
-                });
-                ioMenu.createComponentButton('Pull resistor', `<b>Pull up/down resistor</b>. ${DRAG_MSG}`, (grid, x, y) => {
-                    return grid.addItem(new PullResistor(this, x, y, defaults.pull.rotation));
-                });
-                ioMenu.createComponentButton('Toggle switch', `<b>Toggle switch</b> with permanently saved state. ${DRAG_MSG}`, (grid, x, y) => {
-                    return grid.addItem(new Toggle(this, x, y, defaults.toggle.rotation));
-                });
-                ioMenu.createComponentButton('Momentary switch', `<b>Momentary switch</b>. ${DRAG_MSG}`, (grid, x, y) => {
-                    return grid.addItem(new Momentary(this, x, y, defaults.momentary.rotation));
-                });
-                ioMenu.createComponentButton('ROM', `<b>Read-only memory</b>. ${DRAG_MSG}`, (grid, x, y) => {
-                    return grid.addItem(new Memory(this, x, y, defaults.rom.rotation, 'rom', defaults.rom.addressWidth, defaults.rom.dataWidth));
-                });
-                ioMenu.createComponentButton('RAM', `<b>Read/write memory</b>. ${DRAG_MSG}`, (grid, x, y) => {
-                    return grid.addItem(new Memory(this, x, y, defaults.ram.rotation, 'ram', defaults.ram.addressWidth, defaults.ram.dataWidth, [], defaults.ram.combinedPorts));
-                });
+                this.#menuComponentButton(ioMenu, 'Clock', `<b>Clock</b>. ${DRAG_MSG}`,
+                    (grid, x, y) => grid.addItem(new Clock(this, x, y, defaults.clock.rotation)), { '#c': 'Clock' });
+                this.#menuComponentButton(ioMenu, 'Constant', `<b>Constant value</b>. ${DRAG_MSG}`,
+                    (grid, x, y) => grid.addItem(new Constant(this, x, y, defaults.constant.rotation)), { '#c': 'Constant' });
+                this.#menuComponentButton(ioMenu, 'Probe', `<b>Net state probe</b>. Displays the state of attached net. ${DRAG_MSG}`,
+                    (grid, x, y) => grid.addItem(new Probe(this, x, y, defaults.probe.rotation)), { '#c': 'Probe' });
+                this.#menuComponentButton(ioMenu, 'Pull resistor', `<b>Pull up/down resistor</b>. ${DRAG_MSG}`,
+                    (grid, x, y) => grid.addItem(new PullResistor(this, x, y, defaults.pull.rotation)), { '#c': 'PullResistor' });
+                this.#menuComponentButton(ioMenu, 'Toggle switch', `<b>Toggle switch</b> with permanently saved state. ${DRAG_MSG}`,
+                    (grid, x, y) => grid.addItem(new Toggle(this, x, y, defaults.toggle.rotation)), { '#c': 'Toggle' });
+                this.#menuComponentButton(ioMenu, 'Momentary switch', `<b>Momentary switch</b>. ${DRAG_MSG}`,
+                    (grid, x, y) => grid.addItem(new Momentary(this, x, y, defaults.momentary.rotation)), { '#c': 'Momentary' });
+                this.#menuComponentButton(ioMenu, 'ROM', `<b>Read-only memory</b>. ${DRAG_MSG}`,
+                    (grid, x, y) => grid.addItem(new Memory(this, x, y, defaults.rom.rotation, 'rom', defaults.rom.addressWidth, defaults.rom.dataWidth)), { '#c': 'Memory', '#t': 'rom' });
+                this.#menuComponentButton(ioMenu, 'RAM', `<b>Read/write memory</b>. ${DRAG_MSG}`,
+                    (grid, x, y) => grid.addItem(new Memory(this, x, y, defaults.ram.rotation, 'ram', defaults.ram.addressWidth, defaults.ram.dataWidth, [], defaults.ram.combinedPorts)), { '#c': 'Memory', '#t': 'ram' });
             });
 
             // add libraries
@@ -489,7 +525,8 @@ class Application {
                         const isCurrentCircuit = uid === this.circuits.current.uid;
                         // place component as component
                         if (!isCurrentGrid) {
-                            const componentButton = libraryMenu.createComponentButton('&#9094;', label + '. <i>LMB</i> Drag to move onto grid.', (grid, x, y) => grid.addItem(new CustomComponent(this, x, y, 0, uid)));
+                            const componentButton = this.#menuComponentButton(libraryMenu, '&#9094;', label + '. <i>LMB</i> Drag to move onto grid.',
+                                (grid, x, y) => grid.addItem(new CustomComponent(this, x, y, 0, uid)), { '#c': 'CustomComponent', '#u': uid }, label);
                             componentButton.node.classList.add('toolbar-circuit-place');
                         }
                         // component select
@@ -660,46 +697,10 @@ class Application {
                 });
             }
         });
-    }
 
-    // Create tool bar entries.
-    #initToolbar() {
-        const DRAG_MSG = '<i>LMB</i> Drag to move onto grid.';
-        const defaults = this.config.placementDefaults;
-
-        // add text
-        this.toolbar.createComponentButton('Text', `<b>Userdefined text message</b>. ${DRAG_MSG}`, (grid, x, y) => {
-            return grid.addItem(new TextLabel(this, x, y, defaults.textlabel.rotation));
-        });
-
-        // add ports
-        this.toolbar.createComponentButton('Port', `<b>Component IO pin</b>. ${DRAG_MSG}`, (grid, x, y) => {
-            return grid.addItem(new Port(this, x, y, defaults.port.rotation))
-        });
-
-        // add tunnels
-        this.toolbar.createComponentButton('Tunnel', `<b>Network tunnel</b>. ${DRAG_MSG}`, (grid, x, y) => {
-            return grid.addItem(new Tunnel(this, x, y, defaults.tunnel.rotation))
-        });
-
-        // add a splitter component
-        this.toolbar.createComponentButton('Splitter', `<b>Wire splitter/joiner</b>. ${DRAG_MSG}`, (grid, x, y) => {
-            return grid.addItem(new Splitter(this, x, y, defaults.splitter.rotation, defaults.splitter.numSplits));
-        });
-
-        // add probe
-        this.toolbar.createComponentButton('Probe', `<b>Net state probe</b>. Displays the state of attached net. ${DRAG_MSG}`, (grid, x, y) => {
-            return grid.addItem(new Probe(this, x, y, defaults.probe.rotation));
-        });
-
-        // add gates
-        for (const [ gateType, { joinOp } ] of Object.entries(Simulation.GATE_MAP)) {
-            const gateLabel = gateType.toUpperFirst();
-            this.toolbar.createComponentButton(gateLabel, `<b>${gateLabel} gate</b>. ${DRAG_MSG}`, (grid, x, y) => {
-                let numInputs = defaults[gateType]?.numInputs ?? defaults.gate.numInputs;
-                return grid.addItem(new Gate(this, x, y, defaults[gateType]?.rotation ?? defaults.gate.rotation, gateType, joinOp !== null ? numInputs : 1));
-            });
-        }
+        // Add dropzone for custom toolbar elements
+        this.toolbar.createDropZone();
+        this.toolbar.createTrashZone();
     }
 
     // Enables single-step mode (if not already) and advances the simulation by one tick.

@@ -71,7 +71,9 @@ const APPLICATION_STUB = `
         grid = { trackAction() {}, setCircuit() {}, setCircuitLabel() {}, setSimulationLabel() {} };
         simulations = { current: null };
         circuits = null;
+        toolbarPins = [];
         refreshUndoButtons() {}
+        loadToolbarPins() {}
         constructor() {
             this.circuits = new Circuits(this);
             // reset() initialises #circuits and creates a placeholder circuit;

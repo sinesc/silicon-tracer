@@ -571,6 +571,55 @@ div.circuit-preview > div.grid > div.grid-info {
     position: absolute;
     right: 0;
 }
+/* Toolbar pin/trash zones: shared dashed-border base */
+.toolbar > .toolbar-drop-zone,
+body.dragging-from-toolbar .toolbar > .toolbar-trash-zone {
+    cursor: default;
+    border: 2px dashed var(--component-border-hover-color);
+    background-color: transparent;
+    color: var(--component-border-hover-color);
+    transition: opacity 0.15s, min-width 0.15s, border-color 0.15s, background-color 0.15s, color 0.15s;
+    min-width: 75px;
+}
+/* Hover over a zone during its active drag: fill background */
+body.dragging-from-menu .toolbar > .toolbar-drop-zone:hover,
+body.dragging-from-toolbar .toolbar > .toolbar-trash-zone:hover {
+    border-color: var(--component-border-hover-color);
+    color: var(--component-border-hover-color);
+    background-color: color-mix(in oklch, var(--component-body-hover-color), transparent 60%);
+}
+/* Drop zone: placeholder text when toolbar is empty */
+.toolbar > .toolbar-drop-zone:not(.toolbar-drop-zone-has-pins)::before {
+    content: 'Drag components here to pin';
+}
+/* Drop zone: collapsed and invisible once pins exist, expands again during drag */
+.toolbar > .toolbar-drop-zone.toolbar-drop-zone-has-pins {
+    opacity: 0;
+    min-width: 0;
+    padding: 0 2px;
+}
+.toolbar > .toolbar-drop-zone.toolbar-drop-zone-has-pins::before {
+    content: '+';
+}
+/* Drop zone: full size and labelled during a menu drag, same base style as trash zone */
+body.dragging-from-menu .toolbar > .toolbar-drop-zone {
+    opacity: 1;
+    min-width: 75px;
+    padding: 0 5px;
+}
+body.dragging-from-menu .toolbar > .toolbar-drop-zone::before {
+    content: '+ Pin';
+}
+/* Trash zone: hidden by default, appears during toolbar drag */
+.toolbar > .toolbar-trash-zone {
+    display: none;
+}
+body.dragging-from-toolbar .toolbar > .toolbar-trash-zone {
+    display: inline-block;
+}
+body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
+    content: '🗑';
+}
 /* Use italic tag as quotes */
 .toolbar > .toolbar-button i::before {
     content: '»';

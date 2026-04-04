@@ -125,4 +125,11 @@ class Splitter extends VirtualComponent {
 
         return { left, right/*, channelMap*/ };
     }
+    
+    static fromDescriptor(app, _desc) {
+        const d = app.config.placementDefaults;
+        return (grid, x, y) => grid.addItem(new Splitter(app, x, y, d.splitter.rotation, d.splitter.numSplits));
+    }
 }
+
+GridItem.CLASSES['Splitter'] = Splitter;

@@ -107,4 +107,18 @@ class Gate extends SimulationComponent {
 
         return { left, right, inputs, output };
     }
+
+    static fromDescriptor(app, desc) {
+        const d = app.config.placementDefaults;
+        const gateType = desc['#t'];
+        const gateEntry = Simulation.GATE_MAP[gateType];
+        if (!gateEntry) return null;
+        const { joinOp } = gateEntry;
+        return (grid, x, y) => {
+            const numInputs = d[gateType]?.numInputs ?? d.gate.numInputs;
+            return grid.addItem(new Gate(app, x, y, d[gateType]?.rotation ?? d.gate.rotation, gateType, joinOp !== null ? numInputs : 1));
+        };
+    }
 }
+
+GridItem.CLASSES['Gate'] = Gate;

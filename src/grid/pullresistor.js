@@ -51,4 +51,11 @@ class PullResistor extends SimulationComponent {
             this.grid.trackAction('Edit pull resistor');
         }
     }
+
+    static fromDescriptor(app, _desc) {
+        const d = app.config.placementDefaults;
+        return (grid, x, y) => grid.addItem(new PullResistor(app, x, y, d.pull.rotation));
+    }
 }
+
+GridItem.CLASSES['PullResistor'] = PullResistor;

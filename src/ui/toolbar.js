@@ -44,6 +44,18 @@ class ToolbarItem {
         assert(this.#subToolbar, 'This item does not contain a sub-toolbar');
         return this.#subToolbar.createComponentButton(...args);
     }
+    createPinnedComponentButton(...args) {
+        assert(this.#subToolbar, 'This item does not contain a sub-toolbar');
+        return this.#subToolbar.createPinnedComponentButton(...args);
+    }
+    clearPins(...args) {
+        assert(this.#subToolbar, 'This item does not contain a sub-toolbar');
+        return this.#subToolbar.clearPins(...args);
+    }
+    createTrashZone(...args) {
+        assert(this.#subToolbar, 'This item does not contain a sub-toolbar');
+        return this.#subToolbar.createTrashZone(...args);
+    }
     createActionButton(...args) {
         assert(this.#subToolbar, 'This item does not contain a sub-toolbar');
         return this.#subToolbar.createActionButton(...args);
@@ -94,6 +106,12 @@ class Toolbar {
     // Menu states by textual path.
     #states = {};
 
+    // Drop zone element for pinning components to the toolbar.
+    #dropZone = null;
+
+    // Trash zone element for unpinning components from the toolbar.
+    #trashZone = null;
+
     // Creates a new toolpar within the given DOM parent.
     constructor(app, domParent, parent = null) {
         assert.class(Application, app);
@@ -136,24 +154,65 @@ class Toolbar {
         this.#menuStates = new WeakUnorderedSet();
     }
 
-    // Creates a button that can be dragged onto the grid.
-    createComponentButton(label, hoverMessage, create) {
+    // Creates a button that can be dragged onto the grid or toolbar.
+    createComponentButton(label, hoverMessage, create, onPin = null) {
         assert.string(label);
         assert.string(hoverMessage);
         assert.function(create);
-        const button = html(this.#element, 'div', 'toolbar-button toolbar-component-button', label);
-        button.onmousedown = (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            if (!button.classList.contains('toolbar-menu-button-disabled') && !this.#app.grid.readonly) {
-                const [ x, y ] = this.#app.grid.screenToGrid(e.clientX, e.clientY);
-                const component = create(this.#app.grid, x, y);
-                component.dragStart(x, y, { type: "component", grabOffsetX: component.width / 2, grabOffsetY: component.height / 2, isNew: true });
-            }
-        };
-        button.onmouseenter = () => this.#app.setStatus(hoverMessage);
-        button.onmouseleave = () => this.#app.clearStatus();
+        assert.function(onPin, true);
+        const button = this.#makeComponentButtonNode(label, hoverMessage, create, onPin);
+        this.#element.appendChild(button);
         return new ToolbarItem(this, button);
+    }
+
+    // Creates a pinned component button (a component dragged onto the toolbar).
+    createPinnedComponentButton(label, hoverMessage, create, onTrash = null) {
+        assert.string(label);
+        assert.string(hoverMessage);
+        assert.function(create);
+        assert.function(onTrash, true);
+        const button = this.#makeComponentButtonNode(label, hoverMessage, create, null,
+            onTrash ? () => onTrash(button) : null);
+        button.dataset.pin = '1';
+        if (this.#dropZone) {
+            this.#element.insertBefore(button, this.#dropZone);
+        } else {
+            this.#element.appendChild(button);
+        }
+        return new ToolbarItem(this, button);
+    }
+
+    // Removes all pinned component buttons from the toolbar.
+    clearPins() {
+        for (const el of [...this.#element.querySelectorAll('[data-pin]')]) {
+            el.remove();
+        }
+    }
+
+    // Creates a drop zone element at the end of the toolbar for pinning components.
+    createDropZone() {
+        this.#dropZone = html(this.#element, 'div', 'toolbar-button toolbar-drop-zone');
+        this.#dropZone.onmouseenter = () => this.#app.setStatus('Drag a component from the Component menu here to pin it to the toolbar.');
+        this.#dropZone.onmouseleave = () => this.#app.clearStatus();
+        return this.#dropZone;
+    }
+
+    // Returns the drop zone element, if created.
+    get dropZone() {
+        return this.#dropZone;
+    }
+
+    // Creates a trash zone element at the end of the toolbar for unpinning components.
+    createTrashZone() {
+        this.#trashZone = html(this.#element, 'div', 'toolbar-button toolbar-trash-zone');
+        this.#trashZone.onmouseenter = () => this.#app.setStatus('Drop here to remove from toolbar.');
+        this.#trashZone.onmouseleave = () => this.#app.clearStatus();
+        return this.#trashZone;
+    }
+
+    // Returns the trash zone element, if created.
+    get trashZone() {
+        return this.#trashZone;
     }
 
     // Creates a button that can be clicked to trigger an action.
@@ -199,6 +258,53 @@ class Toolbar {
     createSeparator() {
         const separator = html(this.#element, 'div', 'toolbar-separator');
         return new ToolbarItem(this, separator);
+    }
+
+    // Wraps onmouseup so that dropping over zoneElement calls callback() instead of completing the normal grid drop.
+    #interceptDrop(zoneElement, bodyClass, savedOnClick, component, callback) {
+        document.body.classList.add(bodyClass);
+        const originalUp = document.onmouseup;
+        document.onmouseup = (upEvent) => {
+            const rect = zoneElement.getBoundingClientRect();
+            document.body.classList.remove(bodyClass);
+            if (upEvent.clientX >= rect.left && upEvent.clientX <= rect.right &&
+                upEvent.clientY >= rect.top && upEvent.clientY <= rect.bottom) {
+                document.onmouseup = null;
+                document.onmousemove = null;
+                document.body.classList.remove('dragging');
+                setTimeout(() => document.onclick = savedOnClick, 10);
+                this.#app.grid.removeItem(component);
+                callback();
+            } else {
+                originalUp.call(document, upEvent);
+            }
+        };
+    }
+
+    // Creates a button element that can be dragged onto the grid or toolbar.
+    #makeComponentButtonNode(label, hoverMessage, create, onPin = null, onTrash = null) {
+        const button = html(null, 'div', 'toolbar-button toolbar-component-button', label);
+        button.onmousedown = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (!button.classList.contains('toolbar-menu-button-disabled') && !this.#app.grid.readonly) {
+                const savedOnClick = document.onclick;
+                const [ x, y ] = this.#app.grid.screenToGrid(e.clientX, e.clientY);
+                const component = create(this.#app.grid, x, y);
+                component.dragStart(x, y, { type: "component", grabOffsetX: component.width / 2, grabOffsetY: component.height / 2, isNew: true });
+                if (onPin) {
+                    const dropZone = this.#app.toolbar.dropZone;
+                    if (dropZone) this.#interceptDrop(dropZone, 'dragging-from-menu', savedOnClick, component, onPin);
+                }
+                if (onTrash) {
+                    const trashZone = this.#app.toolbar.trashZone;
+                    if (trashZone) this.#interceptDrop(trashZone, 'dragging-from-toolbar', savedOnClick, component, onTrash);
+                }
+            }
+        };
+        button.onmouseenter = () => this.#app.setStatus(hoverMessage);
+        button.onmouseleave = () => this.#app.clearStatus();
+        return button;
     }
 
     // Creates a menu or submenu/category.
