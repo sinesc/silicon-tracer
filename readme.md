@@ -7,7 +7,7 @@ It is fully usable **offline** (download the repository and open index.html in a
 ## Project status: Getting there.
 
 ### Currently implemented
-- **Debugger**: Highlight conflict, break on conflict, break on custom expression, single step.
+- **Debugger**: Highlight conflict, break on conflict, break on custom net-expression, single step.
 - **Component libraries**: Support for both user created and pre-packages libraries (currently includes one open source library for 74x discrete logic chips).
 - **Network colors**: Networks can be assigned one of 10 colors to apply to all wires/ports in the net.
 - **LogiSim import**: See details below.
@@ -15,22 +15,23 @@ It is fully usable **offline** (download the repository and open index.html in a
 - **Transparent ports/tunnels/wires/splitters**: These translate to nothing but nets in the simulation engine. E.g. no directionality on ports.
 - Basic **single channel gates** with configurable number of inputs.
 - **Misc standard components** like full adders, muxes, latches, ...
+- **RAM** and **ROM** components.
 - **Tri-state** components, e.g. buffer, inverter, ...
 - **Text elements**: Support different font sizes, rotation and color.
 - Load/save via **local file picker**. Requires Chrome/Edge/Opera, not yet supported in Firefox.
 - Context specific **hotkey controlled UI** with currently available hotkeys always shown in the bottom right corner of the screen. For ease of use Hotkeys are clustered around WASD.
-- Component selection, drag&drop, rotation (including selections), deletion, editing.
+- Customizable component toolbar.
+- Undo/redo system.
+- Component selection, copy&paste, drag&drop, rotation (including selections), deletion, editing.
 - Wire trimming (ALT + mouse drag to select wire segments to trim).
 - Basic simulation statistics like gate and network counts, longest signal path.
 
 ### Todo
+- RAM/ROM editing UI
 - Standard gate/component symbols, currently everything is boxes
-- RAM/ROM component
 - More 74x components
-- Configurable toolbar
 - EDA export, gate refactoring
 - Simulation subcomponent overview (e.g. tree view)
-- Undo/redo system
 - Navigation history (i.e. forward/back)
 
 ### Known issues
@@ -38,9 +39,9 @@ It is fully usable **offline** (download the repository and open index.html in a
 
 ## Screenshot
 
-![Nonsense circuit](https://sinesc.github.io/silicon-tracer/res/doc/neon.png)
+![UI Screenshot](https://sinesc.github.io/silicon-tracer/res/doc/ui.png)
 
-Nonsense circuit showing a few custom components, splitters, tunnels and gates.
+A simple full adder, net coloring, open file menu, empty toolbar.
 
 ## Logisim import
 
