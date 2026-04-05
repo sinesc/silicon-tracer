@@ -1982,7 +1982,7 @@ loadFiles.push(
 						"ram",
 						2,
 						1,
-						[],
+						"",
 						false
 					]
 				},
@@ -2208,7 +2208,7 @@ loadFiles.push(
 						"ram",
 						2,
 						1,
-						[],
+						"",
 						true
 					]
 				},
@@ -2414,7 +2414,7 @@ loadFiles.push(
 						"ram",
 						2,
 						4,
-						[],
+						"",
 						true
 					]
 				},

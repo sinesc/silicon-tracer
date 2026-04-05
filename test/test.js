@@ -1,7 +1,7 @@
 const args = process.argv.slice(2);
 const debug = args.includes('--debug');
 
-const { assert, test, time, readJSON, summary, context: c, createSimulationWithBackend, compileCircuit, loadCircuitWires } = require('./lib/runner');
+const { assert, test, time, readJSON, summary, context: c, createSimulationWithBackend, compileCircuit, loadCircuitWires, declareMemory } = require('./lib/runner');
 
 if (debug) {
     require('./lib/runner').setDebugMode(true);
@@ -187,7 +187,7 @@ test("ROM read with 2-bit address and 8-bit data", () => {
     const suffix = '@rom0@0_0';
 
     // Declare a ROM: 2-bit address (4 entries), 8-bit data, values [0xAA, 0x55, 0xFF, 0x01]
-    sim.declareMemory('rom', 2, 8, [0xAA, 0x55, 0xFF, 0x01], suffix);
+    declareMemory(sim, 'rom', 2, 8, 'AA55FF01', suffix);
 
     // Declare constants for address bits and output enable
     sim.declareConst(0, '@ca0@0_0');
@@ -247,7 +247,7 @@ test("RAM write and read back with 2-bit address and 4-bit data", () => {
     const suffix = '@ram0@0_0';
 
     // Declare a RAM: 2-bit address (4 entries), 4-bit data, initially all zeros
-    sim.declareMemory('ram', 2, 4, [], suffix);
+    declareMemory(sim, 'ram', 2, 4, '', suffix);
 
     // Constants for address (2 bits), data-in (4 bits), write-enable
     sim.declareConst(0, '@ca0@0_0');
@@ -340,7 +340,7 @@ test("RAM write and read back with 2-bit address and 4-bit data", () => {
 test("ROM reset restores initial data", () => {
     const sim = createSimulationWithBackend('js');
     const suffix = '@rom0@0_0';
-    sim.declareMemory('rom', 1, 8, [0x42, 0x99], suffix);
+    declareMemory(sim, 'rom', 1, 8, '4299', suffix);
     sim.declareConst(0, '@ca0@0_0');
     sim.declareConst(1, '@coe@0_0');
     sim.declareNet(['q@ca0@0_0', 'a0' + suffix]);
@@ -379,7 +379,7 @@ test("ROM reset restores initial data", () => {
 test("RAM with 1-bit data width (32 values packed per element)", () => {
     const sim = createSimulationWithBackend('js');
     const suffix = '@ram0@0_0';
-    sim.declareMemory('ram', 3, 1, [], suffix);
+    declareMemory(sim, 'ram', 3, 1, '', suffix);
     sim.declareConst(0, '@ca0@0_0');
     sim.declareConst(0, '@ca1@0_0');
     sim.declareConst(0, '@ca2@0_0');
@@ -421,7 +421,7 @@ test("RAM with 1-bit data width (32 values packed per element)", () => {
 test("getMemoryData / setMemoryData with packing", () => {
     const sim = createSimulationWithBackend('js');
     const suffix = '@rom0@0_0';
-    sim.declareMemory('rom', 3, 4, [0xA, 0xB, 0xC, 0xD, 0xE, 0xF, 0x1, 0x2], suffix);
+    declareMemory(sim, 'rom', 3, 4, '0A0B0C0D0E0F0102', suffix);
     // Minimal wiring to compile (need at least one net)
     sim.declareConst(0, '@ca0@0_0');
     sim.declareConst(1, '@coe@0_0');
@@ -455,7 +455,7 @@ test("getMemoryData / setMemoryData with packing", () => {
 test("ROM output enable controls tri-state output", () => {
     const sim = createSimulationWithBackend('js');
     const suffix = '@rom0@0_0';
-    sim.declareMemory('rom', 1, 4, [0xA, 0x5], suffix);
+    declareMemory(sim, 'rom', 1, 4, '0A05', suffix);
 
     sim.declareConst(0, '@ca0@0_0');
     sim.declareConst(1, '@coe@0_0');

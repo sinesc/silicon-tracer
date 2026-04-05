@@ -520,7 +520,7 @@ class Application {
                 this.#menuComponentButton(ioMenu, 'ROM', `<b>Read-only memory</b>. ${DRAG_MSG}`,
                     (grid, x, y) => grid.addItem(new Memory(this, x, y, defaults.rom.rotation, 'rom', defaults.rom.addressWidth, defaults.rom.dataWidth)), { '#c': 'Memory', '#t': 'rom' });
                 this.#menuComponentButton(ioMenu, 'RAM', `<b>Read/write memory</b>. ${DRAG_MSG}`,
-                    (grid, x, y) => grid.addItem(new Memory(this, x, y, defaults.ram.rotation, 'ram', defaults.ram.addressWidth, defaults.ram.dataWidth, [], defaults.ram.combinedPorts)), { '#c': 'Memory', '#t': 'ram' });
+                    (grid, x, y) => grid.addItem(new Memory(this, x, y, defaults.ram.rotation, 'ram', defaults.ram.addressWidth, defaults.ram.dataWidth, null, defaults.ram.combinedPorts)), { '#c': 'Memory', '#t': 'ram' });
             });
 
             // add libraries

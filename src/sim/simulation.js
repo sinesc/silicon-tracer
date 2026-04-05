@@ -288,7 +288,7 @@ class Simulation {
         assert.integer(addressWidth, false, 1, 24);
         assert.integer(dataWidth, false, 1, this.#backend.constructor.BITS_PER_ELEMENT);
         assert((dataWidth & (dataWidth - 1)) === 0, `dataWidth must be a power of 2, got ${dataWidth}`);
-        assert.array(initialData);
+        assert.class(Uint8Array, initialData);
         assert.string(suffix);
         assert.bool(writeBeforeRead);
         // unique batchType per memory instance to avoid batching

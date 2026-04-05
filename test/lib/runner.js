@@ -136,6 +136,20 @@ vm.runInContext(`
             debugSerializeSimulation: false,
         }, configOverrides || {}));
     }
+
+    if (!Uint8Array.fromHex) {
+        Uint8Array.fromHex = function fromHex(digits) {
+            const result = new Uint8Array(digits.length / 2);
+            for (let i = 0; i < result.length; i++) {
+                result[i] = parseInt(digits.slice(i * 2, i * 2 + 2), 16);
+            }
+            return result;
+        };
+    }
+
+    function declareMemory(sim, memType, addressWidth, dataWidth, initialData, suffix, writeBeforeRead = true) {
+        return sim.declareMemory(memType, addressWidth, dataWidth, Uint8Array.fromHex(initialData), suffix, writeBeforeRead);
+    }
 `, context);
 
 let passed = 0;
@@ -225,4 +239,4 @@ function loadCircuitWires(filePath, circuitLabel = null) {
     return context._loadCircuitWires(text, circuitLabel);
 }
 
-module.exports = { assert, test, time, readJSON, summary, context, setDebugMode, createSimulationWithBackend: context.createSimulationWithBackend, compileCircuit, loadCircuitWires };
+module.exports = { assert, test, time, readJSON, summary, context, setDebugMode, createSimulationWithBackend: context.createSimulationWithBackend, declareMemory: context.declareMemory, compileCircuit, loadCircuitWires };

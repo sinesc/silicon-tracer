@@ -104,6 +104,19 @@ Object.defineProperty(String.prototype, "toUpperFirst", {
     }
 }
 
+// Converts a hex string to a Uint8Array. Ignores whitespace, case insensitive.
+function hexToU8(hex) {
+    assert.string(hex);
+    return Uint8Array.fromHex(hex.replace(/\s/g, ''));
+}
+
+// Converts a comma-separated decimal string to a Uint8Array. Ignores whitespace.
+function decToU8(dec) {
+    assert.string(dec);
+    const parts = dec.split(',').map(s => s.trim()).filter(s => s.length > 0);
+    return new Uint8Array(parts.map(s => parseInt(s, 10)));
+}
+
 // Returns the fractional part of a number.
 Math.fract = function(number) {
     return (number - (0 | number));
@@ -563,6 +576,10 @@ class File {
             description: "Logisim circuit",
             mimeType: "text/xml",
         },
+        '.rom': {
+            description: "ROM/RAM contents",
+            mimeType: "text/plain",
+        }
     };
 
     static async verifyPermission(fileHandle) {

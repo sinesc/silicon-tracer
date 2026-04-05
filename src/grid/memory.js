@@ -8,6 +8,7 @@ class Memory extends SimulationComponent {
     static #ROM_EDIT_DIALOG = [
         { name: 'addressWidth', label: 'Address width (bits)', type: 'int', postCheck: (v, f) => isFinite(v) && v >= 1 && v <= 24 },
         { name: 'dataWidth', label: 'Data width (bits)', type: 'select', options: { 1: "1", 2: "2", 4: "4", 8: "8", 16: "16", 32: "32" }, apply: (v) => parseInt(v) },
+        { name: 'data', label: 'Initial data', type: 'textfile', extension: '.rom', apply: (txt) => Memory.decodeData(txt), restore: (a) => a.toHex(), filestatus: (d) => d === null ? '0 bytes' : `${d.length} bytes` },
         ...Component.EDIT_DIALOG,
     ];
     static #RAM_EDIT_DIALOG = [
@@ -21,11 +22,13 @@ class Memory extends SimulationComponent {
     #data;
     #combinedPorts;
 
-    constructor(app, x, y, rotation, memType, addressWidth, dataWidth, data = [], combinedPorts = true) {
+    constructor(app, x, y, rotation, memType, addressWidth, dataWidth, data = null, combinedPorts = true) {
         assert.enum([ 'rom', 'ram' ], memType);
         assert.integer(addressWidth, false, 1, 24);
         assert.integer(dataWidth, false, 1, 32);
         assert((dataWidth & (dataWidth - 1)) === 0, `dataWidth must be a power of 2, got ${dataWidth}`);
+        data = String.isString(data) ? Uint8Array.fromHex(data) : (data === null ? new Uint8Array() : data);
+        assert.class(Uint8Array, data);
 
         const { left, right, top, bottom } = Memory.#generatePorts(memType, addressWidth, dataWidth, combinedPorts);
         const ioTypes = Memory.#generateIoTypes(memType, addressWidth, dataWidth);
@@ -56,7 +59,7 @@ class Memory extends SimulationComponent {
     serialize() {
         return {
             ...super.serialize(),
-            '#a': [ this.x, this.y, this.rotation, this.#memType, this.#addressWidth, this.#dataWidth, this.#data, this.#combinedPorts ],
+            '#a': [ this.x, this.y, this.rotation, this.#memType, this.#addressWidth, this.#dataWidth, this.#data.toHex(), this.#combinedPorts ],
         };
     }
 
@@ -75,7 +78,7 @@ class Memory extends SimulationComponent {
     // Handle edit hotkey.
     async onEdit() {
         const editDialog = this.#memType === 'ram' ? Memory.#RAM_EDIT_DIALOG : Memory.#ROM_EDIT_DIALOG;
-        const config = await dialog(`Configure ${this.label}`, editDialog, { addressWidth: this.#addressWidth, dataWidth: this.#dataWidth, combinedPorts: this.#combinedPorts, rotation: this.rotation });
+        const config = await dialog(`Configure ${this.label}`, editDialog, { data: this.#data, addressWidth: this.#addressWidth, dataWidth: this.#dataWidth, combinedPorts: this.#combinedPorts, rotation: this.rotation });
         if (config) {
             if (config.addressWidth !== this.#addressWidth || config.dataWidth !== this.#dataWidth || config.combinedPorts !== this.#combinedPorts) {
                 const grid = this.grid;
@@ -85,6 +88,7 @@ class Memory extends SimulationComponent {
                 const shadowPorts = Memory.#generateShadowPorts(this.#memType, config.dataWidth, config.combinedPorts);
                 this.#dataWidth = config.dataWidth;
                 this.#combinedPorts = config.combinedPorts;
+                this.#data = config.data;
                 this.setPortsFromNames({ left, right, top, bottom }, 1, ioTypes, shadowPorts);
                 this.#relabelDataPorts();
                 this.#addressWidth = config.addressWidth;
@@ -160,6 +164,20 @@ class Memory extends SimulationComponent {
             ioTypes['we'] = 'in';
         }
         return ioTypes;
+    }
+
+    // Decodes a ROM data string (comma-separated decimals or non-comma-separated hex values).
+    static decodeData(str) {
+        assert.string(str, true);
+        if (str === null) return null;
+        if (str.includes(',')) {
+            return decToU8(str);
+        }
+        const stripped = str.replace(/\s/g, '');
+        if (/^[0-9]+$/.test(stripped) && stripped.length % 2 === 1) {
+            return decToU8(str);
+        }
+        return hexToU8(str);
     }
 
     static fromDescriptor(app, desc) {
