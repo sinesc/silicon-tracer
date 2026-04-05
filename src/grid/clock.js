@@ -4,7 +4,7 @@
 class Clock extends SimulationComponent {
 
     static EDIT_DIALOG = [
-        { name: 'frequency', label: 'Frequency in Hz', type: 'int', check: (v, f) => { const p = Number.parseSI(v, true); return isFinite(p) && p >= 1; } },
+        { name: 'frequency', label: 'Frequency in Hz', type: 'int', postCheck: (v, f) => isFinite(v) && v >= 1 },
         ...Component.EDIT_DIALOG,
     ];
 

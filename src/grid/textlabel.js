@@ -7,7 +7,7 @@ class TextLabel extends GridItem {
         { name: 'text', label: 'Text', type: 'string', check: (v, f) => v.trim().length > 0 },
         { name: 'fontSize', label: 'Font size', type: 'select', options: { "small": "Small", "medium": "Medium", "large": "Large" } },
         { name: 'color', label: 'Color', type: 'select', options: { "-": "White", "c0": "Mint", "c1": "Green", "c2": "Yellow", "c3": "Orange", "c4": "Red", "c5": "Ruby", "c6": "Magenta", "c7": "Purple", "c8": "Blue", "c9": "Turquoise" } },
-        { name: 'maxLength', label: 'Max. width', type: 'int', check: (v, f) => { const p = Number.parseInt(v); return isFinite(p) && p >= Grid.SPACING; } },
+        { name: 'maxLength', label: 'Max. width', type: 'int', postCheck: (v, f) => isFinite(v) && v >= Grid.SPACING },
         ...Component.EDIT_DIALOG,
     ];
 
@@ -201,7 +201,7 @@ class TextLabel extends GridItem {
         }
         return true;
     }
-    
+
     static fromDescriptor(app, _desc) {
         const d = app.config.placementDefaults;
         return (grid, x, y) => grid.addItem(new TextLabel(app, x, y, d.textlabel.rotation));

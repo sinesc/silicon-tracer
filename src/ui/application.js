@@ -607,7 +607,7 @@ class Application {
             // Configure simulation speed.
             simulationMenu.createActionButton(`Set ticks/s limit (${Number.formatSI(this.config.targetTPS)})...`, 'Configure simulation speed.', async () => {
                 simulationMenu.state(false);
-                const result = await dialog('Simulation speed', [ { label: "Ticks per second", name: "targetTPS", type: "int", check: (v, f) => { const p = Number.parseSI(v); return Number.isInteger(p) && p >= 1; } } ], { targetTPS: Number.formatSI(this.config.targetTPS, true) });
+                const result = await dialog('Simulation speed', [ { label: "Ticks per second", name: "targetTPS", type: "int", postCheck: (v, f) => v >= 1 } ], { targetTPS: this.config.targetTPS });
                 if (result) {
                     this.config.targetTPS = result.targetTPS;
                     this.simulations.updateClocks(this.config.targetTPS);

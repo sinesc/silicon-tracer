@@ -7,7 +7,7 @@ class Splitter extends VirtualComponent {
     static SINGLE_PORT_NAME = 'm';
 
     static #EDIT_DIALOG = [
-        { name: 'numSplits', label: 'Number of n-ports', type: 'int', check: (v, f) => { const p = Number.parseSI(v, true); return isFinite(p) && p >= 2 && p <= 64; } },
+        { name: 'numSplits', label: 'Number of n-ports', type: 'int', postCheck: (v, f) => isFinite(v) && v >= 2 && v <= 64 },
         { name: 'ordering', label: 'Order of n-ports', type: 'select', options: { ltr: "0 ... n", rtl: "n ... 0" } },
         { name: 'orientation', label: 'Position of single port', type: 'select', options: { start: "Opposite of n0", middle: "Middle", end: "Opposite of nMax" } },
         { name: 'spacing', label: 'Pin spacing', type: 'select', options: { 0: "None", 1: "One", 2: "Two" } },
@@ -125,7 +125,7 @@ class Splitter extends VirtualComponent {
 
         return { left, right/*, channelMap*/ };
     }
-    
+
     static fromDescriptor(app, _desc) {
         const d = app.config.placementDefaults;
         return (grid, x, y) => grid.addItem(new Splitter(app, x, y, d.splitter.rotation, d.splitter.numSplits));

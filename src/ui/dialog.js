@@ -1,6 +1,17 @@
 "use strict";
 
 // Opens a modal dialog with the given fields and returns the user input to the awaiting caller.
+// Field properties:
+//   name:      key in the data object
+//   type:      one of int, float, string, select, bool, textfile
+//   label:     display label (defaults to capitalized name)
+//   options:   map of value->label pairs (select type only)
+//   extension:  file extension filter (textfile type only)
+//   filestatus: closure(appliedValue, field) returning a status string (textfile type only, defaults to char count)
+//   check:     custom validation, overrides the type default
+//   apply:     transform element value to result value
+//   postCheck: second validation after apply
+//   restore:   transform data value to initial element value (counterpart to apply)
 function dialog(title, fields, data, extraOptions) {
     const { context, extraClass, cancelable, onChange } = Object.assign({ context: null, extraClass: null, cancelable: true, onChange: () => null }, extraOptions);
     assert.string(title),
@@ -12,7 +23,7 @@ function dialog(title, fields, data, extraOptions) {
 
     // predefine some validations
     const validations = {
-        int: { check: (v, f) => Number.isInteger(Number.parseSI(v)), apply: (v, f) => Number.parseSI(v, true) },
+        int: { check: (v, f) => Number.isInteger(Number.parseSI(v)), restore: (v, f) => Number.formatSI(v, true), apply: (v, f) => Number.parseSI(v, true) },
         float: { check: (v, f) => Number.isFinite(Number.parseSI(v)), apply: (v, f) => Number.parseSI(v) },
         string: { check: (v, f) => String.isString(v), apply: (v, f) => v },
         select: { check: (v, f) => Object.keys(f.options).includes(v), apply: (v, f) => v },
@@ -37,9 +48,15 @@ function dialog(title, fields, data, extraOptions) {
             const check = field.check ?? validations[field.type].check;
             if (check.call(context, element.value, field)) {
                 const apply = field.apply ?? validations[field.type].apply;
-                result[field.name] = apply.call(context, element.value, field);
-                if (result[field.name] !== data[field.name]) {
-                    changed.push(field.name);
+                const applied = apply.call(context, element.value, field);
+                const postCheck = field.postCheck ?? (() => true);
+                if (postCheck.call(context, applied, field)) {
+                    result[field.name] = applied;
+                    if (result[field.name] !== data[field.name]) {
+                        changed.push(field.name);
+                    }
+                } else {
+                    errors.push(field.name);
                 }
             } else {
                 errors.push(field.name);
@@ -79,20 +96,24 @@ function dialog(title, fields, data, extraOptions) {
             const rowElement = html(tableElement, 'tr', 'dialog-row');
             html(rowElement, 'td', 'dialog-row-label', field.label ?? field.name.toUpperFirst());
             const rowRight = html(rowElement, 'td', 'dialog-row-mask');
+            const initialValue = field.restore ? field.restore.call(context, data[field.name], field) : data[field.name];
             let fieldElement
             if (field.type === 'select') {
-                fieldElement = html(rowRight, 'select', 'dialog-row-select', { name: field.name, options: field.options, value: data[field.name] });
+                fieldElement = html(rowRight, 'select', 'dialog-row-select', { name: field.name, options: field.options, value: initialValue });
                 fieldElement.onchange = triggerOnChange;
             } else if (field.type === 'bool') {
-                fieldElement = html(rowRight, 'select', 'dialog-row-select', { name: field.name, options: { 'true': 'Yes', 'false': 'No' }, value: data[field.name] ? 'true' : 'false' });
+                fieldElement = html(rowRight, 'select', 'dialog-row-select', { name: field.name, options: { 'true': 'Yes', 'false': 'No' }, value: initialValue ? 'true' : 'false' });
                 fieldElement.onchange = triggerOnChange;
             } else if (field.type === 'textfile') {
-                const valueRef = { value: data[field.name], focus() {}, onkeydown: null };
+                const valueRef = { value: initialValue, focus() {}, onkeydown: null };
                 const openButton = html(rowRight, 'span', 'dialog-button dialog-button-small', 'Open');
                 const clearButton = html(rowRight, 'span', 'dialog-button dialog-button-small', 'Clear');
                 const infoDiv = html(rowRight, 'div', 'dialog-textfile-info');
+                const applyFn = field.apply ?? validations[field.type].apply;
+                const filestatus = field.filestatus ?? ((v) => v != null ? `${Number.formatSI(v.length)} chars` : 'No file');
                 const updateInfo = () => {
-                    infoDiv.textContent = valueRef.value != null ? `${Number.formatSI(valueRef.value.length)} chars` : 'No file';
+                    const applied = valueRef.value != null ? applyFn.call(context, valueRef.value, field) : null;
+                    infoDiv.textContent = filestatus.call(context, applied, field);
                 };
                 updateInfo();
                 openButton.onclick = async () => {
@@ -113,7 +134,7 @@ function dialog(title, fields, data, extraOptions) {
                 };
                 fieldElement = valueRef;
             } else {
-                fieldElement = html(rowRight, 'input', 'dialog-row-input', { name: field.name, value: data[field.name] });
+                fieldElement = html(rowRight, 'input', 'dialog-row-input', { name: field.name, value: initialValue });
                 fieldElement.onkeyup = triggerOnChange;
                 fieldElement.onchange = triggerOnChange;
             }

@@ -6,7 +6,7 @@ class Memory extends SimulationComponent {
     static VALID_DATA_WIDTHS = [ 1, 2, 4, 8, 16, 32 ];
 
     static #ROM_EDIT_DIALOG = [
-        { name: 'addressWidth', label: 'Address width (bits)', type: 'int', check: (v) => { const p = Number.parseSI(v, true); return isFinite(p) && p >= 1 && p <= 24; } },
+        { name: 'addressWidth', label: 'Address width (bits)', type: 'int', postCheck: (v, f) => isFinite(v) && v >= 1 && v <= 24 },
         { name: 'dataWidth', label: 'Data width (bits)', type: 'select', options: { 1: "1", 2: "2", 4: "4", 8: "8", 16: "16", 32: "32" }, apply: (v) => parseInt(v) },
         ...Component.EDIT_DIALOG,
     ];
@@ -161,7 +161,7 @@ class Memory extends SimulationComponent {
         }
         return ioTypes;
     }
-    
+
     static fromDescriptor(app, desc) {
         const d = app.config.placementDefaults;
         const memType = desc['#t'];
