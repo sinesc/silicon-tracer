@@ -268,7 +268,8 @@ class Simulation {
     declareProbe(name, suffix) {
         assert.string(name);
         assert.string(suffix);
-        assert(this.#probes[name] === undefined, `Probe name "${name}" already defined`);
+        // TODO: enable once UI ensures unique name
+        //assert(this.#probes.byName[name] === undefined, `Probe name "${name}" already defined`);
         const probe = { name, suffix, netId: null };
         this.#probes.byName[name] = probe;
         this.#probes.byInput['input' + suffix] = probe;
@@ -281,8 +282,7 @@ class Simulation {
         return probe.netId === null ? null : this.getNetValue(probe.netId);
     }
 
-    // Declares a memory component (ROM or RAM). addressWidth and dataWidth must be positive integers, dataWidth must be a power of 2 and <= BITS_PER_ELEMENT.
-    // initialData is an array of integer values (one per address). writeBeforeRead controls whether a simultaneous write+read returns the new value (true) or old value (false).
+    // Declares a RAM/ROM component. dataWidth must be a power of 2 and <= BITS_PER_ELEMENT.
     declareMemory(memType, addressWidth, dataWidth, initialData, suffix, writeBeforeRead = true) {
         assert.enum([ 'rom', 'ram' ], memType);
         assert.integer(addressWidth, false, 1, 24);
@@ -291,29 +291,23 @@ class Simulation {
         assert.array(initialData);
         assert.string(suffix);
         assert.bool(writeBeforeRead);
-
-        // Use a unique batchType per memory instance to avoid batching
+        // unique batchType per memory instance to avoid batching
         const batchType = 'memory' + suffix;
-
-        // Declare address input ports
+        // address input ports
         const addressPortNames = [];
         for (let i = 0; i < addressWidth; i++) {
             this.#declarePort('a' + i, suffix, 'i', false, false, batchType);
             addressPortNames.push('a' + i + suffix);
         }
-
-        // Declare data output ports (tri-state, controlled by output enable)
+        // data output ports, output enable
         const dataOutPortNames = [];
         for (let i = 0; i < dataWidth; i++) {
             this.#declarePort('do' + i, suffix, 'o', true, false, batchType);
             dataOutPortNames.push('do' + i + suffix);
         }
-
-        // Output enable input port
         this.#declarePort('oe', suffix, 'i', false, false, batchType);
         const oePortName = 'oe' + suffix;
-
-        // RAM-only ports
+        // data input ports (RAM only)
         let dataInPortNames = null;
         let wePortName = null;
         if (memType === 'ram') {
@@ -325,7 +319,7 @@ class Simulation {
             this.#declarePort('we', suffix, 'i', false, false, batchType);
             wePortName = 'we' + suffix;
         }
-
+        // register memory
         const id = this.#memories.length;
         const memory = {
             id, memType, addressWidth, dataWidth, initialData, suffix, writeBeforeRead,
@@ -374,8 +368,8 @@ class Simulation {
             nets: this.#nets.all.map((n) => ({ id: n.id, ports: n.ports })),
             ports: this.#ports.all.map((p) => ({ id: p.id, name: p.name, ioType: p.ioType, isTriState: p.isTriState, detectEdges: p.detectEdges, batchType: p.batchType, batchName: p.batchName, batchComponent: p.batchComponent })),
             clocks: this.#clocks.map((c) => ({ id: c.id, frequency: c.frequency, tps: c.tps, enablePortName: c.enablePortName, outputPortName: c.outputPortName })),
-            memories: this.#memories.map((m) => ({ id: m.id, memType: m.memType, addressWidth: m.addressWidth, dataWidth: m.dataWidth, initialData: m.initialData, suffix: m.suffix, writeBeforeRead: m.writeBeforeRead, addressPortNames: m.addressPortNames, dataOutPortNames: m.dataOutPortNames, oePortName: m.oePortName, dataInPortNames: m.dataInPortNames, wePortName: m.wePortName })),
-            probes: this.#probes,
+            memories: this.#memories.map((m) => Object.filter(m, (k, v) => k !== 'baseOffset')),
+            probes: values(this.#probes.byName).map((p) => ({ name: p.name, suffix: p.suffix })).toArray(),
         }
     }
 
@@ -403,7 +397,14 @@ class Simulation {
         }
         this.#clocks = serialized.clocks.map((c) => ({ ...c, counterIndex: null, limitIndex: null }));
         this.#memories = (serialized.memories ?? []).map((m) => ({ ...m, baseOffset: null }));
-        this.#probes = serialized.probes;
+        if (serialized.probes?.byName) {
+            this.probes = serialized.probes; // TODO: legacy compat, remove
+        } else {
+            for (const probe of (serialized.probes ?? []).map((p) => ({ ...p, netId: null }))) {
+                this.#probes.byName[probe.name] = probe;
+                this.#probes.byInput['input' + probe.suffix] = probe;
+            }
+        }
     }
 
     // Compiles the circuit and initializes memory, making it ready for simulate().
@@ -454,24 +455,20 @@ class Simulation {
                 this.#backend.clearBit(elementIndex, bitIndex);
             }
         };
-
-        // Reset all net memory elements
+        // reset net memory elements
         for (const net of this.#nets.all) {
             clearBit(net.elementIndex2, net.bitIndex);
             clearBit(net.elementIndex3, net.bitIndex);
             clearBit(net.elementIndexC, net.bitIndex);
         }
-
-        // Reset all port memory elements
+        // reset port memory elements
         for (const port of this.#ports.all) {
-            // Skip constant ports - they should maintain their values after reset
             if (port.batchType === 'const') continue;
             clearBit(port.elementIndex2, port.bitIndex);
             clearBit(port.elementIndex3, port.bitIndex);
             clearBit(port.elementIndexP, port.bitIndex);
         }
-
-        // Reset memory data to initial values
+        // reset memory data to initial values
         this.#initMemoryData();
     }
 
