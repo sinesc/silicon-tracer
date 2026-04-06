@@ -58,9 +58,10 @@ class GridItem {
     }
 
     // Unserializes a circuit item to a grid item.
-    static unserialize(app, item, rawOthers, setLid = null, errors = []) {
+    static unserialize(app, item, rawOthers = [], setLid = null, errors = []) {
         assert.class(Application, app);
         assert.object(item);
+        assert.array(rawOthers);
         assert.string(setLid, true);
         const cname = item['#c'];
         const cargs = item['#a'];

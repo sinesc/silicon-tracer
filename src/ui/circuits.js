@@ -565,9 +565,10 @@ Circuits.Circuit = class {
     }
 
     // Unserializes circuit from decoded JSON-object and adds it to Circuits. Dependencies of CustomComponents will also be added.
-    static unserialize(app, rawCircuit, rawOthers, setLid = null, errors = []) {
+    static unserialize(app, rawCircuit, rawOthers = [], setLid = null, errors = []) {
         assert.class(Application, app);
         assert.object(rawCircuit);
+        assert.array(rawOthers);
         assert.string(setLid, true);
         assert.array(errors);
         const items = rawCircuit.data.map((item) => GridItem.unserialize(app, item, rawOthers, setLid, errors));
