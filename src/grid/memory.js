@@ -111,11 +111,13 @@ class Memory extends SimulationComponent {
         for (let i = 0; i < addressWidth; i++) {
             left.push('a' + i);
         }
-        left.push(null);
-        left.push('oe');
+        for (let i = 0; i < dataWidth - addressWidth - (memType === 'ram' ? 2 : 1); i++) {
+            left.push(null);
+        }
         if (memType === 'ram') {
             left.push('we');
         }
+        left.push('oe');
 
         const right = [];
         for (let i = 0; i < dataWidth; i++) {
