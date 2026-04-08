@@ -763,7 +763,8 @@ class Grid {
                 const gy1 = y / this.zoom - this.offsetY;
                 const gx2 = gx1 + w / this.zoom;
                 const gy2 = gy1 + h / this.zoom;
-                this.trackAction('Trim wires', () => this.#executeTrim(gx1, gy1, gx2, gy2));
+                this.#executeTrim(gx1, gy1, gx2, gy2)
+                this.trackAction('Trim wires');
             } else {
                 // normal selection: set selected items
                 this.#selection = this.items.filter((c) => c.selected).toArray();
