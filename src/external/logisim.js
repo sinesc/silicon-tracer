@@ -3,6 +3,8 @@
 // Imports circuits from logisim .circ files.
 class LogiSim {
 
+    static WIRECOLOR = 1;
+
     #app;
     #layouts = {};
     #fileHandle;
@@ -119,9 +121,19 @@ class LogiSim {
     // Offset given component by the position of the named port. (Logisim component coordinates are often the coordinate of one of its ports.)
     static #offsetPort(component, name) {
         assert.class(Component, component);
+        assert.string(name);
         const offset = component.portByName(name).coords(component.width, component.height, component.rotation);
         component.x -= offset.x;
         component.y -= offset.y;
+    }
+
+    static #portPos(component, name) {
+        assert.class(Component, component);
+        assert.string(name);
+        const offset = component.portByName(name).coords(component.width, component.height, component.rotation);
+        offset.x += component.x;
+        offset.y += component.y;
+        return offset;
     }
 
     // Returns a direction vector for the given rotation id.
@@ -146,7 +158,7 @@ class LogiSim {
         const y1 = item.y + portOffset.y;
         const x2 = x1 + direction.x * Grid.SPACING * length;
         const y2 = y1 + direction.y * Grid.SPACING * length;
-        const wire = new Wire(this.#app, x1, y1, Grid.SPACING, 'h'); // temporary coords/length...
+        const wire = new Wire(this.#app, x1, y1, Grid.SPACING, 'h', LogiSim.WIRECOLOR); // temporary coords/length...
         wire.setEndpoints(x1, y1, x2, y2); // ... we use more convenient api instead
         circuit.addItem(wire);
     }
@@ -250,7 +262,7 @@ class LogiSim {
             const [ x2, y2 ] = parseLoc(rawWire.to);
             const direction = x1 === x2 ? 'v' : 'h';
             const length = x1 === x2 ? y2 - y1 : x2 - x1;
-            const wire = new Wire(this.#app, x1, y1, length, direction);
+            const wire = new Wire(this.#app, x1, y1, length, direction, LogiSim.WIRECOLOR);
             circuit.addItem(wire);
         }
         // convert components
@@ -388,8 +400,8 @@ class LogiSim {
                 circuit.addItem(inverter);
                 this.#addHelperWire(circuit, buffer, 'q', direction(1), 1);
                 this.#addHelperWire(circuit, inverter, 'q', direction(1), 1);
-                circuit.addItem(new Wire(this.#app, x - Grid.SPACING, y + Grid.SPACING, Grid.SPACING, 'v'));
-                circuit.addItem(new Wire(this.#app, x - Grid.SPACING, y + 4 * Grid.SPACING, Grid.SPACING, 'v'));
+                circuit.addItem(new Wire(this.#app, x - Grid.SPACING, y + Grid.SPACING, Grid.SPACING, 'v', LogiSim.WIRECOLOR));
+                circuit.addItem(new Wire(this.#app, x - Grid.SPACING, y + 4 * Grid.SPACING, Grid.SPACING, 'v', LogiSim.WIRECOLOR));
             } else if (rawComp.name === 'Ground') {
                 const item = new Constant(this.#app, x, y, rotation(rawComp.facing ?? 'south') + 2, 0);
                 offsetPort(item, 'q');
@@ -417,6 +429,42 @@ class LogiSim {
                 const item = new TextLabel(this.#app, x, y, rotation(rawComp.facing ?? 'east') + 3, 200, rawComp.name, 'medium', 4);
                 circuit.addItem(item);
                 // since these aren't required for the circuit to work we'll not generate a problems log entry for them
+            } else if ([ 'ROM', 'RAM' ].includes(rawComp.name)) {
+                const memType = rawComp.name.toLowerCase();
+                const addressWidth = Number.parseInt(rawComp.addrWidth ?? '8');
+                const dataWidth = Number.parseInt(rawComp.dataWidth ?? '8');
+                const combinedPorts = rawComp.databus === 'bidir';
+                const item = new Memory(this.#app, x + Grid.SPACING * 8 /*roughly centered in logisim footprint*/, y, rotation('north'), memType, addressWidth, dataWidth, null, combinedPorts);
+                circuit.addItem(item);
+                // address splitter
+                const addressPos = LogiSim.#portPos(item, 'a' + (addressWidth - 1));
+                const addressSplitter = new Splitter(this.#app, addressPos.x - Grid.SPACING * 3, addressPos.y - Grid.SPACING, rotation('south'), addressWidth, 'none', 'end', 'rtl');
+                circuit.addItem(addressSplitter);
+                for (let i = 0; i < addressWidth; ++i) {
+                    const splitterPort = LogiSim.#portPos(addressSplitter, 'n' + i);
+                    const memoryPort = LogiSim.#portPos(item, 'a' + i);
+                    circuit.addItem(new Wire(this.#app, splitterPort.x, splitterPort.y, memoryPort.x - splitterPort.x, 'h', LogiSim.WIRECOLOR));
+                }
+                // output/data splitter
+                const outputPos = LogiSim.#portPos(item, 'do0');
+                const outputSplitter = new Splitter(this.#app, outputPos.x + Grid.SPACING, outputPos.y - Grid.SPACING, rotation('north'), dataWidth, 'none', 'end', 'rtl');
+                circuit.addItem(outputSplitter);
+                for (let i = 0; i < dataWidth; ++i) {
+                    const splitterPort = LogiSim.#portPos(outputSplitter, 'n' + i);
+                    const memoryPort = LogiSim.#portPos(item, 'do' + i);
+                    circuit.addItem(new Wire(this.#app, memoryPort.x, memoryPort.y, splitterPort.x - memoryPort.x, 'h', LogiSim.WIRECOLOR));
+                }
+                // input splitter when not combined io
+                if (!combinedPorts && memType === 'ram') {
+                    const inputPos = LogiSim.#portPos(item, 'di' + (dataWidth - 1));
+                    const inputSplitter = new Splitter(this.#app, inputPos.x - Grid.SPACING, inputPos.y + Grid.SPACING, rotation('east'), dataWidth, 'none', 'end', 'rtl');
+                    circuit.addItem(inputSplitter);
+                    for (let i = 0; i < dataWidth; ++i) {
+                        const splitterPort = LogiSim.#portPos(inputSplitter, 'n' + i);
+                        const memoryPort = LogiSim.#portPos(item, 'di' + i);
+                        circuit.addItem(new Wire(this.#app, memoryPort.x, memoryPort.y, splitterPort.y - memoryPort.y, 'v', LogiSim.WIRECOLOR));
+                    }
+                }
             } else if (tmp = this.#app.circuits.byLabel(rawComp.name.replace(/^74/, '74x'), this.#lib74SeriesLogic)) {
                 const rot = (rotation(rawComp.facing) + 0) & 3;
                 const item = new CustomComponent(this.#app, 0, 0, rot, tmp.uid, null, null, 1);
@@ -489,53 +537,12 @@ class LogiSim {
                     index = (layoutPort.y - layout.minY) / Grid.SPACING - 1;
                 }
                 sides[side][index] = mapping.portName;
-                /*
-                // port
-                const port = new Port(this.#app, scale * layoutPort.x - globalOffsetX - expandX(rotation + 1), scale * layoutPort.y - globalOffsetY - expandY(rotation + 1), rotation + 1);
-                offsetPort(port, 'q');
-                port.name = mapping.portName;
-                circuit.addItem(port);
-                // wire between port and tunnel
-                const tunnelOffsetDir = direction(port.rotation);
-                this.#addHelperWire(circuit, port, 'q', tunnelOffsetDir, 1);
-                const tunnelOffsetX = tunnelOffsetDir.x * Grid.SPACING;
-                const tunnelOffsetY = tunnelOffsetDir.y * Grid.SPACING;
-                // tunnel
-                const tunnel = new Tunnel(this.#app, scale * layoutPort.x - globalOffsetX + tunnelOffsetX - expandX(rotation + 1), scale * layoutPort.y - globalOffsetY + tunnelOffsetY - expandY(rotation + 1), rotation + 1 + 2);
-                offsetPort(tunnel, '');
-                tunnel.name = mapping.tunnelName;
-                circuit.addItem(tunnel);
-                */
             }
         }
         circuit.portConfig.placement.top = sides.top.join(',');
         circuit.portConfig.placement.right = sides.right.join(',');
         circuit.portConfig.placement.bottom = sides.bottom.join(',');
         circuit.portConfig.placement.left = sides.left.join(',');
-        /*
-        // fill in unoccupied positions with dummy ports (item.name='') on the component outline
-        const occupied = new Set(layout.ports.map((p) => `${p.x},${p.y}`));
-        const addDummy = (x, y, rotation) => {
-            if (!occupied.has(`${x},${y}`)) {
-                const item = new Port(this.#app, scale * x - globalOffsetX - expandX(rotation + 1), scale * y - globalOffsetY - expandY(rotation + 1), rotation + 1);
-                offsetPort(item, 'q');
-                item.name = '';
-                circuit.addItem(item);
-                occupied.add(`${x},${y}`);
-            }
-        };
-        for (let y = layout.minY + Grid.SPACING; y < layout.maxY; y += Grid.SPACING) {
-            addDummy(layout.minX, y, 0);
-            addDummy(layout.maxX, y, 2);
-        }
-        for (let x = layout.minX + Grid.SPACING; x < layout.maxX; x += Grid.SPACING) {
-            addDummy(x, layout.minY, 1);
-            addDummy(x, layout.maxY, 3);
-        }
-        // add a note about how the outline works
-        const portExplainer = '^^^ Scroll up ^^^ Import has replaced circuit pins with tunnels connected to the ports above to allow for placing the ports such that the resulting component shape matches the original shape and properly connects to existing circuits.';
-        circuit.addItem(new TextLabel(this.#app, Grid.SPACING, Grid.SPACING, 0, 800, portExplainer, 'small', 3));
-        */
     }
 
 }

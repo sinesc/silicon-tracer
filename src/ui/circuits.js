@@ -516,7 +516,17 @@ Circuits.Circuit = class {
 
     // Serializes the circuit for saving to file.
     serialize() {
-        const data = this.#data.map((item) => item.serialize());
+        const data = this.#data.map((item) => item.serialize()).sort((a, b) => {
+            const x = a['#a'][0] - b['#a'][0];
+            if (x !== 0) return x;
+            const y = a['#a'][1] - b['#a'][1];
+            if (y !== 0) return y;
+            if (a['#c'] === 'Wire' && b['#c'] === 'Wire') {
+                return compare(a['#a'][3], b['#a'][3]); // compare by direction
+            } else {
+                return a['#c'] === 'Wire' ? -1 : (b['#c'] === 'Wire' ? 1 : compare(a['#c'], b['#c']));
+            }
+        });
         return { label: this.label, uid: this.uid, data, gridConfig: this.gridConfig, portConfig: this.portConfig, lid: this.#lid, visibleInLib: this.visibleInLib };
     }
 

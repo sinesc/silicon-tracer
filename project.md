@@ -25,4 +25,4 @@ Vanilla JS/HTML/CSS, no framework, no build step. Open `index.html` directly in 
 
 ## Guidelines
 - use `assert*()` in public functions
-- brief one line comments, only document non-self-explanatory arguments e.g. string 'enums'
+- prefer brief one line comments, only document non-self-explanatory arguments e.g. string 'enums'
