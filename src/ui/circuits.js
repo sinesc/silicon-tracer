@@ -16,9 +16,9 @@ class Circuits {
         ...Circuits.CREATE_DIALOG,
         { separator: true, text: 'Optional comma-separated lists of custom port positions. Blank entries create gaps, e.g. <code>a,,b,c</code> creates a gap between a and b.' },
         { name: 'top', label: 'Top ports', type: 'string' },
+        { name: 'left', label: 'Left ports', type: 'string' },
         { name: 'right', label: 'Right ports ', type: 'string' },
         { name: 'bottom', label: 'Bottom ports', type: 'string' },
-        { name: 'left', label: 'Left ports', type: 'string' },
     ];
 
     static STRINGIFY_SPACE = "\t";

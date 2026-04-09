@@ -492,6 +492,8 @@ class LogiSim {
                 this.#missing.add(rawComp.name);
             }
         }
+        // compact wires so we don't get a huge diff on first load
+        Wire.compact(circuit);
         return portMap;
     }
 
@@ -551,5 +553,4 @@ class LogiSim {
         circuit.portConfig.placement.bottom = sides.bottom.join(',');
         circuit.portConfig.placement.left = sides.left.join(',');
     }
-
 }
