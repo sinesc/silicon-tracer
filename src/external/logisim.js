@@ -466,17 +466,24 @@ class LogiSim {
                     }
                 }
             } else if (tmp = this.#app.circuits.byLabel(rawComp.name.replace(/^74/, '74x'), this.#lib74SeriesLogic)) {
+                const large = [ '7464', '74153', '74273', '74377' ].includes(rawComp.name); // some have a larger footprint
                 const rot = (rotation(rawComp.facing) + 0) & 3;
                 const item = new CustomComponent(this.#app, 0, 0, rot, tmp.uid, null, null, 1);
+                const shift = large ? 1 : 2;
                 const offsets = [
-                    { x: -2, y: -item.height / Grid.SPACING },
-                    { x: 0, y: -2 },
-                    { x: -2, y: 0 },
-                    { x: -item.width / Grid.SPACING, y: -2 },
+                    { x: -shift, y: -item.height / Grid.SPACING },
+                    { x: 0, y: -shift },
+                    { x: -shift, y: 0 },
+                    { x: -item.width / Grid.SPACING, y: -shift },
                 ];
                 item.x = x + offsets[rot].x * Grid.SPACING - 0.5 * Grid.SPACING;
                 item.y = y + offsets[rot].y * Grid.SPACING - 0.5 * Grid.SPACING;
                 circuit.addItem(item);
+                // add helper wires to match logisim component size
+                for (const port of item.ports) {
+                    const dir = [ 'top', 'right', 'bottom', 'left' ].indexOf(port.side(item.rotation));
+                    this.#addHelperWire(circuit, item, port.name, direction(dir), large ? 2 : 1);
+                }
             } else {
                 const item = new TextLabel(this.#app, x, y, rotation(rawComp.facing ?? 'east') + 3, 200, rawComp.name, 'medium', 4);
                 circuit.addItem(item);
