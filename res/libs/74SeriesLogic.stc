@@ -12,7 +12,7 @@ loadFiles.push(
 					"#c": "TextLabel",
 					"#a": [
 						30,
-						50,
+						40,
 						0,
 						200,
 						"Logisim 7400 series integrated circuits library",
@@ -24,7 +24,7 @@ loadFiles.push(
 					"#c": "TextLabel",
 					"#a": [
 						30,
-						110,
+						100,
 						0,
 						200,
 						"Copyright (C) 2015 - 2016 by Stefan Rothe",
@@ -36,7 +36,7 @@ loadFiles.push(
 					"#c": "TextLabel",
 					"#a": [
 						30,
-						150,
+						140,
 						0,
 						200,
 						"This library is licenced under the GNU Lesser General Public Licence version 3.",
@@ -48,7 +48,7 @@ loadFiles.push(
 					"#c": "TextLabel",
 					"#a": [
 						30,
-						210,
+						200,
 						0,
 						180,
 						"Silicon Tracer conversion, additional components (C) 2026 Dennis Möhlmann",
@@ -14954,7 +14954,7 @@ loadFiles.push(
 						1130,
 						1
 					],
-					"name": "OE1"
+					"name": "#OE2A"
 				},
 				{
 					"#c": "Port",
@@ -14963,7 +14963,7 @@ loadFiles.push(
 						1190,
 						1
 					],
-					"name": "unnamed-29e922cf"
+					"name": "#OE2B"
 				},
 				{
 					"#c": "Port",
@@ -14972,7 +14972,7 @@ loadFiles.push(
 						1250,
 						1
 					],
-					"name": "OE2"
+					"name": "OE1"
 				},
 				{
 					"#c": "Wire",
@@ -16270,7 +16270,7 @@ loadFiles.push(
 					"top": ",",
 					"right": ",Y0,Y1,Y2,Y3,Y4,Y5,Y6",
 					"bottom": ",",
-					"left": "A0,A1,A2,OE1,unnamed-29e922cf,OE2,Y7,"
+					"left": "A0,A1,A2,#OE2A,#OE2B,OE1,Y7,"
 				}
 			},
 			"lid": null,
