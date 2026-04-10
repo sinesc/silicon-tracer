@@ -668,7 +668,7 @@ Circuits.Circuit = class {
             .map((w) => new NetList.NetWire([ new Point(w.x, w.y), new Point(w.x + w.width, w.y + w.height) ], w.gid, instanceId));
         // get all component ports
         const ports = [];
-        for (const component of this.#data.filter((i) => ((i instanceof SimulationComponent) || (i instanceof VirtualComponent)) && !i.disregard())) {
+        for (const component of this.#data.filter((i) => ((i instanceof SimulationComponent) || (i instanceof VirtualComponent)) && !i.disregard(instanceId))) {
             const uid = component instanceof CustomComponent ? component.uid : null;
             const type = component instanceof CustomComponent ? 'descend' : (component instanceof Port ? 'ascend' : (component instanceof Tunnel ? 'tunnel' : null));
             const allowUnnamedPorts = component instanceof Port || component instanceof Tunnel; // the component-port on these has no name but the component itself does

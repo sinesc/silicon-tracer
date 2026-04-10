@@ -22,7 +22,11 @@ class Port extends SimulationComponent {
     // Link port to a grid, enabling it to be rendered.
     link(grid) {
         super.link(grid);
-        this.setHoverMessage(this.inner, () => (this.name === '' ? 'Inactive port (needs a network name)' : `Port <b>${this.name}</b>`) +  `. <i>1</i> Set high, <i>2</i> Set low, <i>3</i> Unset, <i>E</i> Edit, ${Component.HOTKEYS}.`, { type: 'hover' });
+        this.setHoverMessage(this.inner, () => {
+            const isRootCircuit = this.grid?.circuit?.uid === this.app.simulations.current?.uid;
+            const label = this.name !== '' ? `Port <b>${this.name}</b>` : (isRootCircuit ? 'Port (no name)' : 'Inactive port (needs a network name)');
+            return `${label}. <i>1</i> Set high, <i>2</i> Set low, <i>3</i> Unset, <i>E</i> Edit, ${Component.HOTKEYS}.`;
+        }, { type: 'hover' });
         this.#labelElement = html(this.element, 'div', 'port-name');
         this.element.classList.add('port', 'status-outline');
     }
@@ -36,9 +40,10 @@ class Port extends SimulationComponent {
         };
     }
 
-    // Completely ignore this port if it doesn't have a name.
-    disregard() {
-        return this.name === '';
+    // Completely ignore this port if it doesn't have a name and is not in the root circuit.
+    // Unnamed ports in the root circuit are allowed since there are no outside connections to name them for.
+    disregard(instanceId = null) {
+        return this.name === '' && instanceId !== 0;
     }
 
     // Declare component simulation item.
