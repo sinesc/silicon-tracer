@@ -408,6 +408,7 @@ class Simulation {
     }
 
     // Compiles the circuit and initializes memory, making it ready for simulate().
+    // Returns true if previous simulation state was retained, false if memory was reset.
     compile(previous = null) {
         assert.class(Simulation, previous, true);
         const requiredMemory = this.#generateMemoryLayout();
@@ -422,7 +423,9 @@ class Simulation {
                 this.#backend.setClockParam(clock.counterIndex, ticks);
             }
             this.#initMemoryData();
+            return false;
         }
+        return true;
     }
 
     // Returns the generated simulation tick function source code as a string. JS backend only.
@@ -1074,16 +1077,20 @@ class Simulation {
         this.#backend.emitPullResistors(this.#layout.pullMasks);
     }
 
+    // Returns simulation fingerprint for memory-layout compatibility checks. Ignores probes and const initial values (user set port state).
+    #structuralKey() {
+        const { probes, consts, ...rest } = this.serialize();
+        return JSON.stringify({ ...rest, consts: consts.map(({ initialValue, ...c }) => c) });
+    }
+
     // Compiles and sets the internal simulation tick function.
     #compileTicks(requiredMemory, previous) {
         this.#compileTick();
-        let usingExisting;
-        if (previous && previous.mem && previous.mem.length === requiredMemory) {
+        const usingExisting = previous?.mem && this.#structuralKey() === previous.#structuralKey();
+        if (usingExisting) {
             this.#backend.setMem(previous.mem);
-            usingExisting = true;
         } else {
             this.#backend.allocMem(requiredMemory);
-            usingExisting = false;
         }
         this.#compiledTicks = this.#backend.compile();
         return usingExisting;

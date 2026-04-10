@@ -103,9 +103,9 @@ class NetList {
         if (config.debugSerializeSimulation) {
             console.log(JSON.stringify(sim.serialize()));
         }
-        sim.compile(previous);
+        const retained = sim.compile(previous);
         this.statsCompiledNets = sim.nets.length;
-        return sim;
+        return [ sim, retained ];
     }
 
     // Returns a string representation of this netlist. Used to compare netlists and check if nets changed.

@@ -100,7 +100,6 @@ Simulations.Simulation = class {
     #instanceId = 0;
     #dirty = true;
     #attached = false;
-    #netListHash;
     #stats;
 
     constructor(app, circuit) {
@@ -211,10 +210,8 @@ Simulations.Simulation = class {
     // Compiles the simulation.
     #compile() {
         this.#netList = NetList.identify(this.#circuit, this.#app.circuits.all);
-        const newHash = this.#netList.toString();
-        const retainMemory = this.#engine && this.#netListHash === newHash;
         const config = this.#app.config;
-        this.#engine = this.#netList.compileSimulation(retainMemory ? this.#engine : null, {
+        const [ engine, retained ] = this.#netList.compileSimulation(this.#engine ?? null, {
             debug:              config.debugCompileComments,
             checkNetConflicts:  config.checkNetConflicts,
             breakOnConflict:    config.breakOnConflict,
@@ -222,10 +219,10 @@ Simulations.Simulation = class {
             backend:            config.simulationBackend,
             targetTPS:          config.targetTPS,
         });
-        if (!retainMemory) {
+        this.#engine = engine;
+        if (!retained) {
             this.#computeCircuitStats();
         }
-        this.#netListHash = newHash;
         this.#dirty = false;
     }
 
