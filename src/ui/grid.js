@@ -559,7 +559,7 @@ class Grid {
         const center = this.#selectionCenter ??= this.#computeSelectionCenter();
         // rotate items around center
         for (const item of this.#selection) {
-            if (item instanceof Component) {
+            if (item instanceof Component || item instanceof TextLabel) {
                 // component.rotation causes a rotation around the component center, so we have to use that as our basis
                 const xc = item.x + (item.width / 2);
                 const yc = item.y + (item.height / 2);
@@ -598,11 +598,11 @@ class Grid {
         const sY = y / this.zoom - this.offsetY;
         const sWidth = width / this.zoom;
         const sHeight = height / this.zoom;
-        const m = 5; // component margin, subtracted during selection to more accurately select the component
         // update selection status on components
         for (const c of this.#circuit.items) {
             const currentlySelected = this.#selection.indexOf(c) > -1;
-            if (c.x + m >= sX && c.y + m >= sY && c.x + c.width - m <= sX + sWidth && c.y + c.height - m <= sY + sHeight) {
+            const b = c.selectionBounds;
+            if (b.x >= sX && b.y >= sY && b.x + b.width <= sX + sWidth && b.y + b.height <= sY + sHeight) {
                 c.selected = addSelection;
             } else {
                 c.selected = currentlySelected;

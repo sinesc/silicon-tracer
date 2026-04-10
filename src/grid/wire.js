@@ -88,7 +88,7 @@ class Wire extends GridItem {
         this.grid.releaseHotkeyTarget(this, true);
 
         // check if we're dragging from either end of the wire and change ordering to extend from there first, then go perpendicular
-        const [ mx, my ] = Grid.align(x, y);
+        const [ mx, my ] = this.align(x, y);
         let fliptest;
         if ((mx === this.x && my === this.y) || (mx === this.x + this.width && my === this.y + this.height)) {
             if (this.#direction === 'h') {
@@ -192,7 +192,7 @@ class Wire extends GridItem {
     // Sets wire dimensions, optionally aligned to the grid.
     setDimensions(x, y, length, direction, aligned = false) {
         if (aligned) {
-            [ x, y ] = Grid.align(x, y);
+            [ x, y ] = this.align(x, y);
             length = Math.ceil(length / Grid.SPACING) * Grid.SPACING;
         }
         this.#direction = direction;
@@ -205,8 +205,8 @@ class Wire extends GridItem {
     // Sets wire endpoints, optionally aligned to the grid.
     setEndpoints(x1, y1, x2, y2, aligned = false) {
         if (aligned) {
-            [ x1, y1 ] = Grid.align(x1, y1);
-            [ x2, y2 ] = Grid.align(x2, y2);
+            [ x1, y1 ] = this.align(x1, y1);
+            [ x2, y2 ] = this.align(x2, y2);
         }
         this.#direction = y1 === y2 ? 'h' : 'v';
         this.x = Math.min(x1, x2);

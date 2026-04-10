@@ -419,7 +419,7 @@ class LogiSim {
                 offsetPort(item, 'q');
                 circuit.addItem(item);
             } else if (rawComp.name === 'Text') {
-                const item = new TextLabel(this.#app, x, y, rotation(rawComp.facing ?? 'east') + 3, 200, rawComp.text);
+                const item = new TextLabel(this.#app, x, y - 2 * Grid.SPACING + Grid.SPACING * 0.5, rotation(rawComp.facing ?? 'east') + 3, 200, rawComp.text);
                 circuit.addItem(item);
             } else if (rawComp.name === 'Probe') {
                 const item = new Probe(this.#app, x, y, rotation(rawComp.facing ?? 'east'), rawComp.label);

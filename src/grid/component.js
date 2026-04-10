@@ -341,7 +341,7 @@ class Component extends GridItem {
                     y += Grid.SPACING / 2;
                 }
             }
-            [ this.x, this.y ] = Grid.align(x, y);
+            [ this.x, this.y ] = this.align(x, y);
             this.#rotation = value;
             this.app.config.placementDefaults[this.#type] ??= {};
             this.app.config.placementDefaults[this.#type].rotation = value;
@@ -464,7 +464,7 @@ class Component extends GridItem {
                 this.#dropPreview = html(null, 'div', 'component-drop-preview');
                 this.grid.addVisual(this.#dropPreview);
             }
-            const [ alignedX, alignedY ] = Grid.align(this.x, this.y);
+            const [ alignedX, alignedY ] = this.align(this.x, this.y);
             const [ visualX, visualY ] = this.gridToVisual(alignedX, alignedY);
             this.#dropPreview.style.left = visualX + "px";
             this.#dropPreview.style.top = visualY + "px";

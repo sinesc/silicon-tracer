@@ -8,6 +8,9 @@ class GridItem {
     // Serializable GridItem subclasses. Registration at the bottom of each subclass file.
     static CLASSES = {};
 
+    // Bounding box inset during selection.
+    static #SELECTION_MARGIN = 5;
+
     // Reference to linked grid, if linked.
     grid = null;
 
@@ -36,7 +39,7 @@ class GridItem {
         assert.number(y);
         this.#app = app;
         this.#gid = GridItem.#generateGID(app.config.debugCompileComments);
-        this.#position = new Point(...Grid.align(x, y));
+        this.#position = new Point(...this.align(x, y));
         this.#size = new Point(0, 0);
     }
 
@@ -280,6 +283,12 @@ class GridItem {
         };
     }
 
+    // Returns the inset bounding box used for area selection. Subclasses may override.
+    get selectionBounds() {
+        const m = GridItem.#SELECTION_MARGIN;
+        return { x: this.x + m, y: this.y + m, width: this.width - m * 2, height: this.height - m * 2 };
+    }
+
     // Converts in-simulation/on-grid to visual coordinates (for rendering).
     gridToVisual(x, y) {
         assert.number(x);
@@ -290,13 +299,18 @@ class GridItem {
         ];
     }
 
+    // Aligns coordinates to the grid. Subclasses may override for custom snapping.
+    align(x, y) {
+        return Grid.align(x, y);
+    }
+
     // Sets the optionally aligned item position.
     setPosition(x, y, aligned = false) {
         assert.number(x);
         assert.number(y);
         assert.bool(aligned);
         if (aligned) {
-            [ x, y ] = Grid.align(x, y);
+            [ x, y ] = this.align(x, y);
         }
         this.x = x;
         this.y = y;

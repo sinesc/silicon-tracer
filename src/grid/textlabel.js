@@ -87,6 +87,36 @@ class TextLabel extends GridItem {
         this.#color = value;
     }
 
+    // Return text label rotation.
+    get rotation() {
+        return this.#rotation;
+    }
+
+    // Set text label rotation.
+    set rotation(value) {
+        //this.dirty ||= this.#rotation !== value;
+        this.#rotation = value & 3;
+    }
+
+    // Returns the effective bounding box for area selection, accounting for rotation.
+    get selectionBounds() {
+        if (this.#rotation === 1 || this.#rotation === 3) {
+            const b = super.selectionBounds;
+            const cx = this.x + this.width / 2;
+            const cy = this.y + this.height / 2;
+            return { x: cx - b.height / 2, y: cy - b.width / 2, width: b.height, height: b.width };
+        }
+        return super.selectionBounds;
+    }
+
+    // Snaps Y to grid points (n*SPACING) rather than the default midpoints (n*SPACING - SPACING/2),
+    // so that the text top edge aligns with port rows.
+    align(x, y) {
+        const half = Grid.SPACING / 2;
+        const [ax, ay] = Grid.align(x, y - half);
+        return [ax, ay + half];
+    }
+
     // Hover hotkey actions
     onHotkey(key, action, what) {
         if (action !== 'down') {
@@ -146,12 +176,13 @@ class TextLabel extends GridItem {
                 this.#dropPreview = html(null, 'div', 'text-drop-preview');
                 this.grid.addVisual(this.#dropPreview);
             }
-            const [ alignedX, alignedY ] = Grid.align(this.x, this.y);
+            const [ alignedX, alignedY ] = this.align(this.x, this.y);
             const [ visualX, visualY ] = this.gridToVisual(alignedX, alignedY);
             this.#dropPreview.style.left = visualX + "px";
             this.#dropPreview.style.top = visualY + "px";
             this.#dropPreview.style.width = this.#element.offsetWidth + "px";
             this.#dropPreview.style.height = this.#element.offsetHeight + "px";
+            this.#dropPreview.style.transform = this.#rotation ? 'rotate(' + (this.#rotation * 90) + 'deg)' : '';
         } else {
             this.grid.removeVisual(this.#dropPreview);
             this.#dropPreview = null;

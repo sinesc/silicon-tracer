@@ -24,8 +24,8 @@ class WireBuilder extends GridItem { // Note: Not actually a grid item, but uses
         super(app, 0, 0);
         this.grid = grid;
 
-        [ x1, y1 ] = Grid.align(x1, y1);
-        [ x2, y2 ] = Grid.align(x2, y2);
+        [ x1, y1 ] = this.align(x1, y1);
+        [ x2, y2 ] = this.align(x2, y2);
         this.x = x1;
         this.y = y1;
         this.width = x2 - x1;
@@ -122,8 +122,8 @@ class WireBuilder extends GridItem { // Note: Not actually a grid item, but uses
 
     // Sets wire corner bounding box.
     #setBounding(x1, y1, x2, y2) {
-        [ x1, y1 ] = Grid.align(x1, y1);
-        [ x2, y2 ] = Grid.align(x2, y2);
+        [ x1, y1 ] = this.align(x1, y1);
+        [ x2, y2 ] = this.align(x2, y2);
         this.x = x1;
         this.y = y1;
         this.width = x2 - x1;
