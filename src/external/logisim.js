@@ -467,14 +467,14 @@ class LogiSim {
                 }
             } else if (tmp = this.#app.circuits.byLabel(rawComp.name.replace(/^74/, '74x'), this.#lib74SeriesLogic)) {
                 const large = [ '7464', '74153', '74273', '74377' ].includes(rawComp.name); // some have a larger footprint
-                const rot = (rotation(rawComp.facing) + 0) & 3;
+                const rot = (rotation(rawComp.facing) + 2) & 3;
                 const item = new CustomComponent(this.#app, 0, 0, rot, tmp.uid, null, null, 1);
                 const shift = large ? 1 : 2;
                 const offsets = [
-                    { x: -shift, y: -item.height / Grid.SPACING },
-                    { x: 0, y: -shift },
                     { x: -shift, y: 0 },
                     { x: -item.width / Grid.SPACING, y: -shift },
+                    { x: -shift, y: -item.height / Grid.SPACING },
+                    { x: 0, y: -shift },
                 ];
                 item.x = x + offsets[rot].x * Grid.SPACING - 0.5 * Grid.SPACING;
                 item.y = y + offsets[rot].y * Grid.SPACING - 0.5 * Grid.SPACING;
