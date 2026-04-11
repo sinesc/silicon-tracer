@@ -95,6 +95,7 @@ class Application {
         assert.class(Node, toolbarParent);
         document.addEventListener('keydown', this.#handleHotkey.bind(this));
         document.addEventListener('keyup', this.#handleHotkey.bind(this));
+        this.#initHotkeys(); // must happen before grid creation or global hotkeys may be overriden by per-component hotkeys
         this.grid = new Grid(this, gridParent);
         this.toolbar = new Toolbar(this, toolbarParent);
         this.circuits = new Circuits(this);
@@ -103,7 +104,6 @@ class Application {
         this.#initToolbar();
         this.#initFocusMonitor();
         this.#initRenderLoop();
-        this.#initHotkeys();
         this.circuits.reset();
         this.simulations.select(this.circuits.current, this.config.autoCompile);
     }
