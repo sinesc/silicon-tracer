@@ -27,6 +27,8 @@ class Grid {
 
     #trimOverlays = [];
 
+    #junctionElements = new Map(); // "x:y" => { element: HTMLElement, wire: Wire }
+
     #infoBox = {
         element: null,
         circuitLabel: null,
@@ -65,6 +67,7 @@ class Grid {
         }
         this.#circuit.unlink();
         this.#circuit = null;
+        this.#clearJunctions();
         this.#infoBox.circuitLabel = '';
         this.#dirty |= Grid.#DIRTY_OVERLAY;
         this.#hotkeyTarget = null;
@@ -220,9 +223,10 @@ class Grid {
         if (this.#circuit) {
 
             const dirtyGrid = this.#dirty & (Grid.#DIRTY_OUTER | Grid.#DIRTY_INNER);
+            const anyDirty = !!(dirtyGrid || this.#circuit.hasItem((item) => item.dirty));
 
             // apply wire net colors to attached ports
-            if (dirtyGrid || this.#circuit.hasItem((item) => item.dirty)) {
+            if (anyDirty) {
                 this.#applyNetColors();
             }
 
@@ -239,6 +243,11 @@ class Grid {
 
                 item.renderNetState();
             }
+
+            if (anyDirty) {
+                this.#rebuildJunctions();
+            }
+            this.#updateJunctionNetStates();
         }
 
         this.#infoBox.FPSCount.current += 1;
@@ -461,6 +470,72 @@ class Grid {
             const portName = port.name;
             component.portByName(portName).color = null;
         }
+    }
+
+    // Rebuilds junction dot elements for all T- and X-junction coordinates.
+    // A junction exists wherever 3 or more wire endpoints share the same grid coordinate.
+    #rebuildJunctions() {
+        const coordMap = new Map(); // "x:y" => { x, y, wire: Wire }
+        for (const item of this.#circuit.items) {
+            if (!(item instanceof Wire) || item.disregard()) continue;
+            for (const pt of item.points()) {
+                const key = pt.c;
+                if (!coordMap.has(key)) {
+                    coordMap.set(key, { x: pt.x, y: pt.y, count: 0, wire: item });
+                }
+                coordMap.get(key).count++;
+            }
+        }
+
+        // Remove stale junction elements for coordinates that are no longer junctions.
+        for (const [key, { element }] of this.#junctionElements) {
+            if (!coordMap.has(key) || coordMap.get(key).count < 3) {
+                element.remove();
+                this.#junctionElements.delete(key);
+            }
+        }
+
+        // Create or update junction elements for junction coordinates (3+ endpoints).
+        const diameter = 7 * this.zoom;
+        for (const [key, { x, y, count, wire }] of coordMap) {
+            if (count < 3) continue;
+            const vx = (x + this.offsetX) * this.zoom;
+            const vy = (y + this.offsetY) * this.zoom;
+
+            let entry = this.#junctionElements.get(key);
+            if (!entry) {
+                const element = html(null, 'div', 'wire-junction');
+                this.#element.appendChild(element);
+                entry = { element, wire };
+                this.#junctionElements.set(key, entry);
+            } else {
+                entry.wire = wire;
+            }
+
+            entry.element.setAttribute('data-net-color', wire.color ?? '');
+            entry.element.style.left = (vx - diameter / 2) + 'px';
+            entry.element.style.top = (vy - diameter / 2) + 'px';
+            entry.element.style.width = diameter + 'px';
+            entry.element.style.height = diameter + 'px';
+        }
+    }
+
+    // Updates the net-state attribute on all junction dot elements (called every frame).
+    #updateJunctionNetStates() {
+        for (const { element, wire } of this.#junctionElements.values()) {
+            const state = wire.getNetState(wire.netIds);
+            if (element.getAttribute('data-net-state') !== state) {
+                element.setAttribute('data-net-state', state);
+            }
+        }
+    }
+
+    // Removes all junction dot elements from the DOM.
+    #clearJunctions() {
+        for (const { element } of this.#junctionElements.values()) {
+            element.remove();
+        }
+        this.#junctionElements.clear();
     }
 
     // Registers required grid hotkeys with application.

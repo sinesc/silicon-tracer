@@ -1107,6 +1107,13 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
     transition: opacity var(--component-delete-duration);
     opacity: 0;
 }
+.wire-junction {
+    z-index: 11;
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    background-color: var(--wire-colorD);
+}
 /* debugging */
 .wirebuilder-debug {
     pointer-events: none;
