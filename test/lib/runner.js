@@ -228,7 +228,8 @@ function readJSON(filePath) {
 function compileCircuit(filePath, circuitLabel = null, backend = 'js', configOverrides = null) {
     const fullpath = path.resolve(__dirname, '../' + filePath);
     const text = fs.readFileSync(fullpath, 'utf-8');
-    return context._compileCircuit(text, circuitLabel, backend, configOverrides);
+    const [ sim ] = context._compileCircuit(text, circuitLabel, backend, configOverrides);
+    return sim;
 }
 
 // Loads a .stc circuit file and returns wire compaction info: { wireCount, wireNetIds }.

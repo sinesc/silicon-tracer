@@ -42,7 +42,7 @@ if (mode === 'list') {
     }
 } else {
     const circuitLabel = positional[1] ?? null;
-    const sim = context._compileCircuit(text, circuitLabel, 'js', mode === 'code' ? { debug: true } : null);
+    const [ sim ] = context._compileCircuit(text, circuitLabel, 'js', mode === 'code' ? { debug: true } : null);
     if (mode === 'nets') {
         process.stdout.write(JSON.stringify(sim.serialize(), null, 2) + '\n');
     } else {
