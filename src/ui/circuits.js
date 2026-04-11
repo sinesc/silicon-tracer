@@ -361,8 +361,8 @@ class Circuits {
             }
         }
         // restore toolbar pins only when loading the primary file (not a library)
-        if (setLid === null && !packaged) {
-            this.#app.loadToolbarPins(content.toolbar ?? []);
+        if (setLid === null && !packaged && Array.isArray(content.toolbar)) {
+            this.#app.loadToolbarPins(content.toolbar);
         }
         return content.currentUID;
     }
