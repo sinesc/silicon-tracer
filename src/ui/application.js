@@ -334,7 +334,7 @@ class Application {
             ticksDone += ticksNow;
             elapsed = performance.now() - start;
             if (broke) { // 1 = conflict break, 2 = condition break
-                this.config.singleStep = true;
+                this.#singleStep(0, broke);
                 return ticksDone;
             }
         } while (ticksDone < ticks && elapsed < maxTiming && (tickLimit *= 10));
@@ -344,7 +344,7 @@ class Application {
             const stillDoable = 0 | Math.min(ticks - ticksDone, maxTicks);
             const broke = sim.tick(stillDoable);
             if (broke) { // 1 = conflict break, 2 = condition break
-                this.config.singleStep = true;
+                this.#singleStep(0, broke);
             }
             return stillDoable + ticksDone;
         } else {
@@ -683,9 +683,10 @@ class Application {
             debuggerMenu.createSeparator();
             // Toggle single-step mode. When enabled, T advances by one tick.
             const stepToggle = debuggerMenu.createToggleButton('Single step', 'Pause simulation and step one tick at a time using hotkey <i>T</i>.', this.config.singleStep, (enabled) => {
-                this.config.singleStep = enabled;
-                if (enabled && !this.simulations.current) {
-                    this.simulations.select(this.circuits.current, true);
+                if (enabled) {
+                    this.#singleStep(0);
+                } else {
+                    this.config.singleStep = false;
                 }
                 debuggerMenu.open();
             });
@@ -707,7 +708,6 @@ class Application {
                 if (result) {
                     this.config.breakConditions.push(result.expression.trim());
                     this.simulations.markDirty(null);
-                    debuggerMenu.open();
                 }
             });
             if (this.config.breakConditions.length > 0) {
@@ -740,15 +740,19 @@ class Application {
     }
 
     // Enables single-step mode (if not already) and advances the simulation by one tick.
-    #singleStep() {
+    #singleStep(ticks = 1, reason = 0) {
         if (!this.simulations.current) {
             this.simulations.select(this.circuits.current, true);
         }
         const sim = this.simulations.current;
         if (!sim) return;
+        const alreadySingleStep = this.config.singleStep;
         this.config.singleStep = true;
-        sim.tick(1);
+        sim.tick(ticks);
         this.grid.markDirty();
+        if (!alreadySingleStep) {
+            this.showNotice(reason === 1 ? 'Breaking on conflict' : (reason === 2 ? 'Breaking on condition' : 'Simulation single-step enabled' ));
+        }
     }
 
     // Updates the undo/redo button labels and enabled state.
