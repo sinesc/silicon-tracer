@@ -117,6 +117,10 @@ class Momentary extends SimulationComponent {
         }
     }
 
+    static toolbarMeta(_desc) {
+        return { label: 'Momentary switch', hoverMessage: '<b>Momentary switch</b>. <i>LMB</i> Drag to move onto grid.' };
+    }
+
     static fromDescriptor(app, _desc) {
         const d = app.config.placementDefaults;
         return (grid, x, y) => grid.addItem(new Momentary(app, x, y, d.momentary.rotation));

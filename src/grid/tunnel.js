@@ -83,6 +83,10 @@ class Tunnel extends VirtualComponent {
         }
     }
 
+    static toolbarMeta(_desc) {
+        return { label: 'Tunnel', hoverMessage: '<b>Network tunnel</b>. <i>LMB</i> Drag to move onto grid.' };
+    }
+
     static fromDescriptor(app, _desc) {
         const d = app.config.placementDefaults;
         return (grid, x, y) => grid.addItem(new Tunnel(app, x, y, d.tunnel.rotation));

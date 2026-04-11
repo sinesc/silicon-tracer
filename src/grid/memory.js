@@ -182,6 +182,12 @@ class Memory extends SimulationComponent {
         return hexToU8(str);
     }
 
+    static toolbarMeta(desc) {
+        if (desc['#t'] === 'rom') return { label: 'ROM', hoverMessage: '<b>Read-only memory</b>. <i>LMB</i> Drag to move onto grid.' };
+        if (desc['#t'] === 'ram') return { label: 'RAM', hoverMessage: '<b>Read/write memory</b>. <i>LMB</i> Drag to move onto grid.' };
+        return null;
+    }
+
     static fromDescriptor(app, desc) {
         const d = app.config.placementDefaults;
         const memType = desc['#t'];

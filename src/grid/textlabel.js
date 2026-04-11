@@ -233,6 +233,10 @@ class TextLabel extends GridItem {
         return true;
     }
 
+    static toolbarMeta(_desc) {
+        return { label: 'Text', hoverMessage: '<b>Userdefined text message</b>. <i>LMB</i> Drag to move onto grid.' };
+    }
+
     static fromDescriptor(app, _desc) {
         const d = app.config.placementDefaults;
         return (grid, x, y) => grid.addItem(new TextLabel(app, x, y, d.textlabel.rotation));

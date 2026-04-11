@@ -88,6 +88,10 @@ class Probe extends SimulationComponent {
         }
     }
 
+    static toolbarMeta(_desc) {
+        return { label: 'Probe', hoverMessage: '<b>Net state probe</b>. Displays the state of attached net. <i>LMB</i> Drag to move onto grid.' };
+    }
+
     static fromDescriptor(app, _desc) {
         const d = app.config.placementDefaults;
         return (grid, x, y) => grid.addItem(new Probe(app, x, y, d.probe.rotation));

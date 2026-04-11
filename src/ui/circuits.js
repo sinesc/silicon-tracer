@@ -268,7 +268,7 @@ class Circuits {
     reset(removeLibraries = false) {
         assert.bool(removeLibraries);
         this.#clear(removeLibraries);
-        this.#app.loadToolbarPins([]);
+        this.#app.loadToolbarPins(Application.DEFAULT_TOOLBAR_PINS);
         const label = this.#generateLabel();
         const circuit = new Circuits.Circuit(this.#app, label);
         this.#circuits[circuit.uid] = circuit;

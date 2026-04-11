@@ -124,6 +124,11 @@ class Builtin extends SimulationComponent {
         return { left, right, inputs, outputs };
     }
     
+    static toolbarMeta(desc) {
+        const label = Builtin.META_INFO[desc['#t']]?.label ?? desc['#t'].toUpperFirst();
+        return { label, hoverMessage: `<b>${label}</b> builtin. <i>LMB</i> Drag to move onto grid.` };
+    }
+
     static fromDescriptor(app, desc) {
         const d = app.config.placementDefaults;
         const builtinType = desc['#t'];

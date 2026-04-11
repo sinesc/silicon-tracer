@@ -3,6 +3,22 @@
 // Main application class, handles UI interaction.
 class Application {
 
+    // Default toolbar pins pre-populated on a fresh start (Routing & labeling + Basic gates).
+    static DEFAULT_TOOLBAR_PINS = [
+        { descriptor: { '#c': 'Port' } },
+        { descriptor: { '#c': 'Splitter' } },
+        { descriptor: { '#c': 'Tunnel' } },
+        { descriptor: { '#c': 'TextLabel' } },
+        { descriptor: { '#c': 'Gate', '#t': 'buffer' } },
+        { descriptor: { '#c': 'Gate', '#t': 'not' } },
+        { descriptor: { '#c': 'Gate', '#t': 'and' } },
+        { descriptor: { '#c': 'Gate', '#t': 'nand' } },
+        { descriptor: { '#c': 'Gate', '#t': 'or' } },
+        { descriptor: { '#c': 'Gate', '#t': 'nor' } },
+        { descriptor: { '#c': 'Gate', '#t': 'xor' } },
+        { descriptor: { '#c': 'Gate', '#t': 'xnor' } },
+    ];
+
     config = {
         targetTPS: 10000,
         autoCompile: true,
@@ -200,7 +216,8 @@ class Application {
 
     // Adds a pinned button to the toolbar and records it for serialization.
     #pinButton(label, hoverMessage, create, descriptor) {
-        const pin = { label, hoverMessage, descriptor };
+        const cls = GridItem.CLASSES[descriptor['#c']];
+        const pin = cls?.toolbarMeta ? { descriptor } : { label, hoverMessage, descriptor };
         const item = this.toolbar.createPinnedComponentButton(label, hoverMessage, create,
             (buttonNode) => this.#removePin(pin, buttonNode),
             () => this.#syncPinsFromDOM());
@@ -221,13 +238,19 @@ class Application {
         this.toolbar.clearPins();
         this.#toolbarPins = [];
         for (const pin of (pins ?? [])) {
-            const create = GridItem.CLASSES[pin.descriptor['#c']]?.fromDescriptor?.(this, pin.descriptor) ?? null;
+            const cls = GridItem.CLASSES[pin.descriptor['#c']];
+            const create = cls?.fromDescriptor?.(this, pin.descriptor) ?? null;
             if (create) {
-                const item = this.toolbar.createPinnedComponentButton(pin.label, pin.hoverMessage, create,
-                    (buttonNode) => this.#removePin(pin, buttonNode),
+                const meta = cls.toolbarMeta?.(pin.descriptor);
+                const label = meta?.label ?? pin.label;
+                const hoverMessage = meta?.hoverMessage ?? pin.hoverMessage;
+                if (!label) continue;
+                const storedPin = meta ? { descriptor: pin.descriptor } : { label, hoverMessage, descriptor: pin.descriptor };
+                const item = this.toolbar.createPinnedComponentButton(label, hoverMessage, create,
+                    (buttonNode) => this.#removePin(storedPin, buttonNode),
                     () => this.#syncPinsFromDOM());
-                item.node.__pin = pin;
-                this.#toolbarPins.push(pin);
+                item.node.__pin = storedPin;
+                this.#toolbarPins.push(storedPin);
             }
         }
         this.toolbar.dropZone.classList.toggle('toolbar-drop-zone-has-pins', this.#toolbarPins.length > 0);

@@ -108,6 +108,11 @@ class Gate extends SimulationComponent {
         return { left, right, inputs, output };
     }
 
+    static toolbarMeta(desc) {
+        const label = desc['#t'].toUpperFirst();
+        return { label, hoverMessage: `<b>${label} gate</b>. <i>LMB</i> Drag to move onto grid.` };
+    }
+
     static fromDescriptor(app, desc) {
         const d = app.config.placementDefaults;
         const gateType = desc['#t'];

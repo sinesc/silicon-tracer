@@ -139,6 +139,10 @@ class Port extends SimulationComponent {
         }
     }
 
+    static toolbarMeta(_desc) {
+        return { label: 'Port', hoverMessage: '<b>Component IO pin</b>. <i>LMB</i> Drag to move onto grid.' };
+    }
+
     static fromDescriptor(app, _desc) {
         const d = app.config.placementDefaults;
         return (grid, x, y) => grid.addItem(new Port(app, x, y, d.port.rotation));

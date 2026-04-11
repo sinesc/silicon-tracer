@@ -120,6 +120,10 @@ class Toggle extends SimulationComponent {
         }
     }
 
+    static toolbarMeta(_desc) {
+        return { label: 'Toggle switch', hoverMessage: '<b>Toggle switch</b> with permanently saved state. <i>LMB</i> Drag to move onto grid.' };
+    }
+
     static fromDescriptor(app, _desc) {
         const d = app.config.placementDefaults;
         return (grid, x, y) => grid.addItem(new Toggle(app, x, y, d.toggle.rotation));

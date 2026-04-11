@@ -106,6 +106,10 @@ class Constant extends SimulationComponent {
         }
     }
 
+    static toolbarMeta(_desc) {
+        return { label: 'Constant', hoverMessage: '<b>Constant value</b>. <i>LMB</i> Drag to move onto grid.' };
+    }
+
     static fromDescriptor(app, _desc) {
         const d = app.config.placementDefaults;
         return (grid, x, y) => grid.addItem(new Constant(app, x, y, d.constant.rotation));

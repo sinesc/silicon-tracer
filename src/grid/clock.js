@@ -54,6 +54,10 @@ class Clock extends SimulationComponent {
         }
     }
 
+    static toolbarMeta(_desc) {
+        return { label: 'Clock', hoverMessage: '<b>Clock</b>. <i>LMB</i> Drag to move onto grid.' };
+    }
+
     static fromDescriptor(app, _desc) {
         const d = app.config.placementDefaults;
         return (grid, x, y) => grid.addItem(new Clock(app, x, y, d.clock.rotation));
