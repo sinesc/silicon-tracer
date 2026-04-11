@@ -61,6 +61,7 @@ class Application {
     #hotkeyDefs = [];
     #undoButton = null;
     #redoButton = null;
+    #noticeTimer = null;
 
     // Toolbar pins: array of { label, hoverMessage, descriptor } stored in the circuit file.
     #toolbarPins = [];
@@ -816,6 +817,23 @@ class Application {
         requestAnimationFrame(() => this.#render());
         // update stats overlay once a second
         setInterval(() => this.#renderStats(), 1000);
+    }
+
+    // Display a brief overlay notice message.
+    showNotice(message, duration = 2) {
+        assert.string(message);
+        assert.number(duration, false, 0);
+        const el = document.getElementById('notice');
+        el.textContent = message;
+        el.classList.remove('hiding');
+        el.classList.add('visible');
+        clearTimeout(this.#noticeTimer);
+        this.#noticeTimer = setTimeout(() => {
+            el.classList.remove('visible');
+            el.classList.add('hiding');
+            // wait for fade-out transition before hiding
+            setTimeout(() => { el.classList.remove('hiding'); el.style.display = ''; }, 550);
+        }, duration * 1000);
     }
 
     // Show warning when not focussed to avoid confusion. In this state mouse wheel events still register but hotkeys don't.

@@ -259,6 +259,36 @@ body.no-focus #focus-hint:has(+div.grid:hover) {
 }
 
 /*
+ * General notice overlay, see Application.showNotice().
+ */
+#notice {
+    pointer-events: none;
+    display: none;
+    position: absolute;
+    z-index: 99;
+    top: 75px;
+    left: 50%;
+    margin-left: -400px;
+    width: 800px;
+    padding: 10px;
+    text-align: center;
+    font-size: var(--font-size-large);
+    border: 3px solid rgba(0, 120, 255, 0.3);
+    background: rgba(0, 60, 128, 0.35);
+    opacity: 0.0;
+    border-radius: 10px;
+    transition: opacity 0.5s;
+}
+#notice.visible {
+    display: block;
+    opacity: 0.8;
+}
+#notice.hiding {
+    display: block;
+    opacity: 0.0;
+}
+
+/*
  * Status
  */
 .app-status {

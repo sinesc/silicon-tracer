@@ -69,6 +69,7 @@ class Circuits {
         }
         if (asLibrary) {
             fileLid = this.addLibrary(content.label ?? file.name.replace(/\.stc/, ''));
+            this.#app.showNotice(`Library "${content.label}" has been added to the 'Component' menu.`);
         }
         const errors = [];
         const newCircuitUID = this.unserialize(content, fileLid, false, errors);
@@ -113,6 +114,7 @@ class Circuits {
         }
         await writable.write(Circuits.#encodeJSON(this.#serialize(File.makeLabel(name))));
         await writable.close();
+        this.#app.showNotice(`File "${name}" has been saved.`);
     }
 
     // Saves circuits as a new file.
@@ -125,6 +127,7 @@ class Circuits {
         // make this the new file handle
         this.#fileHandle = handle;
         this.#fileName = handle.name;
+        this.#app.showNotice(`File "${handle.name}" has been saved.`);
         return handle.name;
     }
 
