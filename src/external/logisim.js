@@ -419,14 +419,14 @@ class LogiSim {
                 offsetPort(item, 'q');
                 circuit.addItem(item);
             } else if (rawComp.name === 'Text') {
-                const item = new TextLabel(this.#app, x, y - 2 * Grid.SPACING + Grid.SPACING * 0.5, rotation(rawComp.facing ?? 'east') + 3, 200, rawComp.text);
+                const item = new TextLabel(this.#app, x - Grid.SPACING * 0.5, y - 2 * Grid.SPACING + Grid.SPACING * 0.5, rotation(rawComp.facing ?? 'east') + 3, 200, rawComp.text);
                 circuit.addItem(item);
             } else if (rawComp.name === 'Probe') {
                 const item = new Probe(this.#app, x, y, rotation(rawComp.facing ?? 'east'), rawComp.label);
                 offsetPort(item, 'input');
                 circuit.addItem(item);
-            } else if ([ 'NoConnect' ].includes(rawComp.name)) {
-                const item = new TextLabel(this.#app, x, y, rotation(rawComp.facing ?? 'east') + 3, 200, rawComp.name, 'medium', 4);
+            } else if (rawComp.name === 'NoConnect') {
+                const item = new TextLabel(this.#app, x - Grid.SPACING * 0.5, y - Grid.SPACING * 0.5, rotation(rawComp.facing ?? 'east') + 3, 200, 'X', 'medium', 4);
                 circuit.addItem(item);
                 // since these aren't required for the circuit to work we'll not generate a problems log entry for them
             } else if ([ 'ROM', 'RAM' ].includes(rawComp.name)) {
@@ -465,10 +465,11 @@ class LogiSim {
                         circuit.addItem(new Wire(this.#app, memoryPort.x, memoryPort.y, splitterPort.y - memoryPort.y, 'v', LogiSim.WIRECOLOR));
                     }
                 }
-            } else if (tmp = this.#app.circuits.byLabel(rawComp.name.replace(/^74/, '74x'), this.#lib74SeriesLogic)) {
+            } else if (tmp = this.#app.circuits.byLabel(rawComp.name.replace(/^(DIP_)?74/, '74x'), this.#lib74SeriesLogic)) {
                 const large = [ '7464', '74153', '74273', '74377' ].includes(rawComp.name); // some have a larger footprint
-                const rot = (rotation(rawComp.facing) + 2) & 3;
-                const item = new CustomComponent(this.#app, 0, 0, rot, tmp.uid, null, null, 1);
+                const diplib = rawComp.name.slice(0, 4) === 'DIP_'; // components from 74x DIP library: no pin spacing, different offsets
+                const rot = (rotation(rawComp.facing) + (diplib ? 3 : 2)) & 3;
+                const item = new CustomComponent(this.#app, 0, 0, rot, tmp.uid, null, null, diplib ? 0 : 1);
                 const shift = large ? 1 : 2;
                 const offsets = [
                     { x: -shift, y: 0 },
@@ -476,16 +477,24 @@ class LogiSim {
                     { x: -shift, y: -item.height / Grid.SPACING },
                     { x: 0, y: -shift },
                 ];
-                item.x = x + offsets[rot].x * Grid.SPACING - 0.5 * Grid.SPACING;
-                item.y = y + offsets[rot].y * Grid.SPACING - 0.5 * Grid.SPACING;
+                const dipOffsets = [
+                    { x: -1, y: -1 },
+                    { x: 1, y: -1 },
+                    { x: 2, y: 1 },
+                    { x: -1, y: 2 },
+                ];
+                item.x = x + (offsets[rot].x + (diplib ? dipOffsets[rot].x : 0)) * Grid.SPACING - 0.5 * Grid.SPACING;
+                item.y = y + (offsets[rot].y + (diplib ? dipOffsets[rot].y : 0)) * Grid.SPACING - 0.5 * Grid.SPACING;
                 circuit.addItem(item);
                 // add helper wires to match logisim component size
-                for (const port of item.ports) {
-                    const dir = [ 'top', 'right', 'bottom', 'left' ].indexOf(port.side(item.rotation));
-                    this.#addHelperWire(circuit, item, port.name, direction(dir), large ? 2 : 1);
+                if (!diplib) {
+                    for (const port of item.ports) {
+                        const dir = [ 'top', 'right', 'bottom', 'left' ].indexOf(port.side(item.rotation));
+                        this.#addHelperWire(circuit, item, port.name, direction(dir), large ? 2 : 1);
+                    }
                 }
             } else {
-                const item = new TextLabel(this.#app, x, y, rotation(rawComp.facing ?? 'east') + 3, 200, rawComp.name, 'medium', 4);
+                const item = new TextLabel(this.#app, x - Grid.SPACING * 0.5, y - Grid.SPACING * 0.5, rotation(rawComp.facing ?? 'east') + 3, 200, rawComp.name, 'medium', 4);
                 circuit.addItem(item);
                 // unsupported component type that might be required for the circuit to work, add log entry
                 this.#problems.add(rawCircuit.name);
@@ -502,8 +511,6 @@ class LogiSim {
         // shift ports above circuit and scale by factor 2 so that ports fit next to each other
         const scale = 2;
         const expansion = 3;
-        const globalOffsetY = layout.maxY * scale + (10 * Grid.SPACING);
-        const globalOffsetX = layout.minX * scale - (10 * Grid.SPACING);
         const direction = LogiSim.#direction;
         const expandX = (r) => direction(r).x * Grid.SPACING * expansion; // expand ports outwards to make room for the tunnels
         const expandY = (r) => direction(r).y * Grid.SPACING * expansion;
@@ -534,7 +541,7 @@ class LogiSim {
                     //rotation = 3;
                     side = 'bottom';
                 } else {
-                    circuit.addItem(new TextLabel(this.#app, Grid.SPACING * 40, -(globalOffsetY - layout.minY * scale) + errorPos * Grid.SPACING, 0, 800, `Port ${mapping.portName} could not be placed on the outline of the component.`, 'small', 4));
+                    circuit.addItem(new TextLabel(this.#app, Grid.SPACING * 2, errorPos * Grid.SPACING, 0, 800, `Port ${mapping.portName} could not be placed on the outline of the component.`, 'small', 4));
                     this.#problems.add(circuit.label);
                     errorPos += 1;
                     continue;
