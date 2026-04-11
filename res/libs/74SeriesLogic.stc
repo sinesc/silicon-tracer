@@ -5,7 +5,7 @@ loadFiles.push(
 	"currentUID": "ub88aef16b5da42c08bfb7d190a7f4790",
 	"circuits": [
 		{
-			"label": "#README",
+			"label": "README",
 			"uid": "ub88aef16b5da42c08bfb7d190a7f4790",
 			"data": [
 				{
