@@ -786,6 +786,9 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
     box-sizing: border-box;
     opacity: 1;
 }
+.text {
+    z-index: 12;
+}
 .component {
     pointer-events: none;
 }
@@ -912,6 +915,13 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
 }
 .component:hover .component-port-label {
     opacity: 1;
+}
+
+/*
+ * Probe
+ */
+.component.probe .component-inner {
+    border-radius: calc(20px * var(--zoom-factor) / 100);
 }
 
 /*

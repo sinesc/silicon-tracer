@@ -109,12 +109,11 @@ class TextLabel extends GridItem {
         return super.selectionBounds;
     }
 
-    // Snaps Y to grid points (n*SPACING) rather than the default midpoints (n*SPACING - SPACING/2),
-    // so that the text top edge aligns with port rows.
+    // Snap to grid points (n*SPACING) rather than the default midpoints (n*SPACING - SPACING/2)
     align(x, y) {
         const half = Grid.SPACING / 2;
-        const [ax, ay] = Grid.align(x, y - half);
-        return [ax, ay + half];
+        const [ax, ay] = Grid.align(x - half, y - half);
+        return [ax + half, ay + half];
     }
 
     // Hover hotkey actions
