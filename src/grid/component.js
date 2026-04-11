@@ -605,7 +605,7 @@ class Component extends GridItem {
             seeker: do {
                 let known = [];
                 for (const port of ports) {
-                    if (pos > port.label.length) {
+                    if (pos >= port.label.length) {
                         pos = 0;
                         break;
                     }
