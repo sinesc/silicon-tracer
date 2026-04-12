@@ -63,7 +63,28 @@ class Circuits {
         const haveCircuits = !this.allEmpty();
         const [ handle ] = await File.open(this.#fileHandle);
         const file = await handle.getFile();
-        const content = Circuits.#decodeJSON(await file.text());
+        let content;
+        try {
+            content = Circuits.#decodeJSON(await file.text());
+        } catch (e) {
+            content = null;
+        }
+        if (!content || !Array.isArray(content.circuits) || content.circuits.length === 0) {
+            await infoDialog('Cannot load file', `The file <b>${file.name}</b> is corrupt or not a Silicon Tracer circuits file.`);
+            return;
+        }
+        if ((content.version ?? 0) > Circuits.COMPAT_VERSION) {
+            const ok = await confirmDialog('Newer file version', `The file <b>${file.name}</b> was created with a newer version of Silicon Tracer and may get corrupted by loading it. Load anyway?`);
+            if (!ok) return;
+        }
+        if (!clear) {
+            const duplicates = (content.circuits ?? []).filter((c) => this.#circuits[c.uid]);
+            if (duplicates.length > 0) {
+                const list = duplicates.map((c) => `<li>${c.label}</li>`).join('');
+                await infoDialog('Cannot load file', `The file <b>${file.name}</b> contains the following already loaded circuits and cannot be ${asLibrary ? 'included' : 'merged'}:<ul>${list}</ul>`);
+                return;
+            }
+        }
         let fileLid = null;
         if (clear) {
             this.#clear();
