@@ -70,7 +70,7 @@ class Circuits {
             content = null;
         }
         if (!content || !Array.isArray(content.circuits) || content.circuits.length === 0) {
-            await infoDialog('Cannot load file', `The file <b>${file.name}</b> is corrupt or not a Silicon Tracer circuits file.`);
+            await errorDialog('Cannot load file', `The file <b>${file.name}</b> is corrupt or not a Silicon Tracer circuits file.`);
             return;
         }
         if ((content.version ?? 0) > Circuits.COMPAT_VERSION) {
@@ -81,7 +81,7 @@ class Circuits {
             const duplicates = (content.circuits ?? []).filter((c) => this.#circuits[c.uid]);
             if (duplicates.length > 0) {
                 const list = duplicates.map((c) => `<li>${c.label}</li>`).join('');
-                await infoDialog('Cannot load file', `The file <b>${file.name}</b> contains the following already loaded circuits and cannot be ${asLibrary ? 'included' : 'merged'}:<ul>${list}</ul>`);
+                await errorDialog('Cannot load file', `The file <b>${file.name}</b> contains the following already loaded circuits and cannot be ${asLibrary ? 'included' : 'merged'}:<ul>${list}</ul>`);
                 return;
             }
         }
@@ -106,7 +106,7 @@ class Circuits {
             }
         }
         if (errors.length > 0) {
-            await infoDialog('File errors detected', '<b>Some components or component types used in the file are missing or unsupported.</b><br><br>Please check the the loaded circuits carefully as <b><u>you will lose the missing/unsupported components</u></b> if you save the file now. If you have unloaded packaged libraries (via CTRL+Close) the circuits might depend on those. Otherwise, if you are not on the latest version of Silicon Tracer updating might fix the issue.');
+            await infoDialog('Circuit issues detected', '<b>Some components or component types used in the file are missing or unsupported.</b><br><br>Please check the the loaded circuits carefully as <b><u>you will lose the missing/unsupported components</u></b> if you save the file now. If you have unloaded packaged libraries (via CTRL+Close) the circuits might depend on those. Otherwise, if you are not on the latest version of Silicon Tracer updating might fix the issue.');
         }
     }
 
@@ -118,7 +118,7 @@ class Circuits {
         if (text.includes('This file is intended to be loaded by Logisim')) {
             await LogiSim.import(this.#app, handle, text);
         } else {
-            await infoDialog('Unsupported file format', 'The file does not appear to be a valid LogiSim Evolution file.');
+            await errorDialog('Unsupported file format', 'The file does not appear to be a valid LogiSim Evolution file.');
         }
     }
 

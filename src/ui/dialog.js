@@ -212,6 +212,13 @@ function infoDialog(title, message) {
     return dialog(title, [ { text: message } ], { }, { extraClass: 'info-dialog', cancelable: false }).then((v) => !!v, (v) => false);
 }
 
+// Opens a modal error dialog with a custom message and an ok button only. Returns true.
+function errorDialog(title, message) {
+    assert.string(title);
+    assert.string(message);
+    return dialog(title, [ { text: message } ], { }, { extraClass: 'error-dialog', cancelable: false }).then((v) => !!v, (v) => false);
+}
+
 // Opens a modal confirmation dialog used to confirm discarding unsaved changes.
 function unsavedDialog(extraMessage) {
     assert.string(extraMessage);
