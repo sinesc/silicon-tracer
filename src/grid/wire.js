@@ -227,11 +227,12 @@ class Wire extends GridItem {
             return false;
         }
 
-        const thickness = Wire.#THICKNESS * this.grid.zoom * (this.netIds?.length > 1 ? 2 : 1);
+        const thickness = Wire.#THICKNESS * this.grid.zoom;
         const v = this.visual;
         const t = thickness / 2;
 
         this.#element.setAttribute('data-net-color', this.color ?? '');
+        this.#element.classList.toggle('wire-bus', (this.netIds?.length ?? 0) > 1);
 
         if (v.width !== 0) {
             const hx = v.width < 0 ? v.x + v.width : v.x;
@@ -239,14 +240,12 @@ class Wire extends GridItem {
             this.#element.style.left = (hx - t) + "px";
             this.#element.style.top = (v.y - t) + "px";
             this.#element.style.width = (hw + thickness) + "px";
-            this.#element.style.height = thickness + "px";
             this.#element.style.display = '';
         } else if (v.height !== 0) {
             const vy = v.height < 0 ? v.y + v.height : v.y;
             const vh = Math.abs(v.height);
             this.#element.style.left = (v.x + v.width - t) + "px";
             this.#element.style.top = (vy - t) + "px";
-            this.#element.style.width = thickness + "px";
             this.#element.style.height = (vh + thickness) + "px";
             this.#element.style.display = '';
         } else {

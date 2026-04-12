@@ -709,6 +709,7 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
 }
 .grid[data-zoom] {
     --zoom-factor: attr(data-zoom type(<number>));
+    --wire-thickness: calc(3px * var(--zoom-factor) / 100);
 }
 .grid.grid-zoom-below-100 {
     background-image: radial-gradient(circle, #333 1px, var(--grid-bg-color) 1px);
@@ -1103,6 +1104,22 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
     inset-block: calc(-4px * var(--zoom-factor) / 100);
     inset-inline: calc(-4px * var(--zoom-factor) / 100);
 }
+.wire-h {
+    height: var(--wire-thickness);
+}
+.wire-v {
+    width: var(--wire-thickness);
+}
+.wire-h.wire-bus {
+    height: calc(2 * var(--wire-thickness));
+    margin-top: calc(-0.5 * var(--wire-thickness));
+    margin-inline: calc(-0.5 * var(--wire-thickness));
+}
+.wire-v.wire-bus {
+    width: calc(2 * var(--wire-thickness));
+    margin-left: calc(-0.5 * var(--wire-thickness));
+    margin-block: calc(-0.5 * var(--wire-thickness));
+}
 .wire-delete-animation {
     transition: opacity var(--component-delete-duration);
     opacity: 0;
@@ -1139,21 +1156,6 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
     margin-left: -150px;
     margin-top: -20px;
     text-align: center;
-}
-.debug-point {
-    pointer-events: none;
-    z-index: 11;
-    display: block;
-    position: absolute;
-}
-.debug-point0::after {
-    content: '0';
-}
-.debug-point1::after {
-    content: '1';
-}
-.debug-point2::after {
-    content: '2';
 }
 
 /*
@@ -1225,3 +1227,22 @@ span[data-net-color="6"] { color: var(--wire-color6-high); }
 span[data-net-color="7"] { color: var(--wire-color7-high); }
 span[data-net-color="8"] { color: var(--wire-color8-high); }
 span[data-net-color="9"] { color: var(--wire-color9-high); }
+
+/*
+ * Debug elements
+ */
+.debug-point {
+    pointer-events: none;
+    z-index: 11;
+    display: block;
+    position: absolute;
+}
+.debug-point0::after {
+    content: '0';
+}
+.debug-point1::after {
+    content: '1';
+}
+.debug-point2::after {
+    content: '2';
+}
