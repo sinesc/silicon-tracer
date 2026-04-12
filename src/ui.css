@@ -210,6 +210,41 @@ html {
         0 -10px 20px #ff8000,
         0 -18px 40px #F00;
 }
+#header h1[data-c="6"] {
+    color: #0f0;
+    transform: skew(-15deg, 0deg);
+    text-decoration-color: #0a0;
+    text-shadow:
+        0 0 4px #0f0,
+        0 0 10px #0f0,
+        0 0 30px #0f0,
+        0 0 60px #00ff88,
+        2px 2px 2px rgba(0, 0, 0, 0.8);
+}
+#header h1[data-c="7"] {
+    color: transparent;
+    background: linear-gradient(90deg, #ff0080, #ff8c00, #ffe600, #00ff88, #00cfff, #cc00ff, #ff0080);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    transform: skew(-10deg, 0deg);
+    text-decoration-color: #ff0080;
+    text-shadow: none;
+    animation: logo-rainbow 3s linear infinite;
+}
+@keyframes logo-rainbow {
+    to { background-position: 200% center; }
+}
+#header h1[data-c="8"] {
+    color: #c0c0e8;
+    transform: skew(-15deg, 0deg) scaleY(1.1);
+    text-decoration-color: #6060c0;
+    text-shadow:
+        3px 3px 0 #000080,
+        6px 6px 0 #000060,
+        9px 9px 0 #000040,
+        9px 9px 12px rgba(0, 0, 128, 0.6);
+}
 #toolbar {
     display: inline-block;
     vertical-align: top;

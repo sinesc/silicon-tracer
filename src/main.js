@@ -120,7 +120,12 @@ Tools:
 {
     // a blast from a past where we still owned our stuff
     const logo = document.querySelector('#header h1');
+    const cycleLogo = () => logo.setAttribute('data-c', ((parseInt(logo.getAttribute('data-c') ?? 0) + 1) % 9));
     logo.onmouseenter = () => app.setStatus('Cheesy 80s logo. It is ticklish.');
     logo.onmouseleave = () => app.clearStatus();
-    logo.onclick = () => logo.setAttribute('data-c', ((parseInt(logo.getAttribute('data-c') ?? 0) + 1) % 6));
+    logo.onclick = cycleLogo;
+    const now = new Date();
+    if (now.getMonth() === 3 && now.getDate() === 1) {
+        setInterval(cycleLogo, 10 * 60 * 1000);
+    }
 }
