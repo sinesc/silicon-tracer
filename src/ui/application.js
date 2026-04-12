@@ -477,7 +477,7 @@ class Application {
             editMenu.createSeparator();
             const cutButton = editMenu.createActionButton('Cut', 'Cut selected items. Hotkey: <i>Ctrl+X</i>.', () => this.grid.actionCutSelection());
             const copyButton = editMenu.createActionButton('Copy', 'Copy selected items to clipboard. Hotkey: <i>Ctrl+C</i>.', () => this.grid.copySelection());
-            const pasteButton = editMenu.createActionButton('Paste', 'Paste items from clipboard. Hotkey: <i>Ctrl+V</i>.', async () => () => this.grid.actionPasteSelection());
+            const pasteButton = editMenu.createActionButton('Paste', 'Paste items from clipboard. Hotkey: <i>Ctrl+V</i>.', () => this.grid.actionPasteSelection());
             cutButton.node.classList.toggle('toolbar-menu-button-disabled', this.grid.selection.length === 0 || this.grid.readonly);
             copyButton.node.classList.toggle('toolbar-menu-button-disabled', this.grid.selection.length === 0);
             //pasteButton.node.classList.toggle('toolbar-menu-button-disabled', await navigator.clipboard.readText().length === 0); // cannot currently do this without annoying confirmation popup
