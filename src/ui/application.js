@@ -45,8 +45,7 @@ class Application {
             builtin: { rotation: 0, },
             textlabel: { rotation: 0, },
             constant: { rotation: 1, },
-            toggle: { rotation: 0, },
-            momentary: { rotation: 0, },
+            switch: { rotation: 0, },
             probe: { rotation: 1, },
             rom: { rotation: 0, addressWidth: 4, dataWidth: 8 },
             ram: { rotation: 0, addressWidth: 4, dataWidth: 8, combinedPorts: true },
@@ -538,9 +537,9 @@ class Application {
                 this.#menuComponentButton(ioMenu, 'Pull resistor', `<b>Pull up/down resistor</b>. ${DRAG_MSG}`,
                     (grid, x, y) => grid.addItem(new PullResistor(this, x, y, defaults.pull.rotation)), { '#c': 'PullResistor' });
                 this.#menuComponentButton(ioMenu, 'Toggle switch', `<b>Toggle switch</b> with permanently saved state. ${DRAG_MSG}`,
-                    (grid, x, y) => grid.addItem(new Toggle(this, x, y, defaults.toggle.rotation)), { '#c': 'Toggle' });
+                    (grid, x, y) => grid.addItem(new Switch(this, x, y, defaults.switch.rotation, 'toggle')), { '#c': 'Switch', '#t': 'toggle' });
                 this.#menuComponentButton(ioMenu, 'Momentary switch', `<b>Momentary switch</b>. ${DRAG_MSG}`,
-                    (grid, x, y) => grid.addItem(new Momentary(this, x, y, defaults.momentary.rotation)), { '#c': 'Momentary' });
+                    (grid, x, y) => grid.addItem(new Switch(this, x, y, defaults.switch.rotation, 'momentary')), { '#c': 'Switch', '#t': 'momentary' });
                 this.#menuComponentButton(ioMenu, 'ROM', `<b>Read-only memory</b>. ${DRAG_MSG}`,
                     (grid, x, y) => grid.addItem(new Memory(this, x, y, defaults.rom.rotation, 'rom', defaults.rom.addressWidth, defaults.rom.dataWidth)), { '#c': 'Memory', '#t': 'rom' });
                 this.#menuComponentButton(ioMenu, 'RAM', `<b>Read/write memory</b>. ${DRAG_MSG}`,
