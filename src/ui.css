@@ -1125,11 +1125,18 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
     opacity: 0;
 }
 .wire-junction {
+    --junction-size: calc(7 / 3 * var(--wire-thickness));
     z-index: 11;
     position: absolute;
     border-radius: 50%;
     pointer-events: none;
     background-color: var(--wire-colorD);
+    width: var(--junction-size);
+    height: var(--junction-size);
+    transform: translate(-50%, -50%);
+}
+.wire-junction.wire-bus {
+    --junction-size: calc(14 / 3 * var(--wire-thickness));
 }
 /* debugging */
 .wirebuilder-debug {

@@ -496,11 +496,11 @@ class Grid {
         }
 
         // Create or update junction elements for junction coordinates (3+ endpoints).
-        const diameter = 7 * this.zoom;
         for (const [key, { x, y, count, wire }] of coordMap) {
             if (count < 3) continue;
             const vx = (x + this.offsetX) * this.zoom;
             const vy = (y + this.offsetY) * this.zoom;
+            const isBus = (wire.netIds?.length ?? 0) > 1;
 
             let entry = this.#junctionElements.get(key);
             if (!entry) {
@@ -512,11 +512,10 @@ class Grid {
                 entry.wire = wire;
             }
 
+            entry.element.classList.toggle('wire-bus', isBus);
             entry.element.setAttribute('data-net-color', wire.color ?? '');
-            entry.element.style.left = (vx - diameter / 2) + 'px';
-            entry.element.style.top = (vy - diameter / 2) + 'px';
-            entry.element.style.width = diameter + 'px';
-            entry.element.style.height = diameter + 'px';
+            entry.element.style.left = vx + 'px';
+            entry.element.style.top = vy + 'px';
         }
     }
 
