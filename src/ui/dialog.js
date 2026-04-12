@@ -3,6 +3,7 @@
 // Opens a modal dialog with the given fields and returns the user input to the awaiting caller.
 // Field properties:
 //   name:      key in the data object
+//   text:      if present, text contents will be displayed, other field properties are ignored
 //   type:      one of int, float, string, select, bool, textfile
 //   label:     display label (defaults to capitalized name)
 //   options:   map of value->label pairs (select type only)

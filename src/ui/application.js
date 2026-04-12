@@ -375,12 +375,64 @@ class Application {
                 this.haveChanges = true;
             });
             addButton.node.classList.toggle('toolbar-menu-button-disabled', this.circuits.allEmpty());
+            fileMenu.createSeparator();
             // Open as library
-            fileMenu.createActionButton('Add library...', 'Add circuits in file as library components. These are accessible via the <i>Component</i> menu and do not show in <i>Circuit</i>.', async () => {
+            fileMenu.createActionButton('Include library...', 'Add circuits in file as library components. These are accessible via the <i>Component</i> menu and do not show in <i>Circuit</i>.', async () => {
                 fileMenu.state(false);
                 await this.circuits.loadFile(false, false, true);
                 this.haveChanges = true;
             });
+            // Create a new empty library.
+            fileMenu.createActionButton('Create library...', 'Create a new empty library accessible via the <i>Component</i> menu.', async () => {
+                fileMenu.state(false);
+                const result = await dialog('Create library', [
+                    { name: 'label', label: 'Library name', type: 'string', postCheck: (v) => v.length > 0 },
+                ], { label: '' });
+                if (result) {
+                    this.circuits.addLibrary(result.label, null, false);
+                    this.showNotice(`Added empty library "${result.label}" to the Component menu.`);
+                    this.haveChanges = true;
+                }
+            });
+            // Extract a non-packaged library to a file.
+            const hasCircuit = (lid) => Object.values(this.circuits.all).some((c) => c.lid === lid);
+            const nonPackagedForExtract = [ ...this.circuits.libraries ].filter(([ lid ]) => !this.circuits.isPackaged(lid) && hasCircuit(lid));
+            const extractButton = fileMenu.createActionButton('Extract library...', 'Save all circuits belonging to a library to a file.', async () => {
+                fileMenu.state(false);
+                const libs = [ ...this.circuits.libraries ].filter(([ lid ]) => !this.circuits.isPackaged(lid) && hasCircuit(lid));
+                const options = Object.fromEntries(libs.map(([ lid, label ]) => [ lid, label ]));
+                const result = await dialog('Extract library', [
+                    { name: 'lib', label: 'Library', type: 'select', options },
+                ], { lib: libs[0][0] });
+                if (result) {
+                    await this.circuits.extractLibrary(result.lib);
+                }
+            });
+            extractButton.node.classList.toggle('toolbar-menu-button-disabled', nonPackagedForExtract.length === 0);
+            // Remove a non-packaged library and its circuits from memory.
+            const nonPackagedForRemove = [ ...this.circuits.libraries ].filter(([ lid ]) => !this.circuits.isPackaged(lid));
+            const removeLibButton = fileMenu.createActionButton('Remove library...', 'Remove a library and its circuits from memory.', async () => {
+                fileMenu.state(false);
+                const libs = [ ...this.circuits.libraries ].filter(([ lid ]) => !this.circuits.isPackaged(lid));
+                const removable = libs.filter(([ lid ]) => this.circuits.libraryDependents(lid).size === 0);
+                const nonRemovable = libs.filter(([ lid ]) => this.circuits.libraryDependents(lid).size > 0);
+                const fields = [];
+                if (nonRemovable.length > 0) {
+                    fields.push({ text: `The following libraries cannot be removed because other circuits depend on them: ${nonRemovable.map(([ , label ]) => `<b>${label}</b>`).join(', ')}.` });
+                }
+                fields.push({ name: 'lib', label: 'Library', type: 'select', options: Object.fromEntries(removable.map(([ lid, label ]) => [ lid, label ])) });
+                const result = await dialog('Remove library', fields, { lib: removable[0]?.[0] ?? '' });
+                if (result) {
+                    const libLabel = removable.find(([ lid ]) => lid === result.lib)[1];
+                    this.circuits.removeLibrary(result.lib);
+                    this.simulations.clear();
+                    this.simulations.select(this.circuits.current, this.config.autoCompile);
+                    this.showNotice(`Removed library "${libLabel}".`);
+                    this.haveChanges = true;
+                }
+            });
+            removeLibButton.node.classList.toggle('toolbar-menu-button-disabled', nonPackagedForRemove.length === 0);
+            fileMenu.createSeparator();
             // Import circuits and add to currently loaded circuits.
             fileMenu.createActionButton('Import...', 'Import files produced by other applications.', async () => {
                 fileMenu.state(false);
@@ -457,6 +509,34 @@ class Application {
                 }
             });
             button.node.classList.toggle('toolbar-menu-button-disabled', circuitList.length <= 1);
+            // Move current circuit to/from a library.
+            const currentLid = this.circuits.current.lid;
+            const nonPackagedLibs = [ ...this.circuits.libraries ].filter(([ lid ]) => !this.circuits.isPackaged(lid));
+            if (currentLid === null) {
+                const moveToLibButton = circuitMenu.createActionButton('Move to library...', nonPackagedLibs.length > 0 ? 'Move this circuit into a library.' : 'No non-packaged libraries loaded.', async () => {
+                    circuitMenu.state(false);
+                    const options = Object.fromEntries(nonPackagedLibs.map(([ lid, label ]) => [ lid, label ]));
+                    const result = await dialog('Move to library', [
+                        { name: 'lib', label: 'Library', type: 'select', options },
+                    ], { lib: nonPackagedLibs[0][0] });
+                    if (result) {
+                        const circuit = this.circuits.current;
+                        const libLabel = nonPackagedLibs.find(([ lid ]) => lid === result.lib)[1];
+                        circuit.lid = result.lib;
+                        this.showNotice(`Circuit "${circuit.label}" was moved to "${libLabel}".`);
+                        this.haveChanges = true;
+                    }
+                });
+                moveToLibButton.node.classList.toggle('toolbar-menu-button-disabled', nonPackagedLibs.length === 0);
+            } else if (!this.circuits.isPackaged(currentLid)) {
+                circuitMenu.createActionButton('Move to circuits', 'Move this library circuit into regular circuits.', () => {
+                    circuitMenu.state(false);
+                    const circuit = this.circuits.current;
+                    circuit.lid = null;
+                    this.showNotice(`Circuit "${circuit.label}" was moved to circuits.`);
+                    this.haveChanges = true;
+                });
+            }
             circuitMenu.createSeparator();
             // Switch circuit. Generate menu items for each circuit.
             for (const [ uid, label ] of circuitList) {

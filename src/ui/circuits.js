@@ -21,6 +21,7 @@ class Circuits {
         { name: 'bottom', label: 'Bottom ports', type: 'string' },
     ];
 
+    static COMPAT_VERSION = 4;
     static STRINGIFY_SPACE = "\t";
 
     #app;
@@ -294,11 +295,7 @@ class Circuits {
         assert.string(uid);
         delete this.#circuits[uid];
         if (uid === this.#currentCircuit) {
-            const fallback = (Object.values(this.#circuits).find((c) => c.lid === null)?.uid) ?? Object.keys(this.#circuits)[0] ?? null;
-            if (fallback) {
-                this.select(fallback);
-            }
-            return;
+            this.#selectFallbackCircuit();
         }
     }
 
@@ -309,6 +306,40 @@ class Circuits {
         lid ??= Circuits.generateLID();
         this.#libraries[lid] = { label, packaged };
         return lid;
+    }
+
+    // Returns a set of lids (including null for main circuits) that contain circuits depending on circuits in the given library.
+    libraryDependents(lid) {
+        assert.string(lid);
+        const libCircuitUids = new Set(Object.values(this.#circuits).filter((c) => c.lid === lid).map((c) => c.uid));
+        const dependentLids = new Set();
+        for (const circuit of Object.values(this.#circuits)) {
+            if (circuit.lid === lid) continue;
+            for (const item of circuit.items) {
+                if (item instanceof CustomComponent && libCircuitUids.has(item.uid)) {
+                    dependentLids.add(circuit.lid);
+                    break;
+                }
+            }
+        }
+        return dependentLids;
+    }
+
+    // Recursively collects transitive non-packaged library lids that the given library depends on into visited.
+    #collectLibraryDependencies(lid, visited = new Set()) {
+        for (const circuit of Object.values(this.#circuits)) {
+            if (circuit.lid !== lid) continue;
+            for (const item of circuit.items) {
+                if (item instanceof CustomComponent) {
+                    const refLid = this.#circuits[item.uid]?.lid;
+                    if (refLid && refLid !== lid && !this.#libraries[refLid]?.packaged && !visited.has(refLid)) {
+                        visited.add(refLid);
+                        this.#collectLibraryDependencies(refLid, visited);
+                    }
+                }
+            }
+        }
+        return visited;
     }
 
     // Returns whether the given library ID belongs to a packaged library.
@@ -327,16 +358,63 @@ class Circuits {
         return pairs(Object.map(this.#libraries, (k, v) => v.label));
     }
 
+    // Serializes circuits belonging to the given library for file export (resets lid to null).
+    serializeLibrary(lid) {
+        assert.string(lid);
+        const label = this.#libraries[lid].label;
+        const depLids = this.#collectLibraryDependencies(lid);
+        const circuits = [];
+        for (const circuit of Object.values(this.#circuits)) {
+            if (circuit.lid === lid) {
+                const s = circuit.serialize();
+                s.lid = null;
+                circuits.push(s);
+            } else if (depLids.has(circuit.lid)) {
+                circuits.push(circuit.serialize());
+            }
+        }
+        const libraries = {};
+        for (const depLid of depLids) {
+            libraries[depLid] = this.#libraries[depLid].label;
+        }
+        return { version: Circuits.COMPAT_VERSION, label, currentUID: circuits[0]?.uid ?? null, circuits, libraries };
+    }
+
+    // Saves circuits from the given library to a user-chosen file.
+    async extractLibrary(lid) {
+        assert.string(lid);
+        const label = this.#libraries[lid].label;
+        const handle = await File.saveAs(label);
+        const writable = await handle.createWritable();
+        await writable.write(Circuits.#encodeJSON(this.serializeLibrary(lid)));
+        await writable.close();
+        this.#app.showNotice(`Library "${label}" has been saved to "${handle.name}".`);
+    }
+
     // Generate a library id.
     static generateLID() {
         return 'l' + crypto.randomUUID().replaceAll('-', '');
+    }
+
+    // Removes a non-packaged library and all circuits belonging to it from memory.
+    removeLibrary(lid) {
+        assert.string(lid);
+        for (const [ uid, circuit ] of Object.entries(this.#circuits)) {
+            if (circuit.lid === lid) {
+                delete this.#circuits[uid];
+            }
+        }
+        delete this.#libraries[lid];
+        if (!this.#circuits[this.#currentCircuit]) {
+            this.#selectFallbackCircuit();
+        }
     }
 
     // Serializes loaded circuits for saving to file.
     #serialize(label) {
         const packaged = pairs(this.#libraries).filter(([ lid, library ]) => library.packaged).map(([ lid, library ]) => lid).toArray();
         return {
-            version: 4,
+            version: Circuits.COMPAT_VERSION,
             label,
             currentUID: this.#currentCircuit,
             circuits: Object.values(this.#circuits).filter((c) => !packaged.includes(c.lid)).map((c) => c.serialize()),
@@ -388,6 +466,14 @@ class Circuits {
             }
         }
         return foundUIDs;
+    }
+
+    // Selects a fallback circuit (e.g. when the current one no longer exists), prefers non-library circuits.
+    #selectFallbackCircuit() {
+        const fallback = (Object.values(this.#circuits).find((c) => c.lid === null)?.uid) ?? Object.keys(this.#circuits)[0] ?? null;
+        if (fallback) {
+            this.select(fallback);
+        }
     }
 
     // Clear all circuits/libraries (except packaged).
@@ -510,6 +596,12 @@ Circuits.Circuit = class {
     // Return the library id of this circuit, if any, or null.
     get lid() {
         return this.#lid;
+    }
+
+    // Sets the library id of this circuit.
+    set lid(value) {
+        assert.string(value, true);
+        this.#lid = value;
     }
 
     // Returns true if this circuit belongs to a packaged (read-only) library.
