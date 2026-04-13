@@ -62,7 +62,7 @@ class Constant extends SimulationComponent {
             if (this.simId !== null && sim) {
                 sim.engine.setConstValue(this.simId, this.#state);
             }
-            this.dirty = true;
+            this.renderFlags |= GridItem.NEEDS_DETAIL_RENDER;
         }
     }
 
@@ -79,8 +79,8 @@ class Constant extends SimulationComponent {
     }
 
     // Renders the constant onto the grid.
-    render() {
-        if (!super.render()) {
+    renderFull() {
+        if (!super.renderFull()) {
             return false;
         }
 
@@ -93,6 +93,12 @@ class Constant extends SimulationComponent {
         this.element.setAttribute('data-port-state', this.#state ?? '');
 
         return true;
+    }
+
+    // Updates user-set state indicator.
+    renderDetail() {
+        super.renderDetail();
+        this.element.setAttribute('data-port-state', this.#state ?? '');
     }
 
     // Renders/updates the current net state of the wire to the grid.

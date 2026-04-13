@@ -160,18 +160,14 @@ class Wire extends GridItem {
             for (const netWire of netList.nets[myNetId].wires) {
                 this.grid.circuit.itemByGID(netWire.gid).color = color;
             }
-            this.grid.markDirty();
+            this.grid.onNetColorsChanged();
             return true;
         } else if (key === 'Delete' && what.type === 'hover') {
             this.#element.classList.add('wire-delete-animation');
             setTimeout(() => {
                 if (this.#element) { // deletion might already be in progress
                     this.#element.classList.remove('wire-delete-animation');
-                    this.grid.markDirty();
-                    const grid = this.grid;
-                    this.grid.removeItem(this);
-                    Wire.compact(grid);
-                    grid.pruneSelection();
+                    this.grid.removeItem(this); // fires onCircuitItemRemoved → compact + recompile + prune
                 }
             }, 150);
             return true;
@@ -186,8 +182,10 @@ class Wire extends GridItem {
     // Set wire color.
     set color(value) {
         assert.integer(value, true);
-        this.dirty ||= this.#color !== value;
-        this.#color = value;
+        if (this.#color !== value) {
+            this.#color = value;
+            this.renderFlags |= GridItem.NEEDS_DETAIL_RENDER;
+        }
     }
 
     // Sets wire dimensions, optionally aligned to the grid.
@@ -222,38 +220,52 @@ class Wire extends GridItem {
     }
 
     // Renders the connection onto the grid.
-    render() {
+    renderFull() {
 
-        if (!super.render()) {
+        if (!super.renderFull()) {
             return false;
         }
 
+        this.renderDetail();
+        this.renderPosition();
+        return true;
+    }
+
+    // Updates wire color and bus class.
+    renderDetail() {
+        this.#element.setAttribute('data-net-color', this.color ?? '');
+        this.#element.classList.toggle('wire-bus', (this.netIds?.length ?? 0) > 1);
+    }
+
+    // Updates wire CSS position and dimensions.
+    renderPosition() {
         const thickness = Wire.#THICKNESS * this.grid.zoom;
         const v = this.visual;
         const t = thickness / 2;
 
-        this.#element.setAttribute('data-net-color', this.color ?? '');
-        this.#element.classList.toggle('wire-bus', (this.netIds?.length ?? 0) > 1);
-
         if (v.width !== 0) {
             const hx = v.width < 0 ? v.x + v.width : v.x;
             const hw = Math.abs(v.width);
+            this.#element.classList.add('wire-h');
+            this.#element.classList.remove('wire-v');
             this.#element.style.left = (hx - t) + "px";
             this.#element.style.top = (v.y - t) + "px";
             this.#element.style.width = (hw + thickness) + "px";
+            this.#element.style.height = '';
             this.#element.style.display = '';
         } else if (v.height !== 0) {
             const vy = v.height < 0 ? v.y + v.height : v.y;
             const vh = Math.abs(v.height);
+            this.#element.classList.add('wire-v');
+            this.#element.classList.remove('wire-h');
             this.#element.style.left = (v.x + v.width - t) + "px";
             this.#element.style.top = (vy - t) + "px";
+            this.#element.style.width = '';
             this.#element.style.height = (vh + thickness) + "px";
             this.#element.style.display = '';
         } else {
             this.#element.style.display = 'none';
         }
-
-        return true;
     }
 
     // Renders/updates the current net state of the wire to the grid.
@@ -270,6 +282,7 @@ class Wire extends GridItem {
     static compact(container) {
         assert(container instanceof Grid || container instanceof Circuits.Circuit, 'container must be a Grid or Circuit');
 
+        const selection = container instanceof Grid ? container.selection : null;
         const allWires = container.items.filter((w) => w instanceof Wire).toArray();
         if (allWires.length === 0) return;
 
@@ -353,12 +366,17 @@ class Wire extends GridItem {
                         ...interiorCuts.sort((a, b) => a - b),
                         groupEnd ];
 
+                    const anySelected = selection !== null && groupWires.some(w => w.wire.selected);
                     for (const w of groupWires) container.removeItem(w.wire);
 
                     const color = groupWires[0].wire.color;
                     for (let i = 0; i < splitPoints.length - 1; i++) {
                         const from = splitPoints[i], to = splitPoints[i + 1];
-                        container.addItem(new Wire(app, isH ? from : trackCoord, isH ? trackCoord : from, to - from, direction, color));
+                        const wire = container.addItem(new Wire(app, isH ? from : trackCoord, isH ? trackCoord : from, to - from, direction, color));
+                        if (anySelected) {
+                            selection.push(wire);
+                            wire.selected = true;
+                        }
                     }
                 };
 

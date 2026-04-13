@@ -11,11 +11,18 @@ class GridItem {
     // Bounding box inset during selection.
     static #SELECTION_MARGIN = 5;
 
+    // Render flag: update CSS left/top only (mid-drag move).
+    static NEEDS_POSITION_UPDATE = 1;
+    // Render flag: update labels and port content only (no geometry change).
+    static NEEDS_DETAIL_RENDER = 2;
+    // Render flag: full re-render including position, size, and content.
+    static NEEDS_FULL_RENDER = 4;
+
     // Reference to linked grid, if linked.
     grid = null;
 
-    // Whether the item needs to be rendered.
-    dirty = true;
+    // Pending render work: bitmask of NEEDS_POSITION_UPDATE / NEEDS_DETAIL_RENDER / NEEDS_FULL_RENDER.
+    renderFlags = 0;
 
     // Reference to the application
     #app;
@@ -127,7 +134,7 @@ class GridItem {
         assert.class(Grid, grid);
         this.grid = grid;
         this.#hoverMessages = new WeakMap();
-        this.dirty = true;
+        this.renderFlags = GridItem.NEEDS_FULL_RENDER;
     }
 
     // Remove item from grid.
@@ -139,8 +146,8 @@ class GridItem {
     // Implement to detach the item from the simulation.
     detachSimulation() { }
 
-    // Implement to render the item to the grid.
-    render() {
+    // Full re-render: position, size, and content. Subclasses must call super.renderFull() first.
+    renderFull() {
         if (this.#beforeRender.length > 0) {
             for (const func of this.#beforeRender) {
                 func();
@@ -150,18 +157,26 @@ class GridItem {
         return true;
     }
 
+    // Partial re-render: labels and port content only (no geometry change). Subclasses may override.
+    renderDetail() { }
+
+    // Partial re-render: update CSS left/top only (mid-drag move). Subclasses may override.
+    renderPosition() { }
+
     // Implement to render the net-state of the item to the grid.
     renderNetState() { }
 
     // Call after the grid item is modified to ensure the component is fully redrawn and the simulation is updated.
-    redraw(recompile = true, beforeRender = null) { // FIXME: this ignores recompile, does too many things. add e.g. dirty(), dirtySimulation(), dirtyChanges()?
+    redraw(recompile = true, beforeRender = null) {
         assert.bool(recompile);
         assert.function(beforeRender, true);
         if (beforeRender) {
             this.#beforeRender.push(beforeRender);
         }
-        this.#app.simulations.markDirty(this.grid.circuit);
-        this.dirty = true;
+        if (recompile) {
+            this.grid?.onTopologyChanged();
+        }
+        this.renderFlags |= GridItem.NEEDS_FULL_RENDER;
         this.#app.haveChanges = true;
     }
 
@@ -186,8 +201,7 @@ class GridItem {
             }
             this.grid.invalidateSelection();
             if (status === 'stop') {
-                Wire.compact(this.grid);
-                this.grid.pruneSelection();
+                this.grid.onWiresChanged(); // schedules compact + recompile; pruneSelection runs after compact
                 this.grid.trackAction('Move selection');
             }
             return true;
@@ -225,8 +239,10 @@ class GridItem {
     // Set grid item x position.
     set x(value) {
         assert.number(value);
-        this.dirty ||= this.#position.x !== value;
-        this.#position.x = value;
+        if (this.#position.x !== value) {
+            this.#position.x = value;
+            this.renderFlags |= GridItem.NEEDS_POSITION_UPDATE;
+        }
     }
 
     // Return grid item y position.
@@ -237,8 +253,10 @@ class GridItem {
     // Set grid item y position.
     set y(value) {
         assert.number(value);
-        this.dirty ||= this.#position.y !== value;
-        this.#position.y = value;
+        if (this.#position.y !== value) {
+            this.#position.y = value;
+            this.renderFlags |= GridItem.NEEDS_POSITION_UPDATE;
+        }
     }
 
     // Return grid item width.
@@ -249,8 +267,10 @@ class GridItem {
     // Set grid item width.
     set width(value) {
         assert.integer(value);
-        this.dirty ||= this.#size.x !== value;
-        this.#size.x = value;
+        if (this.#size.x !== value) {
+            this.#size.x = value;
+            this.renderFlags |= GridItem.NEEDS_FULL_RENDER;
+        }
     }
 
     // Return grid item height.
@@ -261,8 +281,10 @@ class GridItem {
     // Set grid item height.
     set height(value) {
         assert.integer(value);
-        this.dirty ||= this.#size.y !== value;
-        this.#size.y = value;
+        if (this.#size.y !== value) {
+            this.#size.y = value;
+            this.renderFlags |= GridItem.NEEDS_FULL_RENDER;
+        }
     }
 
     // Return grid item id.

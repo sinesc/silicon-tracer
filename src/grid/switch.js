@@ -77,7 +77,7 @@ class Switch extends SimulationComponent {
         if (this.simId !== null && sim) {
             sim.engine.setConstValue(this.simId, this.#effectiveState);
         }
-        this.dirty = true;
+        this.renderFlags |= GridItem.NEEDS_DETAIL_RENDER;
     }
 
     // Hover hotkey actions.
@@ -102,7 +102,7 @@ class Switch extends SimulationComponent {
                 if (this.simId !== null && sim) {
                     sim.engine.setConstValue(this.simId, this.#effectiveState);
                 }
-                this.dirty = true;
+                this.renderFlags |= GridItem.NEEDS_DETAIL_RENDER;
                 return true;
             }
         }
@@ -135,15 +135,14 @@ class Switch extends SimulationComponent {
             if (this.simId !== null && sim) {
                 sim.engine.setConstValue(this.simId, this.#effectiveState);
             }
-            this.dirty = true;
             this.redraw();
             this.grid.trackAction('Edit switch');
         }
     }
 
     // Renders the switch onto the grid.
-    render() {
-        if (!super.render()) {
+    renderFull() {
+        if (!super.renderFull()) {
             return false;
         }
 
@@ -156,6 +155,12 @@ class Switch extends SimulationComponent {
         this.element.setAttribute('data-port-state', this.#effectiveState);
 
         return true;
+    }
+
+    // Updates effective state indicator.
+    renderDetail() {
+        super.renderDetail();
+        this.element.setAttribute('data-port-state', this.#effectiveState);
     }
 
     // Renders/updates the current net state of the wire to the grid.

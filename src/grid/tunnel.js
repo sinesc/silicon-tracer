@@ -59,9 +59,9 @@ class Tunnel extends VirtualComponent {
         return 'Tunnel';
     }
 
-    // Renders the port onto the grid.
-    render() {
-        if (!super.render()) {
+    // Renders the tunnel onto the grid.
+    renderFull() {
+        if (!super.renderFull()) {
             return false;
         }
 

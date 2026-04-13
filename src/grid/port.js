@@ -77,7 +77,7 @@ class Port extends SimulationComponent {
                 if (this.simId !== null && sim) {
                     sim.engine.setConstValue(this.simId, this.#state);
                 }
-                this.dirty = true;
+                this.renderFlags |= GridItem.NEEDS_DETAIL_RENDER;
             }
             return true;
         }
@@ -112,8 +112,8 @@ class Port extends SimulationComponent {
     }
 
     // Renders the port onto the grid.
-    render() {
-        if (!super.render()) {
+    renderFull() {
+        if (!super.renderFull()) {
             return false;
         }
 
@@ -126,6 +126,12 @@ class Port extends SimulationComponent {
         this.element.setAttribute('data-port-state', this.#state ?? '');
 
         return true;
+    }
+
+    // Updates user-set state indicator.
+    renderDetail() {
+        super.renderDetail();
+        this.element.setAttribute('data-port-state', this.#state ?? '');
     }
 
     // Renders/updates the current net state of the wire to the grid.

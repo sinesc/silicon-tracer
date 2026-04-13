@@ -158,7 +158,7 @@ Simulations.Simulation = class {
             if (reattach && this.#attached) {
                 circuit.attachSimulation(this.#netList, this.#instanceId);
             }
-            this.#app.grid.markDirty();
+            this.#app.grid.onSimulationRecompiled();
             return true;
         }
         return false;
@@ -195,7 +195,7 @@ Simulations.Simulation = class {
         this.#circuit.attachSimulation(this.#netList, 0);
         this.#instanceId = 0;
         this.#app.grid.setSimulationLabel(this.#circuit.label);
-        this.#app.grid.markDirty();
+        this.#app.grid.onSimulationRecompiled();
         this.#attached = true;
     }
 
@@ -203,7 +203,7 @@ Simulations.Simulation = class {
     detach() {
         this.#app.grid.circuit.detachSimulation();
         this.#app.grid.setSimulationLabel(null);
-        this.#app.grid.markDirty();
+        this.#app.grid.onSimulationRecompiled();
         this.#attached = false;
     }
 

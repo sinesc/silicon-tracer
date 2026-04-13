@@ -63,8 +63,8 @@ class Probe extends SimulationComponent {
     }
 
     // Renders the probe onto the grid.
-    render() {
-        if (!super.render()) {
+    renderFull() {
+        if (!super.renderFull()) {
             return false;
         }
 

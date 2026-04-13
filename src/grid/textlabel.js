@@ -83,8 +83,10 @@ class TextLabel extends GridItem {
     // Set text color.
     set color(value) {
         assert.integer(value, true);
-        this.dirty ||= this.#color !== value;
-        this.#color = value;
+        if (this.#color !== value) {
+            this.#color = value;
+            this.renderFlags |= GridItem.NEEDS_DETAIL_RENDER;
+        }
     }
 
     // Return text label rotation.
@@ -94,7 +96,7 @@ class TextLabel extends GridItem {
 
     // Set text label rotation.
     set rotation(value) {
-        //this.dirty ||= this.#rotation !== value;
+        //this.renderFlags |= GridItem.NEEDS_FULL_RENDER;
         this.#rotation = value & 3;
     }
 
@@ -205,9 +207,9 @@ class TextLabel extends GridItem {
         }
     }
 
-    // Renders the connection onto the grid.
-    render() {
-        if (!super.render()) {
+    // Renders the text label onto the grid.
+    renderFull() {
+        if (!super.renderFull()) {
             return false;
         }
         const v = this.visual;
@@ -217,19 +219,28 @@ class TextLabel extends GridItem {
         this.#element.style.width = 'auto';
         this.#element.style.height = 'auto';
         this.#element.setAttribute('data-text-rotation', this.#rotation);
-
-        if (this.dirty) {
-            this.#inner.innerText = this.#text;
-            if (this.#color !== null) {
-                this.#inner.setAttribute('data-net-color', '' + this.#color);
-            } else {
-                this.#inner.removeAttribute('data-net-color');
-            }
-            for (const size of [ 'small', 'medium', 'large' ]) {
-                this.#element.classList.toggle(`size-${size}`, this.#fontSize === size);
-            }
-        }
+        this.renderDetail();
         return true;
+    }
+
+    // Updates text content and styling.
+    renderDetail() {
+        this.#inner.innerText = this.#text;
+        if (this.#color !== null) {
+            this.#inner.setAttribute('data-net-color', '' + this.#color);
+        } else {
+            this.#inner.removeAttribute('data-net-color');
+        }
+        for (const size of [ 'small', 'medium', 'large' ]) {
+            this.#element.classList.toggle(`size-${size}`, this.#fontSize === size);
+        }
+    }
+
+    // Updates CSS left/top position only.
+    renderPosition() {
+        const v = this.visual;
+        this.#element.style.left = v.x + "px";
+        this.#element.style.top = v.y + "px";
     }
 
     static toolbarMeta(_desc) {

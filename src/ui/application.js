@@ -285,11 +285,8 @@ class Application {
     // Called each animation-frame to render elements.
     #render() {
         const renderStart = performance.now();
+        this.grid.render();
         const sim = this.simulations.current;
-        // after each circuit modification the simulation will not have been ticked yet and net-state won't be known. this causes a brief flickering each time the circuit changes, so we skip that single frame
-        if (!sim || !sim.checkDirty()) {
-            this.grid.render();
-        }
         if (sim) {
             this.grid.setCircuitDetails(`Gates: ${sim.stats.gates}<br>Max delay: ${sim.stats.maxDelay}<br>Nets: ${sim.stats.nets}`);
         }
@@ -829,7 +826,6 @@ class Application {
         const alreadySingleStep = this.config.singleStep;
         this.config.singleStep = true;
         sim.tick(ticks);
-        this.grid.markDirty();
         if (!alreadySingleStep) {
             this.showNotice(reason === 1 ? 'Breaking on conflict' : (reason === 2 ? 'Breaking on condition' : 'Simulation single-step enabled' ));
         }

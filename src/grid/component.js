@@ -325,7 +325,8 @@ class Component extends GridItem {
     set rotation(value) {
         assert.integer(value);
         value = value & 3; // clamp to 0-3
-        this.dirty ||= this.#rotation !== value;
+        const changed = this.#rotation !== value;
+        if (changed) this.renderFlags |= GridItem.NEEDS_FULL_RENDER;
         if (this.grid && (value & 1) !== (this.#rotation & 1)) {
             let x = this.x + (this.width - this.height) / 2;
             let y = this.y - (this.width - this.height) / 2;
@@ -348,6 +349,9 @@ class Component extends GridItem {
             this.updateDimensions();
         } else {
             this.#rotation = value;
+        }
+        if (changed) {
+            this.grid?.onTopologyChanged();
         }
     }
 
@@ -540,9 +544,9 @@ class Component extends GridItem {
     }
 
     // Renders the component onto the grid.
-    render() {
+    renderFull() {
 
-        if (!super.render()) {
+        if (!super.renderFull()) {
             return false;
         }
 
@@ -550,16 +554,7 @@ class Component extends GridItem {
             return false;
         }
 
-        // don't need to update ports when only moving
-        if (this.dirty) {
-            for (const port of this.ports) {
-                if (port.shadow) continue;
-                // TODO: refactor into overrideable function.
-                if (this instanceof Port || this instanceof Tunnel || port.name !== '') {
-                    port.render(this, this.#portLabelCharPos[port.originalSide]);
-                }
-            }
-        }
+        this.renderDetail();
 
         const v = this.visual;
         this.#element.style.left = v.x + "px";
@@ -577,6 +572,24 @@ class Component extends GridItem {
         }
 
         return true;
+    }
+
+    // Updates port labels and colors.
+    renderDetail() {
+        // TODO: refactor into overrideable function.
+        for (const port of this.ports) {
+            if (port.shadow) continue;
+            if (this instanceof Port || this instanceof Tunnel || port.name !== '') {
+                port.render(this, this.#portLabelCharPos[port.originalSide]);
+            }
+        }
+    }
+
+    // Updates CSS left/top position only.
+    renderPosition() {
+        const v = this.visual;
+        this.#element.style.left = v.x + "px";
+        this.#element.style.top = v.y + "px";
     }
 
     // Override redraw to also update the inner label.

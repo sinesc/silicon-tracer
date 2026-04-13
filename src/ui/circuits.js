@@ -550,6 +550,7 @@ Circuits.Circuit = class {
     #data;
     #gidLookup;
     #lid;
+    #gridListener = null; // Grid currently subscribed to this circuit's item changes.
 
     constructor(app, label, uid = null, data = [], gridConfig = {}, portConfig = {}, lid = null, visibleInLib = true) {
         assert.class(Application, app);
@@ -571,6 +572,11 @@ Circuits.Circuit = class {
         this.#gidLookup = new Map(data.map((v) => [ v.gid, new WeakRef(v) ]));
     }
 
+    // Subscribes (or unsubscribes when null) a grid to receive item add/remove notifications.
+    setGridListener(grid) {
+        this.#gridListener = grid;
+    }
+
     // Returns item by GID.
     itemByGID(gid) {
         assert.string(gid);
@@ -583,6 +589,7 @@ Circuits.Circuit = class {
         assert.class(GridItem, item);
         this.#data.push(item);
         this.#gidLookup.set(item.gid, new WeakRef(item));
+        this.#gridListener?.onCircuitItemAdded(item);
         return item;
     }
 
@@ -596,6 +603,7 @@ Circuits.Circuit = class {
         } else {
             throw new Error('Failed to find item');
         }
+        this.#gridListener?.onCircuitItemRemoved(item);
         return item;
     }
 
@@ -662,7 +670,10 @@ Circuits.Circuit = class {
     restoreFromUndo(snapshot) {
         const grid = this.#app.grid;
         const isDisplayed = grid.circuit === this;
-        if (isDisplayed) this.unlink();
+        if (isDisplayed) {
+            this.unlink();
+            this.setGridListener(null); // suppress circuit events during rebuild
+        }
         this.#data = [];
         this.#gidLookup = new Map();
         this.label = snapshot.label;
@@ -679,10 +690,11 @@ Circuits.Circuit = class {
         }
         Wire.compact(this);
         if (isDisplayed) {
+            this.setGridListener(grid); // restore listener before re-linking
             this.link(grid);
             grid.setCircuitLabel(this.label);
             grid.setSimulationLabel(this.label);
-            grid.markDirty();
+            grid.onSimulationRecompiled();
             // Restore selection: match items by their restored GIDs (wires re-created by Wire.compact won't match).
             const newSelection = this.#data.filter((item) => selectedGids.has(item.gid));
             newSelection.forEach((item) => item.selected = true);

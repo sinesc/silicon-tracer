@@ -8,13 +8,20 @@ class Grid {
 
     static #RAD90 = Math.PI / 2; // 90°
     static #ZOOM_LEVELS = [ 0.5, 0.65, 0.85, 1.0, 1.25, 1.50, 1.75, 2.0, 2.5, 3.0 ];
-    static #DIRTY_NONE      = 0b0000;
-    static #DIRTY_OUTER     = 0b0001;
-    static #DIRTY_INNER     = 0b0010;
-    static #DIRTY_OVERLAY   = 0b0100;
 
     #app;
-    #dirty = Grid.#DIRTY_INNER | Grid.#DIRTY_OUTER | Grid.#DIRTY_OVERLAY;
+    #pending = {
+        wireCompact: false,            // wire(s) added/removed/repositioned — compact before next compile
+        recompile: false,              // topology changed → sim.compile on next render
+        netColors: true,               // net topology/colors changed → applyNetColors on next render
+        junctionRebuild: true,         // wire topology changed → rebuildJunctions on next render
+        junctionPositionUpdate: false, // pan/zoom changed → reposition junction elements on next render
+        bgPattern: true,               // zoom or pan changed → CSS background update on next render
+        viewportUpdate: false,         // zoom changed → propagate NEEDS_FULL_RENDER to all items
+        panUpdate: false,              // pan changed → propagate NEEDS_POSITION_UPDATE to all items
+        overlayUpdate: true,           // info box content changed → re-render overlay on next render
+    };
+    #suppressCircuitEvents = false;  // true while Wire.compact runs inside render()
     #element;
     #selectionElement;
     #selection = [];
@@ -65,11 +72,12 @@ class Grid {
         if (!this.#circuit) {
             return;
         }
+        this.#circuit.setGridListener(null);
         this.#circuit.unlink();
         this.#circuit = null;
         this.#clearJunctions();
         this.#infoBox.circuitLabel = '';
-        this.#dirty |= Grid.#DIRTY_OVERLAY;
+        this.#pending.overlayUpdate = true;
         this.#hotkeyTarget = null;
         this.#app.clearStatus(true);
     }
@@ -80,8 +88,12 @@ class Grid {
         this.unsetCircuit();
         this.#circuit = circuit;
         this.#circuit.link(this);
+        this.#circuit.setGridListener(this);
         this.#infoBox.circuitLabel = circuit.label;
-        this.#dirty |= Grid.#DIRTY_INNER | Grid.#DIRTY_OUTER | Grid.#DIRTY_OVERLAY;
+        this.#pending.bgPattern = true;
+        this.#pending.overlayUpdate = true;
+        this.#pending.netColors = true;
+        this.#pending.junctionRebuild = true;
         if (!circuit.readonly && circuit.undoStack.currentSnapshot === null) {
             circuit.undoStack.init(circuit.serializeForUndo());
         }
@@ -89,51 +101,51 @@ class Grid {
 
     // Update circuit label in infobox.
     setCircuitLabel(label) {
-        this.#dirty |= this.#infoBox.circuitLabel !== label ? Grid.#DIRTY_OVERLAY : 0;
+        if (this.#infoBox.circuitLabel !== label) this.#pending.overlayUpdate = true;
         this.#infoBox.circuitLabel = label;
     }
 
     // Update circuit details in infobox.
     setCircuitDetails(details) {
-        this.#dirty |= this.#infoBox.circuitDetails !== details ? Grid.#DIRTY_OVERLAY : 0;
+        if (this.#infoBox.circuitDetails !== details) this.#pending.overlayUpdate = true;
         this.#infoBox.circuitDetails = details;
     }
 
     // Sets the simulation label displayed on the grid.
     setSimulationLabel(label) {
-        this.#dirty |= this.#infoBox.simulationLabel !== label ? Grid.#DIRTY_OVERLAY : 0;
+        if (this.#infoBox.simulationLabel !== label) this.#pending.overlayUpdate = true;
         this.#infoBox.simulationLabel = label;
     }
 
     // Sets the simulation details displayed on the grid.
     setSimulationDetails(details) {
-        this.#dirty |= this.#infoBox.simulationDetails !== details ? Grid.#DIRTY_OVERLAY : 0;
+        if (this.#infoBox.simulationDetails !== details) this.#pending.overlayUpdate = true;
         this.#infoBox.simulationDetails = details;
     }
 
     // Adds an item to the grid. Automatically done by GridItem constructor.
+    // restart=false suppresses circuit events (e.g. for temporary limbo wires in WireBuilder).
     addItem(item, restart = true) {
         assert.class(GridItem, item);
         assert.bool(restart);
-        this.#circuit.addItem(item);
+        if (!restart) this.#suppressCircuitEvents = true;
+        this.#circuit.addItem(item); // fires onCircuitItemAdded unless suppressed
+        if (!restart) this.#suppressCircuitEvents = false;
         item.link(this);
-        if (restart) {
-            this.#app.simulations.markDirty(this.#circuit);
-        }
         this.#app.haveChanges = true;
         return item;
     }
 
     // Removes an item from the grid and the current circuit.
+    // restart=false suppresses circuit events (e.g. for temporary limbo wires in WireBuilder).
     removeItem(item, restart = true) {
         assert.class(GridItem, item);
         assert.bool(restart);
         item.unlink();
-        this.#circuit.removeItem(item);
+        if (!restart) this.#suppressCircuitEvents = true;
+        this.#circuit.removeItem(item); // fires onCircuitItemRemoved unless suppressed
+        if (!restart) this.#suppressCircuitEvents = false;
         this.releaseHotkeyTarget(item);
-        if (restart) {
-            this.#app.simulations.markDirty(this.#circuit);
-        }
         this.#app.haveChanges = true;
         return item;
     }
@@ -180,7 +192,35 @@ class Grid {
     // Renders the grid and its components.
     render() {
 
-        if (this.#dirty & Grid.#DIRTY_OVERLAY) {
+        if (!this.#passive) {
+            // compact wires (must run before sim recompile to expose final wire topology)
+            if (this.#pending.wireCompact && this.#circuit) {
+                this.#suppressCircuitEvents = true;
+                Wire.compact(this);
+                this.#suppressCircuitEvents = false;
+                this.#pending.wireCompact = false;
+                this.pruneSelection();
+                this.invalidateSelection();
+                this.#pending.recompile = true;
+                this.#pending.netColors = true;
+                this.#pending.junctionRebuild = true;
+            }
+
+            // trigger simulation recompile if topology changed
+            if (this.#pending.recompile && this.#circuit) {
+                this.#app.simulations.markDirty(this.#circuit);
+                this.#pending.recompile = false;
+            }
+
+            // recompile sim if dirty — skip this render frame to avoid stale net-state flash
+            const sim = this.#app.simulations.current;
+            if (sim && sim.checkDirty()) {
+                return;
+            }
+        }
+
+        // Info box overlay (circuit/simulation labels)
+        if (this.#pending.overlayUpdate) {
             const isLocked = this.#app.config.lockSimulation ? '<span class="warning">Locked</span> ' : '';
             const singleStep = this.#app.config.singleStep ? '<span class="warning">Single Step</span> ' : '';
             const isReadonly = this.readonly ? '<span class="warning">Read-only</span> ' : '';
@@ -188,9 +228,11 @@ class Grid {
                 (!this.#infoBox.circuitDetails ? '' : `<div class="info-details">${this.#infoBox.circuitDetails}</div>`) +
                 (!this.#infoBox.simulationLabel ? '' : `<div class="info-section">${singleStep}${isLocked}Simulation</div><div class="info-title">${this.#infoBox.simulationLabel}</div>`) +
                 (!this.#infoBox.simulationDetails ? '' : `<div class="info-details">${this.#infoBox.simulationDetails}</div>`);
+            this.#pending.overlayUpdate = false;
         }
 
-        if (this.#dirty & (Grid.#DIRTY_OUTER | Grid.#DIRTY_INNER)) {
+        // CSS background grid pattern (zoom or pan changed)
+        if (this.#pending.bgPattern) {
 
             // add below/above/current zoom level classes to grid to enable zoom based styling
             if (!this.#element.classList.contains('grid-zoom-' + (this.zoom * 100))) {
@@ -218,40 +260,62 @@ class Grid {
             this.#element.style.backgroundSize = spacing + 'px ' + spacing + 'px';
             this.#element.style.backgroundPositionX = (offsetX % spacing) + 'px';
             this.#element.style.backgroundPositionY = (offsetY % spacing) + 'px';
+            this.#pending.bgPattern = false;
         }
 
         if (this.#circuit) {
 
-            const dirtyGrid = this.#dirty & (Grid.#DIRTY_OUTER | Grid.#DIRTY_INNER);
-            const anyDirty = !!(dirtyGrid || this.#circuit.hasItem((item) => item.dirty));
-
-            // apply wire net colors to attached ports
-            if (anyDirty) {
-                this.#applyNetColors();
+            // zoom → propagate NEEDS_FULL_RENDER to all items
+            if (this.#pending.viewportUpdate) {
+                for (const item of this.#circuit.items) {
+                    item.renderFlags = GridItem.NEEDS_FULL_RENDER;
+                }
+                this.#pending.viewportUpdate = false;
             }
 
-            // render components
-            for (const item of this.#circuit.items) {
-                if (dirtyGrid || item.dirty) {
-                    // optionally require full redraw from the item
-                    if (this.#dirty & Grid.#DIRTY_INNER) {
-                        item.dirty = true;
-                    }
-                    item.render();
-                    item.dirty = false;
+            // pan → propagate NEEDS_POSITION_UPDATE to all items (only if not already flagged higher)
+            if (this.#pending.panUpdate) {
+                for (const item of this.#circuit.items) {
+                    item.renderFlags |= GridItem.NEEDS_POSITION_UPDATE;
                 }
+                this.#pending.panUpdate = false;
+            }
 
+            // apply wire net colors to attached ports
+            if (this.#pending.netColors) {
+                this.#applyNetColors();
+                this.#pending.netColors = false;
+            }
+
+            // render items
+            for (const item of this.#circuit.items) {
+                const flags = item.renderFlags;
+                if (flags !== 0) {
+                    if (flags & GridItem.NEEDS_FULL_RENDER) {
+                        item.renderFull();
+                    } else if (flags & GridItem.NEEDS_DETAIL_RENDER) {
+                        item.renderDetail();
+                    } else {
+                        item.renderPosition();
+                    }
+                    item.renderFlags = 0;
+                }
                 item.renderNetState();
             }
 
-            if (anyDirty) {
+            // rebuild junction dots after topology changes, or just reposition after pan/zoom
+            if (this.#pending.junctionRebuild) {
                 this.#rebuildJunctions();
+                this.#pending.junctionRebuild = false;
+                this.#pending.junctionPositionUpdate = false;
+            } else if (this.#pending.junctionPositionUpdate) {
+                this.#updateJunctionPositions();
+                this.#pending.junctionPositionUpdate = false;
             }
             this.#updateJunctionNetStates();
         }
 
         this.#infoBox.FPSCount.current += 1;
-        this.#dirty = Grid.#DIRTY_NONE;
     }
 
     // Makes given grid item become the hotkey-target and when locked also prevents hover events from stealing hotkey focus until released.
@@ -272,9 +336,55 @@ class Grid {
         }
     }
 
-    // Mark grid as dirty (require redraw).
-    markDirty() {
-        this.#dirty |= Grid.#DIRTY_INNER | Grid.#DIRTY_OUTER;
+    // Called by Simulation after a recompile or attach/detach. Schedules net color and junction updates.
+    onSimulationRecompiled() {
+        this.#pending.netColors = true;
+        this.#pending.junctionRebuild = true;
+    }
+
+    // Called by Circuit when an item is added. Schedules wire compact and simulation recompile as needed.
+    onCircuitItemAdded(item) {
+        if (this.#suppressCircuitEvents) return;
+        if (item instanceof Wire && !item.limbo) {
+            this.#pending.wireCompact = true;
+        }
+        this.#pending.recompile = true;
+        this.#pending.netColors = true;
+        this.#pending.junctionRebuild = true;
+    }
+
+    // Called by Circuit when an item is removed. Schedules wire compact, simulation recompile, and selection pruning.
+    onCircuitItemRemoved(item) {
+        if (this.#suppressCircuitEvents) return;
+        if (item instanceof Wire) {
+            this.#pending.wireCompact = true;
+        }
+        this.pruneSelection();
+        this.#pending.recompile = true;
+        this.#pending.netColors = true;
+        this.#pending.junctionRebuild = true;
+    }
+
+    // Signals that wires have structurally changed (moved, built, trimmed).
+    // Schedules a wire compact and simulation recompile for the next frame.
+    onWiresChanged() {
+        this.#pending.wireCompact = true;
+        this.#pending.recompile = true;
+        this.#pending.netColors = true;
+        this.#pending.junctionRebuild = true;
+    }
+
+    // Signals that circuit topology has changed without a structural wire change (rotation, move-stop).
+    // Schedules a simulation recompile for the next frame.
+    onTopologyChanged() {
+        this.#pending.recompile = true;
+        this.#pending.netColors = true;
+    }
+
+    // Signals that wire colors changed without a topology change.
+    // Schedules net color propagation to ports for the next frame.
+    onNetColorsChanged() {
+        this.#pending.netColors = true;
     }
 
     // Returns the grids default status message.
@@ -293,8 +403,12 @@ class Grid {
     // Sets the zoom factor.
     set zoom(value) {
         assert.number(value);
-        this.#dirty |= this.#circuit.gridConfig.zoom !== value ? Grid.#DIRTY_INNER : 0;
-        this.#circuit.gridConfig.zoom = value;
+        if (this.#circuit.gridConfig.zoom !== value) {
+            this.#circuit.gridConfig.zoom = value;
+            this.#pending.bgPattern = true;
+            this.#pending.viewportUpdate = true;
+            this.#pending.junctionPositionUpdate = true;
+        }
     }
 
     // Sets grid x-offset.
@@ -305,8 +419,12 @@ class Grid {
     // Gets grid x-offset.
     set offsetX(value) {
         assert.number(value);
-        this.#dirty |= this.#circuit.gridConfig.offsetX !== value ? Grid.#DIRTY_OUTER : 0;
-        this.#circuit.gridConfig.offsetX = value;
+        if (this.#circuit.gridConfig.offsetX !== value) {
+            this.#circuit.gridConfig.offsetX = value;
+            this.#pending.bgPattern = true;
+            this.#pending.panUpdate = true;
+            this.#pending.junctionPositionUpdate = true;
+        }
     }
 
     // Sets grid y-offset.
@@ -317,8 +435,12 @@ class Grid {
     // Gets grid y-offset.
     set offsetY(value) {
         assert.number(value);
-        this.#dirty |= this.#circuit.gridConfig.offsetY !== value ? Grid.#DIRTY_OUTER : 0;
-        this.#circuit.gridConfig.offsetY = value;
+        if (this.#circuit.gridConfig.offsetY !== value) {
+            this.#circuit.gridConfig.offsetY = value;
+            this.#pending.bgPattern = true;
+            this.#pending.panUpdate = true;
+            this.#pending.junctionPositionUpdate = true;
+        }
     }
 
     // Gets the current zoom level index.
@@ -420,9 +542,8 @@ class Grid {
         }
         this.#selection = items;
         this.invalidateSelection();
-        Wire.compact(this);
-        this.pruneSelection();
-        this.#app.simulations.markDirty(this.#circuit);
+        // Wire compact, simulation recompile, and selection pruning are triggered automatically
+        // via onCircuitItemAdded events fired during addItem above.
         this.#app.haveChanges = true;
         this.trackAction('Paste selection');
     }
@@ -436,12 +557,11 @@ class Grid {
     #deleteSelection() {
         this.#circuit.detachSimulation();
         for (const item of this.#selection) {
-            this.removeItem(item, false);
+            this.removeItem(item); // fires onCircuitItemRemoved → schedules compact/recompile/prune
         }
         this.#selection = [];
         this.invalidateSelection();
-        Wire.compact(this);
-        this.#app.simulations.markDirty(this.#circuit);
+        // Wire compact, simulation recompile, and selection pruning handled automatically by circuit events.
         this.#app.haveChanges = true;
     }
 
@@ -466,7 +586,11 @@ class Grid {
             for (const port of net.ports) {
                 const component = this.#circuit.itemByGID(port.gid);
                 const portName = port.name;
-                component.portByName(portName).color = applyColor;
+                const p = component.portByName(portName);
+                if (p.color !== applyColor) {
+                    p.color = applyColor;
+                    component.renderFlags |= GridItem.NEEDS_DETAIL_RENDER;
+                }
             }
         }
         // clear color of unconnected wires
@@ -478,36 +602,41 @@ class Grid {
         for (const port of netList.unconnected.ports) {
             const component = this.#circuit.itemByGID(port.gid);
             const portName = port.name;
-            component.portByName(portName).color = null;
+            const p = component.portByName(portName);
+            if (p.color !== null) {
+                p.color = null;
+                component.renderFlags |= GridItem.NEEDS_DETAIL_RENDER;
+            }
         }
     }
 
     // Rebuilds junction dot elements for all T- and X-junction coordinates.
     // A junction exists wherever 3 or more wire endpoints share the same grid coordinate.
     #rebuildJunctions() {
-        const coordMap = new Map(); // "x:y" => { x, y, wire: Wire }
+        const coordMap = new Map(); // "x:y" => { x, y, wires: Wire[] }
         for (const item of this.#circuit.items) {
             if (!(item instanceof Wire) || item.disregard()) continue;
             for (const pt of item.points()) {
                 const key = pt.c;
                 if (!coordMap.has(key)) {
-                    coordMap.set(key, { x: pt.x, y: pt.y, count: 0, wire: item });
+                    coordMap.set(key, { x: pt.x, y: pt.y, wires: [] });
                 }
-                coordMap.get(key).count++;
+                coordMap.get(key).wires.push(item);
             }
         }
 
         // Remove stale junction elements for coordinates that are no longer junctions.
         for (const [key, { element }] of this.#junctionElements) {
-            if (!coordMap.has(key) || coordMap.get(key).count < 3) {
+            if (!coordMap.has(key) || coordMap.get(key).wires.length < 3) {
                 element.remove();
                 this.#junctionElements.delete(key);
             }
         }
 
         // Create or update junction elements for junction coordinates (3+ endpoints).
-        for (const [key, { x, y, count, wire }] of coordMap) {
-            if (count < 3) continue;
+        for (const [key, { x, y, wires }] of coordMap) {
+            if (wires.length < 3) continue;
+            const wire = wires[0];
             const vx = (x + this.offsetX) * this.zoom;
             const vy = (y + this.offsetY) * this.zoom;
             const isBus = (wire.netIds?.length ?? 0) > 1;
@@ -516,10 +645,11 @@ class Grid {
             if (!entry) {
                 const element = html(null, 'div', 'wire-junction');
                 this.#element.appendChild(element);
-                entry = { element, wire };
+                entry = { element, wire, wires, x, y };
                 this.#junctionElements.set(key, entry);
             } else {
                 entry.wire = wire;
+                entry.wires = wires;
             }
 
             entry.element.classList.toggle('wire-bus', isBus);
@@ -529,12 +659,27 @@ class Grid {
         }
     }
 
-    // Updates the net-state attribute on all junction dot elements (called every frame).
+    // Updates only the visual positions of existing junction elements after a pan or zoom.
+    #updateJunctionPositions() {
+        for (const { element, x, y } of this.#junctionElements.values()) {
+            element.style.left = (x + this.offsetX) * this.zoom + 'px';
+            element.style.top = (y + this.offsetY) * this.zoom + 'px';
+        }
+    }
+
+    // Updates the net-state and net-color attributes on all junction dot elements (called every frame).
     #updateJunctionNetStates() {
-        for (const { element, wire } of this.#junctionElements.values()) {
+        for (const { element, wire, wires } of this.#junctionElements.values()) {
+            const hidden = wires.some((w) => w.selected);
+            element.style.display = hidden ? 'none' : '';
+            if (hidden) continue;
             const state = wire.getNetState(wire.netIds);
             if (element.getAttribute('data-net-state') !== state) {
                 element.setAttribute('data-net-state', state);
+            }
+            const color = wire.color ?? '';
+            if (element.getAttribute('data-net-color') !== String(color)) {
+                element.setAttribute('data-net-color', color);
             }
         }
     }
@@ -559,7 +704,6 @@ class Grid {
             }
             this.invalidateSelection();
             this.#snapshotSelection();
-            this.#app.simulations.markDirty(this.#circuit);
         });
         this.#app.registerHotkey('ctrl+v', 'down', () => !this.readonly, () => this.actionPasteSelection());
         this.#app.registerHotkey('ctrl+c', 'down', () => !this.readonly && this.#selection.length > 0, () => this.copySelection());
@@ -587,7 +731,7 @@ class Grid {
         // below hotkeys only trigger when there is no hover target
         this.#app.registerHotkey('e', 'down', () => !this.readonly, (e) => {
             this.#app.circuits.edit(this.#circuit.uid);
-            this.#dirty |= Grid.#DIRTY_OVERLAY;
+            this.#pending.overlayUpdate = true;
         });
         this.#app.registerHotkey('w', 'down', () => this.#app.simulations.current, (e) => {
             // switch to parent simulation instance // TODO: when not simulating this should switch to the previous circuit. this requires adding a navigation history
@@ -658,7 +802,7 @@ class Grid {
                 item.setEndpoints(start.x, start.y, end.x, end.y);
             }
         }
-        this.#app.simulations.markDirty(this.#circuit);
+        this.onTopologyChanged();
         this.trackAction('Rotate selection');
     }
 
@@ -770,7 +914,8 @@ class Grid {
             if (trimB < wireEnd)
                 this.addItem(new Wire(this.#app, dir === 'h' ? trimB : fixed, dir === 'h' ? fixed : trimB, wireEnd - trimB, dir, wire.color), false);
         }
-        this.#app.simulations.markDirty(this.#circuit);
+        this.pruneSelection();
+        this.onWiresChanged();
     }
 
     // Removes all active trim overlay elements.
