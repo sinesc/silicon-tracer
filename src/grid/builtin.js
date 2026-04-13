@@ -21,6 +21,7 @@ class Builtin extends SimulationComponent {
         ajkflipflop: { label: 'JK flip-flop, async. reset', gateCount: 14, layoutOverride: { left: [ 'clock', 'k', 'j' ], right: [ null, 'q', null ], top: [ 'set' ], bottom: [ 'reset' ] } },
         tflipflop: { label: 'T flip-flop', gateCount: 11, layoutOverride: null },
         atflipflop: { label: 'T flip-flop, async. reset', gateCount: 14, layoutOverride: { left: [ 'clock', null, 't' ], right: [ null, 'q', null ], top: [ 'set' ], bottom: [ 'reset' ] } },
+        srlatch: { label: 'SR latch', gateCount: 2, layoutOverride: null },
         srflipflop: { label: 'SR flip-flop', gateCount: 9, layoutOverride: null },
         asrflipflop: { label: 'SR flip-flop, async. reset', gateCount: 12, layoutOverride: { left: [ 'clock', 'r', 's' ], right: [ null, 'q', null ], top: [ 'set' ], bottom: [ 'reset' ] } },
         //switch: { label: 'Switch', gateCount: 0, layoutOverride: { left: [ 'data' ], right: [ 'q' ], top: [ null ], bottom: [ 'close' ] } },
@@ -123,7 +124,7 @@ class Builtin extends SimulationComponent {
 
         return { left, right, inputs, outputs };
     }
-    
+
     static toolbarMeta(desc) {
         const label = Builtin.META_INFO[desc['#t']]?.label ?? desc['#t'].toUpperFirst();
         return { label, hoverMessage: `<b>${label}</b> builtin. <i>LMB</i> Drag to move onto grid.` };

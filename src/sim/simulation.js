@@ -47,6 +47,7 @@ class Simulation {
         ajkflipflop : { outputs: { q: '~reset & (set | ((+clock & ((j & ~q) | (~k & q))) | (~+clock & q)))' }, inputs: [ 'clock', 'k', 'j', 'reset', 'set' ] },
         tflipflop   : { outputs: { q: '(+clock & ((t & ~q) | (~t & q))) | (~+clock & q)' }, inputs: [ 'clock', 't' ] },
         atflipflop  : { outputs: { q: '~reset & (set | ((+clock & ((t & ~q) | (~t & q))) | (~+clock & q)))' }, inputs: [ 'clock', 't', 'reset', 'set' ] },
+        srlatch     : { outputs: { q: 's | (~r & q)', nq: '!q' }, inputs: [ 'r', 's' ] },
         srflipflop  : { outputs: { q: '(+clock & (s | (~r & q))) | (~+clock & q)' }, inputs: [ 'clock', 'r', 's' ] },
         asrflipflop : { outputs: { q: '~reset & (set | ((+clock & (s | (~r & q))) | (~+clock & q)))' }, inputs: [ 'clock', 'r', 's', 'reset', 'set' ] },
         switch      : { outputs: { output: 'input' }, signals: { output: 'close' }, inputs: [ 'close', 'input' ] }, // FIXME: signals should be: { output: 'close & ?input' } but ?input not yet supported (reconsider even using this because switch behaviour is inconvenient [requiring an input])
