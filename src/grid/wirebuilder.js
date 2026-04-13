@@ -116,6 +116,7 @@ class WireBuilder extends GridItem { // Note: Not actually a grid item, but uses
             }
         }
         Wire.compact(this.grid);
+        this.grid.pruneSelection();
         this.grid.markDirty();
         this.app.simulations.markDirty(this.grid.circuit);
     }

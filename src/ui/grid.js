@@ -420,7 +420,10 @@ class Grid {
         }
         this.#selection = items;
         this.invalidateSelection();
+        Wire.compact(this);
+        this.pruneSelection();
         this.#app.simulations.markDirty(this.#circuit);
+        this.#app.haveChanges = true;
         this.trackAction('Paste selection');
     }
 
@@ -440,6 +443,13 @@ class Grid {
         Wire.compact(this);
         this.#app.simulations.markDirty(this.#circuit);
         this.#app.haveChanges = true;
+    }
+
+    // Remove unlinked items from selection (deleted items that are now only referenced by the selection)
+    pruneSelection() {
+        if (this.#selection.length > 0) {
+            this.#selection = this.#selection.filter(item => item.grid === this);
+        }
     }
 
     // Applies net colors to component ports on the grid.

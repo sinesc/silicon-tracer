@@ -186,6 +186,8 @@ class GridItem {
             }
             this.grid.invalidateSelection();
             if (status === 'stop') {
+                Wire.compact(this.grid);
+                this.grid.pruneSelection();
                 this.grid.trackAction('Move selection');
             }
             return true;

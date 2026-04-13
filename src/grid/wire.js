@@ -171,6 +171,7 @@ class Wire extends GridItem {
                     const grid = this.grid;
                     this.grid.removeItem(this);
                     Wire.compact(grid);
+                    grid.pruneSelection();
                 }
             }, 150);
             return true;
