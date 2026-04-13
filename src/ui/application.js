@@ -573,12 +573,34 @@ class Application {
                     (grid, x, y) => grid.addItem(new Splitter(this, x, y, defaults.splitter.rotation, defaults.splitter.numSplits)), { '#c': 'Splitter' });
                 this.#menuComponentButton(routingMenu, 'Tunnel', `<b>Network tunnel</b>. ${DRAG_MSG}`,
                     (grid, x, y) => grid.addItem(new Tunnel(this, x, y, defaults.tunnel.rotation)), { '#c': 'Tunnel' });
+                this.#menuComponentButton(routingMenu, 'Probe', `<b>Net state probe</b>. Displays the state of attached net. ${DRAG_MSG}`,
+                    (grid, x, y) => grid.addItem(new Probe(this, x, y, defaults.probe.rotation)), { '#c': 'Probe' });
                 this.#menuComponentButton(routingMenu, 'Text', `<b>Userdefined text message</b>. ${DRAG_MSG}`,
                     (grid, x, y) => grid.addItem(new TextLabel(this, x, y, defaults.textlabel.rotation)), { '#c': 'TextLabel' });
+
+            });
+
+            // io/utilities
+            componentMenu.createMenuCategory('IO/Control', 'Clocks, constants, ...', (ioMenu) => {
+                ioMenu.clear();
+                this.#menuComponentButton(ioMenu, 'Clock', `<b>Clock</b>. ${DRAG_MSG}`,
+                    (grid, x, y) => grid.addItem(new Clock(this, x, y, defaults.clock.rotation)), { '#c': 'Clock' });
+                this.#menuComponentButton(ioMenu, 'Constant', `<b>Constant value</b>. ${DRAG_MSG}`,
+                    (grid, x, y) => grid.addItem(new Constant(this, x, y, defaults.constant.rotation)), { '#c': 'Constant' });
+                this.#menuComponentButton(ioMenu, 'Pull resistor', `<b>Pull up/down resistor</b>. ${DRAG_MSG}`,
+                    (grid, x, y) => grid.addItem(new PullResistor(this, x, y, defaults.pull.rotation)), { '#c': 'PullResistor' });
+                this.#menuComponentButton(ioMenu, 'Toggle switch', `<b>Toggle switch</b> with permanently saved state. ${DRAG_MSG}`,
+                    (grid, x, y) => grid.addItem(new Switch(this, x, y, defaults.switch.rotation, 'toggle')), { '#c': 'Switch', '#t': 'toggle' });
+                this.#menuComponentButton(ioMenu, 'Momentary switch', `<b>Momentary switch</b>. ${DRAG_MSG}`,
+                    (grid, x, y) => grid.addItem(new Switch(this, x, y, defaults.switch.rotation, 'momentary')), { '#c': 'Switch', '#t': 'momentary' });
+                this.#menuComponentButton(ioMenu, 'ROM', `<b>Read-only memory</b>. ${DRAG_MSG}`,
+                    (grid, x, y) => grid.addItem(new Memory(this, x, y, defaults.rom.rotation, 'rom', defaults.rom.addressWidth, defaults.rom.dataWidth)), { '#c': 'Memory', '#t': 'rom' });
+                this.#menuComponentButton(ioMenu, 'RAM', `<b>Read/write memory</b>. ${DRAG_MSG}`,
+                    (grid, x, y) => grid.addItem(new Memory(this, x, y, defaults.ram.rotation, 'ram', defaults.ram.addressWidth, defaults.ram.dataWidth, null, defaults.ram.combinedPorts)), { '#c': 'Memory', '#t': 'ram' });
             });
 
             // add gates
-            componentMenu.createMenuCategory('Basic gates', 'Basic gates.', (gatesMenu) => {
+            componentMenu.createMenuCategory('Gates', 'Basic gates.', (gatesMenu) => {
                 gatesMenu.clear();
                 for (const [ gateType, { joinOp } ] of Object.entries(Simulation.GATE_MAP)) {
                     const gateLabel = gateType.toUpperFirst();
@@ -591,7 +613,7 @@ class Application {
             });
 
             // add extra gate-like builtins
-            componentMenu.createMenuCategory('Basic components', 'Latches, muxes, ...', (builtinMenu) => {
+            componentMenu.createMenuCategory('Logic components', 'Latches, muxes, ...', (builtinMenu) => {
                 builtinMenu.clear();
                 const builtins = [];
                 for (const [ builtinType, builtin ] of pairs(Builtin.META_INFO)) {
@@ -603,27 +625,6 @@ class Application {
                         (grid, x, y) => grid.addItem(new Builtin(this, x, y, defaults[builtinType]?.rotation ?? defaults.builtin.rotation, builtinType)),
                         { '#c': 'Builtin', '#t': builtinType });
                 }
-            });
-
-            // io/utilities
-            componentMenu.createMenuCategory('IO/Control', 'Clocks, constants, ...', (ioMenu) => {
-                ioMenu.clear();
-                this.#menuComponentButton(ioMenu, 'Clock', `<b>Clock</b>. ${DRAG_MSG}`,
-                    (grid, x, y) => grid.addItem(new Clock(this, x, y, defaults.clock.rotation)), { '#c': 'Clock' });
-                this.#menuComponentButton(ioMenu, 'Constant', `<b>Constant value</b>. ${DRAG_MSG}`,
-                    (grid, x, y) => grid.addItem(new Constant(this, x, y, defaults.constant.rotation)), { '#c': 'Constant' });
-                this.#menuComponentButton(ioMenu, 'Probe', `<b>Net state probe</b>. Displays the state of attached net. ${DRAG_MSG}`,
-                    (grid, x, y) => grid.addItem(new Probe(this, x, y, defaults.probe.rotation)), { '#c': 'Probe' });
-                this.#menuComponentButton(ioMenu, 'Pull resistor', `<b>Pull up/down resistor</b>. ${DRAG_MSG}`,
-                    (grid, x, y) => grid.addItem(new PullResistor(this, x, y, defaults.pull.rotation)), { '#c': 'PullResistor' });
-                this.#menuComponentButton(ioMenu, 'Toggle switch', `<b>Toggle switch</b> with permanently saved state. ${DRAG_MSG}`,
-                    (grid, x, y) => grid.addItem(new Switch(this, x, y, defaults.switch.rotation, 'toggle')), { '#c': 'Switch', '#t': 'toggle' });
-                this.#menuComponentButton(ioMenu, 'Momentary switch', `<b>Momentary switch</b>. ${DRAG_MSG}`,
-                    (grid, x, y) => grid.addItem(new Switch(this, x, y, defaults.switch.rotation, 'momentary')), { '#c': 'Switch', '#t': 'momentary' });
-                this.#menuComponentButton(ioMenu, 'ROM', `<b>Read-only memory</b>. ${DRAG_MSG}`,
-                    (grid, x, y) => grid.addItem(new Memory(this, x, y, defaults.rom.rotation, 'rom', defaults.rom.addressWidth, defaults.rom.dataWidth)), { '#c': 'Memory', '#t': 'rom' });
-                this.#menuComponentButton(ioMenu, 'RAM', `<b>Read/write memory</b>. ${DRAG_MSG}`,
-                    (grid, x, y) => grid.addItem(new Memory(this, x, y, defaults.ram.rotation, 'ram', defaults.ram.addressWidth, defaults.ram.dataWidth, null, defaults.ram.combinedPorts)), { '#c': 'Memory', '#t': 'ram' });
             });
 
             // add libraries
