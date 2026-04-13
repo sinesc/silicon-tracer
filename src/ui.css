@@ -760,6 +760,11 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
 .grid.grid-zoom-175 {
     background-image: radial-gradient(circle, #aaa 1px, var(--grid-bg-color) 1px);
 }
+.grid-world {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
 .grid-info {
     z-index: 20;
     position: absolute;

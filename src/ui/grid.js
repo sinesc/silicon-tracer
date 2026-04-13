@@ -18,11 +18,11 @@ class Grid {
         junctionPositionUpdate: false, // pan/zoom changed → reposition junction elements on next render
         bgPattern: true,               // zoom or pan changed → CSS background update on next render
         viewportUpdate: false,         // zoom changed → propagate NEEDS_FULL_RENDER to all items
-        panUpdate: false,              // pan changed → propagate NEEDS_POSITION_UPDATE to all items
         overlayUpdate: true,           // info box content changed → re-render overlay on next render
     };
     #suppressCircuitEvents = false;  // true while Wire.compact runs inside render()
     #element;
+    #worldElement;
     #selectionElement;
     #selection = [];
     #selectionCenter = null;
@@ -50,6 +50,7 @@ class Grid {
         assert.class(Node, parent);
         this.#app = app;
         this.#element = html(parent, 'div', 'grid');
+        this.#worldElement = html(this.#element, 'div', 'grid-world');
         this.#infoBox.element = html(this.#element, 'div', 'grid-info', '');
         this.#selectionElement = html(this.#element, 'div', 'grid-selection hidden');
         this.#debugElement = html(this.#element, 'div', 'debug-info');
@@ -94,6 +95,7 @@ class Grid {
         this.#pending.overlayUpdate = true;
         this.#pending.netColors = true;
         this.#pending.junctionRebuild = true;
+        this.#updateWorldTransform();
         if (!circuit.readonly && circuit.undoStack.currentSnapshot === null) {
             circuit.undoStack.init(circuit.serializeForUndo());
         }
@@ -158,7 +160,7 @@ class Grid {
     // Adds a visual element for a grid item to the grid.
     addVisual(element) {
         assert.class(Node, element);
-        this.#element.appendChild(element);
+        this.#worldElement.appendChild(element);
     }
 
     // Removes a visual element from the grid.
@@ -271,14 +273,6 @@ class Grid {
                     item.renderFlags = GridItem.NEEDS_FULL_RENDER;
                 }
                 this.#pending.viewportUpdate = false;
-            }
-
-            // pan → propagate NEEDS_POSITION_UPDATE to all items (only if not already flagged higher)
-            if (this.#pending.panUpdate) {
-                for (const item of this.#circuit.items) {
-                    item.renderFlags |= GridItem.NEEDS_POSITION_UPDATE;
-                }
-                this.#pending.panUpdate = false;
             }
 
             // apply wire net colors to attached ports
@@ -408,6 +402,7 @@ class Grid {
             this.#pending.bgPattern = true;
             this.#pending.viewportUpdate = true;
             this.#pending.junctionPositionUpdate = true;
+            this.#updateWorldTransform();
         }
     }
 
@@ -422,8 +417,7 @@ class Grid {
         if (this.#circuit.gridConfig.offsetX !== value) {
             this.#circuit.gridConfig.offsetX = value;
             this.#pending.bgPattern = true;
-            this.#pending.panUpdate = true;
-            this.#pending.junctionPositionUpdate = true;
+            this.#updateWorldTransform();
         }
     }
 
@@ -438,8 +432,7 @@ class Grid {
         if (this.#circuit.gridConfig.offsetY !== value) {
             this.#circuit.gridConfig.offsetY = value;
             this.#pending.bgPattern = true;
-            this.#pending.panUpdate = true;
-            this.#pending.junctionPositionUpdate = true;
+            this.#updateWorldTransform();
         }
     }
 
@@ -637,14 +630,14 @@ class Grid {
         for (const [key, { x, y, wires }] of coordMap) {
             if (wires.length < 3) continue;
             const wire = wires[0];
-            const vx = (x + this.offsetX) * this.zoom;
-            const vy = (y + this.offsetY) * this.zoom;
+            const vx = x * this.zoom;
+            const vy = y * this.zoom;
             const isBus = (wire.netIds?.length ?? 0) > 1;
 
             let entry = this.#junctionElements.get(key);
             if (!entry) {
                 const element = html(null, 'div', 'wire-junction');
-                this.#element.appendChild(element);
+                this.#worldElement.appendChild(element);
                 entry = { element, wire, wires, x, y };
                 this.#junctionElements.set(key, entry);
             } else {
@@ -659,11 +652,18 @@ class Grid {
         }
     }
 
+    // Applies the current pan offset as a CSS transform on the world container.
+    #updateWorldTransform() {
+        const tx = this.offsetX * this.zoom;
+        const ty = this.offsetY * this.zoom;
+        this.#worldElement.style.transform = `translate(${tx}px, ${ty}px)`;
+    }
+
     // Updates only the visual positions of existing junction elements after a pan or zoom.
     #updateJunctionPositions() {
         for (const { element, x, y } of this.#junctionElements.values()) {
-            element.style.left = (x + this.offsetX) * this.zoom + 'px';
-            element.style.top = (y + this.offsetY) * this.zoom + 'px';
+            element.style.left = x * this.zoom + 'px';
+            element.style.top = y * this.zoom + 'px';
         }
     }
 

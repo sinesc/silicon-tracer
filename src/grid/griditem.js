@@ -300,8 +300,8 @@ class GridItem {
     // Gets the grid-relative screen coordinate/dimensions for this grid item.
     get visual() {
         return {
-            x: (this.x + this.grid.offsetX) * this.grid.zoom,
-            y: (this.y + this.grid.offsetY) * this.grid.zoom,
+            x: this.x * this.grid.zoom,
+            y: this.y * this.grid.zoom,
             width: this.width * this.grid.zoom,
             height: this.height * this.grid.zoom,
         };
@@ -318,8 +318,8 @@ class GridItem {
         assert.number(x);
         assert.number(y);
         return [
-            (x + this.grid.offsetX) * this.grid.zoom,
-            (y + this.grid.offsetY) * this.grid.zoom
+            x * this.grid.zoom,
+            y * this.grid.zoom
         ];
     }
 
