@@ -311,7 +311,7 @@ function comparePriority(a, b, priorities) {
 
     // Asserts given value is a plain object.
     assert.object = function(val, allow_null = false, objectTester = null, message = null) {
-        if (!(allow_null && val === null) && val?.constructor !== Object) {
+        if (!(allow_null && val === null) && ((val?.constructor !== Object && val?.constructor !== undefined) || typeof val !== 'object')) {
             let ty = type(val);
             ty = ty === 'object' ? 'instance of ' + val.constructor.name : ty;
             message = typeof message === 'function' ? message() : message;
