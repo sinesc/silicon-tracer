@@ -107,10 +107,24 @@ class LogiSim {
         if (!ok) {
             return null;
         }
-        [ this.#fileHandle ] = await File.open(this.#fileHandle, '.circ');
-        const file = await this.#fileHandle.getFile();
-        const text = await file.text();
-        return XML.parse(text).project;
+        let file;
+        let text;
+        let result;
+        try {
+            [ this.#fileHandle ] = await File.open(this.#fileHandle, '.circ');
+            file = await this.#fileHandle.getFile();
+            text = await file.text();
+        } catch (e) {
+            return null; // user abort, treat same as dialog cancel
+        }
+        try {
+            result = XML.parse(text).project;
+            assert.object(result);
+        } catch (e) {
+            await errorDialog('Cannot load file', `The file <b>${file.name}</b> is corrupt or not a LogiSim file. Import aborted.`);
+            throw e;
+        }
+        return result;
     }
 
     // Convert LogiSim scale.
