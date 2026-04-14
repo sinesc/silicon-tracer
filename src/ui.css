@@ -399,7 +399,7 @@ body.no-focus #focus-hint:has(~div.grid:hover) {
     padding: 0 10px 0 0;
     line-height: 2;
 }
-.dialog-container.info-dialog .dialog-row-label, .dialog-container.confirm-dialog .dialog-row-label {
+.dialog-container.info-dialog .dialog-row-label, .dialog-container.error-dialog .dialog-row-label, .dialog-container.confirm-dialog .dialog-row-label {
     line-height: 1.2;
     color: #ddd;
     max-width: none;

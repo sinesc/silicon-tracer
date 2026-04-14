@@ -76,6 +76,7 @@ class GridItem {
         const cname = item['#c'];
         const cargs = item['#a'];
         let instance;
+        let isError = false;
         if (cname === 'CustomComponent') {
             const uid = cargs[3];
             let missing = false;
@@ -90,18 +91,23 @@ class GridItem {
             if (missing) {
                 instance = new GridItem.CLASSES['TextLabel'](app, cargs[0] ?? 0, cargs[1] ?? 0, 0, 200, 'Missing custom component ' + uid, 'small', 4);
                 errors.push([ 'missing', uid ]);
+                isError = true;
             } else {
                 instance = new GridItem.CLASSES['CustomComponent'](app, ...cargs);
             }
         } else if (GridItem.CLASSES[cname]) {
             instance = new GridItem.CLASSES[cname](app, ...cargs);
         } else {
+            instance = new GridItem.CLASSES['TextLabel'](app, cargs[0] ?? 0, cargs[1] ?? 0, 0, 200, 'Unknown component ' + cname, 'small', 4);
             errors.push([ 'invalid', cname ]);
-            return null;
+            isError = true;
         }
-        for (const [ k, v ] of Object.entries(item)) {
-            if (k.slice(0, 1) !== '#') {
-                instance[k] = v;
+        // set remaining properties
+        if (!isError) {
+            for (const [ k, v ] of Object.entries(item)) {
+                if (k.slice(0, 1) !== '#') {
+                    instance[k] = v;
+                }
             }
         }
         return instance;

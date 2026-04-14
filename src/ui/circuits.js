@@ -106,7 +106,7 @@ class Circuits {
             }
         }
         if (errors.length > 0) {
-            await infoDialog('Circuit issues detected', '<b>Some components or component types used in the file are missing or unsupported.</b><br><br>Please check the the loaded circuits carefully as <b><u>you will lose the missing/unsupported components</u></b> if you save the file now. If you have unloaded packaged libraries (via CTRL+Close) the circuits might depend on those. Otherwise, if you are not on the latest version of Silicon Tracer updating might fix the issue.');
+            await errorDialog('Circuit issues detected', '<b>Some components or component types used in the file are missing or unsupported.</b><br><br>Please check the the loaded circuits carefully as <b><u>you will lose the missing/unsupported components</u></b> if you save the file now. If you have unloaded packaged libraries (via CTRL+Close) the circuits might depend on those. Otherwise, if you are not on the latest version of Silicon Tracer updating might fix the issue.');
         }
     }
 
