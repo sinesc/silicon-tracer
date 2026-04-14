@@ -764,6 +764,8 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
     position: absolute;
     top: 0;
     left: 0;
+    width: 100%;
+    height: 100%;
 }
 .grid-info {
     z-index: 20;

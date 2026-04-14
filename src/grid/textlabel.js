@@ -11,6 +11,8 @@ class TextLabel extends GridItem {
         ...Component.EDIT_DIALOG,
     ];
 
+    static #ctx = document.createElement('canvas').getContext('2d');
+
     #element;
     #inner;
     #dropPreview;
@@ -18,6 +20,7 @@ class TextLabel extends GridItem {
     #color;
     #text;
     #rotation;
+    #computedWidth = {};
 
     constructor(app, x, y, rotation, maxLength = 180, text = 'Placeholder text. Press e to edit.', fontSize = 'small', color = null) {
         assert.integer(rotation);
@@ -202,9 +205,17 @@ class TextLabel extends GridItem {
             this.#fontSize = config.fontSize;
             this.#color = config.color === '-' ? null : Number.parseInt(config.color.slice(1));
             this.#rotation = config.rotation;
+            this.#computedWidth = {};
             this.redraw();
             this.grid.trackAction('Edit text label');
         }
+    }
+
+    // Measures the natural pixel width of the text at current font settings.
+    #computeWidth() {
+        TextLabel.#ctx.font = getComputedStyle(this.#inner).font;
+        const padding = 5 * 2; // compensate padding on `.text > .inner` padding
+        return Math.ceil(Math.max(...this.#text.split('\n').map(line => TextLabel.#ctx.measureText(line).width))) + padding;
     }
 
     // Renders the text label onto the grid.
@@ -215,11 +226,11 @@ class TextLabel extends GridItem {
         const v = this.visual;
         this.#element.style.left = v.x + "px";
         this.#element.style.top = v.y + "px";
-        this.#element.style.maxWidth = v.width + "px";
-        this.#element.style.width = 'auto';
         this.#element.style.height = 'auto';
         this.#element.setAttribute('data-text-rotation', this.#rotation);
-        this.renderDetail();
+        this.renderDetail(); // apply font classes before measuring
+        this.#computedWidth[`z${this.grid.zoom}`] ??= this.#computeWidth();
+        this.#element.style.width = Math.min(this.#computedWidth[`z${this.grid.zoom}`], v.width) + 'px';
         return true;
     }
 
