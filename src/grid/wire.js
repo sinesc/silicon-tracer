@@ -396,6 +396,109 @@ class Wire extends GridItem {
             }
         }
     }
+
+    // Finds non-selected wires with an endpoint attached to a selection.
+    static findSelectionAttachedWires(grid, selection, startX, startY) {
+        assert.class(Grid, grid);
+        assert.array(selection);
+        assert.number(startX);
+        assert.number(startY);
+        const selectionPoints = new Set();
+        for (const item of selection) {
+            if (item instanceof Wire) {
+                const [ p0, p1 ] = item.points();
+                selectionPoints.add(`${p0.x},${p0.y}`);
+                selectionPoints.add(`${p1.x},${p1.y}`);
+            } else if (item instanceof Component) {
+                for (const port of item.ports) {
+                    const c = port.coords(item.width, item.height, item.rotation);
+                    selectionPoints.add(`${item.x + c.x},${item.y + c.y}`);
+                }
+            }
+        }
+        const attachedWires = [];
+        for (const wire of grid.items.filter(i => i instanceof Wire && !i.selected && !i.limbo).toArray()) {
+            const [ p0, p1 ] = wire.points();
+            const p0c = selectionPoints.has(`${p0.x},${p0.y}`);
+            const p1c = selectionPoints.has(`${p1.x},${p1.y}`);
+            if (p0c && !p1c) {
+                attachedWires.push({ wire, endpoint: 0, initialX: wire.x, initialY: wire.y, initialWidth: wire.width, initialHeight: wire.height });
+            } else if (p1c && !p0c) {
+                attachedWires.push({ wire, endpoint: 1, initialX: wire.x, initialY: wire.y, initialWidth: wire.width, initialHeight: wire.height });
+            }
+        }
+        return { startX, startY, attachedWires };
+    }
+
+    // Updates non-selected wires, returns clamped drag position (to avoid wire length going to 0)
+    static updateSelectionAttachedWires(x, y, dragInfo, status) {
+        assert.number(x);
+        assert.number(y);
+        assert.object(dragInfo);
+        assert.string(status);
+        const dx = x - dragInfo.startX;
+        const dy = y - dragInfo.startY;
+        const [ cdx, cdy ] = Wire.#clampAltDrag(dragInfo.attachedWires, dx, dy);
+        const effectiveX = dragInfo.startX + cdx;
+        const effectiveY = dragInfo.startY + cdy;
+        Wire.#applyAltDragWires(dragInfo.attachedWires, cdx, cdy, status === 'stop');
+        return [ effectiveX, effectiveY ];
+    }
+
+    // Returns [dx, dy] clamped so no attached wire falls below Grid.SPACING minimum length.
+    static #clampAltDrag(attachedWires, dx, dy) {
+        let minDx = -Infinity, maxDx = Infinity;
+        let minDy = -Infinity, maxDy = Infinity;
+        const MIN = Grid.SPACING;
+        for (const { endpoint, initialWidth, initialHeight } of attachedWires) {
+            if (initialWidth > 0) {
+                // Horizontal wire: constrains dx only
+                const room = initialWidth - MIN;
+                if (endpoint === 0) {
+                    maxDx = Math.min(maxDx, room); // p0 moves right → shrinks wire
+                } else {
+                    minDx = Math.max(minDx, -room); // p1 moves left → shrinks wire
+                }
+            } else {
+                // Vertical wire: constrains dy only
+                const room = initialHeight - MIN;
+                if (endpoint === 0) {
+                    maxDy = Math.min(maxDy, room); // p0 moves down → shrinks wire
+                } else {
+                    minDy = Math.max(minDy, -room); // p1 moves up → shrinks wire
+                }
+            }
+        }
+        return [
+            Math.max(minDx, Math.min(maxDx, dx)),
+            Math.max(minDy, Math.min(maxDy, dy)),
+        ];
+    }
+
+    // Stretches/shrinks attached wires to follow clamped delta.
+    static #applyAltDragWires(attachedWires, dx, dy, snap) {
+        for (const { wire, endpoint, initialX, initialY, initialWidth, initialHeight } of attachedWires) {
+            if (initialWidth > 0) {
+                // Horizontal wire: apply dx only
+                const rdx = snap ? Math.ceil(dx / Grid.SPACING - 0.5) * Grid.SPACING : Math.round(dx);
+                if (endpoint === 0) {
+                    wire.x = initialX + rdx;
+                    wire.width = initialWidth - rdx;
+                } else {
+                    wire.width = initialWidth + rdx;
+                }
+            } else {
+                // Vertical wire: apply dy only
+                const rdy = snap ? Math.ceil(dy / Grid.SPACING - 0.5) * Grid.SPACING : Math.round(dy);
+                if (endpoint === 0) {
+                    wire.y = initialY + rdy;
+                    wire.height = initialHeight - rdy;
+                } else {
+                    wire.height = initialHeight + rdy;
+                }
+            }
+        }
+    }
 }
 
 GridItem.CLASSES['Wire'] = Wire;

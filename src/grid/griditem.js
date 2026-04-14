@@ -200,13 +200,18 @@ class GridItem {
         const selection = this.grid.selection;
         if (selection.length > 0 && this.selected) {
             if (status === 'start') {
-                what.items = (new Array(selection.length)).fill(null, 0, selection.length).map((_) => ({})); // excellent developer experience
+                what.items = (new Array(selection.length)).fill(null, 0, selection.length).map((_) => ({}));
+                if (this.app.modifierKeys.altKey) {
+                    what.altDrag = Wire.findSelectionAttachedWires(this.grid, selection, x, y);
+                }
             }
+            const [ effectiveX, effectiveY ] = what.altDrag ? Wire.updateSelectionAttachedWires(x, y, what.altDrag, status) : [ x, y ];
             for (const [ index, item ] of pairs(this.grid.selection)) {
-                item.onMove(x, y, status, what.items[index]);
+                item.onMove(effectiveX, effectiveY, status, what.items[index]);
             }
             this.grid.invalidateSelection();
             if (status === 'stop') {
+                delete what.altDrag;
                 this.grid.onWiresChanged(); // schedules compact + recompile; pruneSelection runs after compact
                 this.grid.trackAction('Move selection');
             }
@@ -465,7 +470,7 @@ class GridItem {
             this.grid.releaseHotkeyTarget(this);
         }
         // set the status message, if any
-        const message = !this.selected ? this.#hoverMessages.get(element) : '<b>Multiple items.</b> <i>LMB</i> Drag to move, <i>R</i> Rotate, <i>DEL</i> Delete, <i>CTRL+C</i> Copy, <i>CTRL+X</i> Cut';
+        const message = !this.selected ? this.#hoverMessages.get(element) : '<b>Multiple items.</b> <i>LMB</i> Drag to move, <i>ALT+LMB</i> Drag to move and shorten/lengthen wires, <i>R</i> Rotate, <i>DEL</i> Delete, <i>CTRL+C</i> Copy, <i>CTRL+X</i> Cut';
         if (message) {
             if (status === 'start') {
                 this.#app.setStatus(message, false, this);
