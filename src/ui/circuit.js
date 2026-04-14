@@ -5,6 +5,7 @@ class Circuit {
 
     static CREATE_DIALOG = [
         { name: 'label', label: 'Circuit label', type: 'string' },
+        { name: 'description', label: 'Optional description', type: 'string' },
         { name: 'visibleInLib', label: 'Visible when loaded as library', type: 'bool' },
         { separator: true, text: 'Default settings. These can be overriden per placed component.' },
         { name: 'spacing', label: 'Pin spacing', type: 'select', options: { 0: "None", 1: "One", 2: "Two" }, apply: (v, f) => Number.parseInt(v) },
@@ -22,6 +23,7 @@ class Circuit {
     ];
 
     label;
+    description = '';
     uid;
     gridConfig;
     portConfig;
@@ -56,13 +58,14 @@ class Circuit {
 
     // Creates a new circuit.
     static async create(app, label) {
-        const config = await dialog("Create circuit", Circuit.CREATE_DIALOG, { label, spacing: '0', gap: 'middle', parity: 'automatic', visibleInLib: true });
+        const config = await dialog("Create circuit", Circuit.CREATE_DIALOG, { label, spacing: '0', gap: 'middle', parity: 'automatic', visibleInLib: true, description: '' });
         if (config) {
             const circuit = new Circuit(app, config.label);
             circuit.portConfig.spacing = config.spacing;
             circuit.portConfig.gap = config.gap;
             circuit.portConfig.parity = config.parity;
             circuit.visibleInLib = config.visibleInLib;
+            circuit.description = config.description;
             return circuit;
         }
         return null;
@@ -72,8 +75,9 @@ class Circuit {
     async edit() {
         const componentPreview = this.makeComponentPreview();
         // show configuration dialog and preview
-        const result = await dialog("Configure circuit", Circuit.EDIT_DIALOG, {
+        const config = await dialog("Configure circuit", Circuit.EDIT_DIALOG, {
             label: this.label,
+            description: this.description,
             spacing: '' + this.portConfig.spacing,
             gap: this.portConfig.gap,
             parity: this.portConfig.parity,
@@ -83,18 +87,19 @@ class Circuit {
             bottom: this.portConfig.placement.bottom,
             left: this.portConfig.placement.left,
         }, { onChange: componentPreview });
-        if (result) {
-            this.label = result.label;
-            this.portConfig.spacing = Number.parseInt(result.spacing);
-            this.portConfig.gap = result.gap;
-            this.portConfig.parity = result.parity;
-            this.visibleInLib = result.visibleInLib;
-            this.portConfig.placement.top = result.top;
-            this.portConfig.placement.right = result.right;
-            this.portConfig.placement.bottom = result.bottom;
-            this.portConfig.placement.left = result.left;
-            this.#app.grid.setCircuitLabel(result.label);
-            this.#app.grid.setSimulationLabel(result.label);
+        if (config) {
+            this.label = config.label;
+            this.description = config.description;
+            this.portConfig.spacing = Number.parseInt(config.spacing);
+            this.portConfig.gap = config.gap;
+            this.portConfig.parity = config.parity;
+            this.visibleInLib = config.visibleInLib;
+            this.portConfig.placement.top = config.top;
+            this.portConfig.placement.right = config.right;
+            this.portConfig.placement.bottom = config.bottom;
+            this.portConfig.placement.left = config.left;
+            this.#app.grid.setCircuitLabel(config.label);
+            this.#app.grid.setSimulationLabel(config.label);
             this.#app.grid.trackAction('Edit circuit');
             return true;
         }
@@ -218,7 +223,7 @@ class Circuit {
                 return a['#c'] === 'Wire' ? -1 : (b['#c'] === 'Wire' ? 1 : compare(a['#c'], b['#c']));
             }
         });
-        return { label: this.label, uid: this.uid, data, gridConfig: this.gridConfig, portConfig: this.portConfig, lid: this.#lid, visibleInLib: this.visibleInLib };
+        return { label: this.label, description: this.description, uid: this.uid, data, gridConfig: this.gridConfig, portConfig: this.portConfig, lid: this.#lid, visibleInLib: this.visibleInLib };
     }
 
     // Serializes circuit state for undo tracking (excludes gridConfig, uid, lid, visibleInLib).
@@ -227,6 +232,7 @@ class Circuit {
         const selectedGids = new Set(grid.circuit === this ? grid.selection.map((i) => i.gid) : []);
         return {
             label: this.label,
+            description: this.description,
             portConfig: JSON.parse(JSON.stringify(this.portConfig)),
             data: this.#data.map((item) => ({ ...item.serialize(), '#gid': item.gid, '#selected': selectedGids.has(item.gid) })),
         };
@@ -244,6 +250,7 @@ class Circuit {
         this.#data = [];
         this.#gidLookup = new Map();
         this.label = snapshot.label;
+        this.description = snapshot.description;
         Object.assign(this.portConfig, snapshot.portConfig);
         this.portConfig.placement = Object.assign({}, snapshot.portConfig.placement);
         const selectedGids = new Set();
@@ -278,6 +285,7 @@ class Circuit {
         assert.array(errors);
         const items = rawCircuit.data.map((item) => GridItem.unserialize(app, item, rawOthers, setLid, errors));
         const circuit = new Circuit(app, rawCircuit.label, rawCircuit.uid, items, rawCircuit.gridConfig, rawCircuit.portConfig, rawCircuit.lid ?? setLid, rawCircuit.visibleInLib ?? true);
+        circuit.description = rawCircuit.description ?? '';
         Wire.compact(circuit);
         app.circuits.add(circuit);
     }

@@ -536,16 +536,17 @@ class Application {
             }
             circuitMenu.createSeparator();
             // Switch circuit. Generate menu items for each circuit.
-            for (const [ uid, label ] of circuitList) {
+            for (const [ uid, label, description ] of circuitList) {
                 const isCurrentGrid = uid === this.grid.circuit.uid; // grid circuit may be different from current circuit when navigating through simulation subcomponents
+                const text = label + (description ? ' (' + description + ').' : '.');
                 // place circuit as component
                 if (uid !== this.grid.circuit.uid && !this.circuits.subcircuitUIDs(uid).has(this.grid.circuit.uid)) {
-                    const componentButton = this.#menuComponentButton(circuitMenu, '&#9094;', label + '. <i>LMB</i> Drag to move onto grid.',
+                    const componentButton = this.#menuComponentButton(circuitMenu, '&#9094;', text + '<i>LMB</i> Drag to move onto grid.',
                         (grid, x, y) => grid.addItem(new CustomComponent(this, x, y, 0, uid)), { '#c': 'CustomComponent', '#u': uid }, label);
                     componentButton.node.classList.add('toolbar-circuit-place');
                 }
                 // circuit select
-                const switchButton  = circuitMenu.createActionButton(label, isCurrentGrid ? 'This is the current circuit on the grid' : 'Switch grid to circuit "' + label + '".', () => {
+                const switchButton = circuitMenu.createActionButton(label, text + (isCurrentGrid ? 'Currently on the grid.' : '<i>LMB</i> Edit on the grid.'), () => {
                     circuitMenu.state(false);
                     this.circuits.select(uid);
                     this.simulations.select(this.circuits.current, this.config.autoCompile);
@@ -633,17 +634,18 @@ class Application {
                     libraryMenu.clear();
                     const componentList = this.circuits.list(lid);
                     // Switch component. Generate menu items for each component.
-                    for (const [ uid, label ] of componentList) {
+                    for (const [ uid, label, description ] of componentList) {
                         const isCurrentGrid = uid === this.grid.circuit.uid; // grid component may be different from current component when navigating through simulation subcomponents
                         const isCurrentCircuit = uid === this.circuits.current.uid;
+                        const text = label + (description ? ' (' + description + ').' : '.');
                         // place component as component
                         if (!isCurrentGrid) {
-                            const componentButton = this.#menuComponentButton(libraryMenu, '&#9094;', label + '. <i>LMB</i> Drag to move onto grid.',
+                            const componentButton = this.#menuComponentButton(libraryMenu, '&#9094;', text + '<i>LMB</i> Drag to move onto grid.',
                                 (grid, x, y) => grid.addItem(new CustomComponent(this, x, y, 0, uid)), { '#c': 'CustomComponent', '#u': uid }, label);
                             componentButton.node.classList.add('toolbar-circuit-place');
                         }
                         // component select
-                        const switchButton = libraryMenu.createActionButton(label, isCurrentCircuit ? 'This is the current component' : 'Switch grid to component "' + label + '".', () => {
+                        const switchButton = libraryMenu.createActionButton(label, text + (isCurrentGrid ? 'Currently on the grid.' : '<i>LMB</i> Edit on the grid.'), () => {
                             componentMenu.state(false);
                             this.circuits.select(uid);
                             this.simulations.select(this.circuits.current, this.config.autoCompile);
