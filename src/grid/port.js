@@ -64,6 +64,10 @@ class Port extends SimulationComponent {
         if (super.onHotkey(key, action, what)) {
             return true;
         } else if (key >= '0' && key <= '3' && what.type === 'hover') {
+            if (this.#isSubcircuit()) {
+                this.app.showNotice('Cannot change port state, currently controlled by simulation parent circuit', 3);
+                return;
+            }
             const prevState = this.#state;
             if (key === '1') {
                 this.#state = 1;
@@ -123,7 +127,7 @@ class Port extends SimulationComponent {
         ComponentPort.renderLabel(this, this.#labelElement, side, labelCoords.x * this.grid.zoom, labelCoords.y * this.grid.zoom, this.name, false, true);
 
         // render user-set state (lightbulb/circle thing)
-        this.element.setAttribute('data-port-state', this.#state ?? '');
+        this.element.setAttribute('data-port-state', this.#isSubcircuit() ? '' : (this.#state ?? ''));
 
         return true;
     }
@@ -131,7 +135,7 @@ class Port extends SimulationComponent {
     // Updates user-set state indicator.
     renderDetail() {
         super.renderDetail();
-        this.element.setAttribute('data-port-state', this.#state ?? '');
+        this.element.setAttribute('data-port-state', this.#isSubcircuit() ? '' : (this.#state ?? ''));
     }
 
     // Renders/updates the current net state of the wire to the grid.
@@ -152,6 +156,10 @@ class Port extends SimulationComponent {
     static fromDescriptor(app, _desc) {
         const d = app.config.placementDefaults;
         return (grid, x, y) => grid.addItem(new Port(app, x, y, d.port.rotation));
+    }
+
+    #isSubcircuit() {
+        return this.app.simulations.current.uid !== this.grid.circuit.uid;
     }
 }
 
