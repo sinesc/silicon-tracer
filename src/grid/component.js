@@ -576,7 +576,6 @@ class Component extends GridItem {
 
     // Updates port labels and colors.
     renderDetail() {
-        // TODO: refactor into overrideable function.
         for (const port of this.ports) {
             if (port.shadow) continue;
             if (this instanceof Port || this instanceof Tunnel || port.name !== '') {

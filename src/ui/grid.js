@@ -10,31 +10,30 @@ class Grid {
     static #ZOOM_LEVELS = [ 0.5, 0.65, 0.85, 1.0, 1.25, 1.50, 1.75, 2.0, 2.5, 3.0 ];
 
     #app;
-    #pending = {
-        wireCompact: false,            // wire(s) added/removed/repositioned — compact before next compile
-        recompile: false,              // topology changed → sim.compile on next render
-        netColors: true,               // net topology/colors changed → applyNetColors on next render
-        junctionRebuild: true,         // wire topology changed → rebuildJunctions on next render
-        junctionPositionUpdate: false, // pan/zoom changed → reposition junction elements on next render
-        bgPattern: true,               // zoom or pan changed → CSS background update on next render
-        viewportUpdate: false,         // zoom changed → propagate NEEDS_FULL_RENDER to all items
-        overlayUpdate: true,           // info box content changed → re-render overlay on next render
-    };
-    #suppressCircuitEvents = false;  // true while Wire.compact runs inside render()
     #element;
     #worldElement;
     #selectionElement;
     #selection = [];
     #selectionCenter = null;
+    #junctionElements = new Map(); // "x:y" => { element: HTMLElement, wire: Wire }
+    #trimOverlays = [];
     #hotkeyTarget = null;
     #circuit;
     #netColor = 1;
     #debugElement;
     #passive;
 
-    #trimOverlays = [];
-
-    #junctionElements = new Map(); // "x:y" => { element: HTMLElement, wire: Wire }
+    #pending = {
+        wireCompact: false,            // wire(s) added/removed/repositioned — compact before next compile
+        recompile: false,              // topology changed → sim.compile on next render
+        netColors: true,               // net topology/colors changed → applyNetColors on next render
+        junctionRebuild: true,         // wire topology changed → rebuildJunctions on next render
+        junctionPositionUpdate: false, // zoom changed → reposition junction elements on next render
+        bgPattern: true,               // zoom or pan changed → CSS background update on next render
+        viewportUpdate: false,         // zoom changed → propagate NEEDS_FULL_RENDER to all items
+        overlayUpdate: true,           // info box content changed → re-render overlay on next render
+    };
+    #suppressCircuitEvents = false;  // true while Wire.compact runs inside render()
 
     #infoBox = {
         element: null,
