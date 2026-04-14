@@ -159,7 +159,7 @@ class Port extends SimulationComponent {
     }
 
     #isSubcircuit() {
-        return this.app.simulations.current.uid !== this.grid.circuit.uid;
+        return this.app.simulations.current && this.app.simulations.current.uid !== this.grid.circuit.uid;
     }
 }
 
