@@ -83,7 +83,7 @@ class GridItem {
             if (!app.circuits.byUID(uid)) {
                 const rawCircuit = rawOthers.find((o) => o.uid === uid);
                 if (rawCircuit) {
-                    Circuits.Circuit.unserialize(app, rawCircuit, rawOthers, setLid, errors); // TODO: add max recursion depth
+                    Circuit.unserialize(app, rawCircuit, rawOthers, setLid, errors); // TODO: add max recursion depth
                 } else {
                     missing = true;
                 }

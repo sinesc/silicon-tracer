@@ -281,7 +281,7 @@ class Wire extends GridItem {
     // Merges collinear wires that overlap or touch, but splits at any point where a
     // perpendicular wire has an endpoint (T- and X-junctions).
     static compact(container) {
-        assert(container instanceof Grid || container instanceof Circuits.Circuit, 'container must be a Grid or Circuit');
+        assert(container instanceof Grid || container instanceof Circuit, 'container must be a Grid or Circuit');
 
         const selection = container instanceof Grid ? container.selection : null;
         const allWires = container.items.filter((w) => w instanceof Wire).toArray();

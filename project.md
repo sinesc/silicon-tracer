@@ -6,8 +6,8 @@ Vanilla JS/HTML/CSS, no framework, no build step. Open `index.html` directly in 
 `index.html` → `src/main.js` → `src/ui/application.js`
 
 ## Source Layout
-- `src/common.js` - shared utilities (`File`, `Point`, `assert*()` parameter validation, `keys()`, `values()`, `pairs()` iteration helpers, ...
-- `src/ui/` - UI components: `toolbar.js` (toolbar/menu), `grid.js` (component placement), `dialog.js`, `circuits.js` (`Circuit` and `Circuits` management), `simulations.js` (`Simulation`, `Simulations`), `undostack.js`
+- `src/common.js` - shared utilities: `File`, `Point`, `assert*()` (parameter validation), `keys()` & `values()` & `pairs()` iteration helpers, ...
+- `src/ui/` - UI components: `toolbar.js` (toolbar/menu), `grid.js` (component placement), `dialog.js`, `circuit.js` & `circuits.js` (`Circuit` and `Circuits` management), `simulations.js` (`Simulation`, `Simulations`), `undostack.js`
 - `src/grid/` - circuit components: `wire.js`, `gate.js`, `builtin.js` (flip-flops, latches, ...), `memory.js` (ROM, RAM), `port.js`, `customcomponent.js` (custom circuits as components), `probe.js`, ...
 - `src/sim/netlist.js` - builds nets/ports graph from circuit wires and components
 - `src/sim/simulation.js` - simulation engine, compiles nets/port logic

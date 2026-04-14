@@ -84,7 +84,7 @@ class Grid {
 
     // Sets current grid circuit.
     setCircuit(circuit) {
-        assert.class(Circuits.Circuit, circuit);
+        assert.class(Circuit, circuit);
         this.unsetCircuit();
         this.#circuit = circuit;
         this.#circuit.link(this);
@@ -729,7 +729,7 @@ class Grid {
 
         // below hotkeys only trigger when there is no hover target
         this.#app.registerHotkey('e', 'down', () => !this.readonly, (e) => {
-            this.#app.circuits.edit(this.#circuit.uid);
+            this.#circuit.edit();
             this.#pending.overlayUpdate = true;
         });
         this.#app.registerHotkey('w', 'down', () => this.#app.simulations.current, (e) => {

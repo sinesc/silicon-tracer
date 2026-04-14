@@ -33,7 +33,7 @@ class Simulations {
     // Makes the simulation for the given circuit current. Passing null as circuit will detach any attached simulation.
     // Optionally creates a simulation if necessary.
     select(circuit, create = true, attach = true) {
-        assert.class(Circuits.Circuit, circuit, true);
+        assert.class(Circuit, circuit, true);
         assert.bool(create);
         assert.bool(attach);
         let simulation;
@@ -57,14 +57,14 @@ class Simulations {
 
     // Creates a simulation for the given circuit.
     create(circuit) {
-        assert.class(Circuits.Circuit, circuit);
+        assert.class(Circuit, circuit);
         this.#simulations[circuit.uid] = new Simulations.Simulation(this.#app, circuit);
         return this.#simulations[circuit.uid];
     }
 
     // Deletes the simulation for the given circuit.
     delete(circuit) {
-        assert.class(Circuits.Circuit, circuit);
+        assert.class(Circuit, circuit);
         delete this.#simulations[circuit.uid];
         if (circuit.uid === this.#currentSimulation) {
             this.#app.grid.setSimulationLabel(null);
@@ -75,7 +75,7 @@ class Simulations {
 
     // Marks the given circuit (or all circuits if null) as modified causing simulations that include it to be recompiled.
     markDirty(circuit) {
-        assert.class(Circuits.Circuit, circuit, true);
+        assert.class(Circuit, circuit, true);
         for (const simulation of values(this.#simulations)) {
             if (circuit === null || simulation.includes(circuit)) {
                 simulation.markDirty();
@@ -104,7 +104,7 @@ Simulations.Simulation = class {
 
     constructor(app, circuit) {
         assert.class(Application, app);
-        assert.class(Circuits.Circuit, circuit);
+        assert.class(Circuit, circuit);
         this.#app = app;
         this.#circuit = circuit;
         this.#compile();
@@ -185,7 +185,7 @@ Simulations.Simulation = class {
 
     // Returns whether the simulation includes the given circuit.
     includes(circuit) {
-        assert.class(Circuits.Circuit, circuit);
+        assert.class(Circuit, circuit);
         return this.#netList.instances.some((i) => i.circuit === circuit);
     }
 

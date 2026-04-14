@@ -10,7 +10,7 @@ class NetList {
 
     // Identifies nets in the given circuit and returns a netlist, recursively if a uid=>circuit map of circuits is provided
     static identify(circuit, circuits = null) {
-        assert.class(Circuits.Circuit, circuit);
+        assert.class(Circuit, circuit);
         assert.object(circuits, true);
         const recurse = circuits !== null;
 
@@ -147,7 +147,7 @@ class NetList {
         if (circuits) {
             for (const component of circuit.items.filter((i) => i instanceof CustomComponent)) {
                 const subCircuit = circuits[component.uid];
-                assert.class(Circuits.Circuit, subCircuit);
+                assert.class(Circuit, subCircuit);
                 subInstances[component.gid] = instances.length; // the id of the upcoming recursion, clunky
                 NetList.#buildInstanceTree(subCircuit, circuits, component.gid, instances, instanceId);
             }

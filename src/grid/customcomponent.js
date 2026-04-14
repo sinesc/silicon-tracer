@@ -113,7 +113,7 @@ class CustomComponent extends VirtualComponent {
     // Handle edit hotkey.
     async onEdit() {
         const circuit = this.app.circuits.byUID(this.uid) ?? {};
-        const componentPreview = Circuits.makeComponentPreview(this.app, circuit);
+        const componentPreview = circuit.makeComponentPreview();
         const config = await dialog("Configure custom component", CustomComponent.EDIT_DIALOG, { spacing: '' + this.#portSpacing, gap: this.#portGap, parity: this.#portParity, rotation: this.rotation }, { onChange: componentPreview });
         if (config) {
             const grid = this.grid;
