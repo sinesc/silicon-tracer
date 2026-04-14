@@ -117,6 +117,7 @@ class Wire extends GridItem {
         }
         if (what.moving) {
             if (status === 'stop') {
+                what.moving = false;
                 this.limbo = false;
             }
             this.onMove(x, y, status, what);
