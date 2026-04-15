@@ -6,12 +6,13 @@ loadFiles.push(
 	"circuits": [
 		{
 			"label": "README",
+			"description": "",
 			"uid": "ub88aef16b5da42c08bfb7d190a7f4790",
 			"data": [
 				{
 					"#c": "TextLabel",
 					"#a": [
-						30,
+						20,
 						40,
 						0,
 						200,
@@ -23,7 +24,7 @@ loadFiles.push(
 				{
 					"#c": "TextLabel",
 					"#a": [
-						30,
+						20,
 						100,
 						0,
 						200,
@@ -35,7 +36,7 @@ loadFiles.push(
 				{
 					"#c": "TextLabel",
 					"#a": [
-						30,
+						20,
 						140,
 						0,
 						200,
@@ -47,7 +48,7 @@ loadFiles.push(
 				{
 					"#c": "TextLabel",
 					"#a": [
-						30,
+						20,
 						200,
 						0,
 						180,
@@ -78,6 +79,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x00",
+			"description": "quad 2-input NAND gate",
 			"uid": "u821e7ed5a9a4476180aae486d428d75e",
 			"data": [
 				{
@@ -530,6 +532,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x02",
+			"description": "quad 2-input NOR gate",
 			"uid": "ua2aac02222e2421da5209506965beec9",
 			"data": [
 				{
@@ -982,6 +985,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x03",
+			"description": "open-collector quad 2-input NAND gate",
 			"uid": "ufa5c383191f540bc9da53c5ac101d6b1",
 			"data": [
 				{
@@ -1640,6 +1644,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x04",
+			"description": "hex inverter gate",
 			"uid": "u1114a7736e53454cbe4500a5485af853",
 			"data": [
 				{
@@ -1952,6 +1957,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x05",
+			"description": "open-collector hex inverter gate",
 			"uid": "u9399766cf58f4c929db82b98ad3bd700",
 			"data": [
 				{
@@ -2448,6 +2454,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x08",
+			"description": "quad 2-input AND gate",
 			"uid": "uaab13cd4879d4298a739850014cb1d32",
 			"data": [
 				{
@@ -2900,6 +2907,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x10",
+			"description": "triple 3-input NAND gate",
 			"uid": "u081de3ff0d46408e80221e3f06640d8d",
 			"data": [
 				{
@@ -3302,6 +3310,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x11",
+			"description": "triple 3-input AND gate",
 			"uid": "u560610dc730548f4b0427985f1b27514",
 			"data": [
 				{
@@ -3704,6 +3713,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x13",
+			"description": "dual 4-input NAND gate",
 			"uid": "ucc3aeb76bc1149e181f5f7a1bfb50b4b",
 			"data": [
 				{
@@ -4098,6 +4108,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x14",
+			"description": "hex inverter gate",
 			"uid": "ufe7d98b0448a4cbba23c4c4ac017d441",
 			"data": [
 				{
@@ -4410,6 +4421,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x20",
+			"description": "dual 4-input NAND gate",
 			"uid": "uc16a11717dd8468f9256dfb2d48dc86c",
 			"data": [
 				{
@@ -4804,6 +4816,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x21",
+			"description": "",
 			"uid": "u6f30794292c544ff89ffcd80057b42f4",
 			"data": [
 				{
@@ -5198,6 +5211,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x25",
+			"description": "",
 			"uid": "u82edb6e37a0c4568ba119871719852f3",
 			"data": [
 				{
@@ -5592,6 +5606,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x27",
+			"description": "",
 			"uid": "u267a4cd3ee78471a81cfd2e7be964b39",
 			"data": [
 				{
@@ -5994,6 +6009,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x30",
+			"description": "",
 			"uid": "u3e820ff7ea2544bf867243f78874f249",
 			"data": [
 				{
@@ -6359,6 +6375,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x32",
+			"description": "",
 			"uid": "ue575f8d1d90c41b886b546c4f675e50a",
 			"data": [
 				{
@@ -6811,6 +6828,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x42",
+			"description": "",
 			"uid": "u82616155635c487b8ef5bc9b4b249ffb",
 			"data": [
 				{
@@ -8281,6 +8299,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x51",
+			"description": "",
 			"uid": "u6abda2a48fb5413e9475537df4d6e099",
 			"data": [
 				{
@@ -8873,6 +8892,7 @@ loadFiles.push(
 		},
 		{
 			"label": "JK flip flop",
+			"description": "",
 			"uid": "u477e618829ef47a9aa040656b03a6594",
 			"data": [
 				{
@@ -9229,6 +9249,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x73",
+			"description": "",
 			"uid": "u022e9f1cdf074de6b25cf13cb8017ec4",
 			"data": [
 				{
@@ -9745,6 +9766,7 @@ loadFiles.push(
 		},
 		{
 			"label": "D flip flop",
+			"description": "",
 			"uid": "u37121cbcf6db4ea88098f90ddf8b6fc9",
 			"data": [
 				{
@@ -10062,6 +10084,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x74",
+			"description": "",
 			"uid": "ufb3e1cfe2af04bff8901b7dd268c252e",
 			"data": [
 				{
@@ -10458,6 +10481,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x76",
+			"description": "",
 			"uid": "u3afcd7bf13af4b958cfe50a58a3fe79d",
 			"data": [
 				{
@@ -11012,6 +11036,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x85",
+			"description": "",
 			"uid": "uffdfeb0f9f194fdebaa30efc35670c1a",
 			"data": [
 				{
@@ -13912,6 +13937,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x86",
+			"description": "",
 			"uid": "u7f657a2e478f4a90b65539314bd08321",
 			"data": [
 				{
@@ -14364,6 +14390,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x109",
+			"description": "",
 			"uid": "ua23ca134a525490b86bcae7531677ccb",
 			"data": [
 				{
@@ -14918,6 +14945,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x138",
+			"description": "",
 			"uid": "u1dfababe9f3c44bbb5dc9c3ed01e4b0c",
 			"data": [
 				{
@@ -16278,6 +16306,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x139",
+			"description": "",
 			"uid": "u77518f39f0dd4253af6ede22b1410061",
 			"data": [
 				{
@@ -17448,6 +17477,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x147",
+			"description": "",
 			"uid": "u339a7d69482d4c0ea445866306b54d73",
 			"data": [
 				{
@@ -19439,6 +19469,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x151",
+			"description": "",
 			"uid": "ua82a03d995c04f91b41205c70f3c7762",
 			"data": [
 				{
@@ -20849,6 +20880,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x153",
+			"description": "",
 			"uid": "u04d11bbd498e4c14992a86c1d0613769",
 			"data": [
 				{
@@ -22059,6 +22091,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x157",
+			"description": "",
 			"uid": "ub92cd2c6b3a54b4686c8e2187eff564d",
 			"data": [
 				{
@@ -23079,6 +23112,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x161",
+			"description": "",
 			"uid": "u33a568cbf76442c7b94919259677ffb6",
 			"data": [
 				{
@@ -25225,6 +25259,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x163",
+			"description": "",
 			"uid": "u12aa694961c64d1daffdaebe22b7c4fd",
 			"data": [
 				{
@@ -27531,6 +27566,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x181",
+			"description": "",
 			"uid": "ucabb902fdb0a4be582e0ea9d632777bc",
 			"data": [
 				{
@@ -31953,6 +31989,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x238",
+			"description": "",
 			"uid": "u00b72aa7fe4e43a8a36c9b596b0e3d32",
 			"data": [
 				{
@@ -33153,6 +33190,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x244",
+			"description": "",
 			"uid": "uc8d556edf4f040518ae5d2c2f4a04dab",
 			"data": [
 				{
@@ -33871,6 +33909,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x247",
+			"description": "",
 			"uid": "u5636db40c4cf425285d0ff902184d315",
 			"data": [
 				{
@@ -36680,6 +36719,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x253",
+			"description": "",
 			"uid": "u57d81f7656484409a5dae3d5432e8c20",
 			"data": [
 				{
@@ -37828,6 +37868,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x257",
+			"description": "",
 			"uid": "u5a8987507fa54b55b784e40e09a87f19",
 			"data": [
 				{
@@ -38924,6 +38965,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x273",
+			"description": "",
 			"uid": "u088af83034a2449881e03e09b1273f1e",
 			"data": [
 				{
@@ -40102,6 +40144,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x283",
+			"description": "",
 			"uid": "ubf6227d2977d482fa7dd358bce302bb3",
 			"data": [
 				{
@@ -42532,6 +42575,7 @@ loadFiles.push(
 		},
 		{
 			"label": "D latch",
+			"description": "",
 			"uid": "ue3897e502c294271a876fbe58bc1b960",
 			"data": [
 				{
@@ -42849,6 +42893,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x373",
+			"description": "",
 			"uid": "u3b27a02c424f42479e6bac21e41593c9",
 			"data": [
 				{
@@ -44179,6 +44224,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x374",
+			"description": "",
 			"uid": "ud4de77a32eb84cc78f8ca92b470695f1",
 			"data": [
 				{
@@ -45519,6 +45565,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x377",
+			"description": "",
 			"uid": "u71fcbac7943640da8cc6d4c2569c50ab",
 			"data": [
 				{
@@ -46717,6 +46764,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x573",
+			"description": "",
 			"uid": "ub6257f68faa54d759f59fd7520d3fe6a",
 			"data": [
 				{
@@ -48047,6 +48095,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x574",
+			"description": "",
 			"uid": "u151d29398ded4ef2b266bfb9199c65d6",
 			"data": [
 				{
@@ -49387,6 +49436,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x595",
+			"description": "",
 			"uid": "uffab4481f2c7465092504f7087f00f7e",
 			"data": [
 				{
@@ -51873,6 +51923,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x4049",
+			"description": "",
 			"uid": "u0323cee05e6f46959de1374aefb89d85",
 			"data": [
 				{
@@ -52185,6 +52236,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x4075",
+			"description": "",
 			"uid": "u716e8cd5d97144d2ae04bb4f729e001a",
 			"data": [
 				{
@@ -52587,6 +52639,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x4078",
+			"description": "",
 			"uid": "u49e225a7e7774889a2f1ae982a504054",
 			"data": [
 				{
@@ -53011,6 +53064,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x4511",
+			"description": "",
 			"uid": "uf76543cc753e428392401f3fb2663acb",
 			"data": [
 				{
@@ -56151,6 +56205,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x241",
+			"description": "",
 			"uid": "u214854f7140043b98f7cb5473895afd2",
 			"data": [
 				{
@@ -56869,6 +56924,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x540",
+			"description": "",
 			"uid": "ua5778eae09074c8aab2206cb3484b8b1",
 			"data": [
 				{
@@ -57567,6 +57623,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x541",
+			"description": "",
 			"uid": "udfeb78404a5f4336a9b4543d01803586",
 			"data": [
 				{
@@ -58265,6 +58322,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x245",
+			"description": "",
 			"uid": "u1b784402b1ad426f93be8c57d3c25d24",
 			"data": [
 				{
@@ -59895,6 +59953,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x18",
+			"description": "dual 4-input NAND gate",
 			"uid": "uda82d03f719042a698f2bf216bf37315",
 			"data": [
 				{
@@ -60209,6 +60268,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x19",
+			"description": "hex inverter gate",
 			"uid": "ud503d95369ce41ae9e4ed42907f05c77",
 			"data": [
 				{
@@ -60521,6 +60581,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x24",
+			"description": "",
 			"uid": "u982db6ebc0fb46ab8fbaba067822fcfb",
 			"data": [
 				{
@@ -60813,6 +60874,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x34",
+			"description": "",
 			"uid": "u101d0b600f234161b1893e7e28a4d43a",
 			"data": [
 				{
@@ -61125,6 +61187,7 @@ loadFiles.push(
 		},
 		{
 			"label": "T flip-flop",
+			"description": "",
 			"uid": "uf197e7ebfd20428e9331a03f6afc897e",
 			"data": [
 				{
@@ -61303,6 +61366,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x193",
+			"description": "",
 			"uid": "u10e3582fcdaa468b8d9ca167c6e49a1e",
 			"data": [
 				{
@@ -63881,7 +63945,6 @@ loadFiles.push(
 		}
 	],
 	"libraries": {},
-	"toolbar": [
-	]
+	"toolbar": []
 }
 )
