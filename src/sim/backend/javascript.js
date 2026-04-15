@@ -206,7 +206,8 @@ class BackendJavascript {
     }
 
     // Emits a break-on-condition check: evaluates a user-defined probe expression and breaks the tick loop early if truthy.
-    // probeMap is { [probeName]: { elementIndex2, bitIndex } | null } — null probes are substituted with 0.
+    // probeMap is { [probeName]: { elementIndex2, bitIndex } | null | Array<{...}> } — null probes are substituted with null,
+    // single-bit probes are 0/1/-1/null, multi-bit probes (arrays) are combined into an integer (LSB = index 0).
     emitBreakOnCondition(expr, probeMap) {
         const names = Object.keys(probeMap).sort((a, b) => b.length - a.length);
         // Replace unknown identifiers with null before probe substitution.
@@ -216,8 +217,27 @@ class BackendJavascript {
             let replacement;
             if (!p) {
                 replacement = 'null';
+            } else if (Array.isArray(p)) {
+                // Multi-bit: combine bits into integer (LSB = index 0). null if all undriven, -1 if any conflict.
+                const bits = p.map((bit, i) => {
+                    if (!bit) return null;
+                    return {
+                        driven:   `((mem[${bit.elementIndex3}] >>> ${bit.bitIndex}) & 1)`,
+                        value:    `((mem[${bit.elementIndex2}] >>> ${bit.bitIndex}) & 1)`,
+                        conflict: bit.elementIndexC !== null ? `((mem[${bit.elementIndexC}] >>> ${bit.bitIndex}) & 1)` : null,
+                        shift: i,
+                    };
+                }).filter(Boolean);
+                const anyDriven   = bits.map((b) => b.driven).join(' | ');
+                const conflicts   = bits.filter((b) => b.conflict).map((b) => b.conflict);
+                const anyConflict = conflicts.length > 0 ? conflicts.join(' | ') : null;
+                const valueExpr   = bits.map((b) => `(${b.driven} ? (${b.value} << ${b.shift}) : 0)`).join(' | ');
+                const driven_part = anyConflict
+                    ? `(${anyConflict}) ? -1 : (${valueExpr})`
+                    : valueExpr;
+                replacement = `((${anyDriven}) ? (${driven_part}) : null)`;
             } else {
-                // Mirror getNetValue(): undriven → null, conflict → -1, otherwise 0/1.
+                // Single-bit: mirror getNetValue() — undriven → null, conflict → -1, otherwise 0/1.
                 const driven  = `((mem[${p.elementIndex3}] >>> ${p.bitIndex}) & 1)`;
                 const value   = `((mem[${p.elementIndex2}] >>> ${p.bitIndex}) & 1)`;
                 const withConflict = p.elementIndexC !== null

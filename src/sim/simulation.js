@@ -134,7 +134,7 @@ class Simulation {
             this.#nets.byPort[port] = net;
         }
         for (const probe of probes) {
-            this.#probes.byInput[probe].netId = net.id;
+            this.#probes.byInput[probe].netIds.push(net.id);
         }
         return net.id;
     }
@@ -264,23 +264,35 @@ class Simulation {
         port.pullType = type;
     }
 
-    // Declares a probe that can be attached to a net like a port (named 'imput'). Name must be unique. This does not add
+    // Declares a probe that can be attached to a net like a port (named 'input'). Name must be unique. This does not add
     // simulation complexity as it is essentially just another name for a net.
     declareProbe(name, suffix) {
         assert.string(name);
         assert.string(suffix);
         // TODO: enable once UI ensures unique name
         //assert(this.#probes.byName[name] === undefined, `Probe name "${name}" already defined`);
-        const probe = { name, suffix, netId: null };
+        const probe = { name, suffix, netIds: [] };
         this.#probes.byName[name] = probe;
         this.#probes.byInput['input' + suffix] = probe;
     }
 
-    // Gets the value of a probe by its name.
+    // Gets the integer value of a probe by its name. For multi-bit probes, netIds[0] is LSB.
+    // Returns null if all bits are undriven, -1 if any bit has a conflict, otherwise an integer.
     getProbeValue(name) {
         assert.string(name);
         const probe = this.#probes.byName[name] ?? error(`Probe name "${name}" is not defined`);
-        return probe.netId === null ? null : this.getNetValue(probe.netId);
+        if (probe.netIds.length === 0) return null;
+        let value = 0;
+        let anyDriven = false;
+        for (let i = 0; i < probe.netIds.length; i++) {
+            const bit = this.getNetValue(probe.netIds[i]);
+            if (bit === -1) return -1;
+            if (bit !== null) {
+                anyDriven = true;
+                value |= (bit << i);
+            }
+        }
+        return anyDriven ? value : null;
     }
 
     // Declares a RAM/ROM component. dataWidth must be a power of 2 and <= BITS_PER_ELEMENT.
@@ -401,7 +413,7 @@ class Simulation {
         if (serialized.probes?.byName) {
             this.probes = serialized.probes; // TODO: legacy compat, remove
         } else {
-            for (const probe of (serialized.probes ?? []).map((p) => ({ ...p, netId: null }))) {
+            for (const probe of (serialized.probes ?? []).map((p) => ({ ...p, netIds: [] }))) {
                 this.#probes.byName[probe.name] = probe;
                 this.#probes.byInput['input' + probe.suffix] = probe;
             }
@@ -1066,8 +1078,17 @@ class Simulation {
         if (this.#breakConditions.length > 0) {
             const probeMap = {};
             for (const probe of Object.values(this.#probes.byName)) {
-                const net = probe.netId !== null ? this.#nets.all[probe.netId] : null;
-                probeMap[probe.name] = net ? { elementIndex2: net.elementIndex2, elementIndex3: net.elementIndex3, elementIndexC: net.elementIndexC, bitIndex: net.bitIndex } : null;
+                if (probe.netIds.length === 0) {
+                    probeMap[probe.name] = null;
+                } else if (probe.netIds.length === 1) {
+                    const net = this.#nets.all[probe.netIds[0]];
+                    probeMap[probe.name] = net ? { elementIndex2: net.elementIndex2, elementIndex3: net.elementIndex3, elementIndexC: net.elementIndexC, bitIndex: net.bitIndex } : null;
+                } else {
+                    probeMap[probe.name] = probe.netIds.map((netId) => {
+                        const net = this.#nets.all[netId];
+                        return net ? { elementIndex2: net.elementIndex2, elementIndex3: net.elementIndex3, elementIndexC: net.elementIndexC, bitIndex: net.bitIndex } : null;
+                    });
+                }
             }
             for (const expr of this.#breakConditions) {
                 this.#backend.emitBreakOnCondition(expr, probeMap);

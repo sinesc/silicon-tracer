@@ -3,14 +3,19 @@
 // A probe component that displays the state of a net it is attached to.
 class Probe extends SimulationComponent {
 
+    static DISPLAY_FORMATS = { 'auto': 'Auto', 'hex': 'Hex', 'dec': 'Decimal', 'bin': 'Binary' };
+
     static EDIT_DIALOG = [
         { name: 'name', label: 'Name', type: 'string', check: (v) => /^\w+$/.test(v) },
+        { name: 'displayFormat', label: 'Display format', type: 'select', options: Probe.DISPLAY_FORMATS },
         ...Component.EDIT_DIALOG,
     ];
 
     #input;
     #labelElement;
+    #prevLabel = null;
     name = '';
+    displayFormat = 'auto';
 
     constructor(app, x, y, rotation, name = null) {
         assert.string(name, true);
@@ -33,6 +38,7 @@ class Probe extends SimulationComponent {
         return {
             ...super.serialize(),
             '#a': [ this.x, this.y, this.rotation, this.name ],
+            displayFormat: this.displayFormat,
         };
     }
 
@@ -47,19 +53,50 @@ class Probe extends SimulationComponent {
 
     // Handle edit hotkey.
     async onEdit() {
-        const config = await dialog("Configure probe", Probe.EDIT_DIALOG, { name: this.name, rotation: this.rotation });
+        const config = await dialog("Configure probe", Probe.EDIT_DIALOG, { name: this.name, displayFormat: this.displayFormat, rotation: this.rotation });
         if (config) {
             this.name = config.name;
+            this.displayFormat = config.displayFormat;
             this.rotation = config.rotation;
+            this.#prevLabel = null;
             this.redraw();
             this.grid.trackAction('Edit probe');
         }
     }
 
-    // Override inner component label to show net state.
+    // Computes the display label from the current net state of all attached nets.
+    // For single-bit nets: '0', '1', '-1' (conflict), or '~' (undriven).
+    // For multi-bit nets: formatted integer value, '!' (conflict), or '~' (undriven).
     get label() {
-        const state = this.getNetState(this.#input.netIds);
-        return state === 'null' ? '~' : state;
+        const netIds = this.#input.netIds;
+        if (!netIds || netIds.length === 0) return '~';
+
+        if (netIds.length === 1) {
+            const state = this.getNetState(netIds);
+            return state === 'null' ? '~' : state;
+        }
+
+        // Multi-bit: read each bit directly from the simulation engine.
+        const engine = this.app.simulations?.current?.engine;
+        if (!engine) return '~';
+
+        let value = 0;
+        let anyDriven = false;
+        for (let i = 0; i < netIds.length; i++) {
+            const bit = engine.getNetValue(netIds[i]);
+            if (bit === -1) return '!';
+            if (bit !== null) {
+                anyDriven = true;
+                value |= (bit << i);
+            }
+        }
+        if (!anyDriven) return '~';
+
+        const fmt = this.displayFormat === 'auto' ? 'hex' : this.displayFormat;
+        if (fmt === 'hex') return '0x' + value.toString(16).toUpperCase();
+        if (fmt === 'dec') return '' + value;
+        // bin
+        return value.toString(2);
     }
 
     // Renders the probe onto the grid.
@@ -80,11 +117,13 @@ class Probe extends SimulationComponent {
     renderNetState() {
         super.renderNetState();
 
-        // Render the current state of the input net
+        // Render the current state of the input net(s).
         const state = this.getNetState(this.#input.netIds);
-        if (this.element.getAttribute('data-net-state') !== state) {
+        const currentLabel = this.label;
+        if (this.element.getAttribute('data-net-state') !== state || this.#prevLabel !== currentLabel) {
             this.element.setAttribute('data-net-state', state);
-            this.inner.innerHTML = '<span>' + this.label + '</span>';
+            this.inner.innerHTML = '<span>' + currentLabel + '</span>';
+            this.#prevLabel = currentLabel;
         }
     }
 
