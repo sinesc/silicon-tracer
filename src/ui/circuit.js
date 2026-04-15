@@ -321,14 +321,14 @@ class Circuit {
         }
         for (const net of netList.nets) {
             // link ports on components
-            for (const { name, gid, instanceId } of net.ports) {
+            for (const { name, gid, instanceId, channel } of net.ports) {
                 if (subCircuitInstance === instanceId) {
                     const component = this.itemByGID(gid);
                     if (component) {
                         const port = component.portByName(name);
                         port.netIds ??= [];
                         if (net.netId !== null) {
-                            port.netIds.push(net.netId);
+                            port.netIds[channel] = net.netId;
                         }
                     }
                 }

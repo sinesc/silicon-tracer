@@ -122,7 +122,7 @@ class GridItem {
         }
         let state = null;
         for (const netId of netIds) {
-            const netState = sim.engine.getNetValue(netId);
+            const netState = netId !== undefined ? sim.engine.getNetValue(netId) : null;
             if (netState === -1) {
                 // conflict, other state doesn't matter, exit
                 state = -1;

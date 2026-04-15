@@ -134,7 +134,8 @@ class Simulation {
             this.#nets.byPort[port] = net;
         }
         for (const probe of probes) {
-            this.#probes.byInput[probe].netIds.push(net.id);
+            const channel = parseInt(probe.slice(probe.lastIndexOf('_') + 1), 10);
+            this.#probes.byInput[probe].netIds[channel] = net.id;
         }
         return net.id;
     }
