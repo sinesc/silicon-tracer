@@ -17,7 +17,15 @@ const context = vm.createContext({
     // Stub browser globals that are referenced by class definitions or constructors
     // but are never actually reached during headless circuit loading (no link() calls).
     Node: class Node {},
-    document: { addEventListener: () => {} },
+    document: {
+        addEventListener: () => {},
+        createElement: (tag) => {
+            if (tag === 'canvas') {
+                return { getContext: () => ({ measureText: () => ({ width: 0 }) }) };
+            }
+            return {};
+        },
+    },
 });
 
 function loadScript(filePath) {
@@ -116,10 +124,11 @@ vm.runInContext(`
         };
     }
 
-    function _compileCircuit(jsonText, circuitLabel, backend, configOverrides) {
+    function _compileCircuit(jsonText, circuitLabel, backend, configOverrides, shortGids) {
         // Strip optional JSON-P wrapper (same logic as Circuits.#decodeJSON)
         const content = JSON.parse(jsonText.replace(/^loadFiles\\.push\\(\\s*(.+)\\)\\s*$/s, '$1'));
         const app = new Application();
+        if (shortGids) app.config.debugCompileComments = true;
         app.circuits.unserialize(content, null, false, []);
         const circuit = circuitLabel
             ? app.circuits.byLabel(circuitLabel)
@@ -228,7 +237,7 @@ function readJSON(filePath) {
 function compileCircuit(filePath, circuitLabel = null, backend = 'js', configOverrides = null) {
     const fullpath = path.resolve(__dirname, '../' + filePath);
     const text = fs.readFileSync(fullpath, 'utf-8');
-    const [ sim ] = context._compileCircuit(text, circuitLabel, backend, configOverrides);
+    const [ sim ] = context._compileCircuit(text, circuitLabel, backend, configOverrides, true);
     return sim;
 }
 

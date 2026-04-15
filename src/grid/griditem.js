@@ -56,7 +56,7 @@ class GridItem {
         if (!readable) {
             return 'g' + crypto.randomUUID().replaceAll('-', '');
         } else {
-            return generateWord(5, 10);
+            return 'g' + crypto.randomUUID().replaceAll('-', '').slice(0, 6);
         }
     }
 
