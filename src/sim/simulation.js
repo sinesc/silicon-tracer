@@ -370,7 +370,7 @@ class Simulation {
             ports: this.#ports.all.map((p) => ({ id: p.id, name: p.name, ioType: p.ioType, isTriState: p.isTriState, detectEdges: p.detectEdges, batchType: p.batchType, batchName: p.batchName, batchComponent: p.batchComponent })),
             clocks: this.#clocks.map((c) => ({ id: c.id, frequency: c.frequency, tps: c.tps, enablePortName: c.enablePortName, outputPortName: c.outputPortName })),
             memories: this.#memories.map((m) => Object.filter(m, (k, v) => k !== 'baseOffset')),
-            probes: values(this.#probes.byName).map((p) => ({ name: p.name, suffix: p.suffix })).toArray(),
+            probes: values(this.#probes.byName).map((p) => ({ name: p.name, suffix: p.suffix, netId: p.netId })).toArray(),
         }
     }
 
@@ -843,7 +843,7 @@ class Simulation {
             if (!net || net.elementIndex2 === null) continue;
 
             masks[net.elementIndex2] ??= { up: 0n, down: 0n, index3: net.elementIndex3 };
-            const bit = 1n << BigInt(port.bitIndex);
+            const bit = 1n << BigInt(net.bitIndex);
             if (port.pullType === 'up') {
                 masks[net.elementIndex2].up |= bit;
             } else {

@@ -95,6 +95,43 @@ test("net conflicts", () => {
     assert(sim.getProbeValue('pOutput') === -1, `pOutput should be -1 (conflict) when both enables are active, got ${sim.getProbeValue('pOutput')}`);
 });
 
+test("pull resistors drive undriven nets", () => {
+    const sim = compileCircuit('data/tests.stc', 'Pullresistors');
+    // Circuit: three toggle switches (d2, d1, d0) each with a pull-down resistor and probe (p2, p1, p0).
+    // Switch consts: d2=const0 (close), d1=const2 (close), d0=const4 (close).
+    // When a switch is open (hi-Z output), the pull-down should drive the net to 0.
+    // When a switch is closed, input is tied to 1, so the probe should read 1.
+
+    // All switches open: pull-downs should drive all probes to 0
+    sim.simulate(5);
+    assert(sim.getProbeValue('p2') === 0, `p2 should be 0 (pull-down, switch open), got ${sim.getProbeValue('p2')}`);
+    assert(sim.getProbeValue('p1') === 0, `p1 should be 0 (pull-down, switch open), got ${sim.getProbeValue('p1')}`);
+    assert(sim.getProbeValue('p0') === 0, `p0 should be 0 (pull-down, switch open), got ${sim.getProbeValue('p0')}`);
+
+    // Close d2: p2 should go high (switch input tied to 1)
+    sim.setConstValue(0, 1);
+    sim.simulate(5);
+    assert(sim.getProbeValue('p2') === 1, `p2 should be 1 (switch d2 closed), got ${sim.getProbeValue('p2')}`);
+    assert(sim.getProbeValue('p1') === 0, `p1 should stay 0 (switch d1 still open), got ${sim.getProbeValue('p1')}`);
+    assert(sim.getProbeValue('p0') === 0, `p0 should stay 0 (switch d0 still open), got ${sim.getProbeValue('p0')}`);
+
+    // Open d2, close d1: p1 should go high
+    sim.setConstValue(0, 0);
+    sim.setConstValue(2, 1);
+    sim.simulate(5);
+    assert(sim.getProbeValue('p2') === 0, `p2 should be 0 (switch d2 reopened), got ${sim.getProbeValue('p2')}`);
+    assert(sim.getProbeValue('p1') === 1, `p1 should be 1 (switch d1 closed), got ${sim.getProbeValue('p1')}`);
+    assert(sim.getProbeValue('p0') === 0, `p0 should stay 0 (switch d0 still open), got ${sim.getProbeValue('p0')}`);
+
+    // Open d1, close d0: p0 should go high
+    sim.setConstValue(2, 0);
+    sim.setConstValue(4, 1);
+    sim.simulate(5);
+    assert(sim.getProbeValue('p2') === 0, `p2 should be 0 (switch d2 open), got ${sim.getProbeValue('p2')}`);
+    assert(sim.getProbeValue('p1') === 0, `p1 should be 0 (switch d1 reopened), got ${sim.getProbeValue('p1')}`);
+    assert(sim.getProbeValue('p0') === 1, `p0 should be 1 (switch d0 closed), got ${sim.getProbeValue('p0')}`);
+});
+
 test("no false positive conflict on AND gate output", () => {
     const sim = compileCircuit('data/tests.stc', 'ConflictGate');
     const cA = sim.getConstId('cA');
