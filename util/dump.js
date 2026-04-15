@@ -4,7 +4,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { context } = require('./lib/runner.js');
+const { context } = require('../test/lib/runner.js');
 
 const USAGE = `Usage: node test/dump.js --mode=<list|nets|code> <circuit-stc-file> [<circuit-label>]
   --mode=list   Lists the circuit labels contained in the file.

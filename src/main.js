@@ -101,20 +101,22 @@ app.debug = () => {
         }
     });
 
-    console.log(`DEBUG mode enabled.
-Hotkeys:
-    F10             enable instruction single stepping
-    SHIFT+F10       recompile simulation
-References:
-    app             application
-    cfg             configuration
-    sim             simulation
-Tools:
-    mem()           output simulation memory
-    layout()        output simulation layout
-    bin(val)        output val as binary
-    binAll(iter)    output iterable as binary
-    renameAll(s,r)  rename all circuits using regex/replace`);
+    console.log([
+        'DEBUG mode enabled.',
+        'Hotkeys:',
+        '    F10             enable instruction single stepping',
+        '    SHIFT+F10       recompile simulation',
+        'References:',
+        '    app             application',
+        '    cfg             configuration',
+        '    sim             simulation',
+        'Tools:',
+        '    mem()           output simulation memory',
+        '    layout()        output simulation layout',
+        '    bin(val)        output val as binary',
+        '    binAll(iter)    output iterable as binary',
+        '    renameAll(s,r)  rename all circuits using regex/replace',
+    ].join("\n"));
 };
 
 {

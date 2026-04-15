@@ -21,7 +21,8 @@ Vanilla JS/HTML/CSS, no framework, no build step. Open `index.html` directly in 
 
 ## Testing & Dev Tools
 - `node test/test.js` - run unit tests (test data in `test/data/`)
-- `node test/dump.js --help` - inspect circuit nets and compiled simulation code
+- `node util/dump.js --help` - inspect circuit nets and compiled simulation code
+- `makedist.sh` - generate bundled html file
 
 ## Guidelines
 - use `assert*()` in public functions
