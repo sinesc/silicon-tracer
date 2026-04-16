@@ -6,6 +6,7 @@ loadFiles.push(
 	"circuits": [
 		{
 			"label": "Gates",
+			"description": "",
 			"uid": "uba4d80be70d7416c8626e5d3342f2159",
 			"data": [
 				{
@@ -644,6 +645,7 @@ loadFiles.push(
 		},
 		{
 			"label": "Tunnels",
+			"description": "",
 			"uid": "u1ae3192620df449d80d1ae47da95ef24",
 			"data": [
 				{
@@ -882,6 +884,7 @@ loadFiles.push(
 		},
 		{
 			"label": "Splitter",
+			"description": "",
 			"uid": "ua89d909dcd794d6e855af64247f521c8",
 			"data": [
 				{
@@ -1451,6 +1454,7 @@ loadFiles.push(
 		},
 		{
 			"label": "Pull resistor",
+			"description": "",
 			"uid": "ue964011161fd4758828f95d36d661c5b",
 			"data": [
 				{
@@ -1601,6 +1605,7 @@ loadFiles.push(
 		},
 		{
 			"label": "Clock",
+			"description": "",
 			"uid": "u3297fde3d33e4e81ae2bca3b910bc54c",
 			"data": [
 				{

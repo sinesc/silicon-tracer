@@ -24,7 +24,7 @@ class Constant extends DisplayComponent {
     #displayFormat = 'auto';
     name = '';
 
-    constructor(app, x, y, rotation, value = 0, driven = 0, dataWidth = 1, displayFormat = 'dec') {
+    constructor(app, x, y, rotation, value = 0, driven = 1, dataWidth = 1, displayFormat = 'dec') {
         assert.integer(value);
         assert.integer(driven);
         assert.integer(dataWidth);

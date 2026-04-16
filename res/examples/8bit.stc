@@ -6,6 +6,7 @@ loadFiles.push(
 	"circuits": [
 		{
 			"label": "8-Bit Latch",
+			"description": "",
 			"uid": "u814c0bfd98a640c0b8ccc0b0ed74b2d4",
 			"data": [
 				{
@@ -825,6 +826,7 @@ loadFiles.push(
 		},
 		{
 			"label": "8-Bit D flip-flop",
+			"description": "",
 			"uid": "u0bcb532dca4e43e7ba32375dad8111f4",
 			"data": [
 				{
@@ -1644,6 +1646,7 @@ loadFiles.push(
 		},
 		{
 			"label": "8-Bit Buffer",
+			"description": "",
 			"uid": "uf1cc3c1b28394902a2f2b119c0c805f3",
 			"data": [
 				{
@@ -2543,6 +2546,7 @@ loadFiles.push(
 		},
 		{
 			"label": "#Tester",
+			"description": "",
 			"uid": "u92dd5e134cb342a69bdd8370a4415c15",
 			"data": [
 				{
