@@ -299,7 +299,7 @@ class Component extends GridItem {
 
     // Detach component ports from simulation.
     detachSimulation() {
-        this.simId = null;
+        this.simIds = [];
         for (const item of this.ports) {
             item.netIds = null;
         }
@@ -642,10 +642,10 @@ class VirtualComponent extends Component { }
 
 // Component subclass used to identify components that are compiled into the simulation.
 class SimulationComponent extends Component {
-    // An id for the simulated component. This could be a constId, clockId, ....
-    // simIds are used by the UI to SET constants values, clock frequencies etc.
-    // By contast, netIds are used during rendering to GET the state of a port or wire.
-    simId = null;
+    // IDs for the simulated component (constId, clockId, ...), one per channel.
+    // Used by the UI to SET constant values, clock frequencies etc.
+    // By contrast, netIds are used during rendering to GET the state of a port or wire.
+    simIds = [];
     // Implement to declare component simulation item.
     declare(sim, config, suffix) {
         return null;

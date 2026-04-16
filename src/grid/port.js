@@ -78,8 +78,8 @@ class Port extends SimulationComponent {
             }
             if (prevState !== this.#state) {
                 const sim = this.app.simulations.current;
-                if (this.simId !== null && sim) {
-                    sim.engine.setConstValue(this.simId, this.#state);
+                if (this.simIds.length > 0 && sim) {
+                    sim.engine.setConstValue(this.simIds[0], this.#state);
                 }
                 this.renderFlags |= GridItem.NEEDS_DETAIL_RENDER;
             }

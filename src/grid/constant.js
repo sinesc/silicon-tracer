@@ -1,24 +1,41 @@
 "use strict";
 
-// An IO port to interface with other circuits.
+// A constant output component that drives a configurable value onto the circuit.
 class Constant extends SimulationComponent {
+
+    static DISPLAY_FORMATS = { 'auto': 'Auto', 'hex': 'Hex', 'dec': 'Decimal', 'bin': 'Binary' };
 
     static EDIT_DIALOG = [
         { name: 'name', label: 'Label', type: 'string' },
-        { name: 'state', label: 'State', type: 'select', options: { "-1": "Unset", "0": "0 / Low", "1": "1 / High" } },
+        { name: 'dataWidth', label: 'Data width (bits)', type: 'select', options: { 1: '1', 2: '2', 4: '4', 8: '8', 16: '16', 32: '32' }, apply: (v) => parseInt(v) },
+        { name: 'value', label: 'Value', type: 'string',
+            check: (v) => /^[0-9]+$/.test(v) || /^0x[0-9a-fA-F]+$/i.test(v) || /^0b[01~]+$/.test(v) || v === '~',
+            apply: (v) => Constant.#parseValue(v),
+        },
+        { text: 'Accepted formats: decimal (42), hex (0xFF), binary (0b1~01). Use ~ for high-impedance bits (binary only), or ~ alone for fully undriven.' },
+        { name: 'displayFormat', label: 'Display format', type: 'select', options: Constant.DISPLAY_FORMATS },
         ...Component.EDIT_DIALOG,
     ];
 
     #port;
     #labelElement;
-    #state = null;
+    #value = 0;
+    #driven = 0;
+    #dataWidth = 1;
+    displayFormat = 'auto';
     name = '';
 
-    constructor(app, x, y, rotation, state = null) {
+    constructor(app, x, y, rotation, value = 0, driven = 0, dataWidth = 1) {
+        assert.integer(value);
+        assert.integer(driven);
+        assert.integer(dataWidth);
         super(app, x, y, rotation, { 'top': [ 'q' ], 'left': [ null ] }, 'toggle');
         this.#port = this.portByName('q');
         this.#port.label = '';
-        this.#state = state;
+        this.#port.numChannels = dataWidth > 1 ? dataWidth : null;
+        this.#value = value;
+        this.#driven = driven;
+        this.#dataWidth = dataWidth;
     }
 
     // Link port to a grid, enabling it to be rendered.
@@ -33,47 +50,105 @@ class Constant extends SimulationComponent {
     serialize() {
         return {
             ...super.serialize(),
-            '#a': [ this.x, this.y, this.rotation, this.#state ],
+            '#a': [ this.x, this.y, this.rotation, this.#value, this.#driven, this.#dataWidth ],
             name: this.name,
+            displayFormat: this.displayFormat,
         };
     }
 
-    // Declare component simulation item.
+    // Declare component simulation item. Called once per channel for multi-bit constants.
     declare(sim, config, suffix) {
-        return sim.declareConst(this.state, suffix, this.name || null);
+        const ch = parseInt(suffix.slice(suffix.lastIndexOf('_') + 1));
+        const bit = (this.#driven >> ch) & 1 ? (this.#value >> ch) & 1 : null;
+        return sim.declareConst(bit, suffix, ch === 0 ? (this.name || null) : null);
     }
 
     // Override inner component label.
     get label() {
-        return this.#state ?? '~';
+        return Constant.#formatValue(this.#value, this.#driven, this.#dataWidth, this.displayFormat);
     }
 
-    // Returns user-set component state.
-    get state() {
-        return this.#state;
-    }
-
-    // Sets constant state.
-    set state(value) {
-        assert.integer(value, true);
-        if (this.#state !== value) {
-            this.#state = value;
-            const sim = this.app.simulations.current;
-            if (this.simId !== null && sim) {
-                sim.engine.setConstValue(this.simId, this.#state);
-            }
-            this.renderFlags |= GridItem.NEEDS_DETAIL_RENDER;
+    // Parses a value string and returns { value, driven }.
+    static #parseValue(str) {
+        if (str === '~') return { value: 0, driven: 0 };
+        if (/^[0-9]+$/.test(str)) {
+            const v = parseInt(str, 10);
+            return { value: v, driven: 0xFFFFFFFF };
         }
+        if (/^0x[0-9a-fA-F]+$/i.test(str)) {
+            const v = parseInt(str, 16);
+            return { value: v, driven: 0xFFFFFFFF };
+        }
+        // binary: 0b[01~]+, parse right-to-left (LSB at rightmost position)
+        const bits = str.slice(2);
+        let value = 0, driven = 0;
+        for (let i = 0; i < bits.length; i++) {
+            const pos = bits.length - 1 - i;
+            const c = bits[pos];
+            if (c === '1') { value |= (1 << i); driven |= (1 << i); }
+            else if (c === '0') { driven |= (1 << i); }
+            // '~' → driven bit stays 0 (high-impedance)
+        }
+        return { value, driven };
+    }
+
+    // Formats value/driven/dataWidth as a display string.
+    static #formatValue(value, driven, dataWidth, displayFormat) {
+        const mask = dataWidth === 32 ? 0xFFFFFFFF : (1 << dataWidth) - 1;
+        const drivenMasked = driven & mask;
+        if (drivenMasked === 0) return '~';
+        const allDriven = drivenMasked === mask;
+        const v = value & mask;
+        const fmt = displayFormat === 'auto'
+            ? (dataWidth === 1 ? 'dec' : (allDriven ? 'hex' : 'bin'))
+            : displayFormat;
+        if (fmt === 'hex') return allDriven ? '0x' + v.toString(16).toUpperCase() : '~';
+        if (fmt === 'dec') return allDriven ? String(v) : '~';
+        // bin: show each bit, '~' for undriven
+        let result = '';
+        for (let i = dataWidth - 1; i >= 0; i--) {
+            result += (drivenMasked >> i) & 1 ? String((v >> i) & 1) : '~';
+        }
+        return dataWidth === 1 ? result : '0b' + result;
+    }
+
+    // Applies new value/driven state with live simulation update.
+    #applyState(value, driven) {
+        const mask = this.#dataWidth === 32 ? 0xFFFFFFFF : (1 << this.#dataWidth) - 1;
+        this.#value = value & mask;
+        this.#driven = driven & mask;
+        const sim = this.app.simulations.current;
+        if (sim) {
+            const ids = this.simIds;
+            for (let ch = 0; ch < this.#dataWidth; ch++) {
+                const id = ids[ch];
+                if (id !== null && id !== undefined) {
+                    const bit = (this.#driven >> ch) & 1 ? (this.#value >> ch) & 1 : null;
+                    sim.engine.setConstValue(id, bit);
+                }
+            }
+        }
+        this.renderFlags |= GridItem.NEEDS_DETAIL_RENDER;
     }
 
     // Handle edit hotkey.
     async onEdit() {
-        const config = await dialog("Configure constant", Constant.EDIT_DIALOG, { name: this.name, rotation: this.rotation, state: this.#state === null ? '-1' : this.#state });
+        const config = await dialog("Configure constant", Constant.EDIT_DIALOG, {
+            name: this.name,
+            dataWidth: String(this.#dataWidth),
+            value: Constant.#formatValue(this.#value, this.#driven, this.#dataWidth, this.displayFormat),
+            displayFormat: this.displayFormat,
+            rotation: this.rotation,
+        });
         if (config) {
+            const dataWidthChanged = config.dataWidth !== this.#dataWidth;
             this.name = config.name;
             this.rotation = config.rotation;
-            this.state = config.state === '-1' ? null : Number.parseInt(config.state);
-            this.redraw(config._changed.some((c) => c !== 'state'));
+            this.displayFormat = config.displayFormat;
+            this.#dataWidth = config.dataWidth;
+            this.#port.numChannels = this.#dataWidth > 1 ? this.#dataWidth : null;
+            this.#applyState(config.value.value, config.value.driven);
+            this.redraw(dataWidthChanged || config._changed.some((c) => c === 'name' || c === 'rotation'));
             this.grid.trackAction('Edit constant');
         }
     }
@@ -89,8 +164,8 @@ class Constant extends SimulationComponent {
         const labelCoords = ComponentPort.portCoords(this.width, this.height, side, 0, true);
         ComponentPort.renderLabel(this, this.#labelElement, side, labelCoords.x * this.grid.zoom, labelCoords.y * this.grid.zoom, this.name, false, true);
 
-        // render user-set state (lightbulb/circle thing)
-        this.element.setAttribute('data-port-state', this.#state ?? '');
+        // render user-set state indicator (single-bit only)
+        this.element.setAttribute('data-port-state', this.#dataWidth === 1 ? ((this.#driven & 1) ? String(this.#value & 1) : '') : '');
 
         return true;
     }
@@ -98,7 +173,7 @@ class Constant extends SimulationComponent {
     // Updates user-set state indicator.
     renderDetail() {
         super.renderDetail();
-        this.element.setAttribute('data-port-state', this.#state ?? '');
+        this.element.setAttribute('data-port-state', this.#dataWidth === 1 ? ((this.#driven & 1) ? String(this.#value & 1) : '') : '');
     }
 
     // Renders/updates the current net state of the wire to the grid.

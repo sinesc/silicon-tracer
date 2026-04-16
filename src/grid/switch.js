@@ -74,8 +74,8 @@ class Switch extends SimulationComponent {
     #setEffective(value) {
         this.#uiState = value ^ this.#defaultState;
         const sim = this.app.simulations.current;
-        if (this.simId !== null && sim) {
-            sim.engine.setConstValue(this.simId, this.#effectiveState);
+        if (this.simIds.length > 0 && sim) {
+            sim.engine.setConstValue(this.simIds[0], this.#effectiveState);
         }
         this.renderFlags |= GridItem.NEEDS_DETAIL_RENDER;
     }
@@ -99,8 +99,8 @@ class Switch extends SimulationComponent {
             if (key === '1') {
                 this.#uiState = action === 'up' ? 0 : 1;
                 const sim = this.app.simulations.current;
-                if (this.simId !== null && sim) {
-                    sim.engine.setConstValue(this.simId, this.#effectiveState);
+                if (this.simIds.length > 0 && sim) {
+                    sim.engine.setConstValue(this.simIds[0], this.#effectiveState);
                 }
                 this.renderFlags |= GridItem.NEEDS_DETAIL_RENDER;
                 return true;
@@ -132,8 +132,8 @@ class Switch extends SimulationComponent {
             }
             this.rotation = config.rotation;
             const sim = this.app.simulations.current;
-            if (this.simId !== null && sim) {
-                sim.engine.setConstValue(this.simId, this.#effectiveState);
+            if (this.simIds.length > 0 && sim) {
+                sim.engine.setConstValue(this.simIds[0], this.#effectiveState);
             }
             this.redraw();
             this.grid.trackAction('Edit switch');

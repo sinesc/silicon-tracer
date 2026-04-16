@@ -46,8 +46,8 @@ class Clock extends SimulationComponent {
             } else {
                 // only frequency may have changed, just set it without restaring the sim
                 const sim = this.app.simulations.current;
-                if (this.simId !== null && sim) {
-                    sim.engine.setClockFrequency(this.simId, this.frequency);
+                if (this.simIds.length > 0 && sim) {
+                    sim.engine.setClockFrequency(this.simIds[0], this.frequency);
                 }
             }
             this.grid.trackAction('Edit clock');
