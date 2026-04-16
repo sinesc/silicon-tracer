@@ -1,9 +1,7 @@
 "use strict";
 
 // A constant output component that drives a configurable value onto the circuit.
-class Constant extends SimulationComponent {
-
-    static DISPLAY_FORMATS = { 'auto': 'Auto', 'hex': 'Hex', 'dec': 'Decimal', 'bin': 'Binary' };
+class Constant extends DisplayComponent {
 
     static EDIT_DIALOG = [
         { name: 'name', label: 'Label', type: 'string' },
@@ -13,7 +11,7 @@ class Constant extends SimulationComponent {
             apply: (v) => Constant.#parseValue(v),
         },
         { text: 'Accepted formats: decimal (42), hex (0xFF), binary (0b1~01). Use ~ for high-impedance bits (binary only), or ~ alone for fully undriven.' },
-        { name: 'displayFormat', label: 'Display format', type: 'select', options: Constant.DISPLAY_FORMATS },
+        { name: 'displayFormat', label: 'Display format', type: 'select', options: DisplayComponent.DISPLAY_FORMATS },
         ...Component.EDIT_DIALOG,
     ];
 
@@ -22,23 +20,46 @@ class Constant extends SimulationComponent {
     #value = 0;
     #driven = 0;
     #dataWidth = 1;
-    #inputFormat = 'dec';
-    displayFormat = 'auto';
+    inputFormat = 'dec';
+    #displayFormat = 'auto';
     name = '';
 
-    constructor(app, x, y, rotation, value = 0, driven = 0, dataWidth = 1, inputFormat = 'dec') {
+    constructor(app, x, y, rotation, value = 0, driven = 0, dataWidth = 1, displayFormat = 'dec') {
         assert.integer(value);
         assert.integer(driven);
         assert.integer(dataWidth);
-        assert.string(inputFormat);
-        super(app, x, y, rotation, { 'top': [ 'q' ], 'left': [ null ] }, 'toggle');
+        assert.string(displayFormat);
+        const leftCount = DisplayComponent.lookupSize(dataWidth, displayFormat);
+        super(app, x, y, rotation, { 'top': [ 'q' ], 'left': Array(leftCount).fill(null) }, 'toggle');
         this.#port = this.portByName('q');
         this.#port.label = '';
         this.#port.numChannels = dataWidth > 1 ? dataWidth : null;
         this.#value = value;
         this.#driven = driven;
         this.#dataWidth = dataWidth;
-        this.#inputFormat = inputFormat;
+        this.#displayFormat = displayFormat;
+    }
+
+    // Returns the effective display format for SIZE_MAP lookup ('bin', 'hex', or 'dec').
+    #effectiveDisplayFormat() {
+        return DisplayComponent.resolveFormat(this.#displayFormat, this.#dataWidth);
+    }
+
+    // Updates the hidden 'left' padding ports based on SIZE_MAP, dataWidth, and display format.
+    #resizeToChannels() {
+        const count = DisplayComponent.lookupSize(this.#dataWidth, this.#effectiveDisplayFormat());
+        const portSide = ComponentPort.portSide(this.rotation, 'top');
+        const oldCoords = ComponentPort.portCoords(this.width, this.height, portSide, 0);
+        const grid = this.grid;
+        this.unlink();
+        this.setPortsFromNames({ 'top': [ 'q' ], 'left': Array(count).fill(null) });
+        this.#port = this.portByName('q');
+        this.#port.label = '';
+        this.#port.numChannels = this.#dataWidth > 1 ? this.#dataWidth : null;
+        const newCoords = ComponentPort.portCoords(this.width, this.height, portSide, 0);
+        this.x += oldCoords.x - newCoords.x;
+        this.y += oldCoords.y - newCoords.y;
+        this.link(grid);
     }
 
     // Link port to a grid, enabling it to be rendered.
@@ -53,9 +74,9 @@ class Constant extends SimulationComponent {
     serialize() {
         return {
             ...super.serialize(),
-            '#a': [ this.x, this.y, this.rotation, this.#value, this.#driven, this.#dataWidth, this.#inputFormat ],
+            '#a': [ this.x, this.y, this.rotation, this.#value, this.#driven, this.#dataWidth, this.#displayFormat ],
             name: this.name,
-            displayFormat: this.displayFormat,
+            inputFormat: this.inputFormat,
         };
     }
 
@@ -68,7 +89,7 @@ class Constant extends SimulationComponent {
 
     // Override inner component label.
     get label() {
-        return Constant.#formatValue(this.#value, this.#driven, this.#dataWidth, this.displayFormat);
+        return DisplayComponent.formatValue(this.#value, this.#driven, this.#dataWidth, this.#displayFormat);
     }
 
     // Parses a value string and returns { value, driven, inputFormat }.
@@ -96,30 +117,6 @@ class Constant extends SimulationComponent {
         }
     }
 
-    // Formats value/driven/dataWidth as a display string.
-    static #formatValue(value, driven, dataWidth, displayFormat) {
-        const mask = dataWidth === 32 ? 0xFFFFFFFF : (1 << dataWidth) - 1; // TODO: handle > 32 bit
-        const drivenMasked = driven & mask;
-        if (drivenMasked === 0) return '~';
-
-        const allDriven = drivenMasked === mask;
-        const v = value & mask;
-        const fmt = displayFormat === 'auto' ? (dataWidth === 1 ? 'dec' : (allDriven ? 'hex' : 'bin')) : displayFormat;
-
-        if (fmt === 'hex') {
-            return allDriven ? '0x' + v.toString(16).toUpperCase() : '~';
-        } else if (fmt === 'dec') {
-            return allDriven ? String(v) : '~';
-        } else {
-            // bin: show each bit, '~' for undriven
-            let result = '';
-            for (let i = dataWidth - 1; i >= 0; i--) {
-                result += (drivenMasked >> i) & 1 ? String((v >> i) & 1) : '~';
-            }
-            return dataWidth === 1 ? result : '0b' + result;
-        }
-    }
-
     // Applies new value/driven state with live simulation update.
     #applyState(value, driven) {
         const mask = this.#dataWidth === 32 ? 0xFFFFFFFF : (1 << this.#dataWidth) - 1;
@@ -144,20 +141,25 @@ class Constant extends SimulationComponent {
         const config = await dialog("Configure constant", Constant.EDIT_DIALOG, {
             name: this.name,
             dataWidth: String(this.#dataWidth),
-            value: Constant.#formatValue(this.#value, this.#driven, this.#dataWidth, this.#inputFormat),
-            displayFormat: this.displayFormat,
+            value: DisplayComponent.formatValue(this.#value, this.#driven, this.#dataWidth, this.inputFormat),
+            displayFormat: this.#displayFormat,
             rotation: this.rotation,
         });
         if (config) {
             const dataWidthChanged = config.dataWidth !== this.#dataWidth;
+            const sizeChanged = dataWidthChanged || config.displayFormat !== this.#displayFormat;
             this.name = config.name;
             this.rotation = config.rotation;
-            this.displayFormat = config.displayFormat;
-            this.#inputFormat = config.value.inputFormat;
+            this.#displayFormat = config.displayFormat;
+            this.inputFormat = config.value.inputFormat;
             this.#dataWidth = config.dataWidth;
-            this.#port.numChannels = this.#dataWidth > 1 ? this.#dataWidth : null;
+            if (sizeChanged) {
+                this.#resizeToChannels();
+            } else {
+                this.#port.numChannels = this.#dataWidth > 1 ? this.#dataWidth : null;
+            }
             this.#applyState(config.value.value, config.value.driven);
-            this.redraw(dataWidthChanged || config._changed.some((c) => c === 'name' || c === 'rotation'));
+            this.redraw(sizeChanged || config._changed.some((c) => c === 'name' || c === 'rotation'));
             this.grid.trackAction('Edit constant');
         }
     }

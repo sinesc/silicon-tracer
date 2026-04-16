@@ -1,28 +1,29 @@
 "use strict";
 
 // A probe component that displays the state of a net it is attached to.
-class Probe extends SimulationComponent {
-
-    static DISPLAY_FORMATS = { 'auto': 'Auto', 'hex': 'Hex', 'dec': 'Decimal', 'bin': 'Binary' };
+class Probe extends DisplayComponent {
 
     static EDIT_DIALOG = [
-        { name: 'name', label: 'Name', type: 'string', check: (v) => /^\w+$/.test(v) },
-        { name: 'displayFormat', label: 'Display format', type: 'select', options: Probe.DISPLAY_FORMATS },
+        { name: 'name', label: 'Name', type: 'string', check: (v) => v ==='' || /^\w+$/.test(v) },
+        { name: 'displayFormat', label: 'Display format', type: 'select', options: DisplayComponent.DISPLAY_FORMATS },
         ...Component.EDIT_DIALOG,
     ];
 
     #input;
     #labelElement;
     #prevLabel = null;
+    #prevLeftCount = 1;
     name = '';
     displayFormat = 'auto';
 
-    constructor(app, x, y, rotation, name = null) {
+    constructor(app, x, y, rotation, name = null, leftCount = 1) {
         assert.string(name, true);
-        super(app, x, y, rotation, { 'top': [ 'input' ], 'left': [ null ] }, 'probe');
+        assert.integer(leftCount);
+        super(app, x, y, rotation, { 'top': [ 'input' ], 'left': Array(leftCount).fill(null) }, 'probe');
         this.#input = this.portByName('input');
         this.#input.label = '';
         this.name = name ?? '';
+        this.#prevLeftCount = leftCount;
     }
 
     // Link port to a grid, enabling it to be rendered.
@@ -37,7 +38,7 @@ class Probe extends SimulationComponent {
     serialize() {
         return {
             ...super.serialize(),
-            '#a': [ this.x, this.y, this.rotation, this.name ],
+            '#a': [ this.x, this.y, this.rotation, this.name, this.#prevLeftCount ],
             displayFormat: this.displayFormat,
         };
     }
@@ -56,10 +57,13 @@ class Probe extends SimulationComponent {
         const config = await dialog("Configure probe", Probe.EDIT_DIALOG, { name: this.name, displayFormat: this.displayFormat, rotation: this.rotation });
         if (config) {
             this.name = config.name;
-            this.displayFormat = config.displayFormat;
             this.rotation = config.rotation;
+            this.displayFormat = config.displayFormat;
+            // Re-check size in case display format changed the desired left count.
+            const channels = this.#input.netIds?.length ?? 1;
+            this.#resizeToChannels(channels);
             this.#prevLabel = null;
-            this.redraw();
+            this.redraw(config._changed.some((c) => c === 'name' || c === 'rotation' || c === 'displayFormat'));
             this.grid.trackAction('Edit probe');
         }
     }
@@ -80,23 +84,18 @@ class Probe extends SimulationComponent {
         const engine = this.app.simulations?.current?.engine;
         if (!engine) return '~';
 
-        let value = 0;
-        let anyDriven = false;
+        let bigValue = 0n, bigDriven = 0n;
         for (let i = 0; i < netIds.length; i++) {
             const bit = engine.getNetValue(netIds[i]);
             if (bit === -1) return '!';
             if (bit !== null) {
-                anyDriven = true;
-                value |= (bit << i);
+                const pos = BigInt(i);
+                bigDriven |= (1n << pos);
+                if (bit === 1) bigValue |= (1n << pos);
             }
         }
-        if (!anyDriven) return '~';
 
-        const fmt = this.displayFormat === 'auto' ? 'hex' : this.displayFormat;
-        if (fmt === 'hex') return '0x' + value.toString(16).toUpperCase();
-        if (fmt === 'dec') return '' + value;
-        // bin
-        return value.toString(2);
+        return DisplayComponent.formatValue(bigValue, bigDriven, netIds.length, this.displayFormat);
     }
 
     // Renders the probe onto the grid.
@@ -117,6 +116,15 @@ class Probe extends SimulationComponent {
     renderNetState() {
         super.renderNetState();
 
+        // Auto-resize to fit connected channel count.
+        const channels = this.#input.netIds?.length ?? 1;
+        const desiredCount = DisplayComponent.lookupSize(channels, this.#effectiveDisplayFormat(channels));
+        if (desiredCount !== this.#prevLeftCount) {
+            this.#resizeToChannels(channels);
+            this.grid?.onTopologyChanged();
+            return;
+        }
+
         // Render the current state of the input net(s).
         const state = this.getNetState(this.#input.netIds);
         const currentLabel = this.label;
@@ -134,6 +142,30 @@ class Probe extends SimulationComponent {
     static fromDescriptor(app, _desc) {
         const d = app.config.placementDefaults;
         return (grid, x, y) => grid.addItem(new Probe(app, x, y, d.probe.rotation));
+    }
+
+    // Returns the effective display format for SIZE_MAP lookup given a channel count.
+    #effectiveDisplayFormat(channels) {
+        return DisplayComponent.resolveFormat(this.displayFormat, channels);
+    }
+
+    // Resizes the component to fit the given channel count, preserving the 'input' port's absolute position.
+    #resizeToChannels(channels) {
+        const count = DisplayComponent.lookupSize(channels, this.#effectiveDisplayFormat(channels));
+        if (count === this.#prevLeftCount) return;
+        const portSide = ComponentPort.portSide(this.rotation, 'top');
+        const oldCoords = ComponentPort.portCoords(this.width, this.height, portSide, 0);
+        const grid = this.grid;
+        this.unlink();
+        this.setPortsFromNames({ 'top': [ 'input' ], 'left': Array(count).fill(null) });
+        this.#input = this.portByName('input');
+        this.#input.label = '';
+        const newCoords = ComponentPort.portCoords(this.width, this.height, portSide, 0);
+        this.x += oldCoords.x - newCoords.x;
+        this.y += oldCoords.y - newCoords.y;
+        this.link(grid);
+        this.renderFull();
+        this.#prevLeftCount = count;
     }
 }
 
