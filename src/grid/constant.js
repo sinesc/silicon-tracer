@@ -73,46 +73,51 @@ class Constant extends SimulationComponent {
 
     // Parses a value string and returns { value, driven, inputFormat }.
     static #parseValue(str) {
-        if (str === '~') return { value: 0, driven: 0, inputFormat: 'bin' };
-        if (/^[0-9]+$/.test(str)) {
+        if (str === '~') {
+            return { value: 0, driven: 0, inputFormat: 'bin' };
+        } else if (/^[0-9]+$/.test(str)) {
             const v = parseInt(str, 10);
             return { value: v, driven: 0xFFFFFFFF, inputFormat: 'dec' };
-        }
-        if (/^0x[0-9a-fA-F]+$/i.test(str)) {
+        } else if (/^0x[0-9a-fA-F]+$/i.test(str)) {
             const v = parseInt(str, 16);
             return { value: v, driven: 0xFFFFFFFF, inputFormat: 'hex' };
+        } else {
+            // binary: 0b[01~]+, parse right-to-left
+            const bits = str.slice(2);
+            let value = 0, driven = 0;
+            for (let i = 0; i < bits.length; i++) {
+                const pos = bits.length - 1 - i;
+                const c = bits[pos];
+                if (c === '1') { value |= (1 << i); driven |= (1 << i); }
+                else if (c === '0') { driven |= (1 << i); }
+                // '~': driven bit stays 0 (high-impedance)
+            }
+            return { value, driven, inputFormat: 'bin' };
         }
-        // binary: 0b[01~]+, parse right-to-left
-        const bits = str.slice(2);
-        let value = 0, driven = 0;
-        for (let i = 0; i < bits.length; i++) {
-            const pos = bits.length - 1 - i;
-            const c = bits[pos];
-            if (c === '1') { value |= (1 << i); driven |= (1 << i); }
-            else if (c === '0') { driven |= (1 << i); }
-            // '~': driven bit stays 0 (high-impedance)
-        }
-        return { value, driven, inputFormat: 'bin' };
     }
 
     // Formats value/driven/dataWidth as a display string.
     static #formatValue(value, driven, dataWidth, displayFormat) {
-        const mask = dataWidth === 32 ? 0xFFFFFFFF : (1 << dataWidth) - 1;
+        const mask = dataWidth === 32 ? 0xFFFFFFFF : (1 << dataWidth) - 1; // TODO: handle > 32 bit
         const drivenMasked = driven & mask;
         if (drivenMasked === 0) return '~';
+
         const allDriven = drivenMasked === mask;
         const v = value & mask;
-        const fmt = displayFormat === 'auto'
-            ? (dataWidth === 1 ? 'dec' : (allDriven ? 'hex' : 'bin'))
-            : displayFormat;
-        if (fmt === 'hex') return allDriven ? '0x' + v.toString(16).toUpperCase() : '~';
-        if (fmt === 'dec') return allDriven ? String(v) : '~';
-        // bin: show each bit, '~' for undriven
-        let result = '';
-        for (let i = dataWidth - 1; i >= 0; i--) {
-            result += (drivenMasked >> i) & 1 ? String((v >> i) & 1) : '~';
+        const fmt = displayFormat === 'auto' ? (dataWidth === 1 ? 'dec' : (allDriven ? 'hex' : 'bin')) : displayFormat;
+
+        if (fmt === 'hex') {
+            return allDriven ? '0x' + v.toString(16).toUpperCase() : '~';
+        } else if (fmt === 'dec') {
+            return allDriven ? String(v) : '~';
+        } else {
+            // bin: show each bit, '~' for undriven
+            let result = '';
+            for (let i = dataWidth - 1; i >= 0; i--) {
+                result += (drivenMasked >> i) & 1 ? String((v >> i) & 1) : '~';
+            }
+            return dataWidth === 1 ? result : '0b' + result;
         }
-        return dataWidth === 1 ? result : '0b' + result;
     }
 
     // Applies new value/driven state with live simulation update.
