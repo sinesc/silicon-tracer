@@ -22,13 +22,15 @@ class Constant extends SimulationComponent {
     #value = 0;
     #driven = 0;
     #dataWidth = 1;
+    #inputFormat = 'dec';
     displayFormat = 'auto';
     name = '';
 
-    constructor(app, x, y, rotation, value = 0, driven = 0, dataWidth = 1) {
+    constructor(app, x, y, rotation, value = 0, driven = 0, dataWidth = 1, inputFormat = 'dec') {
         assert.integer(value);
         assert.integer(driven);
         assert.integer(dataWidth);
+        assert.string(inputFormat);
         super(app, x, y, rotation, { 'top': [ 'q' ], 'left': [ null ] }, 'toggle');
         this.#port = this.portByName('q');
         this.#port.label = '';
@@ -36,6 +38,7 @@ class Constant extends SimulationComponent {
         this.#value = value;
         this.#driven = driven;
         this.#dataWidth = dataWidth;
+        this.#inputFormat = inputFormat;
     }
 
     // Link port to a grid, enabling it to be rendered.
@@ -50,7 +53,7 @@ class Constant extends SimulationComponent {
     serialize() {
         return {
             ...super.serialize(),
-            '#a': [ this.x, this.y, this.rotation, this.#value, this.#driven, this.#dataWidth ],
+            '#a': [ this.x, this.y, this.rotation, this.#value, this.#driven, this.#dataWidth, this.#inputFormat ],
             name: this.name,
             displayFormat: this.displayFormat,
         };
@@ -68,18 +71,18 @@ class Constant extends SimulationComponent {
         return Constant.#formatValue(this.#value, this.#driven, this.#dataWidth, this.displayFormat);
     }
 
-    // Parses a value string and returns { value, driven }.
+    // Parses a value string and returns { value, driven, inputFormat }.
     static #parseValue(str) {
-        if (str === '~') return { value: 0, driven: 0 };
+        if (str === '~') return { value: 0, driven: 0, inputFormat: 'bin' };
         if (/^[0-9]+$/.test(str)) {
             const v = parseInt(str, 10);
-            return { value: v, driven: 0xFFFFFFFF };
+            return { value: v, driven: 0xFFFFFFFF, inputFormat: 'dec' };
         }
         if (/^0x[0-9a-fA-F]+$/i.test(str)) {
             const v = parseInt(str, 16);
-            return { value: v, driven: 0xFFFFFFFF };
+            return { value: v, driven: 0xFFFFFFFF, inputFormat: 'hex' };
         }
-        // binary: 0b[01~]+, parse right-to-left (LSB at rightmost position)
+        // binary: 0b[01~]+, parse right-to-left
         const bits = str.slice(2);
         let value = 0, driven = 0;
         for (let i = 0; i < bits.length; i++) {
@@ -87,9 +90,9 @@ class Constant extends SimulationComponent {
             const c = bits[pos];
             if (c === '1') { value |= (1 << i); driven |= (1 << i); }
             else if (c === '0') { driven |= (1 << i); }
-            // '~' → driven bit stays 0 (high-impedance)
+            // '~': driven bit stays 0 (high-impedance)
         }
-        return { value, driven };
+        return { value, driven, inputFormat: 'bin' };
     }
 
     // Formats value/driven/dataWidth as a display string.
@@ -136,7 +139,7 @@ class Constant extends SimulationComponent {
         const config = await dialog("Configure constant", Constant.EDIT_DIALOG, {
             name: this.name,
             dataWidth: String(this.#dataWidth),
-            value: Constant.#formatValue(this.#value, this.#driven, this.#dataWidth, this.displayFormat),
+            value: Constant.#formatValue(this.#value, this.#driven, this.#dataWidth, this.#inputFormat),
             displayFormat: this.displayFormat,
             rotation: this.rotation,
         });
@@ -145,6 +148,7 @@ class Constant extends SimulationComponent {
             this.name = config.name;
             this.rotation = config.rotation;
             this.displayFormat = config.displayFormat;
+            this.#inputFormat = config.value.inputFormat;
             this.#dataWidth = config.dataWidth;
             this.#port.numChannels = this.#dataWidth > 1 ? this.#dataWidth : null;
             this.#applyState(config.value.value, config.value.driven);
