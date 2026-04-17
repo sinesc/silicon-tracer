@@ -29,7 +29,7 @@ class Probe extends DisplayComponent {
     // Link port to a grid, enabling it to be rendered.
     link(grid) {
         super.link(grid);
-        this.setHoverMessage(this.inner, () => `Probe <b>${this.name}</b>. <i>E</i> Edit, ${Component.HOTKEYS}.`, { type: 'hover' });
+        this.setHoverMessage(this.inner, () => `Probe <b>${this.#displayName(this.instanceId)}</b>. <i>E</i> Edit, ${Component.HOTKEYS}.`, { type: 'hover' });
         this.#labelElement = html(this.element, 'div', 'port-name');
         this.element.classList.add('probe', 'status-outline');
     }
@@ -44,12 +44,8 @@ class Probe extends DisplayComponent {
     }
 
     // Declare component simulation item.
-    declare(sim, config, suffix) {
-        return sim.declareProbe(this.name, suffix);
-        // FIXME: probes in subcircuits that are used multiple times will have the same name.
-        // those will still display correctly here, but sim.getProbeValue() will return the last set value
-        // a possible solution might be to have labeled subcomponents and then make probes accessible by path
-        // e.g. main/primaryAdder/theprobe.
+    declare(sim, config, suffix, instanceId) {
+        return sim.declareProbe(this.#displayName(instanceId), suffix);
     }
 
     // Handle edit hotkey.
@@ -107,7 +103,7 @@ class Probe extends DisplayComponent {
         // Render permanently visible label
         const side = ComponentPort.portSide(this.rotation, 'bottom');
         const labelCoords = ComponentPort.portCoords(this.width, this.height, side, 0, true);
-        ComponentPort.renderLabel(this, this.#labelElement, side, labelCoords.x * this.grid.zoom, labelCoords.y * this.grid.zoom, this.name, false, true);
+        ComponentPort.renderLabel(this, this.#labelElement, side, labelCoords.x * this.grid.zoom, labelCoords.y * this.grid.zoom, this.#displayName(this.instanceId), false, true);
 
         return true;
     }
@@ -142,6 +138,11 @@ class Probe extends DisplayComponent {
     static fromDescriptor(app, _desc) {
         const d = app.config.placementDefaults;
         return (grid, x, y) => grid.addItem(new Probe(app, x, y, d.probe.rotation));
+    }
+
+    // Returns the probe name with instance suffix appended when inside a non-root circuit instance.
+    #displayName(instanceId) {
+        return instanceId != null && instanceId !== 0 ? `${this.name}@${instanceId}` : this.name;
     }
 
     // Returns the effective display format for SIZE_MAP lookup given a channel count.

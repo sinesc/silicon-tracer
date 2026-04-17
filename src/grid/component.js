@@ -646,8 +646,15 @@ class SimulationComponent extends Component {
     // Used by the UI to SET constant values, clock frequencies etc.
     // By contrast, netIds are used during rendering to GET the state of a port or wire.
     simIds = [];
+    // Instance ID of the circuit instance this component belongs to. Set by Circuit.attachSimulation(),
+    // reset to null on detach. Used by components (e.g. Probe) to disambiguate across multiple instances.
+    instanceId = null;
+    detachSimulation() {
+        super.detachSimulation();
+        this.instanceId = null;
+    }
     // Implement to declare component simulation item.
-    declare(sim, config, suffix) {
+    declare(sim, config, suffix, instanceId) {
         return null;
     }
 }

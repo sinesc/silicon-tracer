@@ -317,6 +317,7 @@ class Circuit {
             if (component instanceof SimulationComponent) {
                 const id = simIds[component.gid];
                 component.simIds = Array.isArray(id) ? id : (id != null ? [id] : []);
+                component.instanceId = subCircuitInstance;
             }
         }
         for (const net of netList.nets) {
