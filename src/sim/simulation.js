@@ -349,13 +349,7 @@ class Simulation {
         assert.integer(id);
         assert.integer(address);
         assert.integer(value);
-        const memory = this.#memories[id] ?? error('Unknown memory');
-        const bpe = this.#backend.constructor.BITS_PER_ELEMENT;
-        const valuesPerElement = bpe / memory.dataWidth;
-        const elementIndex = memory.baseOffset + (address >>> Math.log2(valuesPerElement));
-        const subIndex = address & (valuesPerElement - 1);
-        const shift = subIndex * memory.dataWidth;
-        const dataMask = (1 << memory.dataWidth) - 1;
+        const [ elementIndex, shift, dataMask ] = this.#getMemoryLocation(id, address);
         const mem = this.#backend.mem;
         mem[elementIndex] = (mem[elementIndex] & ~(dataMask << shift)) | ((value & dataMask) << shift);
     }
@@ -364,13 +358,7 @@ class Simulation {
     getMemoryData(id, address) {
         assert.integer(id);
         assert.integer(address);
-        const memory = this.#memories[id] ?? error('Unknown memory');
-        const bpe = this.#backend.constructor.BITS_PER_ELEMENT;
-        const valuesPerElement = bpe / memory.dataWidth;
-        const elementIndex = memory.baseOffset + (address >>> Math.log2(valuesPerElement));
-        const subIndex = address & (valuesPerElement - 1);
-        const shift = subIndex * memory.dataWidth;
-        const dataMask = (1 << memory.dataWidth) - 1;
+        const [ elementIndex, shift, dataMask ] = this.#getMemoryLocation(id, address);
         return (this.#backend.mem[elementIndex] >>> shift) & dataMask;
     }
 
@@ -679,6 +667,18 @@ class Simulation {
             globalElementIndex += elementsNeeded;
         }
         return globalElementIndex;
+    }
+
+    // Compute data offset for given memory address
+    #getMemoryLocation(id, address) {
+        const memory = this.#memories[id] ?? error('Unknown memory');
+        const bpe = this.#backend.constructor.BITS_PER_ELEMENT;
+        const valuesPerElement = bpe / memory.dataWidth;
+        const elementIndex = memory.baseOffset + (address >>> Math.log2(valuesPerElement));
+        const subIndex = address & (valuesPerElement - 1);
+        const shift = subIndex * memory.dataWidth;
+        const dataMask = (1 << memory.dataWidth) - 1;
+        return [ elementIndex, shift, dataMask ];
     }
 
     // Assigns nets to elements/bits.
