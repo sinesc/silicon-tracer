@@ -53,12 +53,12 @@ class Probe extends DisplayComponent {
         if (super.onHotkey(key, action, what)) return true;
         if (action !== 'down' || what.type !== 'hover') return;
         if (key === 'm') {
-            this.grid.toggleMonitorItem(this);
+            this.grid.monitorOverlay.toggleItem(this);
             return true;
         }
         if (key === 'M') {
             const items = this.app.simulations.current?.probeInstances(this.name) ?? [];
-            this.grid.setMonitorItems(items);
+            this.grid.monitorOverlay.setItems(items);
             return true;
         }
     }

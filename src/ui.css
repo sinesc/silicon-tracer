@@ -784,7 +784,7 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
     font-size: var(--font-size-normal);
     font-weight: bold;
 }
-.grid-info .info-details + .info-section {
+.grid-info > div + div {
     margin-top: 8px;
 }
 .grid-info .info-title {

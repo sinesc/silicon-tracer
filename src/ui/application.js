@@ -85,8 +85,11 @@ class Application {
         ticksPerFrameComputed: 0,
         ticksFraction: 0,
         load: 0,
+        countStart: null,
         ticksCounted: 0,
         framesCounted: 0,
+        tps: 0,
+        fps: 0,
     };
 
     constructor(gridParent, toolbarParent) {
@@ -105,6 +108,12 @@ class Application {
         this.#initRenderLoop();
         this.circuits.reset();
         this.simulations.select(this.circuits.current, this.config.autoCompile);
+    }
+
+    // Returns performance stats.
+    get stats() {
+        const rl = this.#renderLoop;
+        return { load: rl.load, loadLimit: rl.loadLimit, tps: rl.tps, fps: rl.fps };
     }
 
     // Creates a new application and returns it.
@@ -272,42 +281,37 @@ class Application {
         }
     }
 
-    // Called periodically to update stats overlay.
-    #renderStats() {
-        const load = Math.round(this.#renderLoop.load * 100);
-        const loadClass = this.#renderLoop.load >= this.#renderLoop.loadLimit ? 'warning' : '';
-        const ticks = this.simulations.current ? `${Number.formatSI(this.config.targetTPS)} ticks/s limit<br>${Number.formatSI(Math.round(this.#renderLoop.ticksCounted))} ticks/s actual<br>` : '';
-        this.grid.setSimulationDetails(`${ticks}<span class="${loadClass}">${load}%</span> core load<br>${this.#renderLoop.framesCounted} frames/s`);
-        this.#renderLoop.ticksCounted = 0;
-        this.#renderLoop.framesCounted = 0;
-    }
-
     // Called each animation-frame to render elements.
     #render() {
         const renderStart = performance.now();
+        const rl = this.#renderLoop;
         this.grid.render();
-        const sim = this.simulations.current;
-        if (sim) {
-            this.grid.setCircuitDetails(`Gates: ${sim.stats.gates}<br>Max delay: ${sim.stats.maxDelay}<br>Nets: ${sim.stats.nets}`);
-        }
-        this.#renderLoop.framesCounted += 1;
+        rl.framesCounted += 1;
         // handle both TPS smaller or larger than FPS
-        this.#renderLoop.ticksPerFrameComputed = this.config.targetTPS / (1000 / this.#renderLoop.refresh.med);
-        this.#renderLoop.nextTick += this.#renderLoop.ticksPerFrameComputed;
-        if (this.#renderLoop.nextTick >= 1) {
-            this.#renderLoop.nextTick -= Math.floor(this.#renderLoop.nextTick);
+        rl.ticksPerFrameComputed = this.config.targetTPS / (1000 / rl.refresh.med);
+        rl.nextTick += rl.ticksPerFrameComputed;
+        if (rl.nextTick >= 1) {
+            rl.nextTick -= Math.floor(rl.nextTick);
             if (!this.config.singleStep) {
-                const ticks = Math.max(1, this.#renderLoop.ticksPerFrameComputed);
-                this.#renderLoop.ticksFraction += Math.fract(ticks);                                // accumulate fractional ticks
-                const ticksTotal = Math.trunc(ticks) + Math.trunc(this.#renderLoop.ticksFraction);  //   and apply once at least one full tick has accumulated
+                const ticks = Math.max(1, rl.ticksPerFrameComputed);
+                rl.ticksFraction += Math.fract(ticks);                                // accumulate fractional ticks
+                const ticksTotal = Math.trunc(ticks) + Math.trunc(rl.ticksFraction);  //   and apply once at least one full tick has accumulated
                 const ticksActual = this.#tickSimulation(ticksTotal);
-                this.#renderLoop.ticksCounted += ticksActual;
-                this.#renderLoop.ticksFraction -= Math.trunc(this.#renderLoop.ticksFraction);       // subtract applied number of fractional ticks from remaining fractional ticks
+                rl.ticksCounted += ticksActual;
+                rl.ticksFraction -= Math.trunc(rl.ticksFraction);       // subtract applied number of fractional ticks from remaining fractional ticks
             }
         }
         // compute load (time spent computing/time available)
         const elapsedTime = performance.now() - renderStart;
-        this.#renderLoop.load = elapsedTime / this.#renderLoop.refresh.med;
+        rl.load = elapsedTime / rl.refresh.med;
+        // handle counted ticks/frames
+        if (renderStart - rl.countStart >= 1000) {
+            rl.countStart = renderStart;
+            rl.tps = rl.ticksCounted;
+            rl.fps = rl.framesCounted;
+            rl.ticksCounted = 0;
+            rl.framesCounted = 0;
+        }
         requestAnimationFrame(() => this.#render());
     }
 
@@ -897,8 +901,6 @@ class Application {
         // start simulation/render loop
         this.#renderLoop.refresh = await measureRefreshRate();
         requestAnimationFrame(() => this.#render());
-        // update stats overlay once a second
-        setInterval(() => this.#renderStats(), 1000);
     }
 
     // Display a brief overlay notice message.

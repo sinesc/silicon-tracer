@@ -45,13 +45,13 @@ class Simulations {
             this.#currentSimulation = circuit.uid;
             simulation = this.create(circuit);
         } else {
-            this.#app.grid.setSimulationLabel(null);
+            this.#app.grid.simulationOverlay.setLabel(null);
             this.#app.grid.circuit.detachSimulation();
             this.#currentSimulation = null;
             simulation = null;
         }
         if (oldUid !== this.#currentSimulation) {
-            this.#app.grid.switchMonitorContext(oldUid, this.#currentSimulation);
+            this.#app.grid.monitorOverlay.switchContext(oldUid, this.#currentSimulation);
         }
         if (simulation && attach) {
             simulation.attach();
@@ -70,9 +70,9 @@ class Simulations {
     delete(circuit) {
         assert.class(Circuit, circuit);
         delete this.#simulations[circuit.uid];
-        this.#app.grid.clearSavedMonitor(circuit.uid);
+        this.#app.grid.monitorOverlay.clearSaved(circuit.uid);
         if (circuit.uid === this.#currentSimulation) {
-            this.#app.grid.setSimulationLabel(null);
+            this.#app.grid.simulationOverlay.setLabel(null);
             this.#app.grid.circuit.detachSimulation();
             this.#currentSimulation = null;
         }
@@ -177,7 +177,7 @@ Simulations.Simulation = class {
         if (this.#app.grid.circuit !== circuit) {
             this.#app.grid.setCircuit(circuit);
         }
-        this.#app.grid.setCircuitInstanceId(instanceId);
+        this.#app.grid.circuitOverlay.setInstanceId(instanceId);
         this.#instanceId = instanceId;
         circuit.attachSimulation(this.#netList, instanceId);
     }
@@ -228,7 +228,7 @@ Simulations.Simulation = class {
         this.checkDirty(false);
         this.#circuit.attachSimulation(this.#netList, 0);
         this.#instanceId = 0;
-        this.#app.grid.setSimulationLabel(this.#circuit.label);
+        this.#app.grid.simulationOverlay.setLabel(this.#circuit.label);
         this.#app.grid.onSimulationRecompiled();
         this.#attached = true;
     }
@@ -236,7 +236,7 @@ Simulations.Simulation = class {
     // Detach simulation.
     detach() {
         this.#app.grid.circuit.detachSimulation();
-        this.#app.grid.setSimulationLabel(null);
+        this.#app.grid.simulationOverlay.setLabel(null);
         this.#app.grid.onSimulationRecompiled();
         this.#attached = false;
     }

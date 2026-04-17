@@ -98,8 +98,8 @@ class Circuit {
             this.portConfig.placement.right = config.right;
             this.portConfig.placement.bottom = config.bottom;
             this.portConfig.placement.left = config.left;
-            this.#app.grid.setCircuitLabel(config.label);
-            this.#app.grid.setSimulationLabel(config.label);
+            this.#app.grid.circuitOverlay.setLabel(config.label);
+            this.#app.grid.simulationOverlay.setLabel(config.label);
             this.#app.grid.trackAction('Edit circuit');
             return true;
         }
@@ -266,8 +266,8 @@ class Circuit {
         if (isDisplayed) {
             this.setGridListener(grid); // restore listener before re-linking
             this.link(grid);
-            grid.setCircuitLabel(this.label);
-            grid.setSimulationLabel(this.label);
+            grid.circuitOverlay.setLabel(this.label);
+            grid.simulationOverlay.setLabel(this.label);
             grid.onSimulationRecompiled();
             // Restore selection: match items by their restored GIDs (wires re-created by Wire.compact won't match).
             const newSelection = this.#data.filter((item) => selectedGids.has(item.gid));

@@ -31,21 +31,11 @@ class Grid {
         junctionPositionUpdate: false, // zoom changed → reposition junction elements on next render
         bgPattern: true,               // zoom or pan changed → CSS background update on next render
         viewportUpdate: false,         // zoom changed → propagate NEEDS_FULL_RENDER to all items
-        overlayUpdate: true,           // info box content changed → re-render overlay on next render
     };
-    #suppressCircuitEvents = false;  // true while Wire.compact runs inside render()
-    #monitor = [];              // active monitor items: Array<{ probeName: string, probe: Probe }>
-    #monitorsBySimUid = new Map();  // saved monitors keyed by simulation uid, for save/restore on sim switch
-
-    #infoBox = {
-        element: null,
-        circuitLabel: null,
-        circuitInstanceId: null,
-        circuitDetails: null,
-        simulationLabel: null,
-        simulationDetails: null,
-        FPSCount: { current: 0, last: 0 },
-    };
+    #suppressCircuitEvents = false;    // true while Wire.compact runs inside render()
+    #infoBoxElement = null;
+    #overlays = [];        // Array<{ id, interval, overlay, node, lastRenderTime }>
+    #nextOverlayId = 1;
 
     constructor(app, parent, passive = false) {
         assert.class(Application, app);
@@ -53,7 +43,7 @@ class Grid {
         this.#app = app;
         this.#element = html(parent, 'div', 'grid');
         this.#worldElement = html(this.#element, 'div', 'grid-world');
-        this.#infoBox.element = html(this.#element, 'div', 'grid-info', '');
+        this.#infoBoxElement = html(this.#element, 'div', 'grid-info');
         this.#selectionElement = html(this.#element, 'div', 'grid-selection hidden');
         this.#debugElement = html(this.#element, 'div', 'debug-info');
         this.#passive = passive;
@@ -62,7 +52,29 @@ class Grid {
             this.#element.onmousedown = this.#handleDragStart.bind(this);
             this.#element.onwheel = this.#handleZoom.bind(this);
             document.addEventListener('mousemove', this.#debugHandleMouse.bind(this));
+            this.circuitOverlay = this.registerOverlay(100, new CircuitOverlay(app));
+            this.simulationOverlay = this.registerOverlay(1000, new SimulationOverlay(app));
+            this.monitorOverlay = this.registerOverlay(100, new MonitorOverlay(app));
         }
+    }
+
+    // Registers an overlay section, refreshed every interval ms.
+    registerOverlay(interval, overlay) {
+        assert.integer(interval);
+        assert.class(Overlay, overlay);
+        const id = this.#nextOverlayId++;
+        const node = html(this.#infoBoxElement, 'div');
+        this.#overlays.push({ id, interval, overlay, node, lastRenderTime: null });
+        return overlay;
+    }
+
+    // Removes a registered overlay section.
+    deleteOverlay(overlay) {
+        assert.class(Overlay, overlay);
+        const idx = this.#overlays.findIndex(o => o.overlay === overlay);
+        if (idx < 0) return;
+        this.#overlays[idx].node.remove();
+        this.#overlays.splice(idx, 1);
     }
 
     // Returns the circuit currently on the grid.
@@ -79,9 +91,8 @@ class Grid {
         this.#circuit.unlink();
         this.#circuit = null;
         this.#clearJunctions();
-        this.#infoBox.circuitLabel = '';
-        this.#infoBox.circuitInstanceId = null;
-        this.#pending.overlayUpdate = true;
+        this.circuitOverlay.setLabel('');
+        this.circuitOverlay.setInstanceId(null);
         this.#hotkeyTarget = null;
         this.#app.clearStatus(true);
     }
@@ -93,97 +104,15 @@ class Grid {
         this.#circuit = circuit;
         this.#circuit.link(this);
         this.#circuit.setGridListener(this);
-        this.#infoBox.circuitLabel = circuit.label;
-        this.#infoBox.circuitInstanceId = null;
+        this.circuitOverlay.setLabel(circuit.label);
+        this.circuitOverlay.setInstanceId(null);
         this.#pending.bgPattern = true;
-        this.#pending.overlayUpdate = true;
         this.#pending.netColors = true;
         this.#pending.junctionRebuild = true;
         this.#updateWorldTransform();
         if (!circuit.readonly && circuit.undoStack.currentSnapshot === null) {
             circuit.undoStack.init(circuit.serializeForUndo());
         }
-    }
-
-    // Update circuit label in infobox.
-    setCircuitLabel(label) {
-        if (this.#infoBox.circuitLabel !== label) this.#pending.overlayUpdate = true;
-        this.#infoBox.circuitLabel = label;
-    }
-
-    // Update circuit instance id suffix in infobox.
-    setCircuitInstanceId(instanceId) {
-        assert.integer(instanceId, true);
-        if (this.#infoBox.circuitInstanceId !== instanceId) this.#pending.overlayUpdate = true;
-        this.#infoBox.circuitInstanceId = instanceId;
-    }
-
-    // Update circuit details in infobox.
-    setCircuitDetails(details) {
-        if (this.#infoBox.circuitDetails !== details) this.#pending.overlayUpdate = true;
-        this.#infoBox.circuitDetails = details;
-    }
-
-    // Sets the simulation label displayed on the grid.
-    setSimulationLabel(label) {
-        if (this.#infoBox.simulationLabel !== label) this.#pending.overlayUpdate = true;
-        this.#infoBox.simulationLabel = label;
-    }
-
-    // Sets the simulation details displayed on the grid.
-    setSimulationDetails(details) {
-        if (this.#infoBox.simulationDetails !== details) this.#pending.overlayUpdate = true;
-        this.#infoBox.simulationDetails = details;
-    }
-
-    // Toggles a probe in the monitor list. Adds it if not present, removes it if already monitored.
-    toggleMonitorItem(probe) {
-        assert.class(Probe, probe);
-        const probeName = probe.instanceId != null && probe.instanceId !== 0
-            ? `${probe.name}@${probe.instanceId}` : probe.name;
-        const idx = this.#monitor.findIndex(m => m.probeName === probeName);
-        if (idx >= 0) {
-            this.#monitor.splice(idx, 1);
-        } else {
-            this.#monitor.push({ probeName, probe });
-        }
-        this.#pending.overlayUpdate = true;
-    }
-
-    // Replaces the monitor list with the given items (Array<{ probeName, probe }>).
-    setMonitorItems(items) {
-        this.#monitor = items;
-        this.#pending.overlayUpdate = true;
-    }
-
-    // Re-resolves monitor probe references after a simulation recompile. Removes items whose probe no longer exists.
-    #refreshMonitor() {
-        if (this.#monitor.length === 0) return;
-        const sim = this.#app.simulations.current;
-        if (!sim) {
-            this.#monitor = [];
-        } else {
-            this.#monitor = this.#monitor
-                .map(({ probeName }) => ({ probeName, probe: sim.findProbeByDisplayName(probeName) }))
-                .filter(({ probe }) => probe !== null);
-        }
-        this.#pending.overlayUpdate = true;
-    }
-
-    // Saves the current monitor for oldUid and restores the saved monitor for newUid (or empty if none).
-    // Called by Simulations when the active simulation changes.
-    switchMonitorContext(oldUid, newUid) {
-        assert.string(oldUid, true);
-        assert.string(newUid, true);
-        if (oldUid !== null) this.#monitorsBySimUid.set(oldUid, this.#monitor);
-        this.#monitor = (newUid !== null ? this.#monitorsBySimUid.get(newUid) : null) ?? [];
-        this.#pending.overlayUpdate = true;
-    }
-
-    // Removes saved monitor state for a deleted simulation.
-    clearSavedMonitor(uid) {
-        assert.string(uid);
-        this.#monitorsBySimUid.delete(uid);
     }
 
     // Adds an item to the grid. Automatically done by GridItem constructor.
@@ -282,27 +211,16 @@ class Grid {
             }
         }
 
-        // Keep overlay live while monitor items are active (values change every tick).
-        if (this.#monitor.length > 0) this.#pending.overlayUpdate = true;
-
-        // Info box overlay (circuit/simulation labels)
-        if (this.#pending.overlayUpdate) {
-            const isLocked = this.#app.config.lockSimulation ? '<span class="warning">Locked</span> ' : '';
-            const singleStep = this.#app.config.singleStep ? '<span class="warning">Single Step</span> ' : '';
-            const isReadonly = this.readonly ? '<span class="warning">Read-only</span> ' : '';
-            const circuitInstanceSuffix = this.#infoBox.circuitInstanceId != null && this.#infoBox.circuitInstanceId !== 0 ? `@${this.#infoBox.circuitInstanceId}` : '';
-            const sim = this.#app.simulations.current;
-            const monitorHtml = this.#monitor.length === 0 ? '' :
-                '<div class="info-section">Monitor</div>' +
-                this.#monitor.map(({ probeName, probe }) =>
-                    `<div class="info-details">${probeName}: ${sim ? Probe.getProbeLabel(sim.engine, probeName, probe.displayFormat) : '~'}</div>`
-                ).join('');
-            this.#infoBox.element.innerHTML = `<div class="info-section">${isReadonly}Circuit</div><div class="info-title">${this.#infoBox.circuitLabel}${circuitInstanceSuffix}</div>` +
-                (!this.#infoBox.circuitDetails ? '' : `<div class="info-details">${this.#infoBox.circuitDetails}</div>`) +
-                (!this.#infoBox.simulationLabel ? '' : `<div class="info-section">${singleStep}${isLocked}Simulation</div><div class="info-title">${this.#infoBox.simulationLabel}</div>`) +
-                (!this.#infoBox.simulationDetails ? '' : `<div class="info-details">${this.#infoBox.simulationDetails}</div>`) +
-                monitorHtml;
-            this.#pending.overlayUpdate = false;
+        // Info box overlay — check each registered section at its configured interval.
+        const now = performance.now();
+        for (const entry of this.#overlays) {
+            const intervalElapsed = entry.lastRenderTime === null || entry.interval === 0 || now - entry.lastRenderTime >= entry.interval;
+            if (intervalElapsed) {
+                if (entry.interval > 0) entry.lastRenderTime = now;
+                if (entry.overlay.dirty()) {
+                    entry.overlay.render(entry.node);
+                }
+            }
         }
 
         // CSS background grid pattern (zoom or pan changed)
@@ -380,8 +298,6 @@ class Grid {
             }
             this.#updateJunctionNetStates();
         }
-
-        this.#infoBox.FPSCount.current += 1;
     }
 
     // Makes given grid item become the hotkey-target and when locked also prevents hover events from stealing hotkey focus until released.
@@ -406,7 +322,7 @@ class Grid {
     onSimulationRecompiled() {
         this.#pending.netColors = true;
         this.#pending.junctionRebuild = true;
-        this.#refreshMonitor();
+        this.monitorOverlay.refresh();
     }
 
     // Called by Circuit when an item is added. Schedules wire compact and simulation recompile as needed.
@@ -804,7 +720,6 @@ class Grid {
         // below hotkeys only trigger when there is no hover target
         this.#app.registerHotkey('e', 'down', () => !this.readonly, (e) => {
             this.#circuit.edit();
-            this.#pending.overlayUpdate = true;
         });
         this.#app.registerHotkey('w', 'down', () => this.#app.simulations.current, (e) => {
             // switch to parent simulation instance // TODO: when not simulating this should switch to the previous circuit. this requires adding a navigation history
