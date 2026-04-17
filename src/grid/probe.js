@@ -29,7 +29,7 @@ class Probe extends DisplayComponent {
     // Link port to a grid, enabling it to be rendered.
     link(grid) {
         super.link(grid);
-        this.setHoverMessage(this.inner, () => `Probe <b>${this.#displayName(this.instanceId)}</b>. <i>E</i> Edit, ${Component.HOTKEYS}.`, { type: 'hover' });
+        this.setHoverMessage(this.inner, () => `Probe <b>${this.#displayName(this.instanceId)}</b>. <i>E</i> Edit, <i>M</i> Monitor, ${Component.HOTKEYS}.`, { type: 'hover' });
         this.#labelElement = html(this.element, 'div', 'port-name');
         this.element.classList.add('probe', 'status-outline');
     }
@@ -46,6 +46,21 @@ class Probe extends DisplayComponent {
     // Declare component simulation item.
     declare(sim, config, suffix, instanceId) {
         return sim.declareProbe(this.#displayName(instanceId), suffix);
+    }
+
+    // Handle hover hotkeys.
+    onHotkey(key, action, what) {
+        if (super.onHotkey(key, action, what)) return true;
+        if (action !== 'down' || what.type !== 'hover') return;
+        if (key === 'm') {
+            this.grid.toggleMonitorItem(this);
+            return true;
+        }
+        if (key === 'M') {
+            const items = this.app.simulations.current?.probeInstances(this.name) ?? [];
+            this.grid.setMonitorItems(items);
+            return true;
+        }
     }
 
     // Handle edit hotkey.
@@ -70,19 +85,30 @@ class Probe extends DisplayComponent {
     get label() {
         const netIds = this.#input.netIds;
         if (!netIds || netIds.length === 0) return '~';
-
-        if (netIds.length === 1) {
-            const state = this.getNetState(netIds);
-            return state === 'null' ? '~' : state;
-        }
-
-        // Multi-bit: read each bit directly from the simulation engine.
         const engine = this.app.simulations?.current?.engine;
         if (!engine) return '~';
+        return Probe.#labelFromNetIds(engine, netIds, this.displayFormat);
+    }
 
+    // Returns the formatted label for a named probe, reading net values directly from the engine.
+    // Use this in preference to Probe.label when UI-level netIds may not be attached (e.g. monitor overlay).
+    static getProbeLabel(engine, probeName, displayFormat) {
+        assert.class(Simulation, engine);
+        assert.string(probeName);
+        assert.string(displayFormat);
+        return Probe.#labelFromNetIds(engine, engine.getProbeNetIds(probeName), displayFormat);
+    }
+
+    // Shared label computation from a net ID array and a simulation engine.
+    static #labelFromNetIds(engine, netIds, displayFormat) {
+        if (!netIds || netIds.length === 0) return '~';
+        if (netIds.length === 1) {
+            const v = netIds[0] !== undefined ? engine.getNetValue(netIds[0]) : null;
+            return v === null ? '~' : v === -1 ? '-1' : String(v);
+        }
         let bigValue = 0n, bigDriven = 0n;
         for (let i = 0; i < netIds.length; i++) {
-            const bit = engine.getNetValue(netIds[i]);
+            const bit = netIds[i] !== undefined ? engine.getNetValue(netIds[i]) : null;
             if (bit === -1) return '!';
             if (bit !== null) {
                 const pos = BigInt(i);
@@ -90,8 +116,7 @@ class Probe extends DisplayComponent {
                 if (bit === 1) bigValue |= (1n << pos);
             }
         }
-
-        return DisplayComponent.formatValue(bigValue, bigDriven, netIds.length, this.displayFormat);
+        return bigDriven === 0n ? '~' : DisplayComponent.formatValue(bigValue, bigDriven, netIds.length, displayFormat);
     }
 
     // Renders the probe onto the grid.

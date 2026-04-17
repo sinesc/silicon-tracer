@@ -270,10 +270,11 @@ class Simulation {
     declareProbe(name, suffix) {
         assert.string(name);
         assert.string(suffix);
-        // TODO: enable once UI ensures unique name
-        //assert(this.#probes.byName[name] === undefined, `Probe name "${name}" already defined`);
-        const probe = { name, suffix, netIds: [] };
-        this.#probes.byName[name] = probe;
+        let probe = this.#probes.byName[name];
+        if (!probe) {
+            probe = { name, suffix, netIds: [] };
+            this.#probes.byName[name] = probe;
+        }
         this.#probes.byInput['input' + suffix] = probe;
     }
 
@@ -294,6 +295,12 @@ class Simulation {
             }
         }
         return anyDriven ? value : null;
+    }
+
+    // Returns the net IDs for a declared probe by name, or null if not found.
+    getProbeNetIds(name) {
+        assert.string(name);
+        return this.#probes.byName[name]?.netIds ?? null;
     }
 
     // Declares a RAM/ROM component. dataWidth must be a power of 2 and <= BITS_PER_ELEMENT.

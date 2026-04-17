@@ -4,7 +4,7 @@
 class Simulations {
 
     #simulations = { };
-    #currentSimulation;
+    #currentSimulation = null;
     #app;
 
     constructor(app) {
@@ -36,6 +36,7 @@ class Simulations {
         assert.class(Circuit, circuit, true);
         assert.bool(create);
         assert.bool(attach);
+        const oldUid = this.#currentSimulation;
         let simulation;
         if (circuit && this.#simulations[circuit.uid]) {
             this.#currentSimulation = circuit.uid;
@@ -48,6 +49,9 @@ class Simulations {
             this.#app.grid.circuit.detachSimulation();
             this.#currentSimulation = null;
             simulation = null;
+        }
+        if (oldUid !== this.#currentSimulation) {
+            this.#app.grid.switchMonitorContext(oldUid, this.#currentSimulation);
         }
         if (simulation && attach) {
             simulation.attach();
@@ -66,6 +70,7 @@ class Simulations {
     delete(circuit) {
         assert.class(Circuit, circuit);
         delete this.#simulations[circuit.uid];
+        this.#app.grid.clearSavedMonitor(circuit.uid);
         if (circuit.uid === this.#currentSimulation) {
             this.#app.grid.setSimulationLabel(null);
             this.#app.grid.circuit.detachSimulation();
@@ -172,6 +177,7 @@ Simulations.Simulation = class {
         if (this.#app.grid.circuit !== circuit) {
             this.#app.grid.setCircuit(circuit);
         }
+        this.#app.grid.setCircuitInstanceId(instanceId);
         this.#instanceId = instanceId;
         circuit.attachSimulation(this.#netList, instanceId);
     }
@@ -181,6 +187,34 @@ Simulations.Simulation = class {
     tick(ticks) {
         assert.integer(ticks);
         return this.#engine.simulate(ticks);
+    }
+
+    // Returns all probe instances matching the given base name across all circuit instances.
+    // Each entry has { probeName, probe } where probeName includes the @instanceId suffix when non-root.
+    probeInstances(baseName) {
+        assert.string(baseName);
+        if (!this.#netList) return [];
+        const result = [];
+        for (const [instanceId, { circuit }] of this.#netList.instances.entries()) {
+            const probe = circuit.items.find(i => i instanceof Probe && i.name === baseName);
+            if (probe) {
+                const probeName = instanceId !== 0 ? `${baseName}@${instanceId}` : baseName;
+                result.push({ probeName, probe });
+            }
+        }
+        return result;
+    }
+
+    // Resolves a probe display name (e.g. "myprobe@3") back to its Probe instance, or null if not found.
+    findProbeByDisplayName(displayName) {
+        assert.string(displayName);
+        if (!this.#netList) return null;
+        const atIdx = displayName.lastIndexOf('@');
+        const baseName = atIdx >= 0 ? displayName.slice(0, atIdx) : displayName;
+        const instanceId = atIdx >= 0 ? Number(displayName.slice(atIdx + 1)) : 0;
+        const instance = this.#netList.instances[instanceId];
+        if (!instance) return null;
+        return instance.circuit.items.find(i => i instanceof Probe && i.name === baseName) ?? null;
     }
 
     // Returns whether the simulation includes the given circuit.
