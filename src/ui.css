@@ -260,6 +260,7 @@ html {
 }
 .error {
     color: var(--error-text-color);
+    opacity: 1;
 }
 .warning {
     color: var(--warning-text-color);

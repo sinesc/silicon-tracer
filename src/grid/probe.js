@@ -79,8 +79,8 @@ class Probe extends DisplayComponent {
     }
 
     // Computes the display label from the current net state of all attached nets.
-    // For single-bit nets: '0', '1', '-1' (conflict), or '~' (undriven).
-    // For multi-bit nets: formatted integer value, '!' (conflict), or '~' (undriven).
+    // For single-bit nets: '0', '1', 'E' (conflict), or '~' (undriven).
+    // For multi-bit nets: formatted integer value, 'E' (conflict), or '~' (undriven).
     get label() {
         const netIds = this.#input.netIds;
         if (!netIds || netIds.length === 0) return '~';
@@ -102,12 +102,12 @@ class Probe extends DisplayComponent {
         if (!netIds || netIds.length === 0) return '~';
         if (netIds.length === 1) {
             const v = netIds[0] !== undefined ? engine.getNetValue(netIds[0]) : null;
-            return v === null ? '~' : v === -1 ? '-1' : String(v);
+            return v === null ? '~' : v === -1 ? '<span class="warning">E</span>' : String(v);
         }
         let bigValue = 0n, bigDriven = 0n;
         for (let i = 0; i < netIds.length; i++) {
             const bit = netIds[i] !== undefined ? engine.getNetValue(netIds[i]) : null;
-            if (bit === -1) return '!';
+            if (bit === -1) return '<span class="warning">E</span>';
             if (bit !== null) {
                 const pos = BigInt(i);
                 bigDriven |= (1n << pos);
