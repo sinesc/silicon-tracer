@@ -206,7 +206,7 @@ class BackendJavascript {
     }
 
     // Emits a break-on-condition check: evaluates a user-defined probe expression and breaks the tick loop early if truthy.
-    // probeMap is { [probeName]: { elementIndex2, bitIndex } | null | Array<{...}> } — null probes are substituted with null,
+    // probeMap is { [probeName]: { elementIndex2, bitIndex } | null | Array<{...}> } - null probes are substituted with null,
     // single-bit probes are 0/1/-1/null, multi-bit probes (arrays) are combined into an integer (LSB = index 0).
     emitBreakOnCondition(expr, probeMap) {
         const names = Object.keys(probeMap).sort((a, b) => b.length - a.length);
@@ -237,7 +237,7 @@ class BackendJavascript {
                     : valueExpr;
                 replacement = `((${anyDriven}) ? (${driven_part}) : null)`;
             } else {
-                // Single-bit: mirror getNetValue() — undriven → null, conflict → -1, otherwise 0/1.
+                // Single-bit: mirror getNetValue() - undriven -> null, conflict -> -1, otherwise 0/1.
                 const driven  = `((mem[${p.elementIndex3}] >>> ${p.bitIndex}) & 1)`;
                 const value   = `((mem[${p.elementIndex2}] >>> ${p.bitIndex}) & 1)`;
                 const withConflict = p.elementIndexC !== null

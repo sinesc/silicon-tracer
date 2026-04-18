@@ -168,7 +168,7 @@ class Wire extends GridItem {
             setTimeout(() => {
                 if (this.#element) { // deletion might already be in progress
                     this.#element.classList.remove('wire-delete-animation');
-                    this.grid.removeItem(this); // fires onCircuitItemRemoved → compact + recompile + prune
+                    this.grid.removeItem(this); // fires onCircuitItemRemoved -> compact + recompile + prune
                 }
             }, 150);
             return true;
@@ -277,9 +277,7 @@ class Wire extends GridItem {
         }
     }
 
-    // Compact/reduce overlapping wires on the given grid or circuit.
-    // Merges collinear wires that overlap or touch, but splits at any point where a
-    // perpendicular wire has an endpoint (T- and X-junctions).
+    // Compact overlapping wires on the given grid or circuit, retaining T- and X-junctions.
     static compact(container) {
         assert(container instanceof Grid || container instanceof Circuit, 'container must be a Grid or Circuit');
 
@@ -296,7 +294,6 @@ class Wire extends GridItem {
         // Pre-compute cut points from the original wire state, before any merging.
         // A cut is needed wherever a perpendicular wire connects: either its endpoint lies on
         // this wire's body, or this wire's endpoint lies on the perpendicular wire's body.
-        // Both cases are equivalent junction connections per the wire connectivity rule.
         // Computed once and never mutated so processing one direction cannot corrupt the other.
         const hWiresByTrack = new Map(); // y -> [{start, end}]
         const vWiresByTrack = new Map(); // x -> [{start, end}]
@@ -324,14 +321,14 @@ class Wire extends GridItem {
         for (const wire of allWires) {
             for (const p of wire.points()) {
                 if (wire.#direction === 'v') {
-                    // V endpoint at (p.x, p.y): cuts H track at y=p.y if an H wire body covers p.x.
+                    // V endpoint at (p.x, p.y): cuts H track at y=p.y if an H wire body covers p.x
                     addCut(cutsForH, p.y, p.x);
-                    // V endpoint at (p.x, p.y): cuts V track at x=p.x if an H wire body covers p.y.
+                    // V endpoint at (p.x, p.y): cuts V track at x=p.x if an H wire body covers p.y
                     if (coversPoint(hWiresByTrack.get(p.y), p.x)) addCut(cutsForV, p.x, p.y);
                 } else {
-                    // H endpoint at (p.x, p.y): cuts V track at x=p.x if a V wire body covers p.y.
+                    // H endpoint at (p.x, p.y): cuts V track at x=p.x if a V wire body covers p.y
                     addCut(cutsForV, p.x, p.y);
-                    // H endpoint at (p.x, p.y): cuts H track at y=p.y if a V wire body covers p.x.
+                    // H endpoint at (p.x, p.y): cuts H track at y=p.y if a V wire body covers p.x
                     if (coversPoint(vWiresByTrack.get(p.x), p.y)) addCut(cutsForH, p.y, p.x);
                 }
             }
@@ -342,7 +339,7 @@ class Wire extends GridItem {
             const cuts = isH ? cutsForH : cutsForV;
 
             // Group non-selected wires by their perpendicular coordinate into tracks.
-            // Selected wires are skipped here — they are deferred until the user clears the selection.
+            // Selected wires are skipped here - they are deferred until the user clears the selection.
             const tracks = new Map();
             for (const wire of allWires) {
                 if (wire.#direction !== direction) continue;
@@ -456,17 +453,17 @@ class Wire extends GridItem {
                 // Horizontal wire: constrains dx only
                 const room = initialWidth - MIN;
                 if (endpoint === 0) {
-                    maxDx = Math.min(maxDx, room); // p0 moves right → shrinks wire
+                    maxDx = Math.min(maxDx, room); // p0 moves right -> shrinks wire
                 } else {
-                    minDx = Math.max(minDx, -room); // p1 moves left → shrinks wire
+                    minDx = Math.max(minDx, -room); // p1 moves left -> shrinks wire
                 }
             } else {
                 // Vertical wire: constrains dy only
                 const room = initialHeight - MIN;
                 if (endpoint === 0) {
-                    maxDy = Math.min(maxDy, room); // p0 moves down → shrinks wire
+                    maxDy = Math.min(maxDy, room); // p0 moves down -> shrinks wire
                 } else {
-                    minDy = Math.max(minDy, -room); // p1 moves up → shrinks wire
+                    minDy = Math.max(minDy, -room); // p1 moves up -> shrinks wire
                 }
             }
         }

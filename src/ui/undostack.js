@@ -16,7 +16,7 @@ class UndoStack {
     #pointer = -1;
 
     // Initialize with the baseline state snapshot. Must be called before push().
-    // Safe to call multiple times — subsequent calls are no-ops.
+    // Safe to call multiple times - subsequent calls are no-ops.
     init(snapshot) {
         assert.object(snapshot, true);
         if (this.#pointer >= 0) return;

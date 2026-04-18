@@ -25,13 +25,13 @@ class Grid {
     #passive;
 
     #pending = {
-        wireCompact: false,             // wire(s) added/removed/repositioned — compact before next compile
-        recompile: false,               // topology changed → sim.compile on next render
-        netColors: true,                // net topology/colors changed → applyNetColors on next render
-        junctionRebuild: true,          // wire topology changed → rebuildJunctions on next render
-        junctionPositionUpdate: false,  // zoom changed → reposition junction elements on next render
-        bgPattern: true,                // zoom or pan changed → CSS background update on next render
-        viewportUpdate: false,          // zoom changed → propagate NEEDS_FULL_RENDER to all items
+        wireCompact: false,             // wire(s) added/removed/repositioned - compact before next compile
+        recompile: false,               // topology changed -> sim.compile on next render
+        netColors: true,                // net topology/colors changed -> applyNetColors on next render
+        junctionRebuild: true,          // wire topology changed -> rebuildJunctions on next render
+        junctionPositionUpdate: false,  // zoom changed -> reposition junction elements on next render
+        bgPattern: true,                // zoom or pan changed -> CSS background update on next render
+        viewportUpdate: false,          // zoom changed -> propagate NEEDS_FULL_RENDER to all items
         monitorRefresh: false,          // simulation recompiled, need to update probes
     };
     #suppressCircuitEvents = false;     // true while Wire.compact runs inside render()
@@ -208,7 +208,7 @@ class Grid {
                 this.#pending.recompile = false;
             }
 
-            // recompile sim if dirty — skip this render frame to avoid stale net-state flash
+            // recompile sim if dirty - skip this render frame to avoid stale net-state flash
             const sim = this.#app.simulations.current;
             if (sim && sim.checkDirty()) {
                 return;
@@ -219,7 +219,7 @@ class Grid {
                 this.#pending.monitorRefresh = false;
             }
 
-            // Info box overlay — check each registered section at its configured interval.
+            // Info box overlay - check each registered section at its configured interval.
             const now = performance.now();
             for (const entry of this.#infoBoxSections) {
                 const intervalElapsed = entry.lastRenderTime === null || entry.interval === 0 || now - entry.lastRenderTime >= entry.interval;
@@ -266,7 +266,7 @@ class Grid {
 
         if (this.#circuit) {
 
-            // zoom → propagate NEEDS_FULL_RENDER to all items
+            // zoom -> propagate NEEDS_FULL_RENDER to all items
             if (this.#pending.viewportUpdate) {
                 for (const item of this.#circuit.items) {
                     item.renderFlags = GridItem.NEEDS_FULL_RENDER;
@@ -557,7 +557,7 @@ class Grid {
     #deleteSelection() {
         this.#circuit.detachSimulation();
         for (const item of this.#selection) {
-            this.removeItem(item); // fires onCircuitItemRemoved → schedules compact/recompile/prune
+            this.removeItem(item); // fires onCircuitItemRemoved -> schedules compact/recompile/prune
         }
         this.#selection = [];
         this.invalidateSelection();
