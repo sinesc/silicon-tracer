@@ -81,7 +81,7 @@ const APPLICATION_STUB = `
         circuits = null;
         toolbarPins = [];
         refreshUndoButtons() {}
-        loadToolbarPins() {}
+        loadPins() {}
         constructor() {
             this.circuits = new Circuits(this);
             // reset() initialises #circuits and creates a placeholder circuit;
