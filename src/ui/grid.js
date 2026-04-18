@@ -24,18 +24,18 @@ class Grid {
     #passive;
 
     #pending = {
-        wireCompact: false,            // wire(s) added/removed/repositioned — compact before next compile
-        recompile: false,              // topology changed → sim.compile on next render
-        netColors: true,               // net topology/colors changed → applyNetColors on next render
-        junctionRebuild: true,         // wire topology changed → rebuildJunctions on next render
-        junctionPositionUpdate: false, // zoom changed → reposition junction elements on next render
-        bgPattern: true,               // zoom or pan changed → CSS background update on next render
-        viewportUpdate: false,         // zoom changed → propagate NEEDS_FULL_RENDER to all items
+        wireCompact: false,             // wire(s) added/removed/repositioned — compact before next compile
+        recompile: false,               // topology changed → sim.compile on next render
+        netColors: true,                // net topology/colors changed → applyNetColors on next render
+        junctionRebuild: true,          // wire topology changed → rebuildJunctions on next render
+        junctionPositionUpdate: false,  // zoom changed → reposition junction elements on next render
+        bgPattern: true,                // zoom or pan changed → CSS background update on next render
+        viewportUpdate: false,          // zoom changed → propagate NEEDS_FULL_RENDER to all items
+        monitorRefresh: false,          // simulation recompiled, need to update probes
     };
-    #suppressCircuitEvents = false;    // true while Wire.compact runs inside render()
+    #suppressCircuitEvents = false;     // true while Wire.compact runs inside render()
     #infoBoxElement = null;
-    #overlays = [];        // Array<{ id, interval, overlay, node, lastRenderTime }>
-    #nextOverlayId = 1;
+    #infoBoxSections = [];              // Array<{ id, interval, overlay, node, lastRenderTime }>
 
     constructor(app, parent, passive = false) {
         assert.class(Application, app);
@@ -62,19 +62,18 @@ class Grid {
     registerOverlay(interval, overlay) {
         assert.integer(interval);
         assert.class(Overlay, overlay);
-        const id = this.#nextOverlayId++;
         const node = html(this.#infoBoxElement, 'div');
-        this.#overlays.push({ id, interval, overlay, node, lastRenderTime: null });
+        this.#infoBoxSections.push({ interval, overlay, node, lastRenderTime: null });
         return overlay;
     }
 
     // Removes a registered overlay section.
     deleteOverlay(overlay) {
         assert.class(Overlay, overlay);
-        const idx = this.#overlays.findIndex(o => o.overlay === overlay);
+        const idx = this.#infoBoxSections.findIndex(o => o.overlay === overlay);
         if (idx < 0) return;
-        this.#overlays[idx].node.remove();
-        this.#overlays.splice(idx, 1);
+        this.#infoBoxSections[idx].node.remove();
+        this.#infoBoxSections.splice(idx, 1);
     }
 
     // Returns the circuit currently on the grid.
@@ -210,9 +209,14 @@ class Grid {
                 return;
             }
 
+            if (this.#pending.monitorRefresh) {
+                this.monitorOverlay.refresh();
+                this.#pending.monitorRefresh = false;
+            }
+
             // Info box overlay — check each registered section at its configured interval.
             const now = performance.now();
-            for (const entry of this.#overlays) {
+            for (const entry of this.#infoBoxSections) {
                 const intervalElapsed = entry.lastRenderTime === null || entry.interval === 0 || now - entry.lastRenderTime >= entry.interval;
                 if (intervalElapsed) {
                     if (entry.interval > 0) entry.lastRenderTime = now;
@@ -322,7 +326,7 @@ class Grid {
     onSimulationRecompiled() {
         this.#pending.netColors = true;
         this.#pending.junctionRebuild = true;
-        this.monitorOverlay.refresh();
+        this.#pending.monitorRefresh = true;
     }
 
     // Called by Circuit when an item is added. Schedules wire compact and simulation recompile as needed.
