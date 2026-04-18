@@ -531,6 +531,11 @@ class Grid {
         if (this.readonly) return;
         const serialized = JSON.parse(await navigator.clipboard.readText());
         const items = serialized.map((item) => GridItem.unserialize(this.#app, item));
+        // offset items a bit to help user visually identify the pasted selection
+        for (const item of items) {
+            item.x += 2 * Grid.SPACING;
+            item.y += 2 * Grid.SPACING;
+        }
         // clear old selection
         for (const item of this.#circuit.items) {
             item.selected = false;
