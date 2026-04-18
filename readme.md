@@ -1,8 +1,8 @@
 # Silicon Tracer
 
-This is a logic circuit simulator for designing circuits with discrete logic components (e.g. 74 series chips) for retro/hobby projects. It comes with a LogiSim import and is planned to have an EDA software export with the ability to automatically group individual gates to appropriate and ideally minimal 74x-chip-equivalents during export. To achieve good performance it compiles circuits to fully branchless code using only bit-operations.
+This is a logic circuit simulator for designing circuits with discrete logic components (e.g. 74 series chips) for retro/hobby projects. It comes with a LogiSim import and is planned to have an EDA software export with the ability to automatically group individual gates to appropriate and ideally minimal 74x-chip-equivalents during export. To achieve good performance it compiles circuits to branchless code using only bit-operations.
 
-It is fully usable **offline** (download the repository and open index.html in a browser) or [online](https://sinesc.github.io/silicon-tracer/). Regardless of which option is used circuits are always local, no cloud storage.
+It is fully usable **offline** (see Releases for a bundled version with all code in a single html file or download the repository and open index.html in a browser) or [online](https://sinesc.github.io/silicon-tracer/). Regardless of which option is used circuits are always local, no cloud storage, no telemetry.
 
 ## Project status: Getting there.
 
