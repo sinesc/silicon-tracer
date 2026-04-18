@@ -198,7 +198,7 @@ class Circuits {
     reset(removeLibraries = false) {
         assert.bool(removeLibraries);
         this.#clear(removeLibraries);
-        this.#app.loadToolbarPins(Application.DEFAULT_TOOLBAR_PINS);
+        this.#app.loadPins(Application.DEFAULT_TOOLBAR_PINS);
         const label = this.#generateLabel();
         const circuit = new Circuit(this.#app, label);
         this.#circuits[circuit.uid] = circuit;
@@ -366,7 +366,7 @@ class Circuits {
         }
         // restore toolbar pins only when loading the primary file (not a library)
         if (setLid === null && !packaged && Array.isArray(content.toolbar)) {
-            this.#app.loadToolbarPins(content.toolbar);
+            this.#app.loadPins(content.toolbar);
         }
         return content.currentUID;
     }

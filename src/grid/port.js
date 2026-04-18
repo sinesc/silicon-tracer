@@ -156,13 +156,38 @@ class Port extends SimulationComponent {
         }
     }
 
-    static toolbarMeta(_desc) {
-        return { label: 'Port', hoverMessage: '<b>Component IO pin</b>. <i>LMB</i> Drag to move onto grid.' };
+    // Returns { title, fields, data } for the edit dialog given a descriptor and defaults.
+    // Uses a simplified name field without the context-dependent uniqueness check (not applicable for toolbar defaults).
+    static editDialogConfig(_descriptor, defaults = {}) {
+        const fields = [
+            { name: 'name', label: 'Name', type: 'string' },
+            ...Component.EDIT_DIALOG,
+        ];
+        return {
+            title: 'Configure port',
+            fields,
+            data: { name: defaults.name ?? '', rotation: defaults.rotation ?? 0 },
+        };
     }
 
-    static fromDescriptor(app, _desc) {
+    // Returns the app-level placement defaults relevant to this component descriptor.
+    static getPlacementDefaults(app, _descriptor) {
+        return app.config.placementDefaults.port;
+    }
+
+    static toolbarMeta(_desc) {
+        return { label: 'Port', hoverMessage: '<b>Component IO pin</b>.' };
+    }
+
+    static fromDescriptor(app, _desc, overrideDefaults = {}) {
         const d = app.config.placementDefaults;
-        return (grid, x, y) => grid.addItem(new Port(app, x, y, d.port.rotation));
+        return (grid, x, y) => {
+            const port = new Port(app, x, y, overrideDefaults.rotation ?? d.port.rotation);
+            if (overrideDefaults.name) port.name = overrideDefaults.name;
+            grid.addItem(port);
+            if (overrideDefaults.name) port.name = port.makeUnique('name', overrideDefaults.name);
+            return port;
+        };
     }
 
     #isSubcircuit() {

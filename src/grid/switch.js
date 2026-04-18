@@ -108,15 +108,40 @@ class Switch extends SimulationComponent {
         }
     }
 
+    // Returns { title, fields, data } for the edit dialog given a descriptor and defaults.
+    static editDialogConfig(descriptor, defaults = {}) {
+        return {
+            title: 'Configure switch',
+            fields: Switch.EDIT_DIALOG,
+            data: {
+                name: defaults.name ?? '',
+                rotation: defaults.rotation ?? 0,
+                mode: descriptor['#t'] ?? defaults.mode ?? 'toggle',
+                defaultState: String(defaults.defaultState ?? 0),
+                hasInput: defaults.hasInput ?? true,
+            },
+        };
+    }
+
+    // Returns the app-level placement defaults relevant to this component descriptor.
+    static getPlacementDefaults(app, _descriptor) {
+        return app.config.placementDefaults.switch;
+    }
+
+    // Updates the descriptor in-place from a completed dialog config (for mode changes).
+    static updateDescriptorFromConfig(descriptor, config) {
+        descriptor['#t'] = config.mode;
+    }
+
     // Handle edit hotkey.
     async onEdit() {
-        const config = await dialog("Configure switch", Switch.EDIT_DIALOG, {
+        const { title, fields, data } = Switch.editDialogConfig({ '#t': this.#mode }, {
             name: this.name,
             rotation: this.rotation,
-            mode: this.#mode,
             defaultState: this.#defaultState,
             hasInput: this.#hasInput,
         });
+        const config = await dialog(title, fields, data);
         if (config) {
             this.name = config.name;
             this.#mode = config.mode;
@@ -176,19 +201,26 @@ class Switch extends SimulationComponent {
 
     static toolbarMeta(desc) {
         if (desc['#t'] === 'toggle') {
-            return { label: 'Toggle switch', hoverMessage: '<b>Toggle switch</b> with permanently saved state. <i>LMB</i> Drag to move onto grid.' };
+            return { label: 'Toggle switch', hoverMessage: '<b>Toggle switch</b> with permanently saved state.' };
         }
         if (desc['#t'] === 'momentary') {
-            return { label: 'Momentary switch', hoverMessage: '<b>Momentary switch</b>. <i>LMB</i> Drag to move onto grid.' };
+            return { label: 'Momentary switch', hoverMessage: '<b>Momentary switch</b>.' };
         }
         return null;
     }
 
-    static fromDescriptor(app, desc) {
+    static fromDescriptor(app, desc, overrideDefaults = {}) {
         const mode = desc['#t'];
         if (mode !== 'toggle' && mode !== 'momentary') return null;
         const d = app.config.placementDefaults;
-        return (grid, x, y) => grid.addItem(new Switch(app, x, y, d.switch.rotation, mode));
+        return (grid, x, y) => {
+            const rotation = overrideDefaults.rotation ?? d.switch.rotation;
+            const defaultState = overrideDefaults.defaultState != null ? Number.parseInt(overrideDefaults.defaultState) : 0;
+            const hasInput = overrideDefaults.hasInput ?? true;
+            const sw = new Switch(app, x, y, rotation, mode, defaultState, hasInput);
+            if (overrideDefaults.name) sw.name = overrideDefaults.name;
+            return grid.addItem(sw);
+        };
     }
 }
 

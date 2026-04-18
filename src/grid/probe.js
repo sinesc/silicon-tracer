@@ -69,9 +69,24 @@ class Probe extends DisplayComponent {
         }
     }
 
+    // Returns { title, fields, data } for the edit dialog given a descriptor and defaults.
+    static editDialogConfig(_descriptor, defaults = {}) {
+        return {
+            title: 'Configure probe',
+            fields: Probe.EDIT_DIALOG,
+            data: { name: defaults.name ?? '', displayFormat: defaults.displayFormat ?? 'auto', rotation: defaults.rotation ?? 0 },
+        };
+    }
+
+    // Returns the app-level placement defaults relevant to this component descriptor.
+    static getPlacementDefaults(app, _descriptor) {
+        return app.config.placementDefaults.probe;
+    }
+
     // Handle edit hotkey.
     async onEdit() {
-        const config = await dialog("Configure probe", Probe.EDIT_DIALOG, { name: this.name, displayFormat: this.displayFormat, rotation: this.rotation });
+        const { title, fields, data } = Probe.editDialogConfig({}, { name: this.name, displayFormat: this.displayFormat, rotation: this.rotation });
+        const config = await dialog(title, fields, data);
         if (config) {
             this.name = config.name;
             this.rotation = config.rotation;
@@ -162,12 +177,20 @@ class Probe extends DisplayComponent {
     }
 
     static toolbarMeta(_desc) {
-        return { label: 'Probe', hoverMessage: '<b>Net state probe</b>. Displays the state of attached net. <i>LMB</i> Drag to move onto grid.' };
+        return { label: 'Probe', hoverMessage: '<b>Net state probe</b>. Displays the state of attached net.' };
     }
 
-    static fromDescriptor(app, _desc) {
+    static fromDescriptor(app, _desc, overrideDefaults = {}) {
         const d = app.config.placementDefaults;
-        return (grid, x, y) => grid.addItem(new Probe(app, x, y, d.probe.rotation));
+        return (grid, x, y) => {
+            const rotation = overrideDefaults.rotation ?? d.probe.rotation;
+            const name = overrideDefaults.name ?? '';
+            const probe = new Probe(app, x, y, rotation, name);
+            if (overrideDefaults.displayFormat) probe.displayFormat = overrideDefaults.displayFormat;
+            grid.addItem(probe);
+            if (name) probe.name = probe.makeUnique('name', name);
+            return probe;
+        };
     }
 
     // Returns the probe name with instance suffix appended when inside a non-root circuit instance.

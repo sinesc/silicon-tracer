@@ -34,9 +34,24 @@ class Clock extends SimulationComponent {
         return sim.declareClock(this.frequency, config.targetTPS, suffix);
     }
 
+    // Returns { title, fields, data } for the edit dialog given a descriptor and defaults.
+    static editDialogConfig(_descriptor, defaults = {}) {
+        return {
+            title: 'Configure clock',
+            fields: Clock.EDIT_DIALOG,
+            data: { frequency: Number.formatSI(defaults.frequency ?? 1, true), rotation: defaults.rotation ?? 0 },
+        };
+    }
+
+    // Returns the app-level placement defaults relevant to this component descriptor.
+    static getPlacementDefaults(app, _descriptor) {
+        return app.config.placementDefaults.clock;
+    }
+
     // Handle edit hotkey.
     async onEdit() {
-        const config = await dialog("Configure clock", Clock.EDIT_DIALOG, { frequency: Number.formatSI(this.frequency, true), rotation: this.rotation });
+        const { title, fields, data } = Clock.editDialogConfig({}, { frequency: this.frequency, rotation: this.rotation });
+        const config = await dialog(title, fields, data);
         if (config) {
             this.frequency = config.frequency;
             if (this.rotation !== config.rotation) {
@@ -55,12 +70,16 @@ class Clock extends SimulationComponent {
     }
 
     static toolbarMeta(_desc) {
-        return { label: 'Clock', hoverMessage: '<b>Clock</b>. <i>LMB</i> Drag to move onto grid.' };
+        return { label: 'Clock', hoverMessage: '<b>Clock</b>.' };
     }
 
-    static fromDescriptor(app, _desc) {
+    static fromDescriptor(app, _desc, overrideDefaults = {}) {
         const d = app.config.placementDefaults;
-        return (grid, x, y) => grid.addItem(new Clock(app, x, y, d.clock.rotation));
+        return (grid, x, y) => {
+            const c = new Clock(app, x, y, overrideDefaults.rotation ?? d.clock.rotation);
+            if (overrideDefaults.frequency != null) c.frequency = overrideDefaults.frequency;
+            return grid.addItem(c);
+        };
     }
 }
 

@@ -53,8 +53,8 @@ class Gate extends SimulationComponent {
 
     // Handle edit hotkey.
     async onEdit() {
-        const unary = Gate.#UNARY.includes(this.type);
-        const config = await dialog("Configure gate", unary ? Gate.#UNARY_DIALOG : Gate.#XARY_DIALOG, { numInputs: this.inputs.length, type: this.type, rotation: this.rotation });
+        const { title, fields, data } = Gate.editDialogConfig({ '#t': this.type }, { numInputs: this.inputs.length, rotation: this.rotation });
+        const config = await dialog(title, fields, data);
         if (config) {
             const { left, right, inputs, output } = Gate.#generatePorts(config.numInputs ?? this.inputs.length);
             const grid = this.grid;
@@ -108,20 +108,43 @@ class Gate extends SimulationComponent {
         return { left, right, inputs, output };
     }
 
-    static toolbarMeta(desc) {
-        const label = desc['#t'].toUpperFirst();
-        return { label, hoverMessage: `<b>${label} gate</b>. <i>LMB</i> Drag to move onto grid.` };
+    // Returns { title, fields, data } for the edit dialog given a descriptor and defaults.
+    static editDialogConfig(descriptor, defaults = {}) {
+        const gateType = descriptor['#t'];
+        const unary = Gate.#UNARY.includes(gateType);
+        return {
+            title: 'Configure gate',
+            fields: unary ? Gate.#UNARY_DIALOG : Gate.#XARY_DIALOG,
+            data: { numInputs: defaults.numInputs ?? 2, type: gateType, rotation: defaults.rotation ?? 0 },
+        };
     }
 
-    static fromDescriptor(app, desc) {
+    // Returns the app-level placement defaults relevant to this component descriptor.
+    static getPlacementDefaults(app, descriptor) {
+        const d = app.config.placementDefaults;
+        const gateType = descriptor['#t'];
+        return { ...d.gate, ...(d[gateType] ?? {}) };
+    }
+
+    // Updates the descriptor in-place from a completed dialog config (for type changes).
+    static updateDescriptorFromConfig(descriptor, config) {
+        descriptor['#t'] = config.type;
+    }
+
+    static toolbarMeta(desc) {
+        const label = desc['#t'].toUpperFirst();
+        return { label, hoverMessage: `<b>${label} gate</b>.` };
+    }
+
+    static fromDescriptor(app, desc, overrideDefaults = {}) {
         const d = app.config.placementDefaults;
         const gateType = desc['#t'];
         const gateEntry = Simulation.GATE_MAP[gateType];
         if (!gateEntry) return null;
         const { joinOp } = gateEntry;
         return (grid, x, y) => {
-            const numInputs = d[gateType]?.numInputs ?? d.gate.numInputs;
-            return grid.addItem(new Gate(app, x, y, d[gateType]?.rotation ?? d.gate.rotation, gateType, joinOp !== null ? numInputs : 1));
+            const merged = { ...d.gate, ...(d[gateType] ?? {}), ...overrideDefaults };
+            return grid.addItem(new Gate(app, x, y, merged.rotation ?? d.gate.rotation, gateType, joinOp !== null ? (merged.numInputs ?? d.gate.numInputs) : 1));
         };
     }
 }

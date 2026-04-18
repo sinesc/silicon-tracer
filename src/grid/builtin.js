@@ -70,9 +70,28 @@ class Builtin extends SimulationComponent {
         return sim.declareBuiltin(this.type, suffix);
     }
 
+    // Returns { title, fields, data } for the edit dialog given a descriptor and defaults.
+    static editDialogConfig(descriptor, defaults = {}) {
+        const builtinType = descriptor['#t'];
+        const label = Builtin.META_INFO[builtinType]?.label ?? builtinType?.toUpperFirst() ?? 'component';
+        return {
+            title: `Configure ${label}`,
+            fields: Builtin.EDIT_DIALOG,
+            data: { rotation: defaults.rotation ?? 0 },
+        };
+    }
+
+    // Returns the app-level placement defaults relevant to this component descriptor.
+    static getPlacementDefaults(app, descriptor) {
+        const d = app.config.placementDefaults;
+        const builtinType = descriptor['#t'];
+        return { ...d.builtin, ...(d[builtinType] ?? {}) };
+    }
+
     // Handle edit hotkey.
     async onEdit() {
-        const config = await dialog(`Configure ${this.label}`, Builtin.EDIT_DIALOG, { rotation: this.rotation });
+        const { title, fields, data } = Builtin.editDialogConfig({ '#t': this.type }, { rotation: this.rotation });
+        const config = await dialog(title, fields, data);
         if (config) {
             this.rotation = config.rotation;
             this.redraw();
@@ -127,14 +146,16 @@ class Builtin extends SimulationComponent {
 
     static toolbarMeta(desc) {
         const label = Builtin.META_INFO[desc['#t']]?.label ?? desc['#t'].toUpperFirst();
-        return { label, hoverMessage: `<b>${label}</b> builtin. <i>LMB</i> Drag to move onto grid.` };
+        return { label, hoverMessage: `<b>${label}</b> builtin.` };
     }
 
-    static fromDescriptor(app, desc) {
+    static fromDescriptor(app, desc, overrideDefaults = {}) {
         const d = app.config.placementDefaults;
         const builtinType = desc['#t'];
         if (!Builtin.META_INFO[builtinType]) return null;
-        return (grid, x, y) => grid.addItem(new Builtin(app, x, y, d[builtinType]?.rotation ?? d.builtin.rotation, builtinType));
+        return (grid, x, y) => grid.addItem(new Builtin(app, x, y,
+            overrideDefaults.rotation ?? d[builtinType]?.rotation ?? d.builtin.rotation,
+            builtinType));
     }
 }
 

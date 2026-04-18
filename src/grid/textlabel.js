@@ -3,7 +3,7 @@
 // Custom text
 class TextLabel extends GridItem {
 
-    static #EDIT_DIALOG = [
+    static EDIT_DIALOG = [
         { name: 'text', label: 'Text', type: 'string', check: (v, f) => v.trim().length > 0 },
         { name: 'fontSize', label: 'Font size', type: 'select', options: { "small": "Small", "medium": "Medium", "large": "Large" } },
         { name: 'color', label: 'Color', type: 'select', options: { "-": "White", "c0": "Mint", "c1": "Green", "c2": "Yellow", "c3": "Orange", "c4": "Red", "c5": "Ruby", "c6": "Magenta", "c7": "Purple", "c8": "Blue", "c9": "Turquoise" } },
@@ -196,9 +196,36 @@ class TextLabel extends GridItem {
         }
     }
 
+    // Returns { title, fields, data } for the edit dialog given a descriptor and defaults.
+    static editDialogConfig(_descriptor, defaults = {}) {
+        return {
+            title: 'Configure text element',
+            fields: TextLabel.EDIT_DIALOG,
+            data: {
+                text: defaults.text ?? 'Placeholder text. Press e to edit.',
+                maxLength: defaults.maxLength ?? 180,
+                fontSize: defaults.fontSize ?? 'small',
+                color: defaults.color ?? '-',
+                rotation: defaults.rotation ?? 0,
+            },
+        };
+    }
+
+    // Returns the app-level placement defaults relevant to this component descriptor.
+    static getPlacementDefaults(app, _descriptor) {
+        return app.config.placementDefaults.textlabel;
+    }
+
     // Handle edit hotkey.
     async onEdit() {
-        const config = await dialog("Configure text element", TextLabel.#EDIT_DIALOG, { text: this.#text, maxLength: this.width, fontSize: this.#fontSize, color: this.#color === null ? '-' : 'c' + this.#color, rotation: this.#rotation });
+        const { title, fields, data } = TextLabel.editDialogConfig({}, {
+            text: this.#text,
+            maxLength: this.width,
+            fontSize: this.#fontSize,
+            color: this.#color === null ? '-' : 'c' + this.#color,
+            rotation: this.#rotation,
+        });
+        const config = await dialog(title, fields, data);
         if (config) {
             this.#text = config.text;
             this.width = config.maxLength;
@@ -255,12 +282,20 @@ class TextLabel extends GridItem {
     }
 
     static toolbarMeta(_desc) {
-        return { label: 'Text', hoverMessage: '<b>Userdefined text message</b>. <i>LMB</i> Drag to move onto grid.' };
+        return { label: 'Text', hoverMessage: '<b>Userdefined text message</b>.' };
     }
 
-    static fromDescriptor(app, _desc) {
+    static fromDescriptor(app, _desc, overrideDefaults = {}) {
         const d = app.config.placementDefaults;
-        return (grid, x, y) => grid.addItem(new TextLabel(app, x, y, d.textlabel.rotation));
+        return (grid, x, y) => {
+            const rotation = overrideDefaults.rotation ?? d.textlabel.rotation;
+            const maxLength = overrideDefaults.maxLength ?? 180;
+            const text = overrideDefaults.text ?? 'Placeholder text. Press e to edit.';
+            const fontSize = overrideDefaults.fontSize ?? 'small';
+            const colorStr = overrideDefaults.color ?? '-';
+            const color = colorStr === '-' ? null : Number.parseInt(colorStr.slice(1));
+            return grid.addItem(new TextLabel(app, x, y, rotation, maxLength, text, fontSize, color));
+        };
     }
 }
 

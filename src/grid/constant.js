@@ -136,15 +136,46 @@ class Constant extends DisplayComponent {
         this.renderFlags |= GridItem.NEEDS_DETAIL_RENDER;
     }
 
+    // Returns { title, fields, data } for the edit dialog given a descriptor and defaults.
+    // defaults.value may be a display string or an applied { value, driven, inputFormat } object.
+    static editDialogConfig(_descriptor, defaults = {}) {
+        let valueStr = '0';
+        if (defaults.value != null) {
+            if (typeof defaults.value === 'object') {
+                const v = defaults.value;
+                valueStr = DisplayComponent.formatValue(v.value, v.driven, defaults.dataWidth ?? 1, v.inputFormat ?? 'dec');
+            } else {
+                valueStr = String(defaults.value);
+            }
+        }
+        return {
+            title: 'Configure constant',
+            fields: Constant.EDIT_DIALOG,
+            data: {
+                name: defaults.name ?? '',
+                dataWidth: String(defaults.dataWidth ?? 1),
+                value: valueStr,
+                displayFormat: defaults.displayFormat ?? 'dec',
+                rotation: defaults.rotation ?? 0,
+            },
+        };
+    }
+
+    // Returns the app-level placement defaults relevant to this component descriptor.
+    static getPlacementDefaults(app, _descriptor) {
+        return app.config.placementDefaults.constant;
+    }
+
     // Handle edit hotkey.
     async onEdit() {
-        const config = await dialog("Configure constant", Constant.EDIT_DIALOG, {
+        const { title, fields, data } = Constant.editDialogConfig({}, {
             name: this.name,
-            dataWidth: String(this.#dataWidth),
-            value: DisplayComponent.formatValue(this.#value, this.#driven, this.#dataWidth, this.inputFormat),
+            dataWidth: this.#dataWidth,
+            value: { value: this.#value, driven: this.#driven, inputFormat: this.inputFormat },
             displayFormat: this.#displayFormat,
             rotation: this.rotation,
         });
+        const config = await dialog(title, fields, data);
         if (config) {
             const dataWidthChanged = config.dataWidth !== this.#dataWidth;
             const sizeChanged = dataWidthChanged || config.displayFormat !== this.#displayFormat;
@@ -199,12 +230,22 @@ class Constant extends DisplayComponent {
     }
 
     static toolbarMeta(_desc) {
-        return { label: 'Constant', hoverMessage: '<b>Constant value</b>. <i>LMB</i> Drag to move onto grid.' };
+        return { label: 'Constant', hoverMessage: '<b>Constant value</b>.' };
     }
 
-    static fromDescriptor(app, _desc) {
+    static fromDescriptor(app, _desc, overrideDefaults = {}) {
         const d = app.config.placementDefaults;
-        return (grid, x, y) => grid.addItem(new Constant(app, x, y, d.constant.rotation));
+        return (grid, x, y) => {
+            const rotation = overrideDefaults.rotation ?? d.constant.rotation;
+            const dataWidth = overrideDefaults.dataWidth ?? 1;
+            const displayFormat = overrideDefaults.displayFormat ?? 'dec';
+            const v = overrideDefaults.value;
+            const value = v?.value ?? 0;
+            const driven = v?.driven ?? 1;
+            const c = new Constant(app, x, y, rotation, value, driven, dataWidth, displayFormat);
+            if (overrideDefaults.name) c.name = overrideDefaults.name;
+            return grid.addItem(c);
+        };
     }
 }
 

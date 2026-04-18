@@ -182,19 +182,48 @@ class Memory extends SimulationComponent {
         return hexToU8(str);
     }
 
+    // Returns { title, fields, data } for the edit dialog given a descriptor and defaults.
+    static editDialogConfig(descriptor, defaults = {}) {
+        const memType = descriptor['#t'];
+        const fields = (memType === 'ram' ? Memory.#RAM_EDIT_DIALOG : Memory.#ROM_EDIT_DIALOG).filter((f) => f.name !== 'data'); // skip data upload
+        return {
+            title: `Configure ${memType?.toUpperCase() ?? 'memory'}`,
+            fields,
+            data: {
+                addressWidth: defaults.addressWidth ?? 4,
+                dataWidth: String(defaults.dataWidth ?? 8),
+                combinedPorts: defaults.combinedPorts ?? true,
+                rotation: defaults.rotation ?? 0,
+            },
+        };
+    }
+
+    // Returns the app-level placement defaults relevant to this component descriptor.
+    static getPlacementDefaults(app, descriptor) {
+        const memType = descriptor['#t'];
+        return app.config.placementDefaults[memType] ?? {};
+    }
+
     static toolbarMeta(desc) {
-        if (desc['#t'] === 'rom') return { label: 'ROM', hoverMessage: '<b>Read-only memory</b>. <i>LMB</i> Drag to move onto grid.' };
-        if (desc['#t'] === 'ram') return { label: 'RAM', hoverMessage: '<b>Read/write memory</b>. <i>LMB</i> Drag to move onto grid.' };
+        if (desc['#t'] === 'rom') return { label: 'ROM', hoverMessage: '<b>Read-only memory</b>.' };
+        if (desc['#t'] === 'ram') return { label: 'RAM', hoverMessage: '<b>Read/write memory</b>.' };
         return null;
     }
 
-    static fromDescriptor(app, desc) {
+    static fromDescriptor(app, desc, overrideDefaults = {}) {
         const d = app.config.placementDefaults;
         const memType = desc['#t'];
         if (memType === 'rom') {
-            return (grid, x, y) => grid.addItem(new Memory(app, x, y, d.rom.rotation, 'rom', d.rom.addressWidth, d.rom.dataWidth));
+            return (grid, x, y) => grid.addItem(new Memory(app, x, y,
+                overrideDefaults.rotation ?? d.rom.rotation, 'rom',
+                overrideDefaults.addressWidth ?? d.rom.addressWidth,
+                overrideDefaults.dataWidth ?? d.rom.dataWidth));
         } else if (memType === 'ram') {
-            return (grid, x, y) => grid.addItem(new Memory(app, x, y, d.ram.rotation, 'ram', d.ram.addressWidth, d.ram.dataWidth, [], d.ram.combinedPorts));
+            return (grid, x, y) => grid.addItem(new Memory(app, x, y,
+                overrideDefaults.rotation ?? d.ram.rotation, 'ram',
+                overrideDefaults.addressWidth ?? d.ram.addressWidth,
+                overrideDefaults.dataWidth ?? d.ram.dataWidth,
+                [], overrideDefaults.combinedPorts ?? d.ram.combinedPorts));
         }
         return null;
     }

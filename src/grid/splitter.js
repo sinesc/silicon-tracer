@@ -6,7 +6,7 @@ class Splitter extends VirtualComponent {
     static MULTI_PORT_TEMPLATE = 'n{i}';
     static SINGLE_PORT_NAME = 'm';
 
-    static #EDIT_DIALOG = [
+    static EDIT_DIALOG = [
         { name: 'numSplits', label: 'Number of n-ports', type: 'int', postCheck: (v, f) => isFinite(v) && v >= 2 && v <= 64 },
         { name: 'ordering', label: 'Order of n-ports', type: 'select', options: { ltr: "0 ... n", rtl: "n ... 0" } },
         { name: 'orientation', label: 'Position of single port', type: 'select', options: { start: "Opposite of n0", middle: "Middle", end: "Opposite of nMax" } },
@@ -49,9 +49,31 @@ class Splitter extends VirtualComponent {
         this.setHoverMessage(this.inner, `<b>Wire-splitter/joiner</b>. <i>E</i> Edit, ${Component.HOTKEYS}.`, { type: 'hover' });
     }
 
+    // Returns { title, fields, data } for the edit dialog given a descriptor and defaults.
+    static editDialogConfig(_descriptor, defaults = {}) {
+        return {
+            title: 'Configure splitter',
+            fields: Splitter.EDIT_DIALOG,
+            data: {
+                numSplits: defaults.numSplits ?? 8,
+                gapPosition: defaults.gapPosition ?? 'none',
+                orientation: defaults.orientation ?? 'start',
+                ordering: defaults.ordering ?? 'ltr',
+                spacing: String(defaults.spacing ?? 0),
+                rotation: defaults.rotation ?? 0,
+            },
+        };
+    }
+
+    // Returns the app-level placement defaults relevant to this component descriptor.
+    static getPlacementDefaults(app, _descriptor) {
+        return app.config.placementDefaults.splitter;
+    }
+
     // Handle edit hotkey.
     async onEdit() {
-        const config = await dialog("Configure splitter", Splitter.#EDIT_DIALOG, { numSplits: this.#numSplits, gapPosition: this.#gapPosition, orientation: this.#orientation, ordering: this.#ordering, spacing: '' + this.#spacing, rotation: this.rotation });
+        const { title, fields, data } = Splitter.editDialogConfig({}, { numSplits: this.#numSplits, gapPosition: this.#gapPosition, orientation: this.#orientation, ordering: this.#ordering, spacing: this.#spacing, rotation: this.rotation });
+        const config = await dialog(title, fields, data);
         if (config) {
             const grid = this.grid;
             this.unlink();
@@ -127,12 +149,18 @@ class Splitter extends VirtualComponent {
     }
 
     static toolbarMeta(_desc) {
-        return { label: 'Splitter', hoverMessage: '<b>Wire splitter/joiner</b>. <i>LMB</i> Drag to move onto grid.' };
+        return { label: 'Splitter', hoverMessage: '<b>Wire splitter/joiner</b>.' };
     }
 
-    static fromDescriptor(app, _desc) {
+    static fromDescriptor(app, _desc, overrideDefaults = {}) {
         const d = app.config.placementDefaults;
-        return (grid, x, y) => grid.addItem(new Splitter(app, x, y, d.splitter.rotation, d.splitter.numSplits));
+        return (grid, x, y) => grid.addItem(new Splitter(app, x, y,
+            overrideDefaults.rotation ?? d.splitter.rotation,
+            overrideDefaults.numSplits ?? d.splitter.numSplits,
+            overrideDefaults.gapPosition ?? 'none',
+            overrideDefaults.orientation ?? 'start',
+            overrideDefaults.ordering ?? 'ltr',
+            overrideDefaults.spacing != null ? Number.parseInt(overrideDefaults.spacing) : 0));
     }
 }
 

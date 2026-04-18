@@ -39,9 +39,24 @@ class Tunnel extends VirtualComponent {
         return this.name === '';
     }
 
+    // Returns { title, fields, data } for the edit dialog given a descriptor and defaults.
+    static editDialogConfig(_descriptor, defaults = {}) {
+        return {
+            title: 'Configure tunnel',
+            fields: Tunnel.EDIT_DIALOG,
+            data: { name: defaults.name ?? '', rotation: defaults.rotation ?? 0 },
+        };
+    }
+
+    // Returns the app-level placement defaults relevant to this component descriptor.
+    static getPlacementDefaults(app, _descriptor) {
+        return app.config.placementDefaults.tunnel;
+    }
+
     // Handle edit hotkey.
     async onEdit() {
-        const config = await dialog("Configure tunnel", Tunnel.EDIT_DIALOG, { name: this.name, rotation: this.rotation });
+        const { title, fields, data } = Tunnel.editDialogConfig({}, { name: this.name, rotation: this.rotation });
+        const config = await dialog(title, fields, data);
         if (config) {
             this.name = config.name;
             this.rotation = config.rotation;
@@ -84,12 +99,16 @@ class Tunnel extends VirtualComponent {
     }
 
     static toolbarMeta(_desc) {
-        return { label: 'Tunnel', hoverMessage: '<b>Network tunnel</b>. <i>LMB</i> Drag to move onto grid.' };
+        return { label: 'Tunnel', hoverMessage: '<b>Network tunnel</b>.' };
     }
 
-    static fromDescriptor(app, _desc) {
+    static fromDescriptor(app, _desc, overrideDefaults = {}) {
         const d = app.config.placementDefaults;
-        return (grid, x, y) => grid.addItem(new Tunnel(app, x, y, d.tunnel.rotation));
+        return (grid, x, y) => {
+            const tunnel = new Tunnel(app, x, y, overrideDefaults.rotation ?? d.tunnel.rotation);
+            if (overrideDefaults.name) tunnel.name = overrideDefaults.name;
+            return grid.addItem(tunnel);
+        };
     }
 }
 

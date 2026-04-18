@@ -225,10 +225,34 @@ class CustomComponent extends VirtualComponent {
         return outline;
     }
 
-    static fromDescriptor(app, desc) {
+    // Returns { title, fields, data } for the edit dialog given a descriptor and defaults.
+    static editDialogConfig(_descriptor, defaults = {}) {
+        return {
+            title: 'Configure custom component',
+            fields: CustomComponent.EDIT_DIALOG,
+            data: {
+                rotation: defaults.rotation ?? 0,
+                spacing: String(defaults.spacing ?? 0),
+                parity: defaults.parity ?? 'auto',
+                gap: defaults.gap ?? 'start',
+            },
+        };
+    }
+
+    // Returns the app-level placement defaults relevant to this component descriptor.
+    static getPlacementDefaults(_app, _descriptor) {
+        return {};
+    }
+
+    static fromDescriptor(app, desc, overrideDefaults = {}) {
         const uid = desc['#u'];
         if (!app.circuits.byUID(uid)) return null;
-        return (grid, x, y) => grid.addItem(new CustomComponent(app, x, y, 0, uid));
+        return (grid, x, y) => grid.addItem(new CustomComponent(app, x, y,
+            overrideDefaults.rotation ?? 0,
+            uid,
+            overrideDefaults.parity ?? null,
+            overrideDefaults.gap ?? null,
+            overrideDefaults.spacing != null ? Number.parseInt(overrideDefaults.spacing) : null));
     }
 }
 

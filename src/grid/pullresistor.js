@@ -41,9 +41,24 @@ class PullResistor extends SimulationComponent {
         return this.#direction.toUpperFirst();
     }
 
+    // Returns { title, fields, data } for the edit dialog given a descriptor and defaults.
+    static editDialogConfig(_descriptor, defaults = {}) {
+        return {
+            title: 'Configure pull resistor',
+            fields: PullResistor.EDIT_DIALOG,
+            data: { direction: defaults.direction ?? 'down', rotation: defaults.rotation ?? 0 },
+        };
+    }
+
+    // Returns the app-level placement defaults relevant to this component descriptor.
+    static getPlacementDefaults(app, _descriptor) {
+        return app.config.placementDefaults.pull;
+    }
+
     // Handle edit hotkey.
     async onEdit() {
-        const config = await dialog("Configure pull resistor", PullResistor.EDIT_DIALOG, { direction: this.#direction, rotation: this.rotation });
+        const { title, fields, data } = PullResistor.editDialogConfig({}, { direction: this.#direction, rotation: this.rotation });
+        const config = await dialog(title, fields, data);
         if (config) {
             this.#direction = config.direction;
             this.rotation = config.rotation;
@@ -53,12 +68,14 @@ class PullResistor extends SimulationComponent {
     }
 
     static toolbarMeta(_desc) {
-        return { label: 'Pull resistor', hoverMessage: '<b>Pull up/down resistor</b>. <i>LMB</i> Drag to move onto grid.' };
+        return { label: 'Pull resistor', hoverMessage: '<b>Pull up/down resistor</b>.' };
     }
 
-    static fromDescriptor(app, _desc) {
+    static fromDescriptor(app, _desc, overrideDefaults = {}) {
         const d = app.config.placementDefaults;
-        return (grid, x, y) => grid.addItem(new PullResistor(app, x, y, d.pull.rotation));
+        return (grid, x, y) => grid.addItem(new PullResistor(app, x, y,
+            overrideDefaults.rotation ?? d.pull.rotation,
+            overrideDefaults.direction ?? 'down'));
     }
 }
 

@@ -112,6 +112,10 @@ class Toolbar {
     // Trash zone element for unpinning components from the toolbar.
     #trashZone = null;
 
+    // Currently hovered pinned-component button and its associated pin object.
+    #hoveredPin = null;
+    #hoveredPinButton = null;
+
     // Insertion indicator shown during toolbar reorder drags.
     #reorderIndicator = null;
 
@@ -200,6 +204,16 @@ class Toolbar {
         this.#dropZone.onmouseenter = () => this.#app.setStatus('Drag a component from the Component menu here to pin it to the toolbar.');
         this.#dropZone.onmouseleave = () => this.#app.clearStatus();
         return this.#dropZone;
+    }
+
+    // Returns the currently hovered pinned-button's pin object, or null.
+    get hoveredPin() {
+        return this.#hoveredPin;
+    }
+
+    // Returns the currently hovered pinned-button DOM node, or null.
+    get hoveredPinButton() {
+        return this.#hoveredPinButton;
     }
 
     // Returns the drop zone element, if created.
@@ -367,8 +381,20 @@ class Toolbar {
                 }
             }
         };
-        button.onmouseenter = () => this.#app.setStatus(hoverMessage);
-        button.onmouseleave = () => this.#app.clearStatus();
+        button.onmouseenter = () => {
+            this.#app.setStatus(hoverMessage);
+            if (button.dataset.pin) {
+                this.#hoveredPin = button.__pin;
+                this.#hoveredPinButton = button;
+            }
+        };
+        button.onmouseleave = () => {
+            this.#app.clearStatus();
+            if (button.dataset.pin) {
+                this.#hoveredPin = null;
+                this.#hoveredPinButton = null;
+            }
+        };
         return button;
     }
 
