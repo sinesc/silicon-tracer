@@ -209,16 +209,16 @@ class Grid {
             if (sim && sim.checkDirty()) {
                 return;
             }
-        }
 
-        // Info box overlay — check each registered section at its configured interval.
-        const now = performance.now();
-        for (const entry of this.#overlays) {
-            const intervalElapsed = entry.lastRenderTime === null || entry.interval === 0 || now - entry.lastRenderTime >= entry.interval;
-            if (intervalElapsed) {
-                if (entry.interval > 0) entry.lastRenderTime = now;
-                if (entry.overlay.dirty()) {
-                    entry.overlay.render(entry.node);
+            // Info box overlay — check each registered section at its configured interval.
+            const now = performance.now();
+            for (const entry of this.#overlays) {
+                const intervalElapsed = entry.lastRenderTime === null || entry.interval === 0 || now - entry.lastRenderTime >= entry.interval;
+                if (intervalElapsed) {
+                    if (entry.interval > 0) entry.lastRenderTime = now;
+                    if (entry.overlay.dirty()) {
+                        entry.overlay.render(entry.node);
+                    }
                 }
             }
         }

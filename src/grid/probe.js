@@ -53,12 +53,11 @@ class Probe extends DisplayComponent {
         if (super.onHotkey(key, action, what)) return true;
         if (action !== 'down' || what.type !== 'hover') return;
         if (key === 'm') {
-            this.grid.monitorOverlay.toggleItem(this);
+            this.grid.monitorOverlay.toggleProbe(this);
             return true;
         }
         if (key === 'M') {
-            const items = this.app.simulations.current?.probeInstances(this.name) ?? [];
-            this.grid.monitorOverlay.setItems(items);
+            this.grid.monitorOverlay.addProbesByName(this.name);
             return true;
         }
     }
@@ -87,20 +86,19 @@ class Probe extends DisplayComponent {
         if (!netIds || netIds.length === 0) return '~';
         const engine = this.app.simulations?.current?.engine;
         if (!engine) return '~';
-        return Probe.#labelFromNetIds(engine, netIds, this.displayFormat);
+        return Probe.#displayValue(engine, netIds, this.displayFormat);
     }
 
-    // Returns the formatted label for a named probe, reading net values directly from the engine.
-    // Use this in preference to Probe.label when UI-level netIds may not be attached (e.g. monitor overlay).
-    static getProbeLabel(engine, probeName, displayFormat) {
+    // Returns the formatted value for a named probe. Probe component is not required to be linked.
+    static getDisplayValue(engine, probeName, displayFormat) {
         assert.class(Simulation, engine);
         assert.string(probeName);
         assert.string(displayFormat);
-        return Probe.#labelFromNetIds(engine, engine.getProbeNetIds(probeName), displayFormat);
+        return Probe.#displayValue(engine, engine.getProbeNetIds(probeName), displayFormat);
     }
 
-    // Shared label computation from a net ID array and a simulation engine.
-    static #labelFromNetIds(engine, netIds, displayFormat) {
+    // Returns formatted probe value.
+    static #displayValue(engine, netIds, displayFormat) {
         if (!netIds || netIds.length === 0) return '~';
         if (netIds.length === 1) {
             const v = netIds[0] !== undefined ? engine.getNetValue(netIds[0]) : null;
@@ -167,7 +165,7 @@ class Probe extends DisplayComponent {
 
     // Returns the probe name with instance suffix appended when inside a non-root circuit instance.
     #displayName(instanceId) {
-        return instanceId != null && instanceId !== 0 ? `${this.name}@${instanceId}` : this.name;
+        return instanceId && this.name ? `${this.name}@${instanceId}` : this.name;
     }
 
     // Returns the effective display format for SIZE_MAP lookup given a channel count.
