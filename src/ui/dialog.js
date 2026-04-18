@@ -4,10 +4,11 @@
 // Field properties:
 //   name:      key in the data object
 //   text:      if present, text contents will be displayed, other field properties are ignored
+//   focus:     if true element will receive focus on dialog open
 //   type:      one of int, float, string, select, bool, textfile
 //   label:     display label (defaults to capitalized name)
 //   options:   map of value->label pairs (select type only)
-//   extension:  file extension filter (textfile type only)
+//   extension: file extension filter (textfile type only)
 //   filestatus: closure(appliedValue, field) returning a status string (textfile type only, defaults to char count)
 //   check:     custom validation, overrides the type default
 //   apply:     transform element value to result value
@@ -39,6 +40,7 @@ function dialog(title, fields, data, extraOptions) {
     const contentElement = html(containerElement, 'div', 'dialog-content');
     const tableElement = html(contentElement, 'table');
     const form = [];
+    let focusElement = null;
 
     // validate form input
     const validate = () => {
@@ -140,6 +142,10 @@ function dialog(title, fields, data, extraOptions) {
                 fieldElement.onchange = triggerOnChange;
             }
             form.push({ element: fieldElement, field });
+            // remember first field or field with focus flag, set focus further below
+            if (focusElement === null || field.focus) {
+                focusElement = fieldElement;
+            }
         }
     }
 
@@ -149,10 +155,10 @@ function dialog(title, fields, data, extraOptions) {
     document.body.appendChild(blackout);
     triggerOnChange();
 
-    if (form.length > 0) {
-        form[0].element.focus();
-        if (form[0].element.select) {
-            form[0].element.select();
+    if (focusElement) {
+        focusElement.focus();
+        if (focusElement.select) {
+            focusElement.select();
         }
     }
 

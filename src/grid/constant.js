@@ -6,7 +6,7 @@ class Constant extends DisplayComponent {
     static EDIT_DIALOG = [
         { name: 'name', label: 'Label', type: 'string' },
         { name: 'dataWidth', label: 'Data width (bits)', type: 'select', options: { 1: '1', 2: '2', 4: '4', 8: '8', 16: '16', 32: '32' }, apply: (v) => parseInt(v) },
-        { name: 'value', label: 'Value', type: 'string',
+        { name: 'value', label: 'Value', type: 'string', focus: true,
             check: (v) => /^[0-9]+$/.test(v) || /^0x[0-9a-fA-F]+$/i.test(v) || /^0b[01~]+$/.test(v) || v === '~',
             apply: (v) => Constant.#parseValue(v),
         },
