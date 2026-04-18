@@ -90,8 +90,10 @@ class Grid {
         this.#circuit.unlink();
         this.#circuit = null;
         this.#clearJunctions();
-        this.circuitOverlay.setLabel('');
-        this.circuitOverlay.setInstanceId(null);
+        if (this.circuitOverlay) {
+            this.circuitOverlay.setLabel('');
+            this.circuitOverlay.setInstanceId(null);
+        }
         this.#hotkeyTarget = null;
         this.#app.clearStatus(true);
     }
@@ -103,8 +105,10 @@ class Grid {
         this.#circuit = circuit;
         this.#circuit.link(this);
         this.#circuit.setGridListener(this);
-        this.circuitOverlay.setLabel(circuit.label);
-        this.circuitOverlay.setInstanceId(null);
+        if (this.circuitOverlay) {
+            this.circuitOverlay.setLabel(circuit.label);
+            this.circuitOverlay.setInstanceId(null);
+        }
         this.#pending.bgPattern = true;
         this.#pending.netColors = true;
         this.#pending.junctionRebuild = true;
