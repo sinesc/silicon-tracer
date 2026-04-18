@@ -29,7 +29,8 @@ class Probe extends DisplayComponent {
     // Link port to a grid, enabling it to be rendered.
     link(grid) {
         super.link(grid);
-        this.setHoverMessage(this.inner, () => `Probe <b>${this.#displayName(this.instanceId)}</b>. <i>E</i> Edit, <i>M</i> Monitor, ${Component.HOTKEYS}.`, { type: 'hover' });
+        const sim = this.app.simulations;
+        this.setHoverMessage(this.inner, () => `Probe <b>${this.#displayName(this.instanceId)}</b>. <i>E</i> Edit, ${sim.current ? '' : '<u>'}<i>M</i> Monitor, <i>SHIFT+M</i> Monitor all instances${sim.current ? '' : '</u>'}, ${Component.HOTKEYS}.`, { type: 'hover' });
         this.#labelElement = html(this.element, 'div', 'port-name');
         this.element.classList.add('probe', 'status-outline');
     }
@@ -58,12 +59,11 @@ class Probe extends DisplayComponent {
     // Handle hover hotkeys.
     onHotkey(key, action, what) {
         if (super.onHotkey(key, action, what)) return true;
-        if (action !== 'down' || what.type !== 'hover') return;
+        if (action !== 'down' || what.type !== 'hover' || !this.app.simulations.current) return;
         if (key === 'm') {
             this.grid.monitorOverlay.toggleProbe(this);
             return true;
-        }
-        if (key === 'M') {
+        } else if (key === 'M') {
             this.grid.monitorOverlay.addProbesByName(this.name);
             return true;
         }
