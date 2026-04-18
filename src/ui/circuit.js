@@ -262,17 +262,17 @@ class Circuit {
             }
             this.addItem(item);
         }
-        Wire.compact(this);
         if (isDisplayed) {
             this.setGridListener(grid); // restore listener before re-linking
             this.link(grid);
             grid.circuitOverlay.setLabel(this.label);
             grid.simulationOverlay.setLabel(this.label);
             grid.onSimulationRecompiled();
-            // Restore selection: match items by their restored GIDs (wires re-created by Wire.compact won't match).
+            // Restore selection: match items by their restored GIDs.
             const newSelection = this.#data.filter((item) => selectedGids.has(item.gid));
             newSelection.forEach((item) => item.selected = true);
             grid.setSelection(newSelection);
+            grid.onWiresChanged(); // deferred compact runs next frame with correct selection context
         }
     }
 
