@@ -60,6 +60,7 @@ class Application {
     toolbar;
     circuits;
     simulations;
+    history;
     haveChanges = false;
     #hotkeyDefs = [];
     #undoButton = null;
@@ -112,6 +113,8 @@ class Application {
         this.#initRenderLoop();
         this.circuits.reset();
         this.simulations.select(this.circuits.current, this.config.autoCompile);
+        this.history = new NavigationHistory(this);
+        this.history.init();
     }
 
     // Returns performance stats.
@@ -399,6 +402,7 @@ class Application {
                     await this.circuits.loadFile(true);
                     this.simulations.clear();
                     this.simulations.select(this.circuits.current, this.config.autoCompile);
+                    this.history.init();
                     document.title = this.circuits.fileName + ' - Silicon Tracer';
                     this.haveChanges = false;
                 }
@@ -497,6 +501,7 @@ class Application {
                     this.circuits.closeFile(this.modifierKeys.ctrlKey);
                     this.simulations.clear();
                     this.simulations.select(this.circuits.current, this.config.autoCompile);
+                    this.history.init();
                     this.haveChanges = false;
                     document.title = 'Silicon Tracer';
                 }
@@ -588,6 +593,7 @@ class Application {
                     circuitMenu.state(false);
                     this.circuits.select(uid);
                     this.simulations.select(this.circuits.current, this.config.autoCompile);
+                    this.history.record();
                 });
                 switchButton.node.classList.add(!isCurrentGrid ? 'toolbar-circuit-select' : 'toolbar-circuit-select-fullrow');
                 switchButton.node.classList.toggle('toolbar-menu-button-disabled', isCurrentGrid);
@@ -686,6 +692,7 @@ class Application {
                             componentMenu.state(false);
                             this.circuits.select(uid);
                             this.simulations.select(this.circuits.current, this.config.autoCompile);
+                            this.history.record();
                         });
                         switchButton.node.classList.add(!isCurrentGrid ? 'toolbar-circuit-select' : 'toolbar-circuit-select-fullrow');
                         switchButton.node.classList.toggle('toolbar-menu-button-disabled', isCurrentCircuit);
@@ -764,6 +771,7 @@ class Application {
                     this.circuits.select(uid);
                     this.config.singleStep = false;
                     this.simulations.select(this.circuits.current, this.config.autoCompile);
+                    this.history.record();
                 });
                 button.node.classList.toggle('toolbar-menu-button-disabled', isCurrent);
             }

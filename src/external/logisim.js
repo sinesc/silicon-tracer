@@ -43,6 +43,7 @@ class LogiSim {
             app.circuits.add(circuit);
             app.circuits.select(circuit.uid);
             app.simulations.select(app.circuits.current, app.config.autoCompile);
+            app.history.record();
         }
         infoDialog('Import complete', `Your project has been imported. ${instance.#numImported} circuits have been added to the Circuit and/or Component menus.`);
     }

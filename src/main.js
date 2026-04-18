@@ -26,6 +26,7 @@ if (location.hostname === 'sinesc.github.io' && location.pathname === '/silicon-
         const uid = app.circuits.unserialize(content);
         app.circuits.select(uid);
         app.simulations.select(app.circuits.current, app.config.autoCompile);
+        app.history.record();
         loadExample.node.classList.add('toolbar-menu-button-disabled', 'example-button-fade');
         setTimeout(() => loadExample.node.remove(), 1500);
     });

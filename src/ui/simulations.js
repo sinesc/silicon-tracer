@@ -184,6 +184,7 @@ Simulations.Simulation = class {
         this.#app.grid.circuitOverlay.setInstanceId(instanceId);
         this.#instanceId = instanceId;
         circuit.attachSimulation(this.#netList, instanceId);
+        this.#app.history.record();
     }
 
     // Ticks the current simulation for the given amount of ticks.

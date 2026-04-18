@@ -105,6 +105,7 @@ class CustomComponent extends VirtualComponent {
                 this.app.circuits.select(this.uid);
                 const circuit = this.app.circuits.byUID(this.uid);
                 this.app.simulations.select(circuit, this.app.config.autoCompile);
+                this.app.history.record();
             }
             return true;
         }

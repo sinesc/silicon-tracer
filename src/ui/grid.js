@@ -748,7 +748,7 @@ class Grid {
             this.#circuit.edit();
         });
         this.#app.registerHotkey('w', 'down', () => this.#app.simulations.current, (e) => {
-            // switch to parent simulation instance // TODO: when not simulating this should switch to the previous circuit. this requires adding a navigation history
+            // switch to parent simulation instance
             const sim = this.#app.simulations.current;
             const parentInstanceId = sim.parentInstanceId;
             if (parentInstanceId !== null) {
