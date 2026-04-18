@@ -242,6 +242,26 @@ class GridItem {
         return false;
     }
 
+    // Called after the item is pasted into the circuit. Subclasses may override to fix up properties with a uniqueness requirement.
+    onPaste() { }
+
+    // Finds a unique value for the given property within the circuit by appending/incrementing a numeric suffix.
+    makeUnique(propertyName, value) {
+        assert.string(propertyName);
+        assert.string(value);
+        const existing = new Set(
+            this.grid.circuit.items
+                .filter((item) => item !== this)
+                .map((item) => item[propertyName])
+                .filter((v) => v !== undefined)
+        );
+        if (!existing.has(value)) return value;
+        const base = value.replace(/_\d+$/, '');
+        let n = 1;
+        while (existing.has(`${base}_${n}`)) n++;
+        return `${base}_${n}`;
+    }
+
     // Return grid item x position.
     get x() {
         return this.#position.x;

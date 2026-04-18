@@ -105,6 +105,13 @@ class Port extends SimulationComponent {
         }
     }
 
+    // Called after paste: ensures port name is unique in the circuit.
+    onPaste() {
+        if (this.name !== '') {
+            this.name = this.makeUnique('name', this.name);
+        }
+    }
+
     // Checks whether the given name is unique among ports in the circuit.
     checkNameIsUnique(name, circuit = null) {
         for (const port of values(circuit.items.filter((i) => i instanceof Port))) {

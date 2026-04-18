@@ -543,6 +543,7 @@ class Grid {
         // select pasted items
         for (const item of items) {
             this.addItem(item);
+            item.onPaste();
             item.selected = true;
         }
         this.#selection = items;

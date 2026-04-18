@@ -48,6 +48,13 @@ class Probe extends DisplayComponent {
         return sim.declareProbe(this.#displayName(instanceId), suffix);
     }
 
+    // Called after paste: ensures probe name is unique in the circuit.
+    onPaste() {
+        if (this.name !== '') {
+            this.name = this.makeUnique('name', this.name);
+        }
+    }
+
     // Handle hover hotkeys.
     onHotkey(key, action, what) {
         if (super.onHotkey(key, action, what)) return true;
