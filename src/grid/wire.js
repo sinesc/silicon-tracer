@@ -289,6 +289,10 @@ class Wire extends GridItem {
 
         const app = allWires[0].app;
 
+        // Selected wires are excluded from the merge pass - user may still reposition them.
+        // Endpoints still included in cut-point computation so T-junctions stay correct.
+        const selectedWireSet = selection !== null ? new Set(selection.filter(w => w instanceof Wire)) : new Set();
+
         // Pre-compute cut points from the original wire state, before any merging.
         // A cut is needed wherever a perpendicular wire connects: either its endpoint lies on
         // this wire's body, or this wire's endpoint lies on the perpendicular wire's body.
@@ -337,10 +341,12 @@ class Wire extends GridItem {
             const isH = direction === 'h';
             const cuts = isH ? cutsForH : cutsForV;
 
-            // Group wires by their perpendicular coordinate into tracks.
+            // Group non-selected wires by their perpendicular coordinate into tracks.
+            // Selected wires are skipped here — they are deferred until the user clears the selection.
             const tracks = new Map();
             for (const wire of allWires) {
                 if (wire.#direction !== direction) continue;
+                if (selectedWireSet.has(wire)) continue;
                 const [ p1, p2 ] = wire.points();
                 const trackCoord = isH ? p1.y : p1.x;
                 const start = Math.min(isH ? p1.x : p1.y, isH ? p2.x : p2.y);
@@ -367,17 +373,12 @@ class Wire extends GridItem {
                         ...interiorCuts.sort((a, b) => a - b),
                         groupEnd ];
 
-                    const anySelected = selection !== null && groupWires.some(w => w.wire.selected);
                     for (const w of groupWires) container.removeItem(w.wire);
 
                     const color = groupWires[0].wire.color;
                     for (let i = 0; i < splitPoints.length - 1; i++) {
                         const from = splitPoints[i], to = splitPoints[i + 1];
-                        const wire = container.addItem(new Wire(app, isH ? from : trackCoord, isH ? trackCoord : from, to - from, direction, color));
-                        if (anySelected) {
-                            selection.push(wire);
-                            wire.selected = true;
-                        }
+                        container.addItem(new Wire(app, isH ? from : trackCoord, isH ? trackCoord : from, to - from, direction, color));
                     }
                 };
 

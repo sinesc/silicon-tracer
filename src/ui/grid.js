@@ -15,6 +15,7 @@ class Grid {
     #selectionElement;
     #selection = [];
     #selectionCenter = null;
+    #hadSelectedWires = false; // true when the previous selection contained wires (used to defer compact)
     #junctionElements = new Map(); // "x:y" => { element: HTMLElement, wire: Wire }
     #trimOverlays = [];
     #hotkeyTarget = null;
@@ -473,6 +474,15 @@ class Grid {
     // Invalidate the current selection. Needs to be called after changes to selection to recompute center point.
     invalidateSelection() {
         this.#selectionCenter = null;
+        const hasWires = this.#selection.some(w => w instanceof Wire);
+        if (this.#selection.length === 0 && this.#hadSelectedWires) {
+            // Selected wires were deferred from compaction; now that selection is cleared, compact them.
+            this.#pending.wireCompact = true;
+            this.#pending.recompile = true;
+            this.#pending.netColors = true;
+            this.#pending.junctionRebuild = true;
+        }
+        this.#hadSelectedWires = hasWires;
     }
 
     // Replaces the current selection. Called by Circuit.restoreFromUndo() to reinstate selection after undo/redo.
@@ -559,6 +569,7 @@ class Grid {
     pruneSelection() {
         if (this.#selection.length > 0) {
             this.#selection = this.#selection.filter(item => item.grid === this);
+            this.#hadSelectedWires = this.#selection.some(w => w instanceof Wire);
         }
     }
 
