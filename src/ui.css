@@ -105,7 +105,6 @@
     --font-size-normal: 1em;
     --font-size-small: 0.8em;
     --font-size-large: 1.4em;
-    --font-size-double: 2em;
     --component-rotate-duration: 0.15s;
     --component-color-transition-duration: 0.15s;
     --component-delete-duration: 0.25s;
@@ -778,7 +777,7 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
     background-color: var(--overlay-bg-color);
     pointer-events: none;
     text-align: right;
-    min-width: 140px;
+    width: 220px;
 }
 .grid-info .info-section {
     opacity: 0.6;
@@ -790,13 +789,72 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
 }
 .grid-info .info-title {
     opacity: 0.3;
-    font-size: var(--font-size-double);
+    font-size: var(--font-size-large);
     font-weight: bold;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    direction: rtl;
 }
 .grid-info .info-details {
     opacity: 0.3;
     font-size: var(--font-size-normal);
     font-weight: bold;
+}
+/* simulation tree view overlay */
+.graph-tree {
+    line-height: 1.4;
+    max-height: min(400px, 33vh);
+    overflow-y: auto;
+    scrollbar-width: none;
+    pointer-events: auto;
+    text-align: left;
+    border: 2px solid color-mix(in srgb, var(--text-color) 20%, transparent);
+    padding: 2px;
+}
+.graph-tree::-webkit-scrollbar {
+    display: none;
+}
+.graph-tree li {
+    color: color-mix(in srgb, var(--text-color) 30%, transparent); /* work around stacking opacity */
+    cursor: pointer;
+}
+.graph-tree li.graph-tree-active {
+    color: color-mix(in srgb, var(--text-color) 50%, transparent);
+}
+.graph-tree li:hover {
+    color: color-mix(in srgb, var(--text-color) 50%, transparent);
+}
+.graph-tree ul {
+    padding-left: 0;
+    list-style: none;
+    margin: 0;
+}
+.graph-tree ul ul {
+    padding-left: 16px;
+}
+.graph-tree ul ul > li {
+    position: relative;
+}
+.graph-tree ul ul > li::before { /* vertical stem + horizontal connector to text center (└ / ├ shape) */
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -12px;
+    height: 0.6em;
+    width: 8px;
+    border-left: 1px solid white;
+    border-bottom: 1px solid white;
+    border-color: color-mix(in srgb, var(--text-color) 30%, transparent);
+}
+.graph-tree ul ul > li:not(:last-child)::after { /* continue vertical stem below text center for non-last siblings */
+    content: '';
+    position: absolute;
+    top: 0.6em;
+    left: -12px;
+    bottom: 0;
+    border-left: 1px solid white;
+    border-color: color-mix(in srgb, var(--text-color) 30%, transparent);
 }
 .grid-selection {
     position: absolute;
@@ -813,6 +871,10 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
     border-color: #ff8c00;
     background-color: rgba(255, 140, 0, 0.08);
 }
+
+/*
+ * Wire trimming
+ */
 .wire-trim-overlay {
     position: absolute;
     z-index: 12;
@@ -837,6 +899,12 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
 }
 .component {
     pointer-events: none;
+}
+.component.highlighted {
+    /*filter: drop-shadow(0 0 0.75rem var(--wire-color0-high));*/
+    outline: 3px solid var(--wire-color1-high);
+    outline-offset: -3px;
+    box-shadow: 0 0 10px var(--wire-color1-high);
 }
 .component.selected, .text.selected {
     filter: grayscale(100%) sepia(100%) hue-rotate(var(--selection-hue)) brightness(var(--selection-brightness));
