@@ -85,7 +85,7 @@
 
     --main-bg-color: #000;
     --grid-bg-color: #111;
-    --overlay-bg-color: #00000088;
+    --overlay-bg-color: #000000aa;
     --overlay-border-color: #4444448a;
     --header-bg-color: #1a1a1a;
     --header-border-color: #222;
@@ -843,17 +843,17 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
     pointer-events: none;
     text-align: right;
     width: 220px;
+    color: color-mix(in srgb, var(--text-color) 30%, transparent);
 }
 .grid-info .info-section {
-    opacity: 0.6;
     font-size: var(--font-size-normal);
     font-weight: bold;
+    color: color-mix(in srgb, var(--text-color) 50%, transparent);
 }
 .grid-info > div + div {
     margin-top: 8px;
 }
 .grid-info .info-title {
-    opacity: 0.3;
     font-size: var(--font-size-large);
     font-weight: bold;
     overflow: hidden;
@@ -862,7 +862,6 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
     direction: rtl;
 }
 .grid-info .info-details {
-    opacity: 0.3;
     font-size: var(--font-size-normal);
     font-weight: bold;
 }
@@ -881,7 +880,7 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
     display: none;
 }
 .graph-tree li {
-    color: color-mix(in srgb, var(--text-color) 30%, transparent); /* work around stacking opacity */
+    color: color-mix(in srgb, var(--text-color) 30%, transparent);
     cursor: pointer;
 }
 .graph-tree li.graph-tree-active {
