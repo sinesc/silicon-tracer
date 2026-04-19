@@ -544,6 +544,7 @@ class Application {
                     this.simulations.delete(deletedCircuit);
                     this.circuits.delete(deletedCircuit.uid);
                     this.simulations.select(this.circuits.current, this.config.autoCompile);
+                    this.history.record();
                     this.haveChanges = true;
                     this.refreshUndoButtons();
                 }

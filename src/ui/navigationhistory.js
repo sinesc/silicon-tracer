@@ -6,14 +6,10 @@ class NavigationHistory {
     #app;
     // Unique to this page session so we ignore stale entries from prior sessions.
     #sessionId;
-    // Position counter embedded in every pushed state, exit sentinel at -1.
-    #pos = 0;
-    // Highest pos ever pushed in this session (decreases when user pushes after going back).
-    #maxPos = 0;
     // True while we are restoring a history entry - suppresses re-recording.
     #navigating = false;
-    // True for one popstate cycle after we call history.go() to undo a skip-that-went-nowhere.
-    #undoing = false;
+    // Back navigation ended on sentinel value, next forward navigation needs to go 2 forward
+    #atSentinel = false;
 
     constructor(app) {
         assert.class(Application, app);
@@ -24,23 +20,45 @@ class NavigationHistory {
     // Starts a new session and pushes a sentinel entry followed by the current app state.
     init() {
         this.#sessionId = crypto.randomUUID();
-        this.#pos = 0;
-        this.#maxPos = 0;
-        history.pushState({ sessionId: this.#sessionId, sentinel: true, pos: -1 }, '');
+        history.pushState({ sessionId: this.#sessionId, sentinel: true }, '');
         history.pushState(this.#buildState(), '');
-    }
-
-    // Returns true if we are currently restoring from a history entry.
-    get navigating() {
-        return this.#navigating;
     }
 
     // Pushes the current app state as a new browser history entry. No-op during history restoration.
     record() {
         if (this.#navigating) return;
-        this.#pos++;
-        this.#maxPos = this.#pos;
+        this.#atSentinel = false;
         history.pushState(this.#buildState(), '');
+    }
+
+    // Handles browser back/forward navigation.
+    #onPopState(event) {
+        // Auto-skip entries from other sessions or non-app history entries.
+        const state = event.state;
+        if (!state || state.sessionId !== this.#sessionId) {
+            history.go(-1); // direction: pushing init would have cleared any states 'forward' from here, so must be 'backward'
+            return;
+        }
+
+        // currently on the sentinel entry, navigate forward twice ()
+        if (this.#atSentinel) {
+            this.#atSentinel = false;
+            history.go(1); // direction: we know this is 'forwards' because the sentinel is the first value, 'backwards' would have left this page
+            return
+        }
+
+        // Sentinel - warn the user they are about to navigate out of the application.
+        if (state.sentinel) {
+            this.#app.showNotice('Navigate back again to leave this page');
+            this.#atSentinel = true;
+            return;
+        }
+
+        // show message when circuit in history has since been deleted
+        if (!this.#restore(state)) {
+            this.#app.showNotice('Skipped deleted circuit.');
+            history.go(-1); // direction: must be 'backwards' as deletion also triggers a push, clearing any remaining states that are 'forwards' from here
+        }
     }
 
     // Builds a state snapshot from the current app state.
@@ -51,44 +69,7 @@ class NavigationHistory {
             circuitUid: this.#app.grid.circuit.uid,
             simulationUid: sim?.uid ?? null,
             instanceId: sim?.instanceId ?? null,
-            pos: this.#pos,
         };
-    }
-
-    // Handles browser back/forward navigation.
-    #onPopState(event) {
-        if (this.#undoing) {
-            this.#undoing = false;
-            return;
-        }
-        // Auto-skip entries from other sessions or non-app history entries.
-        const state = event.state;
-        if (!state || state.sessionId !== this.#sessionId) {
-            history.go(-1);
-            return;
-        }
-        // Sentinel - warn the user they are about to navigate out of the application.
-        if (state.sentinel) {
-            this.#pos = -1;
-            this.#app.showNotice('You are about to navigate out of the application.');
-            return;
-        }
-
-        const direction = state.pos < this.#pos ? -1 : 1;
-        this.#pos = state.pos;
-
-        if (this.#restore(state)) return;
-
-        // Circuit was deleted - try to skip to the next entry in the same direction.
-        this.#app.showNotice('Skipped deleted circuit.');
-        const nextPos = this.#pos + direction;
-        if (nextPos < -1 || nextPos > this.#maxPos) {
-            // No more of our own entries in this direction - undo the navigation.
-            this.#undoing = true;
-            history.go(-direction);
-        } else {
-            history.go(direction);
-        }
     }
 
     // Attempts to restores the app to the given history state and returns success.
