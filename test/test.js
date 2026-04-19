@@ -1,7 +1,7 @@
 const args = process.argv.slice(2);
 const debug = args.includes('--debug');
 
-const { assert, test, time, readJSON, summary, context: c, createSimulationWithBackend, compileCircuit, loadCircuitWires, declareMemory } = require('./lib/runner');
+const { assert, test, time, readJSON, summary, context: c, createSimulationWithBackend, compileCircuit, loadCircuitWires, declareMemory, makeU8 } = require('./lib/runner');
 
 if (debug) {
     require('./lib/runner').setDebugMode(true);
@@ -402,8 +402,8 @@ test("ROM reset restores initial data", () => {
     sim.simulate(5);
     assert(readData() === 0x42, `addr 0: expected 0x42, got 0x${readData().toString(16)}`);
 
-    // Tamper with memory via setMemoryData
-    sim.setMemoryData(0, 0, 0xFF);
+    // Tamper with memory via setMemoryData (8-bit data: each byte = one address)
+    sim.setMemoryData(0, makeU8('FF00'));
     sim.simulate(5);
     assert(readData() === 0xFF, `after tamper: expected 0xFF, got 0x${readData().toString(16)}`);
 
@@ -458,7 +458,10 @@ test("RAM with 1-bit data width (32 values packed per element)", () => {
 test("getMemoryData / setMemoryData with packing", () => {
     const sim = createSimulationWithBackend('js');
     const suffix = '@rom0@0_0';
-    declareMemory(sim, 'rom', 3, 4, '0A0B0C0D0E0F0102', suffix);
+    // 4-bit data, packed: each byte holds 2 nibbles (low nibble = lower addr).
+    // To load [0xA,0xB,0xC,0xD,0xE,0xF,0x1,0x2] at addresses 0-7:
+    //   byte0=0xBA (addr0=A,addr1=B), byte1=0xDC, byte2=0xFE, byte3=0x21
+    declareMemory(sim, 'rom', 3, 4, 'BADCFE21', suffix);
     // Minimal wiring to compile (need at least one net)
     sim.declareConst(0, '@ca0@0_0');
     sim.declareConst(1, '@coe@0_0');
@@ -474,19 +477,29 @@ test("getMemoryData / setMemoryData with packing", () => {
     }
     sim.compile();
 
+    // Helpers to read/write a 4-bit value at a given address within a packed Uint8Array
+    const getVal = (data, addr) => (data[addr >> 1] >>> ((addr & 1) * 4)) & 0xF;
+    const setVal = (data, addr, val) => {
+        const shift = (addr & 1) * 4;
+        data[addr >> 1] = (data[addr >> 1] & ~(0xF << shift)) | ((val & 0xF) << shift);
+    };
+
     // Verify all addresses via getMemoryData
     const expected = [0xA, 0xB, 0xC, 0xD, 0xE, 0xF, 0x1, 0x2];
+    const allData = sim.getMemoryData(0);
     for (let addr = 0; addr < 8; addr++) {
-        const val = sim.getMemoryData(0, addr);
+        const val = getVal(allData, addr);
         assert(val === expected[addr], `getMemoryData addr ${addr}: expected 0x${expected[addr].toString(16)}, got 0x${val.toString(16)}`);
     }
 
-    // Modify and verify
-    sim.setMemoryData(0, 3, 0x7);
-    assert(sim.getMemoryData(0, 3) === 0x7, `setMemoryData addr 3: expected 0x7, got 0x${sim.getMemoryData(0, 3).toString(16)}`);
-    // Neighbors should be unaffected
-    assert(sim.getMemoryData(0, 2) === 0xC, `addr 2 unaffected: expected 0xC, got 0x${sim.getMemoryData(0, 2).toString(16)}`);
-    assert(sim.getMemoryData(0, 4) === 0xE, `addr 4 unaffected: expected 0xE, got 0x${sim.getMemoryData(0, 4).toString(16)}`);
+    // Modify addr 3 to 0x7 and verify neighbors unaffected
+    const data = sim.getMemoryData(0);
+    setVal(data, 3, 0x7);
+    sim.setMemoryData(0, data);
+    const data2 = sim.getMemoryData(0);
+    assert(getVal(data2, 3) === 0x7, `setMemoryData addr 3: expected 0x7, got 0x${getVal(data2, 3).toString(16)}`);
+    assert(getVal(data2, 2) === 0xC, `addr 2 unaffected: expected 0xC, got 0x${getVal(data2, 2).toString(16)}`);
+    assert(getVal(data2, 4) === 0xE, `addr 4 unaffected: expected 0xE, got 0x${getVal(data2, 4).toString(16)}`);
 });
 
 test("ROM output enable controls tri-state output", () => {

@@ -351,22 +351,17 @@ class Simulation {
         return id;
     }
 
-    // Sets a value in a declared memory at the given address.
-    setMemoryData(id, address, value) {
+    // Returns a Uint8Array snapshot of all entries in a declared memory.
+    getMemoryData(id) {
         assert.integer(id);
-        assert.integer(address);
-        assert.integer(value);
-        const [ elementIndex, shift, dataMask ] = this.#getMemoryLocation(id, address);
-        const mem = this.#backend.mem;
-        mem[elementIndex] = (mem[elementIndex] & ~(dataMask << shift)) | ((value & dataMask) << shift);
+        return this.#memoryOp(id);
     }
 
-    // Gets a value from a declared memory at the given address.
-    getMemoryData(id, address) {
+    // Writes a Uint8Array into a declared memory.
+    setMemoryData(id, data) {
         assert.integer(id);
-        assert.integer(address);
-        const [ elementIndex, shift, dataMask ] = this.#getMemoryLocation(id, address);
-        return (this.#backend.mem[elementIndex] >>> shift) & dataMask;
+        assert.class(Uint8Array, data);
+        this.#memoryOp(id, data);
     }
 
     // Serialize simulation parameters.
@@ -482,29 +477,6 @@ class Simulation {
         }
         // reset memory data to initial values
         this.#initMemoryData();
-    }
-
-    // Writes initial data into all declared memory regions.
-    #initMemoryData() {
-        const bpe = this.#backend.constructor.BITS_PER_ELEMENT;
-        for (const memory of this.#memories) {
-            const valuesPerElement = bpe / memory.dataWidth;
-            const totalEntries = 1 << memory.addressWidth;
-            const elementsNeeded = Math.ceil(totalEntries / valuesPerElement);
-            const dataMask = (1 << memory.dataWidth) - 1;
-            // Clear the entire region first
-            for (let i = 0; i < elementsNeeded; i++) {
-                this.#backend.mem[memory.baseOffset + i] = 0;
-            }
-            // Write initial data values
-            for (let addr = 0; addr < memory.initialData.length && addr < totalEntries; addr++) {
-                const value = memory.initialData[addr] & dataMask;
-                const elementIndex = memory.baseOffset + (addr >>> Math.log2(valuesPerElement));
-                const subIndex = addr & (valuesPerElement - 1);
-                const shift = subIndex * memory.dataWidth;
-                this.#backend.mem[elementIndex] |= (value << shift);
-            }
-        }
     }
 
     // Sets the value of a defined constant by its id.
@@ -676,16 +648,71 @@ class Simulation {
         return globalElementIndex;
     }
 
-    // Compute data offset for given memory address
-    #getMemoryLocation(id, address) {
-        const memory = this.#memories[id] ?? error('Unknown memory');
+    // Writes initial data into all declared memory regions.
+    #initMemoryData() {
         const bpe = this.#backend.constructor.BITS_PER_ELEMENT;
-        const valuesPerElement = bpe / memory.dataWidth;
-        const elementIndex = memory.baseOffset + (address >>> Math.log2(valuesPerElement));
-        const subIndex = address & (valuesPerElement - 1);
-        const shift = subIndex * memory.dataWidth;
-        const dataMask = (1 << memory.dataWidth) - 1;
-        return [ elementIndex, shift, dataMask ];
+        for (const [ id, memory ] of pairs(this.#memories)) {
+            this.#memoryOp(id, memory.initialData);
+        }
+    }
+
+    // Get/set memory data. data=null reads and returns a packed Uint8Array (totalEntries*dataWidth bits, LSB-first).
+    // data=Uint8Array writes from that same packed format.
+    #memoryOp(id, data = null) {
+        const memory = this.#memories[id] ?? error('Unknown memory id');
+        const bpe = this.#backend.constructor.BITS_PER_ELEMENT;
+        const { dataWidth, addressWidth, baseOffset } = memory;
+        const valuesPerElement = bpe / dataWidth;
+        const totalEntries = 1 << addressWidth;
+        const elementsNeeded = Math.ceil(totalEntries / valuesPerElement);
+        const dataMask = dataWidth === 32 ? 0xFFFFFFFF : (1 << dataWidth) - 1;
+        const mem = this.#backend.mem;
+        if (data === null) {
+            // Return packed byte array: each address occupies dataWidth bits at bit-offset addr*dataWidth
+            const out = new Uint8Array(Math.ceil(totalEntries * dataWidth / 8));
+            for (let i = 0; i < elementsNeeded; i++) {
+                const elem = mem[baseOffset + i];
+                const baseAddr = i * valuesPerElement;
+                for (let j = 0; j < valuesPerElement && (baseAddr + j) < totalEntries; j++) {
+                    const addr = baseAddr + j;
+                    const value = (elem >>> (j * dataWidth)) & dataMask;
+                    if (dataWidth <= 8) {
+                        const bitOffset = addr * dataWidth;
+                        out[bitOffset >>> 3] |= (value << (bitOffset & 7));
+                    } else {
+                        const bytesPerAddr = dataWidth >>> 3;
+                        const byteIdx = addr * bytesPerAddr;
+                        for (let k = 0; k < bytesPerAddr; k++) out[byteIdx + k] = (value >>> (k * 8)) & 0xFF;
+                    }
+                }
+            }
+            return out;
+        } else {
+            // Write from packed byte array: extract dataWidth bits at bit-offset addr*dataWidth
+            const srcLen = data.length;
+            for (let i = 0; i < elementsNeeded; i++) {
+                let elem = 0;
+                const baseAddr = i * valuesPerElement;
+                for (let j = 0; j < valuesPerElement && (baseAddr + j) < totalEntries; j++) {
+                    const addr = baseAddr + j;
+                    let value = 0;
+                    if (dataWidth <= 8) {
+                        const bitOffset = addr * dataWidth;
+                        const byteIdx = bitOffset >>> 3;
+                        if (byteIdx < srcLen) value = (data[byteIdx] >>> (bitOffset & 7)) & dataMask;
+                    } else {
+                        const bytesPerAddr = dataWidth >>> 3;
+                        const byteIdx = addr * bytesPerAddr;
+                        for (let k = 0; k < bytesPerAddr; k++) {
+                            if (byteIdx + k < srcLen) value |= data[byteIdx + k] << (k * 8);
+                        }
+                        value &= dataMask;
+                    }
+                    elem |= (value << (j * dataWidth));
+                }
+                mem[baseOffset + i] = elem >>> 0;
+            }
+        }
     }
 
     // Assigns nets to elements/bits.

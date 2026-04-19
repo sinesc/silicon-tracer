@@ -67,7 +67,25 @@ class Memory extends SimulationComponent {
     link(grid) {
         super.link(grid);
         this.element.classList.add('memory');
-        this.setHoverMessage(this.inner, `<b>${this.label}</b>. <i>E</i> Edit, ${Component.HOTKEYS}.`, { type: 'hover' });
+        this.setHoverMessage(this.inner, `<b>${this.label}</b>. <i>E</i> Edit, <i>SHIFT+E</i> Edit contents, ${Component.HOTKEYS}.`, { type: 'hover' });
+    }
+
+    // Handle hotkeys - add shift+e for hex edit
+    async onHotkey(key, action, what) {
+        if (super.onHotkey(key, action, what)) return true;
+        if (key === 'E' && action === 'down' && what.type === 'hover') {
+            const sim = this.app.simulations.current?.engine;
+            const data = sim ? sim.getMemoryData(this.simIds[0]) : this.#data;
+            const success = await hexeditor('Edit memory', this.#dataWidth, data);
+            if (success) {
+                if (sim) {
+                    sim.setMemoryData(this.simIds[0], data);
+                }
+                this.#data = data;
+                this.grid.trackAction('Edit memory contents');
+            }
+            return true;
+        }
     }
 
     // Declare component simulation item.

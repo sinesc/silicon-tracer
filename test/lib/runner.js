@@ -159,6 +159,12 @@ vm.runInContext(`
     function declareMemory(sim, memType, addressWidth, dataWidth, initialData, suffix, writeBeforeRead = true) {
         return sim.declareMemory(memType, addressWidth, dataWidth, Uint8Array.fromHex(initialData), suffix, writeBeforeRead);
     }
+
+    // Creates a VM-realm Uint8Array from a hex string or plain Array of byte values.
+    function makeU8(values) {
+        if (typeof values === 'string') return Uint8Array.fromHex(values);
+        return new Uint8Array(values);
+    }
 `, context);
 
 let passed = 0;
@@ -249,4 +255,4 @@ function loadCircuitWires(filePath, circuitLabel = null) {
     return context._loadCircuitWires(text, circuitLabel);
 }
 
-module.exports = { assert, test, time, readJSON, summary, context, setDebugMode, createSimulationWithBackend: context.createSimulationWithBackend, declareMemory: context.declareMemory, compileCircuit, loadCircuitWires };
+module.exports = { assert, test, time, readJSON, summary, context, setDebugMode, createSimulationWithBackend: context.createSimulationWithBackend, declareMemory: context.declareMemory, makeU8: context.makeU8, compileCircuit, loadCircuitWires };

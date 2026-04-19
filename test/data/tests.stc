@@ -2,7 +2,7 @@ loadFiles.push(
 {
 	"version": 4,
 	"label": "tests",
-	"currentUID": "ua8a40223b0644e4fb1ab71293acda3ef",
+	"currentUID": "ud5327500cf2144b99c3ff468eb00fc4e",
 	"circuits": [
 		{
 			"label": "ConflictBuffer",
@@ -17,9 +17,11 @@ loadFiles.push(
 						1,
 						1,
 						1,
-						1
+						1,
+						"dec"
 					],
-					"name": "cInput"
+					"name": "cInput",
+					"inputFormat": "dec"
 				},
 				{
 					"#c": "Probe",
@@ -27,8 +29,10 @@ loadFiles.push(
 						550,
 						330,
 						1,
-						"pInput"
-					]
+						"pInput",
+						1
+					],
+					"displayFormat": "auto"
 				},
 				{
 					"#c": "Wire",
@@ -106,9 +110,11 @@ loadFiles.push(
 						0,
 						0,
 						1,
-						1
+						1,
+						"dec"
 					],
-					"name": "cEnable1"
+					"name": "cEnable1",
+					"inputFormat": "dec"
 				},
 				{
 					"#c": "Wire",
@@ -146,8 +152,10 @@ loadFiles.push(
 						670,
 						190,
 						2,
-						"pIntermediate"
-					]
+						"pIntermediate",
+						1
+					],
+					"displayFormat": "auto"
 				},
 				{
 					"#c": "Wire",
@@ -177,9 +185,11 @@ loadFiles.push(
 						0,
 						0,
 						1,
-						1
+						1,
+						"dec"
 					],
-					"name": "cEnable2"
+					"name": "cEnable2",
+					"inputFormat": "dec"
 				},
 				{
 					"#c": "Wire",
@@ -286,8 +296,10 @@ loadFiles.push(
 						790,
 						290,
 						3,
-						"pOutput"
-					]
+						"pOutput",
+						1
+					],
+					"displayFormat": "auto"
 				}
 			],
 			"gridConfig": {
@@ -322,9 +334,11 @@ loadFiles.push(
 						1,
 						1,
 						1,
-						1
+						1,
+						"dec"
 					],
-					"name": "cB"
+					"name": "cB",
+					"inputFormat": "dec"
 				},
 				{
 					"#c": "Constant",
@@ -334,9 +348,11 @@ loadFiles.push(
 						1,
 						1,
 						1,
-						1
+						1,
+						"dec"
 					],
-					"name": "cA"
+					"name": "cA",
+					"inputFormat": "dec"
 				},
 				{
 					"#c": "Probe",
@@ -344,8 +360,10 @@ loadFiles.push(
 						390,
 						210,
 						2,
-						"pB"
-					]
+						"pB",
+						1
+					],
+					"displayFormat": "auto"
 				},
 				{
 					"#c": "Wire",
@@ -373,8 +391,10 @@ loadFiles.push(
 						390,
 						370,
 						0,
-						"pA"
-					]
+						"pA",
+						1
+					],
+					"displayFormat": "auto"
 				},
 				{
 					"#c": "Wire",
@@ -442,8 +462,10 @@ loadFiles.push(
 						530,
 						290,
 						3,
-						"pQ"
-					]
+						"pQ",
+						1
+					],
+					"displayFormat": "auto"
 				}
 			],
 			"gridConfig": {
@@ -783,9 +805,11 @@ loadFiles.push(
 						2,
 						0,
 						1,
-						1
+						1,
+						"dec"
 					],
-					"name": ""
+					"name": "",
+					"inputFormat": "dec"
 				},
 				{
 					"#c": "Wire",
@@ -1023,9 +1047,11 @@ loadFiles.push(
 						2,
 						1,
 						1,
-						1
+						1,
+						"dec"
 					],
-					"name": ""
+					"name": "",
+					"inputFormat": "dec"
 				},
 				{
 					"#c": "Wire",
@@ -1561,8 +1587,10 @@ loadFiles.push(
 						630,
 						470,
 						0,
-						"pConflict"
-					]
+						"pConflict",
+						1
+					],
+					"displayFormat": "auto"
 				},
 				{
 					"#c": "Wire",
@@ -1700,9 +1728,11 @@ loadFiles.push(
 						3,
 						1,
 						1,
-						1
+						1,
+						"dec"
 					],
-					"name": "enable"
+					"name": "enable",
+					"inputFormat": "dec"
 				}
 			],
 			"gridConfig": {
@@ -1737,9 +1767,11 @@ loadFiles.push(
 						1,
 						0,
 						1,
-						1
+						1,
+						"dec"
 					],
-					"name": "cA"
+					"name": "cA",
+					"inputFormat": "dec"
 				},
 				{
 					"#c": "Probe",
@@ -1747,8 +1779,10 @@ loadFiles.push(
 						170,
 						50,
 						2,
-						"pB"
-					]
+						"pB",
+						1
+					],
+					"displayFormat": "auto"
 				},
 				{
 					"#c": "Wire",
@@ -1786,8 +1820,10 @@ loadFiles.push(
 						210,
 						90,
 						3,
-						"pC"
-					]
+						"pC",
+						1
+					],
+					"displayFormat": "auto"
 				}
 			],
 			"gridConfig": {
@@ -1822,9 +1858,11 @@ loadFiles.push(
 						1,
 						0,
 						1,
-						1
+						1,
+						"dec"
 					],
-					"name": "cA"
+					"name": "cA",
+					"inputFormat": "dec"
 				},
 				{
 					"#c": "Probe",
@@ -1832,8 +1870,10 @@ loadFiles.push(
 						170,
 						50,
 						2,
-						"pB"
-					]
+						"pB",
+						1
+					],
+					"displayFormat": "auto"
 				},
 				{
 					"#c": "Wire",
@@ -1851,8 +1891,10 @@ loadFiles.push(
 						170,
 						130,
 						0,
-						"pD"
-					]
+						"pD",
+						1
+					],
+					"displayFormat": "auto"
 				},
 				{
 					"#c": "Wire",
@@ -1890,8 +1932,10 @@ loadFiles.push(
 						210,
 						90,
 						3,
-						"pC"
-					]
+						"pC",
+						1
+					],
+					"displayFormat": "auto"
 				}
 			],
 			"gridConfig": {
@@ -1926,9 +1970,11 @@ loadFiles.push(
 						1,
 						0,
 						1,
-						1
+						1,
+						"dec"
 					],
-					"name": "cA"
+					"name": "cA",
+					"inputFormat": "dec"
 				},
 				{
 					"#c": "Constant",
@@ -1938,9 +1984,11 @@ loadFiles.push(
 						2,
 						1,
 						1,
-						1
+						1,
+						"dec"
 					],
-					"name": "cB"
+					"name": "cB",
+					"inputFormat": "dec"
 				},
 				{
 					"#c": "Wire",
@@ -1958,8 +2006,10 @@ loadFiles.push(
 						170,
 						130,
 						0,
-						"pD"
-					]
+						"pD",
+						1
+					],
+					"displayFormat": "auto"
 				},
 				{
 					"#c": "Wire",
@@ -1977,8 +2027,10 @@ loadFiles.push(
 						210,
 						90,
 						3,
-						"pC"
-					]
+						"pC",
+						1
+					],
+					"displayFormat": "auto"
 				}
 			],
 			"gridConfig": {
@@ -2013,9 +2065,11 @@ loadFiles.push(
 						1,
 						0,
 						1,
-						1
+						1,
+						"dec"
 					],
-					"name": "cwe"
+					"name": "cwe",
+					"inputFormat": "dec"
 				},
 				{
 					"#c": "Constant",
@@ -2025,9 +2079,11 @@ loadFiles.push(
 						1,
 						0,
 						1,
-						1
+						1,
+						"dec"
 					],
-					"name": "coe"
+					"name": "coe",
+					"inputFormat": "dec"
 				},
 				{
 					"#c": "Constant",
@@ -2037,9 +2093,11 @@ loadFiles.push(
 						1,
 						0,
 						1,
-						1
+						1,
+						"dec"
 					],
-					"name": "ca1"
+					"name": "ca1",
+					"inputFormat": "dec"
 				},
 				{
 					"#c": "Constant",
@@ -2049,9 +2107,11 @@ loadFiles.push(
 						1,
 						0,
 						1,
-						1
+						1,
+						"dec"
 					],
-					"name": "ca0"
+					"name": "ca0",
+					"inputFormat": "dec"
 				},
 				{
 					"#c": "Wire",
@@ -2154,9 +2214,11 @@ loadFiles.push(
 						0,
 						0,
 						1,
-						1
+						1,
+						"dec"
 					],
-					"name": "cdi0"
+					"name": "cdi0",
+					"inputFormat": "dec"
 				},
 				{
 					"#c": "Wire",
@@ -2184,8 +2246,10 @@ loadFiles.push(
 						390,
 						70,
 						3,
-						"pdo0"
-					]
+						"pdo0",
+						1
+					],
+					"displayFormat": "auto"
 				},
 				{
 					"#c": "Wire",
@@ -2215,9 +2279,11 @@ loadFiles.push(
 						3,
 						0,
 						0,
-						1
+						1,
+						"dec"
 					],
-					"name": "cdo0"
+					"name": "cdo0",
+					"inputFormat": "dec"
 				}
 			],
 			"gridConfig": {
@@ -2240,74 +2306,98 @@ loadFiles.push(
 			"visibleInLib": true
 		},
 		{
-			"label": "RAMCombined",
+			"label": "ROMs",
 			"description": "",
 			"uid": "ud5327500cf2144b99c3ff468eb00fc4e",
 			"data": [
 				{
 					"#c": "Constant",
 					"#a": [
-						210,
-						70,
-						1,
-						0,
-						1,
-						1
-					],
-					"name": "cwe"
-				},
-				{
-					"#c": "Constant",
-					"#a": [
-						210,
+						450,
 						110,
 						1,
-						0,
-						1,
-						1
+						6,
+						15,
+						4,
+						"dec"
 					],
-					"name": "coe"
+					"name": "address",
+					"inputFormat": "dec"
 				},
 				{
 					"#c": "Constant",
 					"#a": [
-						210,
+						450,
 						150,
 						1,
-						0,
 						1,
-						1
+						1,
+						1,
+						"dec"
 					],
-					"name": "ca1"
+					"name": "oe",
+					"inputFormat": "dec"
 				},
 				{
-					"#c": "Constant",
+					"#c": "Tunnel",
 					"#a": [
-						210,
-						190,
-						1,
-						0,
-						1,
+						450,
+						330,
 						1
 					],
-					"name": "ca0"
+					"name": "oe"
+				},
+				{
+					"#c": "Tunnel",
+					"#a": [
+						450,
+						410,
+						1
+					],
+					"name": "data"
+				},
+				{
+					"#c": "Tunnel",
+					"#a": [
+						450,
+						530,
+						1
+					],
+					"name": "oe"
+				},
+				{
+					"#c": "Tunnel",
+					"#a": [
+						450,
+						550,
+						1
+					],
+					"name": "data"
+				},
+				{
+					"#c": "Tunnel",
+					"#a": [
+						450,
+						670,
+						1
+					],
+					"name": "oe"
+				},
+				{
+					"#c": "Tunnel",
+					"#a": [
+						450,
+						690,
+						1
+					],
+					"name": "data"
 				},
 				{
 					"#c": "Wire",
 					"#a": [
-						250,
-						90,
-						20,
-						"h",
-						1
-					]
-				},
-				{
-					"#c": "Wire",
-					"#a": [
-						250,
+						490,
 						130,
-						40,
+						20,
 						"h",
 						1
 					]
@@ -2315,8 +2405,135 @@ loadFiles.push(
 				{
 					"#c": "Wire",
 					"#a": [
-						250,
+						490,
 						170,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						490,
+						350,
+						80,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						490,
+						430,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						490,
+						550,
+						80,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						490,
+						570,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						490,
+						690,
+						80,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						490,
+						710,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Tunnel",
+					"#a": [
+						510,
+						110,
+						3
+					],
+					"name": "data"
+				},
+				{
+					"#c": "Tunnel",
+					"#a": [
+						510,
+						150,
+						3
+					],
+					"name": "oe"
+				},
+				{
+					"#c": "Splitter",
+					"#a": [
+						510,
+						410,
+						2,
+						4,
+						"none",
+						"end",
+						"rtl",
+						0
+					]
+				},
+				{
+					"#c": "Splitter",
+					"#a": [
+						510,
+						550,
+						2,
+						4,
+						"none",
+						"end",
+						"rtl",
+						0
+					]
+				},
+				{
+					"#c": "Splitter",
+					"#a": [
+						510,
+						690,
+						2,
+						4,
+						"none",
+						"end",
+						"rtl",
+						0
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						530,
+						450,
 						40,
 						"h",
 						1
@@ -2325,8 +2542,28 @@ loadFiles.push(
 				{
 					"#c": "Wire",
 					"#a": [
-						250,
-						210,
+						530,
+						590,
+						40,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						530,
+						730,
+						40,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						550,
+						430,
 						20,
 						"h",
 						1
@@ -2335,18 +2572,8 @@ loadFiles.push(
 				{
 					"#c": "Wire",
 					"#a": [
-						270,
-						90,
-						20,
-						"v",
-						1
-					]
-				},
-				{
-					"#c": "Wire",
-					"#a": [
-						270,
-						110,
+						550,
+						470,
 						20,
 						"h",
 						1
@@ -2355,8 +2582,8 @@ loadFiles.push(
 				{
 					"#c": "Wire",
 					"#a": [
-						270,
-						190,
+						550,
+						490,
 						20,
 						"h",
 						1
@@ -2365,32 +2592,307 @@ loadFiles.push(
 				{
 					"#c": "Wire",
 					"#a": [
-						270,
-						190,
+						550,
+						570,
 						20,
-						"v",
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						550,
+						610,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						550,
+						630,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						550,
+						710,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						550,
+						750,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						550,
+						770,
+						20,
+						"h",
 						1
 					]
 				},
 				{
 					"#c": "Memory",
 					"#a": [
-						290,
-						90,
+						570,
+						330,
 						0,
-						"ram",
+						"rom",
+						4,
+						8,
+						"000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+						null
+					]
+				},
+				{
+					"#c": "Memory",
+					"#a": [
+						570,
+						530,
+						0,
+						"rom",
+						4,
+						4,
+						"000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+						null
+					]
+				},
+				{
+					"#c": "Memory",
+					"#a": [
+						570,
+						670,
+						0,
+						"rom",
+						4,
 						2,
-						1,
-						"",
-						true
+						"000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+						null
 					]
 				},
 				{
 					"#c": "Wire",
 					"#a": [
+						610,
+						350,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						610,
+						370,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						610,
+						390,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						610,
+						410,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						610,
+						430,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						610,
+						450,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						610,
+						470,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						610,
+						490,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						610,
+						550,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						610,
+						570,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						610,
+						590,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						610,
+						610,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						610,
+						690,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						610,
+						710,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Splitter",
+					"#a": [
+						630,
 						330,
-						110,
-						60,
+						0,
+						8,
+						"none",
+						"end",
+						"rtl",
+						0
+					]
+				},
+				{
+					"#c": "Splitter",
+					"#a": [
+						630,
+						530,
+						0,
+						4,
+						"none",
+						"end",
+						"rtl",
+						0
+					]
+				},
+				{
+					"#c": "Splitter",
+					"#a": [
+						630,
+						670,
+						0,
+						2,
+						"none",
+						"end",
+						"rtl",
+						0
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						670,
+						490,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						670,
+						610,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						670,
+						710,
+						20,
 						"h",
 						1
 					]
@@ -2398,49 +2900,339 @@ loadFiles.push(
 				{
 					"#c": "Probe",
 					"#a": [
-						390,
-						70,
+						690,
+						470,
 						3,
-						"pd0"
-					]
+						"p8",
+						2
+					],
+					"displayFormat": "dec"
 				},
 				{
-					"#c": "Wire",
+					"#c": "Probe",
 					"#a": [
-						390,
-						90,
-						20,
-						"v",
-						1
-					]
-				},
-				{
-					"#c": "Wire",
-					"#a": [
-						390,
-						110,
-						20,
-						"v",
-						1
-					]
-				},
-				{
-					"#c": "Constant",
-					"#a": [
-						390,
-						110,
+						690,
+						590,
 						3,
-						0,
-						0,
+						"p4",
 						1
 					],
-					"name": "cd0"
+					"displayFormat": "dec"
+				},
+				{
+					"#c": "Probe",
+					"#a": [
+						690,
+						690,
+						3,
+						"p2",
+						1
+					],
+					"displayFormat": "dec"
+				},
+				{
+					"#c": "Tunnel",
+					"#a": [
+						770,
+						330,
+						1
+					],
+					"name": "oe"
+				},
+				{
+					"#c": "Tunnel",
+					"#a": [
+						770,
+						570,
+						1
+					],
+					"name": "data"
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						810,
+						350,
+						80,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						810,
+						590,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Splitter",
+					"#a": [
+						830,
+						570,
+						2,
+						4,
+						"none",
+						"end",
+						"rtl",
+						0
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						850,
+						610,
+						40,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						870,
+						590,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						870,
+						630,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						870,
+						650,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Memory",
+					"#a": [
+						890,
+						330,
+						0,
+						"rom",
+						4,
+						16,
+						"000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+						null
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						930,
+						350,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						930,
+						370,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						930,
+						390,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						930,
+						410,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						930,
+						430,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						930,
+						450,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						930,
+						470,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						930,
+						490,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						930,
+						510,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						930,
+						530,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						930,
+						550,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						930,
+						570,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						930,
+						590,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						930,
+						610,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						930,
+						630,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						930,
+						650,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Splitter",
+					"#a": [
+						950,
+						330,
+						0,
+						16,
+						"none",
+						"end",
+						"rtl",
+						0
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						990,
+						650,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Probe",
+					"#a": [
+						1010,
+						630,
+						3,
+						"p16",
+						2
+					],
+					"displayFormat": "dec"
 				}
 			],
 			"gridConfig": {
 				"zoom": 1.25,
-				"offsetX": 0,
-				"offsetY": 0
+				"offsetX": -215.2,
+				"offsetY": -43.2
 			},
 			"portConfig": {
 				"spacing": 0,
@@ -2469,9 +3261,11 @@ loadFiles.push(
 						1,
 						0,
 						1,
-						1
+						1,
+						"dec"
 					],
-					"name": "cwe"
+					"name": "cwe",
+					"inputFormat": "dec"
 				},
 				{
 					"#c": "Constant",
@@ -2481,9 +3275,11 @@ loadFiles.push(
 						1,
 						0,
 						1,
-						1
+						1,
+						"dec"
 					],
-					"name": "coe"
+					"name": "coe",
+					"inputFormat": "dec"
 				},
 				{
 					"#c": "Constant",
@@ -2493,9 +3289,11 @@ loadFiles.push(
 						1,
 						0,
 						1,
-						1
+						1,
+						"dec"
 					],
-					"name": "ca1"
+					"name": "ca1",
+					"inputFormat": "dec"
 				},
 				{
 					"#c": "Constant",
@@ -2505,9 +3303,11 @@ loadFiles.push(
 						1,
 						0,
 						1,
-						1
+						1,
+						"dec"
 					],
-					"name": "ca0"
+					"name": "ca0",
+					"inputFormat": "dec"
 				},
 				{
 					"#c": "Wire",
@@ -2628,8 +3428,10 @@ loadFiles.push(
 						350,
 						50,
 						2,
-						"pd0"
-					]
+						"pd0",
+						1
+					],
+					"displayFormat": "auto"
 				},
 				{
 					"#c": "Probe",
@@ -2637,8 +3439,10 @@ loadFiles.push(
 						350,
 						190,
 						0,
-						"pd3"
-					]
+						"pd3",
+						1
+					],
+					"displayFormat": "auto"
 				},
 				{
 					"#c": "Wire",
@@ -2688,9 +3492,11 @@ loadFiles.push(
 						3,
 						0,
 						0,
-						1
+						1,
+						"dec"
 					],
-					"name": "cd0"
+					"name": "cd0",
+					"inputFormat": "dec"
 				},
 				{
 					"#c": "Constant",
@@ -2700,9 +3506,11 @@ loadFiles.push(
 						3,
 						0,
 						0,
-						1
+						1,
+						"dec"
 					],
-					"name": "cd3"
+					"name": "cd3",
+					"inputFormat": "dec"
 				}
 			],
 			"gridConfig": {
@@ -2737,9 +3545,11 @@ loadFiles.push(
 						1,
 						0,
 						1,
-						1
+						1,
+						"dec"
 					],
-					"name": "c"
+					"name": "c",
+					"inputFormat": "dec"
 				},
 				{
 					"#c": "Wire",
@@ -2757,8 +3567,10 @@ loadFiles.push(
 						210,
 						90,
 						3,
-						"p"
-					]
+						"p",
+						1
+					],
+					"displayFormat": "auto"
 				}
 			],
 			"gridConfig": {
@@ -2793,9 +3605,11 @@ loadFiles.push(
 						2,
 						0,
 						1,
-						1
+						1,
+						"dec"
 					],
-					"name": "c"
+					"name": "c",
+					"inputFormat": "dec"
 				},
 				{
 					"#c": "Probe",
@@ -2803,8 +3617,10 @@ loadFiles.push(
 						170,
 						130,
 						0,
-						"p"
-					]
+						"p",
+						1
+					],
+					"displayFormat": "auto"
 				},
 				{
 					"#c": "Wire",
@@ -2940,8 +3756,10 @@ loadFiles.push(
 						510,
 						210,
 						2,
-						"p2"
-					]
+						"p2",
+						1
+					],
+					"displayFormat": "auto"
 				},
 				{
 					"#c": "Probe",
@@ -2949,8 +3767,10 @@ loadFiles.push(
 						510,
 						270,
 						2,
-						"p1"
-					]
+						"p1",
+						1
+					],
+					"displayFormat": "auto"
 				},
 				{
 					"#c": "Probe",
@@ -2958,8 +3778,10 @@ loadFiles.push(
 						510,
 						330,
 						2,
-						"p0"
-					]
+						"p0",
+						1
+					],
+					"displayFormat": "auto"
 				},
 				{
 					"#c": "Splitter",
@@ -2990,8 +3812,10 @@ loadFiles.push(
 						670,
 						230,
 						3,
-						"pCombined"
-					]
+						"pCombined",
+						1
+					],
+					"displayFormat": "auto"
 				}
 			],
 			"gridConfig": {
