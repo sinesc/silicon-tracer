@@ -149,6 +149,7 @@ function dialog(title, fields, data, extraOptions) {
         }
     }
 
+    // bottom button row
     const rowElement = html(contentElement, 'div', 'dialog-button-row', );
     const cancelElement = cancelable ? html(rowElement, 'span', 'dialog-button dialog-cancel', 'Cancel') : null;
     const confirmElement = html(rowElement, 'span', 'dialog-button dialog-confirm', 'Ok');
