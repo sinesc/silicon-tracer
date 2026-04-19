@@ -80,7 +80,7 @@ class Memory extends SimulationComponent {
         const editDialog = this.#memType === 'ram' ? Memory.#RAM_EDIT_DIALOG : Memory.#ROM_EDIT_DIALOG;
         const config = await dialog(`Configure ${this.label}`, editDialog, { data: this.#data, addressWidth: this.#addressWidth, dataWidth: this.#dataWidth, combinedPorts: this.#combinedPorts, rotation: this.rotation });
         if (config) {
-            if (config.addressWidth !== this.#addressWidth || config.dataWidth !== this.#dataWidth || config.combinedPorts !== this.#combinedPorts) {
+            if (config._changed) {
                 const grid = this.grid;
                 this.unlink();
                 const { left, right, top, bottom } = Memory.#generatePorts(this.#memType, config.addressWidth, config.dataWidth, config.combinedPorts);
@@ -88,7 +88,7 @@ class Memory extends SimulationComponent {
                 const shadowPorts = Memory.#generateShadowPorts(this.#memType, config.dataWidth, config.combinedPorts);
                 this.#dataWidth = config.dataWidth;
                 this.#combinedPorts = config.combinedPorts;
-                this.#data = config.data;
+                this.#data = config.data ?? new Uint8Array();
                 this.setPortsFromNames({ left, right, top, bottom }, 1, ioTypes, shadowPorts);
                 this.#relabelDataPorts();
                 this.#addressWidth = config.addressWidth;
