@@ -144,7 +144,7 @@ class Gate extends SimulationComponent {
         const { joinOp } = gateEntry;
         return (grid, x, y) => {
             const merged = { ...d.gate, ...(d[gateType] ?? {}), ...overrideDefaults };
-            return grid.addItem(new Gate(app, x, y, merged.rotation ?? d.gate.rotation, gateType, joinOp !== null ? (merged.numInputs ?? d.gate.numInputs) : 1));
+            return grid.addItem(new Gate(app, x, y, merged.rotation ?? d.gate.rotation, gateType, joinOp !== null ? (merged.numInputs ?? d.gate.numInputs) : 1), false);
         };
     }
 }

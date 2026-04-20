@@ -154,13 +154,17 @@ class Splitter extends VirtualComponent {
 
     static fromDescriptor(app, _desc, overrideDefaults = {}) {
         const d = app.config.placementDefaults;
-        return (grid, x, y) => grid.addItem(new Splitter(app, x, y,
+        return (grid, x, y) => grid.addItem(new Splitter(
+            app,
+            x,
+            y,
             overrideDefaults.rotation ?? d.splitter.rotation,
             overrideDefaults.numSplits ?? d.splitter.numSplits,
             overrideDefaults.gapPosition ?? 'none',
             overrideDefaults.orientation ?? 'start',
             overrideDefaults.ordering ?? 'ltr',
-            overrideDefaults.spacing != null ? Number.parseInt(overrideDefaults.spacing) : 0));
+            overrideDefaults.spacing != null ? Number.parseInt(overrideDefaults.spacing) : 0
+        ), false);
     }
 }
 

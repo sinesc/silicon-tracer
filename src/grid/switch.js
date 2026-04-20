@@ -219,7 +219,7 @@ class Switch extends SimulationComponent {
             const hasInput = overrideDefaults.hasInput ?? true;
             const sw = new Switch(app, x, y, rotation, mode, defaultState, hasInput);
             if (overrideDefaults.name) sw.name = overrideDefaults.name;
-            return grid.addItem(sw);
+            return grid.addItem(sw, false);
         };
     }
 }

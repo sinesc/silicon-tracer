@@ -184,7 +184,7 @@ class Port extends SimulationComponent {
         return (grid, x, y) => {
             const port = new Port(app, x, y, overrideDefaults.rotation ?? d.port.rotation);
             if (overrideDefaults.name) port.name = overrideDefaults.name;
-            grid.addItem(port);
+            grid.addItem(port, false);
             if (overrideDefaults.name) port.name = port.makeUnique('name', overrideDefaults.name);
             return port;
         };

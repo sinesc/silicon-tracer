@@ -107,7 +107,7 @@ class Tunnel extends VirtualComponent {
         return (grid, x, y) => {
             const tunnel = new Tunnel(app, x, y, overrideDefaults.rotation ?? d.tunnel.rotation);
             if (overrideDefaults.name) tunnel.name = overrideDefaults.name;
-            return grid.addItem(tunnel);
+            return grid.addItem(tunnel, false);
         };
     }
 }

@@ -294,7 +294,7 @@ class TextLabel extends GridItem {
             const fontSize = overrideDefaults.fontSize ?? 'small';
             const colorStr = overrideDefaults.color ?? '-';
             const color = colorStr === '-' ? null : Number.parseInt(colorStr.slice(1));
-            return grid.addItem(new TextLabel(app, x, y, rotation, maxLength, text, fontSize, color));
+            return grid.addItem(new TextLabel(app, x, y, rotation, maxLength, text, fontSize, color), false);
         };
     }
 }

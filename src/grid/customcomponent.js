@@ -248,12 +248,16 @@ class CustomComponent extends VirtualComponent {
     static fromDescriptor(app, desc, overrideDefaults = {}) {
         const uid = desc['#u'];
         if (!app.circuits.byUID(uid)) return null;
-        return (grid, x, y) => grid.addItem(new CustomComponent(app, x, y,
+        return (grid, x, y) => grid.addItem(new CustomComponent(
+            app,
+            x,
+            y,
             overrideDefaults.rotation ?? 0,
             uid,
             overrideDefaults.parity ?? null,
             overrideDefaults.gap ?? null,
-            overrideDefaults.spacing != null ? Number.parseInt(overrideDefaults.spacing) : null));
+            overrideDefaults.spacing != null ? Number.parseInt(overrideDefaults.spacing) : null
+        ), false);
     }
 }
 

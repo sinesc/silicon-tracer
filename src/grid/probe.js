@@ -187,7 +187,7 @@ class Probe extends DisplayComponent {
             const name = overrideDefaults.name ?? '';
             const probe = new Probe(app, x, y, rotation, name);
             if (overrideDefaults.displayFormat) probe.displayFormat = overrideDefaults.displayFormat;
-            grid.addItem(probe);
+            grid.addItem(probe, false);
             if (name) probe.name = probe.makeUnique('name', name);
             return probe;
         };

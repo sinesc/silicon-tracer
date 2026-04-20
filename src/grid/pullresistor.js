@@ -73,9 +73,13 @@ class PullResistor extends SimulationComponent {
 
     static fromDescriptor(app, _desc, overrideDefaults = {}) {
         const d = app.config.placementDefaults;
-        return (grid, x, y) => grid.addItem(new PullResistor(app, x, y,
+        return (grid, x, y) => grid.addItem(new PullResistor(
+            app,
+            x,
+            y,
             overrideDefaults.rotation ?? d.pull.rotation,
-            overrideDefaults.direction ?? 'down'));
+            overrideDefaults.direction ?? 'down'
+        ), false);
     }
 }
 

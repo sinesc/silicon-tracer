@@ -232,16 +232,24 @@ class Memory extends SimulationComponent {
         const d = app.config.placementDefaults;
         const memType = desc['#t'];
         if (memType === 'rom') {
-            return (grid, x, y) => grid.addItem(new Memory(app, x, y,
+            return (grid, x, y) => grid.addItem(new Memory(
+                app,
+                x,
+                y,
                 overrideDefaults.rotation ?? d.rom.rotation, 'rom',
                 overrideDefaults.addressWidth ?? d.rom.addressWidth,
-                overrideDefaults.dataWidth ?? d.rom.dataWidth));
+                overrideDefaults.dataWidth ?? d.rom.dataWidth
+            ), false);
         } else if (memType === 'ram') {
-            return (grid, x, y) => grid.addItem(new Memory(app, x, y,
+            return (grid, x, y) => grid.addItem(new Memory(
+                app,
+                x,
+                y,
                 overrideDefaults.rotation ?? d.ram.rotation, 'ram',
                 overrideDefaults.addressWidth ?? d.ram.addressWidth,
                 overrideDefaults.dataWidth ?? d.ram.dataWidth,
-                [], overrideDefaults.combinedPorts ?? d.ram.combinedPorts));
+                [], overrideDefaults.combinedPorts ?? d.ram.combinedPorts
+            ), false);
         }
         return null;
     }

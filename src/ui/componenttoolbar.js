@@ -303,7 +303,7 @@ class ComponentToolbar extends Toolbar {
                 document.onmousemove = null;
                 document.body.classList.remove('dragging');
                 setTimeout(() => document.onclick = savedOnClick, 10);
-                this.app.grid.removeItem(component);
+                this.app.grid.removeItem(component, false);
                 callback();
             } else {
                 originalUp.call(document, upEvent);

@@ -78,7 +78,7 @@ class Clock extends SimulationComponent {
         return (grid, x, y) => {
             const c = new Clock(app, x, y, overrideDefaults.rotation ?? d.clock.rotation);
             if (overrideDefaults.frequency != null) c.frequency = overrideDefaults.frequency;
-            return grid.addItem(c);
+            return grid.addItem(c, false);
         };
     }
 }

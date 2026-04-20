@@ -244,7 +244,7 @@ class Constant extends DisplayComponent {
             const driven = v?.driven ?? 1;
             const c = new Constant(app, x, y, rotation, value, driven, dataWidth, displayFormat);
             if (overrideDefaults.name) c.name = overrideDefaults.name;
-            return grid.addItem(c);
+            return grid.addItem(c, false);
         };
     }
 }
