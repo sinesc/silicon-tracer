@@ -983,16 +983,10 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
 .component {
     pointer-events: none;
 }
-.component.highlighted {
-    /*filter: drop-shadow(0 0 0.75rem var(--wire-color0-high));*/
-    outline: 3px solid var(--wire-color1-high);
-    outline-offset: -3px;
-    box-shadow: 0 0 10px var(--wire-color1-high);
-}
 .component.selected, .text.selected {
     filter: grayscale(100%) sepia(100%) hue-rotate(var(--selection-hue)) brightness(var(--selection-brightness));
 }
-.component.selected, .text.selected > .inner {
+.component.selected, .component.highlighted, .text.selected > .inner {
     outline: 1px dotted white;
     outline-offset: -3px;
     border-radius: 6px;
