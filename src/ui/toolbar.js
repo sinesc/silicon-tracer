@@ -337,9 +337,135 @@ class Toolbar {
             e.stopPropagation();
             if (!button.classList.contains('toolbar-menu-button-disabled') && !this.#app.grid.readonly) {
                 const savedOnClick = document.onclick;
-                const [ x, y ] = this.#app.grid.screenToGrid(e.clientX, e.clientY);
-                const component = create(this.#app.grid, x, y);
-                component.dragStart(x, y, { type: "component", grabOffsetX: component.width / 2, grabOffsetY: component.height / 2, isNew: true });
+                const grid = this.#app.grid;
+                const [ x, y ] = grid.screenToGrid(e.clientX, e.clientY);
+                const component = create(grid, x, y);
+                const what = { type: "component", grabOffsetX: component.width / 2, grabOffsetY: component.height / 2, isNew: true };
+                component.dragStart(x, y, what);
+
+                // Multi-drop state: q/e change count, w/a/s/d change stacking direction/distance.
+                const multiState = { count: 1, direction: null, additionalDist: 0, overlays: [] };
+
+                const updateOverlays = (ax, ay) => {
+                    const dir = multiState.direction ?? 'right';
+                    const isHoriz = dir === 'left' || dir === 'right';
+                    const step = (isHoriz ? component.width : component.height) + multiState.additionalDist;
+                    const dirX = dir === 'right' ? 1 : dir === 'left' ? -1 : 0;
+                    const dirY = dir === 'down' ? 1 : dir === 'up' ? -1 : 0;
+                    const visualW = component.visual.width;
+                    const visualH = component.visual.height;
+                    for (let i = 0; i < multiState.overlays.length; i++) {
+                        const [vx, vy] = component.gridToVisual(ax + dirX * step * (i + 1), ay + dirY * step * (i + 1));
+                        const overlay = multiState.overlays[i];
+                        overlay.style.left = vx + 'px';
+                        overlay.style.top = vy + 'px';
+                        overlay.style.width = visualW + 'px';
+                        overlay.style.height = visualH + 'px';
+                    }
+                };
+
+                const syncOverlays = () => {
+                    while (multiState.overlays.length < multiState.count - 1) {
+                        const el = html(null, 'div', 'component-drop-preview');
+                        grid.addVisual(el);
+                        multiState.overlays.push(el);
+                    }
+                    while (multiState.overlays.length > multiState.count - 1) {
+                        grid.removeVisual(multiState.overlays.pop());
+                    }
+                    if (multiState.overlays.length > 0) {
+                        const [ax, ay] = component.align(component.x, component.y);
+                        updateOverlays(ax, ay);
+                    }
+                };
+
+                const onDragMove = (moveEvent) => {
+                    if (multiState.overlays.length > 0) {
+                        const [mx, my] = grid.screenToGrid(moveEvent.clientX, moveEvent.clientY);
+                        updateOverlays(...component.align(mx - what.grabOffsetX, my - what.grabOffsetY));
+                    }
+                };
+
+                const statusMessage = () => {
+                    const dir = multiState.direction;
+                    const dirInfo = dir !== null && multiState.count > 1
+                        ? `${dir}${multiState.additionalDist > 0 ? `, ${multiState.additionalDist}` : ''}`
+                        : '';
+                    return `Place one or more component instances. <i>R</i> Rotate instances, <i>E</i> / <i>Q</i> Increase/decrease count (${multiState.count}), <i>W</i> / <i>A</i> / <i>S</i> / <i>D</i> Stack direction/distance (${dirInfo})`;
+                };
+
+                const dragKeyHandler = (keyEvent) => {
+                    const key = keyEvent.key;
+                    if (!['q', 'e', 'w', 'a', 's', 'd', 'r'].includes(key)) return;
+                    keyEvent.preventDefault();
+                    keyEvent.stopPropagation();
+                    if (key === 'r') {
+                        component.rotation += 1;
+                        // Grab offsets must reflect new width/height after rotation, otherwise
+                        // onMove will mis-position the component on the next mousemove.
+                        what.grabOffsetX = component.width / 2;
+                        what.grabOffsetY = component.height / 2;
+                        syncOverlays();
+                    } else if (key === 'q') {
+                        multiState.count = Math.max(1, multiState.count - 1);
+                        syncOverlays();
+                    } else if (key === 'e') {
+                        multiState.count++;
+                        syncOverlays();
+                    } else {
+                        const newDir = { w: 'up', a: 'left', s: 'down', d: 'right' }[key];
+                        const opposite = { up: 'down', down: 'up', left: 'right', right: 'left' };
+                        if (multiState.direction === newDir) {
+                            multiState.additionalDist += Grid.SPACING;
+                        } else if (multiState.direction === opposite[newDir]) {
+                            if (multiState.additionalDist > 0) {
+                                multiState.additionalDist -= Grid.SPACING;
+                            } else {
+                                multiState.direction = newDir;
+                            }
+                        } else {
+                            multiState.direction = newDir;
+                        }
+                        if (multiState.overlays.length > 0) {
+                            const [ax, ay] = component.align(component.x, component.y);
+                            updateOverlays(ax, ay);
+                        }
+                    }
+                    this.#app.setStatus(statusMessage(), true);
+                };
+
+                const cleanup = () => {
+                    document.removeEventListener('keydown', dragKeyHandler, true);
+                    document.removeEventListener('mousemove', onDragMove);
+                    for (const el of multiState.overlays) grid.removeVisual(el);
+                    multiState.overlays = [];
+                    this.#app.clearStatus(true);
+                };
+
+                this.#app.setStatus(statusMessage(), true);
+                document.addEventListener('keydown', dragKeyHandler, true);
+                document.addEventListener('mousemove', onDragMove);
+                document.addEventListener('mouseup', cleanup, { once: true, capture: true });
+
+                // Wrap onmouseup (before #interceptDrop may wrap it) to place extra components
+                // before trackAction fires, so all N drops form a single undo point.
+                const prevUp = document.onmouseup;
+                document.onmouseup = (upEvent) => {
+                    if (multiState.count > 1) {
+                        const [mx, my] = grid.screenToGrid(upEvent.clientX, upEvent.clientY);
+                        const [ax, ay] = component.align(mx - what.grabOffsetX, my - what.grabOffsetY);
+                        const dir = multiState.direction ?? 'right';
+                        const isHoriz = dir === 'left' || dir === 'right';
+                        const step = (isHoriz ? component.width : component.height) + multiState.additionalDist;
+                        const dirX = dir === 'right' ? 1 : dir === 'left' ? -1 : 0;
+                        const dirY = dir === 'down' ? 1 : dir === 'up' ? -1 : 0;
+                        for (let i = 1; i < multiState.count; i++) {
+                            create(grid, ax + dirX * step * i, ay + dirY * step * i);
+                        }
+                    }
+                    prevUp.call(document, upEvent);
+                };
+
                 if (onPin) {
                     const dropZone = this.#app.toolbar.dropZone;
                     if (dropZone) this.#interceptDrop(dropZone, 'dragging-from-menu', savedOnClick, component, onPin);

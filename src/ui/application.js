@@ -511,13 +511,13 @@ class Application {
         // Edit menu with undo/redo/cut/copy/paste
         this.toolbar.createMenuButton('Edit', 'Edit operations menu.', (editMenu) => {
             editMenu.clear();
-            this.#undoButton = editMenu.createActionButton('Undo', 'Undo last change. Hotkey: <i>Ctrl+Z</i>.', () => this.#undoAction());
-            this.#redoButton = editMenu.createActionButton('Redo', 'Redo last undone change. Hotkey: <i>Ctrl+Y</i>.', () => this.#redoAction());
+            this.#undoButton = editMenu.createActionButton('Undo', 'Undo last change. Hotkey: <i>CTRL+Z</i>.', () => this.#undoAction());
+            this.#redoButton = editMenu.createActionButton('Redo', 'Redo last undone change. Hotkey: <i>CTRL+Y</i>.', () => this.#redoAction());
             this.refreshUndoButtons();
             editMenu.createSeparator();
-            const cutButton = editMenu.createActionButton('Cut', 'Cut selected items. Hotkey: <i>Ctrl+X</i>.', () => this.grid.actionCutSelection());
-            const copyButton = editMenu.createActionButton('Copy', 'Copy selected items to clipboard. Hotkey: <i>Ctrl+C</i>.', () => this.grid.copySelection());
-            const pasteButton = editMenu.createActionButton('Paste', 'Paste items from clipboard. Hotkey: <i>Ctrl+V</i>.', () => this.grid.actionPasteSelection());
+            const cutButton = editMenu.createActionButton('Cut', 'Cut selected items. Hotkey: <i>CTRL+X</i>.', () => this.grid.actionCutSelection());
+            const copyButton = editMenu.createActionButton('Copy', 'Copy selected items to clipboard. Hotkey: <i>CTRL+C</i>.', () => this.grid.copySelection());
+            const pasteButton = editMenu.createActionButton('Paste', 'Paste items from clipboard. Hotkey: <i>CTRL+V</i>.', () => this.grid.actionPasteSelection());
             cutButton.node.classList.toggle('toolbar-menu-button-disabled', this.grid.selection.length === 0 || this.grid.readonly);
             copyButton.node.classList.toggle('toolbar-menu-button-disabled', this.grid.selection.length === 0);
             //pasteButton.node.classList.toggle('toolbar-menu-button-disabled', await navigator.clipboard.readText().length === 0); // cannot currently do this without annoying confirmation popup
