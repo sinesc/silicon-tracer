@@ -590,6 +590,7 @@ class Grid {
             for (const { gid } of net.wires) {
                 const wire = this.#circuit.itemByGID(gid);
                 wire.color = applyColor;
+                wire.renderFlags |= GridItem.NEEDS_DETAIL_RENDER;
             }
             for (const port of net.ports) {
                 const component = this.#circuit.itemByGID(port.gid);
