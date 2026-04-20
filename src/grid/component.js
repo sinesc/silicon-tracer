@@ -174,7 +174,7 @@ class ComponentPort {
 // General component used as a base class for Gates/Builtins or user defined circuits when represented within other circuits.
 class Component extends GridItem {
 
-    static HOTKEYS = '<i>LMB</i> Drag to move, <i>ALT</i> Drop to accept ghost wires, <i>R</i> Rotate, <i>DEL</i> Delete, ' + GridItem.HOTKEYS;
+    static HOTKEYS = '<i>LMB</i> Drag to move, <i>SHIFT+LMB</i> Drag to move and adjust wire length, <i>ALT</i> Drop to accept ghost wires, <i>R</i> Rotate, <i>DEL</i> Delete, ' + GridItem.HOTKEYS;
 
     static EDIT_DIALOG = [
         { name: 'rotation', label: 'Rotation', type: 'select', options: { 0: "Default", 1: "90°", 2: "180°", 3: "270°" }, apply: (v, f) => parseInt(v) },
@@ -532,8 +532,18 @@ class Component extends GridItem {
         if (super.onDrag(x, y, status, what)) {
             return true;
         } else if (what.type === 'component') {
-            this.onMove(x, y, status, what);
+            if (status === 'start' && this.app.modifierKeys.shiftKey) {
+                what.singleLengthDrag = Wire.findSelectionAttachedWires(this.grid, [this], x, y);
+            }
+            const [ effectiveX, effectiveY ] = what.singleLengthDrag
+                ? Wire.updateSelectionAttachedWires(x, y, what.singleLengthDrag, status)
+                : [ x, y ];
+            this.onMove(effectiveX, effectiveY, status, what);
             if (status === 'stop') {
+                if (what.singleLengthDrag) {
+                    delete what.singleLengthDrag;
+                    this.grid.onWiresChanged();
+                }
                 this.grid.trackAction(what.isNew ? `Add ${this.actionLabel}` : `Move ${this.actionLabel}`);
             }
             return true;
