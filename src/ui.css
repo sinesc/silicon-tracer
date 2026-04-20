@@ -408,6 +408,25 @@ body.no-focus #focus-hint:has(~div.grid:hover) {
     flex-shrink: 0;
     padding: 0;
     margin: 0;
+    appearance: none;
+    background: var(--button-border-color);
+}
+.hexeditor-scrollbar::-webkit-slider-thumb {
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    background: var(--button-bg-color);
+    cursor: pointer;
+}
+.hexeditor-scrollbar::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    background: var(--button-bg-color);
+    border: none;
+    cursor: pointer;
+}
+.hexeditor-scrollbar::-moz-range-track {
+    background: var(--button-border-color);
 }
 
 /*
