@@ -105,7 +105,7 @@ class ComponentToolbar extends Toolbar {
 
     // Repositions all active multi-drop overlay divs to match the current drag position and stacking config.
     #updateDragOverlays(component, multiState, ax, ay) {
-        const dir = multiState.direction ?? 'right';
+        const dir = multiState.direction;
         const isHoriz = dir === 'left' || dir === 'right';
         const step = (isHoriz ? component.width : component.height) + multiState.additionalDist;
         const dirX = dir === 'right' ? 1 : dir === 'left' ? -1 : 0;
@@ -166,6 +166,10 @@ class ComponentToolbar extends Toolbar {
             multiState.count++;
             this.#syncDragOverlays(component, grid, multiState);
         } else {
+            if (multiState.count === 1) {
+                this.app.showNotice('Requires placing multiple components.');
+                return;
+            }
             const newDir = { w: 'up', a: 'left', s: 'down', d: 'right' }[key];
             const opposite = { up: 'down', down: 'up', left: 'right', right: 'left' };
             if (multiState.direction === newDir) {
@@ -201,7 +205,7 @@ class ComponentToolbar extends Toolbar {
         if (multiState.count > 1) {
             const [mx, my] = grid.screenToGrid(upEvent.clientX, upEvent.clientY);
             const [ax, ay] = component.align(mx - what.grabOffsetX, my - what.grabOffsetY);
-            const dir = multiState.direction ?? 'right';
+            const dir = multiState.direction;
             const isHoriz = dir === 'left' || dir === 'right';
             const step = (isHoriz ? component.width : component.height) + multiState.additionalDist;
             const dirX = dir === 'right' ? 1 : dir === 'left' ? -1 : 0;
@@ -254,7 +258,7 @@ class ComponentToolbar extends Toolbar {
         component.dragStart(x, y, what);
 
         // Multi-drop state: q/e change count, w/a/s/d change stacking direction/distance.
-        const multiState = { count: 1, direction: null, additionalDist: 0, overlays: [] };
+        const multiState = { count: 1, direction: 'right', additionalDist: 0, overlays: [] };
 
         const onDragMove = (ev) => this.#onDragMove(ev, component, what, grid, multiState);
         const dragKeyHandler = (ev) => this.#handleDragKey(ev, component, what, grid, multiState);
