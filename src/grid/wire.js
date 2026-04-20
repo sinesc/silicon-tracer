@@ -235,7 +235,7 @@ class Wire extends GridItem {
     // Updates wire color and bus class.
     renderDetail() {
         this.#element.setAttribute('data-net-color', this.color ?? '');
-        this.#element.classList.toggle('wire-bus', (this.netIds?.length ?? 0) > 1);
+        this.#element.classList.toggle('wire-bus', (this.netIds?.length ?? 1) !== 1); // !== 1 to show 0-bit busses (unconnected, cannot yet determine channels) as bus wires
     }
 
     // Updates wire CSS position and dimensions.
