@@ -104,7 +104,7 @@ class Application {
         document.addEventListener('keyup', this.#handleHotkey.bind(this));
         this.#initHotkeys(); // must happen before grid creation or global hotkeys may be overriden by per-component hotkeys
         this.grid = new Grid(this, gridParent);
-        this.toolbar = new Toolbar(this, toolbarParent);
+        this.toolbar = new ComponentToolbar(this, toolbarParent);
         this.circuits = new Circuits(this);
         this.simulations = new Simulations(this);
         this.#status.element = html(gridParent, 'div', 'app-status');
