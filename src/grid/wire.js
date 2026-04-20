@@ -436,15 +436,15 @@ class Wire extends GridItem {
         assert.string(status);
         const dx = x - dragInfo.startX;
         const dy = y - dragInfo.startY;
-        const [ cdx, cdy ] = Wire.#clampAltDrag(dragInfo.attachedWires, dx, dy);
+        const [ cdx, cdy ] = Wire.#clampLengthDrag(dragInfo.attachedWires, dx, dy);
         const effectiveX = dragInfo.startX + cdx;
         const effectiveY = dragInfo.startY + cdy;
-        Wire.#applyAltDragWires(dragInfo.attachedWires, cdx, cdy, status === 'stop');
+        Wire.#applyLengthDragWires(dragInfo.attachedWires, cdx, cdy, status === 'stop');
         return [ effectiveX, effectiveY ];
     }
 
     // Returns [dx, dy] clamped so no attached wire falls below Grid.SPACING minimum length.
-    static #clampAltDrag(attachedWires, dx, dy) {
+    static #clampLengthDrag(attachedWires, dx, dy) {
         let minDx = -Infinity, maxDx = Infinity;
         let minDy = -Infinity, maxDy = Infinity;
         const MIN = Grid.SPACING;
@@ -474,7 +474,7 @@ class Wire extends GridItem {
     }
 
     // Stretches/shrinks attached wires to follow clamped delta.
-    static #applyAltDragWires(attachedWires, dx, dy, snap) {
+    static #applyLengthDragWires(attachedWires, dx, dy, snap) {
         for (const { wire, endpoint, initialX, initialY, initialWidth, initialHeight } of attachedWires) {
             if (initialWidth > 0) {
                 // Horizontal wire: apply dx only
