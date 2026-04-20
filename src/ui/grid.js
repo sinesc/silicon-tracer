@@ -380,6 +380,11 @@ class Grid {
         this.#pending.netColors = true;
     }
 
+    // Returns the current default net color for new wires.
+    get netColor() {
+        return this.#netColor;
+    }
+
     // Returns the grids default status message.
     defaultStatusMessage() {
         const netColor = `<span data-net-color="${this.#netColor}">default net color</span>`;

@@ -3,8 +3,6 @@
 // IO port on a component.
 class ComponentPort {
 
-    static #SIDES = ['top','right','bottom','left'];
-
     name; // simulation port name
     label; // visible port name
     originalSide;
@@ -46,7 +44,7 @@ class ComponentPort {
     static portCoords(width, height, side, index, offsetCenter = false) {
         assert.integer(width);
         assert.integer(height);
-        assert.enum(ComponentPort.#SIDES, side);
+        assert.enum(Component.SIDES, side);
         assert.integer(index);
         assert.bool(offsetCenter);
         // for correct rotation required: top: left->right, right: top->bottom, bottom: right->left, left: bottom->top
@@ -64,7 +62,7 @@ class ComponentPort {
     // Returns the port side name after given component rotation is considered.
     static portSide(rotation, originalSide) {
         assert.integer(rotation);
-        assert.enum(ComponentPort.#SIDES, originalSide);
+        assert.enum(Component.SIDES, originalSide);
         const index = Component.SIDES.indexOf(originalSide);
         return Component.SIDES[(index + rotation) % 4];
     }
@@ -110,7 +108,7 @@ class ComponentPort {
     static renderLabel(component, element, side, x, y, label, containPort = true, force = false) {
         assert.class(Component, component);
         assert.class(Node, element);
-        assert.enum(ComponentPort.#SIDES, side);
+        assert.enum(Component.SIDES, side);
         assert.number(x);
         assert.number(y);
         assert.string(label);
@@ -176,7 +174,7 @@ class ComponentPort {
 // General component used as a base class for Gates/Builtins or user defined circuits when represented within other circuits.
 class Component extends GridItem {
 
-    static HOTKEYS = '<i>LMB</i> Drag to move, <i>R</i> Rotate, <i>DEL</i> Delete, ' + GridItem.HOTKEYS;
+    static HOTKEYS = '<i>LMB</i> Drag to move, <i>ALT</i> Drop to accept ghost wires, <i>R</i> Rotate, <i>DEL</i> Delete, ' + GridItem.HOTKEYS;
 
     static EDIT_DIALOG = [
         { name: 'rotation', label: 'Rotation', type: 'select', options: { 0: "Default", 1: "90°", 2: "180°", 3: "270°" }, apply: (v, f) => parseInt(v) },
@@ -185,11 +183,20 @@ class Component extends GridItem {
     static SIDES = [ 'top', 'right', 'bottom', 'left' ];
     static PORT_SIZE = 14;
 
+    static #OPPOSING_SIDES = [
+        { side: 'left',   other: 'right',  axis: 'y' },
+        { side: 'right',  other: 'left',   axis: 'y' },
+        { side: 'top',    other: 'bottom', axis: 'x' },
+        { side: 'bottom', other: 'top',    axis: 'x' },
+    ];
+
+    static #MAX_GHOST_DISTANCE = 2;
     static #INNER_MARGIN = 5;
 
     #element;
     #inner;
     #dropPreview;
+    #ghostWires = [];
     #ports;
     #type;
     #rotation = 0;
@@ -216,7 +223,7 @@ class Component extends GridItem {
         }
         const ports = { left: [], right: [], top: [], bottom: [], ...portNames };
         // ensure same number of ports on opposing sides of the component by filling up the shorter side with null ports
-        for (const [ side, other ] of Object.entries({ 'left': 'right', 'right': 'left', 'top': 'bottom', 'bottom': 'top' })) {
+        for (const { side, other } of Component.#OPPOSING_SIDES) {
             while (ports[side].length < ports[other].length) {
                 ports[side].push(null);
             }
@@ -485,11 +492,17 @@ class Component extends GridItem {
             this.#dropPreview.style.top = visualY + "px";
             this.#dropPreview.style.width = this.visual.width + "px";
             this.#dropPreview.style.height = this.visual.height + "px";
+            this.#updateGhostWires(alignedX, alignedY);
         } else {
             this.grid.removeVisual(this.#dropPreview);
             this.#dropPreview = null;
             what.grabOffsetX = null;
             what.grabOffsetY = null;
+            if (this.app.modifierKeys.altKey) {
+                this.#commitGhostWires();
+            } else {
+                this.#clearGhostWires();
+            }
             this.redraw();
         }
     }
@@ -615,6 +628,88 @@ class Component extends GridItem {
             const state = this.getNetState(item.netIds);
             if (item.element.getAttribute('data-net-state') !== state) {
                 item.element.setAttribute('data-net-state', state);
+            }
+        }
+    }
+
+    // Removes all current ghost wires from the grid.
+    #clearGhostWires() {
+        for (const wire of this.#ghostWires) {
+            this.grid.removeItem(wire, false);
+        }
+        this.#ghostWires = [];
+    }
+
+    // Commits ghost wires, making them real permanent wires.
+    #commitGhostWires() {
+        for (const wire of this.#ghostWires) {
+            wire.element.classList.remove('wire-ghost');
+            wire.limbo = false;
+        }
+        this.#ghostWires = [];
+        this.grid.onWiresChanged();
+    }
+
+    // Builds ghost wires between this component (at alignedX/Y) and neighboring components.
+    #updateGhostWires(alignedX, alignedY) {
+        this.#clearGhostWires();
+        for (const neighbor of this.grid.items.filter(i => i instanceof Component && i !== this).toArray()) {
+            for (const { side, other, axis } of Component.#OPPOSING_SIDES) {
+                // Compute gap between facing edges, must be within limit.
+                let gap;
+                if (side === 'right') {
+                    gap = neighbor.x - (alignedX + this.width);
+                } else if (side === 'left') {
+                    gap = (alignedX) - (neighbor.x + neighbor.width);
+                } else if (side === 'bottom') {
+                    gap = neighbor.y - (alignedY + this.height);
+                } else { // top
+                    gap = (alignedY) - (neighbor.y + neighbor.height);
+                }
+                if (gap <= 0 || gap > Component.#MAX_GHOST_DISTANCE * Grid.SPACING) continue;
+
+                // Collect ports on each side (exclude shadows)
+                const selfPorts = this.ports.filter(p => !p.shadow && p.side(this.rotation) === side).toArray();
+                const neighborPorts = neighbor.ports.filter(p => !p.shadow && p.side(neighbor.rotation) === other).toArray();
+
+                for (const sp of selfPorts) {
+                    const sc = sp.coords(this.width, this.height, this.rotation);
+                    const spAbsAxis  = axis === 'y' ? alignedY + sc.y : alignedX + sc.x;
+
+                    for (const np of neighborPorts) {
+                        const nc = np.coords(neighbor.width, neighbor.height, neighbor.rotation);
+                        const npAbsAxis = axis === 'y' ? neighbor.y + nc.y : neighbor.x + nc.x;
+
+                        if (spAbsAxis !== npAbsAxis) continue;
+
+                        // Determine wire endpoints.
+                        let wx, wy, wLen, wDir;
+                        if (axis === 'y') {
+                            // horizontal wire
+                            const selfAbsX     = alignedX + sc.x;
+                            const neighborAbsX = neighbor.x + nc.x;
+                            wx   = Math.min(selfAbsX, neighborAbsX);
+                            wy   = spAbsAxis;
+                            wLen = Math.abs(selfAbsX - neighborAbsX);
+                            wDir = 'h';
+                        } else {
+                            // vertical wire
+                            const selfAbsY     = alignedY + sc.y;
+                            const neighborAbsY = neighbor.y + nc.y;
+                            wx   = spAbsAxis;
+                            wy   = Math.min(selfAbsY, neighborAbsY);
+                            wLen = Math.abs(selfAbsY - neighborAbsY);
+                            wDir = 'v';
+                        }
+                        if (wLen === 0) continue;
+
+                        const wire = new Wire(this.app, wx, wy, wLen, wDir, this.grid.netColor);
+                        wire.limbo = true;
+                        this.grid.addItem(wire, false);
+                        wire.element.classList.add('wire-ghost');
+                        this.#ghostWires.push(wire);
+                    }
+                }
             }
         }
     }

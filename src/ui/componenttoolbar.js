@@ -96,11 +96,11 @@ class ComponentToolbar extends Toolbar {
 
     // Returns the drag status bar message for the given multi-drop state.
     #buildDragStatusMessage(multiState) {
-        const dir = multiState.direction;
-        const dirInfo = dir !== null && multiState.count > 1
-            ? `${dir}${multiState.additionalDist > 0 ? `, ${multiState.additionalDist}` : ''}`
-            : '';
-        return `Place one or more component instances. <i>R</i> Rotate instances, <i>E</i> / <i>Q</i> Increase/decrease count (${multiState.count}), <i>W</i> / <i>A</i> / <i>S</i> / <i>D</i> Stack direction/distance (${dirInfo})`;
+        const count = multiState.count;
+        const distanceInfo = `+${multiState.additionalDist / Grid.SPACING}`;
+        const isSingle = count <= 1;
+        return `Place one or more component instances. <i>R</i> Rotate instances, <i>E</i> / <i>Q</i> Increase/decrease count (${count}), ${isSingle ? '<u>' : ''}<i>W</i> / <i>A</i> / <i>S</i> / <i>D</i> Stack direction/spacing (${distanceInfo})${isSingle ? ',</u>' : ''} `
+                + ' <i>ALT</i> Drop to accept ghost wires';
     }
 
     // Repositions all active multi-drop overlay divs to match the current drag position and stacking config.
