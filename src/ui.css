@@ -907,9 +907,6 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
     overflow-y: auto;
     scrollbar-width: none;
     pointer-events: auto;
-    text-align: left;
-    border: 2px solid color-mix(in srgb, var(--text-color) 20%, transparent);
-    padding: 2px;
 }
 .graph-tree::-webkit-scrollbar {
     display: none;
@@ -930,19 +927,19 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
     margin: 0;
 }
 .graph-tree ul ul {
-    padding-left: 16px;
+    padding-right: 16px;
 }
 .graph-tree ul ul > li {
     position: relative;
 }
-.graph-tree ul ul > li::before { /* vertical stem + horizontal connector to text center (└ / ├ shape) */
+.graph-tree ul ul > li::before { /* vertical stem + horizontal connector to text center (┘ / ┤ shape, right-aligned) */
     content: '';
     position: absolute;
     top: 0;
-    left: -12px;
+    right: -12px;
     height: 0.6em;
     width: 8px;
-    border-left: 1px solid white;
+    border-right: 1px solid white;
     border-bottom: 1px solid white;
     border-color: color-mix(in srgb, var(--text-color) 30%, transparent);
 }
@@ -950,9 +947,9 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
     content: '';
     position: absolute;
     top: 0.6em;
-    left: -12px;
+    right: -12px;
     bottom: 0;
-    border-left: 1px solid white;
+    border-right: 1px solid white;
     border-color: color-mix(in srgb, var(--text-color) 30%, transparent);
 }
 .grid-selection {

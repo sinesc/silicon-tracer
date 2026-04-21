@@ -54,8 +54,8 @@ class Grid {
             this.#element.onwheel = this.#handleZoom.bind(this);
             document.addEventListener('mousemove', this.#debugHandleMouse.bind(this));
             this.circuitOverlay = this.registerOverlay(1000, new CircuitOverlay(app));
-            this.simulationOverlay = this.registerOverlay(1000, new SimulationOverlay(app));
             this.dependentsOverlay = this.registerOverlay(-1, new DependentsOverlay(app));
+            this.simulationOverlay = this.registerOverlay(1000, new SimulationOverlay(app));
             this.monitorOverlay = this.registerOverlay(100, new MonitorOverlay(app));
             this.graphOverlay = this.registerOverlay(1000, new GraphOverlay(app));
         }
