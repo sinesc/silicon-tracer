@@ -53,15 +53,15 @@ class Grid {
             this.#element.onmousedown = this.#handleDragStart.bind(this);
             this.#element.onwheel = this.#handleZoom.bind(this);
             document.addEventListener('mousemove', this.#debugHandleMouse.bind(this));
-            this.circuitOverlay = this.registerOverlay(100, new CircuitOverlay(app));
+            this.circuitOverlay = this.registerOverlay(1000, new CircuitOverlay(app));
             this.simulationOverlay = this.registerOverlay(1000, new SimulationOverlay(app));
-            this.dependentsOverlay = this.registerOverlay(500, new DependentsOverlay(app));
+            this.dependentsOverlay = this.registerOverlay(-1, new DependentsOverlay(app));
             this.monitorOverlay = this.registerOverlay(100, new MonitorOverlay(app));
-            this.graphOverlay = this.registerOverlay(500, new GraphOverlay(app));
+            this.graphOverlay = this.registerOverlay(1000, new GraphOverlay(app));
         }
     }
 
-    // Registers an overlay section, refreshed every interval ms.
+    // Registers an overlay section, refreshed every interval ms. Use -1 to only re-render on circuit switch.
     registerOverlay(interval, overlay) {
         assert.integer(interval);
         assert.class(Overlay, overlay);
@@ -115,6 +115,7 @@ class Grid {
         this.#pending.bgPattern = true;
         this.#pending.netColors = true;
         this.#pending.junctionRebuild = true;
+        for (const entry of this.#infoBoxSections) entry.lastRenderTime = null;
         this.#updateWorldTransform();
         if (!circuit.readonly && circuit.undoStack.currentSnapshot === null) {
             circuit.undoStack.init(circuit.serializeForUndo());
@@ -224,9 +225,9 @@ class Grid {
             // Info box overlay - check each registered section at its configured interval.
             const now = performance.now();
             for (const entry of this.#infoBoxSections) {
-                const intervalElapsed = entry.lastRenderTime === null || entry.interval === 0 || now - entry.lastRenderTime >= entry.interval;
+                const intervalElapsed = entry.lastRenderTime === null || entry.interval === 0 || (entry.interval > 0 && now - entry.lastRenderTime >= entry.interval);
                 if (intervalElapsed) {
-                    if (entry.interval > 0) entry.lastRenderTime = now;
+                    if (entry.interval !== 0) entry.lastRenderTime = now;
                     if (entry.overlay.dirty()) {
                         entry.overlay.render(entry.node);
                     }
