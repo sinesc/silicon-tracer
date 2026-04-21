@@ -56,6 +56,12 @@ class Port extends SimulationComponent {
         return this.#state;
     }
 
+    // Returns true if the search string matches this port's name.
+    match(string) {
+        assert.string(string);
+        return super.match(string) || this.name.toLowerCase().includes(string);
+    }
+
     // Hover hotkey actions
     onHotkey(key, action, what) {
         if (action !== 'down') {

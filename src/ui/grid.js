@@ -37,6 +37,7 @@ class Grid {
     #suppressCircuitEvents = false;     // true while Wire.compact runs inside render()
     #infoBoxElement = null;
     #infoBoxSections = [];              // Array<{ id, interval, overlay, node, lastRenderTime }>
+    #searchBar = null;
 
     constructor(app, parent, passive = false) {
         assert.class(Application, app);
@@ -58,6 +59,7 @@ class Grid {
             this.simulationOverlay = this.registerOverlay(1000, new SimulationOverlay(app));
             this.monitorOverlay = this.registerOverlay(100, new MonitorOverlay(app));
             this.graphOverlay = this.registerOverlay(1000, new GraphOverlay(app));
+            this.#searchBar = new SearchBar(app, this.#element);
         }
     }
 
@@ -719,6 +721,7 @@ class Grid {
     #initHotkeys() {
 
         // global hotkeys, override hover target hotkeys
+        this.#app.registerHotkey('ctrl+f', 'down', null, () => this.#searchBar.toggle());
         this.#app.registerHotkey('ctrl+a', 'down', () => !this.readonly, async () => {
             this.#selection = [];
             for (const item of this.#circuit.items) {

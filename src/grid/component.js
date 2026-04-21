@@ -314,24 +314,30 @@ class Component extends GridItem {
 
     // Return whether the element is selected.
     get selected() {
-        return this.#element.classList.contains('selected');
+        return this.#element?.classList.contains('selected') ?? false;
     }
 
     // Apply/remove component selection effect.
     set selected(status) {
         assert.bool(status, true);
-        this.#element.classList.toggle('selected', status);
+        this.#element?.classList.toggle('selected', status);
     }
 
     // Return whether the element is highlighted.
     get highlighted() {
-        return this.#element.classList.contains('highlighted');
+        return this.#element?.classList.contains('highlighted') ?? false;
     }
 
     // Apply/remove component highlight effect.
     set highlighted(status) {
         assert.bool(status);
-        this.#element.classList.toggle('highlighted', status);
+        this.#element?.classList.toggle('highlighted', status);
+    }
+
+    // Returns true if the search string matches this component.
+    match(string) {
+        assert.string(string);
+        return this.label.toLowerCase().includes(string);
     }
 
     // Return grid item rotation.

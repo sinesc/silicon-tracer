@@ -100,6 +100,12 @@ class Probe extends DisplayComponent {
         }
     }
 
+    // Returns true if the search string matches this probe's name.
+    match(string) {
+        assert.string(string);
+        return this.name.toLowerCase().includes(string);
+    }
+
     // Computes the display label from the current net state of all attached nets.
     // For single-bit nets: '0', '1', 'E' (conflict), or '~' (undriven).
     // For multi-bit nets: formatted integer value, 'E' (conflict), or '~' (undriven).

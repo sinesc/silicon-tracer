@@ -69,13 +69,13 @@ class TextLabel extends GridItem {
 
     // Return whether the element is selected.
     get selected() {
-        return this.#element.classList.contains('selected');
+        return this.#element?.classList.contains('selected') ?? false;
     }
 
     // Apply/remove component selection effect.
     set selected(status) {
         assert.bool(status, true);
-        this.#element.classList.toggle('selected', status);
+        this.#element?.classList.toggle('selected', status);
     }
 
     // Return text color.
@@ -119,6 +119,12 @@ class TextLabel extends GridItem {
         const half = Grid.SPACING / 2;
         const [ax, ay] = Grid.align(x - half, y - half);
         return [ax + half, ay + half];
+    }
+
+    // Returns true if the search string matches text.
+    match(string) {
+        assert.string(string);
+        return this.#text.toLowerCase().includes(string);
     }
 
     // Hover hotkey actions

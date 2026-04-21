@@ -378,7 +378,7 @@ function html(parent = null, type = 'div', classNames = null, contents = null) {
         element.classList.add(...classNames.split(' '));
     }
     if (contents) {
-        if (type === 'div' || type === 'span' || type === 'th' || type === 'td') {
+        if (type === 'div' || type === 'span' || type === 'th' || type === 'td' || type === 'button') {
             assert.string(contents);
             element.innerHTML = contents;
         } else if (type === 'input') {

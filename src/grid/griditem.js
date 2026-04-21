@@ -195,6 +195,12 @@ class GridItem {
     // Implement to apply/remove grid item selection effect.
     set selected(status) { }
 
+    // Returns true if the search string matches this grid item. Override in subclasses.
+    match(string) {
+        assert.string(string);
+        return false;
+    }
+
     // Extend to handle drag events. Return true to prevent parent action.
     // TODO: onDrag is registered by subclass Component/Wire via registerMouseAction, this should not be here
     onDrag(x, y, status, what) {

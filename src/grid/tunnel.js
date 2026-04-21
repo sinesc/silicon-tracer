@@ -65,6 +65,12 @@ class Tunnel extends VirtualComponent {
         }
     }
 
+    // Returns true if the search string matches this tunnel's name.
+    match(string) {
+        assert.string(string);
+        return this.name.toLowerCase().includes(string);
+    }
+
     // Override inner component label.
     get label() {
         return '';
