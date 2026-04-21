@@ -40,22 +40,6 @@ class ToolbarItem {
         assert(this.#subToolbar, 'This item does not contain a sub-toolbar');
         return this.#subToolbar.clear();
     }
-    createComponentButton(...args) {
-        assert(this.#subToolbar, 'This item does not contain a sub-toolbar');
-        return this.#subToolbar.createComponentButton(...args);
-    }
-    createPinnedComponentButton(...args) {
-        assert(this.#subToolbar, 'This item does not contain a sub-toolbar');
-        return this.#subToolbar.createPinnedComponentButton(...args);
-    }
-    clearPins(...args) {
-        assert(this.#subToolbar, 'This item does not contain a sub-toolbar');
-        return this.#subToolbar.clearPins(...args);
-    }
-    createTrashZone(...args) {
-        assert(this.#subToolbar, 'This item does not contain a sub-toolbar');
-        return this.#subToolbar.createTrashZone(...args);
-    }
     createActionButton(...args) {
         assert(this.#subToolbar, 'This item does not contain a sub-toolbar');
         return this.#subToolbar.createActionButton(...args);
@@ -75,6 +59,9 @@ class ToolbarItem {
     createSeparator(...args) {
         assert(this.#subToolbar, 'This item does not contain a sub-toolbar');
         return this.#subToolbar.createSeparator(...args);
+    }
+    get subToolbar() {
+        return this.#subToolbar;
     }
     setSubToolbar(subToolbar) {
         assert.class(Toolbar, subToolbar, true);
@@ -168,7 +155,7 @@ class Toolbar {
         };
         button.onmouseenter = () => this.#app.setStatus(hoverMessage);
         button.onmouseleave = () => this.#app.clearStatus();
-        return new ToolbarItem(this, button);
+        return this._makeItem(button);
     }
 
     // Creates a button that can be toggled on or off.
@@ -195,12 +182,17 @@ class Toolbar {
     // Creates a separator.
     createSeparator() {
         const separator = html(this.#element, 'div', 'toolbar-separator');
-        return new ToolbarItem(this, separator);
+        return this._makeItem(separator);
     }
 
     // Factory method: creates a sub-toolbar instance. Subclasses may override to return a different type.
     _makeSubToolbar(app, container, parent) {
         return new Toolbar(app, container, parent);
+    }
+
+    // Factory method: creates a toolbar item instance. Subclasses may override to return a different type.
+    _makeItem(element, stateFn = null) {
+        return new ToolbarItem(this, element, stateFn);
     }
 
     // Creates a menu or submenu/category.
@@ -278,7 +270,7 @@ class Toolbar {
             }
             return state;
         };
-        const item = new ToolbarItem(this, button, stateFn);
+        const item = this._makeItem(button, stateFn);
         item.node.onclick= (e) => {
             e.preventDefault();
             e.stopPropagation();

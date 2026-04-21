@@ -67,9 +67,6 @@ class Application {
     #redoButton = null;
     #noticeTimer = null;
 
-    // Toolbar pins: array of { label, hoverMessage, descriptor } stored in the circuit file.
-    #toolbarPins = [];
-
     #modifierKeys = {
         ctrlKey: false,
         altKey: false,
@@ -207,99 +204,6 @@ class Application {
     // Returns status of modifier-keys.
     get modifierKeys() {
         return this.#modifierKeys;
-    }
-
-    // Returns pinned toolbar button descriptors for serialization.
-    get toolbarPins() {
-        return this.#toolbarPins;
-    }
-
-    // Creates a component button that supports pinning to the main toolbar.
-    #createPinableComponentButton(toolbar, label, hoverMessage, create, descriptor, toolbarLabel = label) {
-        return toolbar.createComponentButton(label, hoverMessage + ` ${Application.TOOLTIP_HINT_MENU}`, create,
-            () => {
-                // Adds a pinned button to the toolbar and records it for serialization.
-                const cls = GridItem.CLASSES[descriptor['#c']];
-                const pin = cls?.toolbarMeta ? { descriptor } : { label: toolbarLabel, descriptor };
-                pin.factory = create;
-                const createFromPin = (grid, x, y) => pin.factory(grid, x, y);
-                const item = this.toolbar.createPinnedComponentButton(toolbarLabel, hoverMessage + ` ${Application.TOOLTIP_HINT_PIN}`, createFromPin,
-                    (buttonNode) => this.#removePin(pin, buttonNode),
-                    () => this.#syncPinsFromDOM());
-                item.node.__pin = pin;
-                this.#toolbarPins.push(pin);
-                this.toolbar.dropZone.classList.add('toolbar-drop-zone-has-pins');
-                this.haveChanges = true;
-            });
-    }
-
-    // Rebuilds pinned toolbar buttons from stored descriptors (called on file load/reset).
-    loadPins(pins) {
-        this.toolbar.clearPins();
-        this.#toolbarPins = [];
-        for (const pin of (pins ?? [])) {
-            const cls = GridItem.CLASSES[pin.descriptor['#c']];
-            const create = cls?.fromDescriptor?.(this, pin.descriptor, pin.defaults ?? {}) ?? null;
-            if (create) {
-                const meta = cls.toolbarMeta?.(pin.descriptor);
-                const label = pin.label ?? meta?.label;
-                if (!label) continue;
-                const storedPin = meta
-                    ? { descriptor: pin.descriptor, defaults: pin.defaults, ...(pin.label ? { label: pin.label } : {}) }
-                    : { label, descriptor: pin.descriptor, defaults: pin.defaults };
-                storedPin.factory = create;
-                const createFromPin = (grid, x, y) => storedPin.factory(grid, x, y);
-                const item = this.toolbar.createPinnedComponentButton(label, (meta?.hoverMessage ?? label) + ` ${Application.TOOLTIP_HINT_PIN}`, createFromPin,
-                    (buttonNode) => this.#removePin(storedPin, buttonNode),
-                    () => this.#syncPinsFromDOM());
-                item.node.__pin = storedPin;
-                this.#toolbarPins.push(storedPin);
-            }
-        }
-        this.toolbar.dropZone.classList.toggle('toolbar-drop-zone-has-pins', this.#toolbarPins.length > 0);
-    }
-
-    // Removes a pin entry and its button node from the toolbar.
-    #removePin(pin, buttonNode) {
-        buttonNode.remove();
-        this.#toolbarPins.splice(this.#toolbarPins.indexOf(pin), 1);
-        this.toolbar.dropZone.classList.toggle('toolbar-drop-zone-has-pins', this.#toolbarPins.length > 0);
-        this.haveChanges = true;
-    }
-
-    // Re-syncs toolbar pin order from the current DOM order of pinned buttons.
-    #syncPinsFromDOM() {
-        const pinElements = [...this.toolbar.node.querySelectorAll('[data-pin]')];
-        this.#toolbarPins = pinElements.map(el => el.__pin).filter(Boolean);
-        this.toolbar.dropZone.classList.toggle('toolbar-drop-zone-has-pins', this.#toolbarPins.length > 0);
-        this.haveChanges = true;
-    }
-
-    // Opens the edit dialog for a pinned toolbar button to configure its placement defaults.
-    async #editPin(pin, buttonNode) {
-        const cls = GridItem.CLASSES[pin.descriptor['#c']];
-        if (!cls?.editDialogConfig) return;
-        const base = cls.getPlacementDefaults?.(this, pin.descriptor) ?? {};
-        const merged = { ...base, ...(pin.defaults ?? {}) };
-        const { title, fields, data } = cls.editDialogConfig(pin.descriptor, merged);
-        const pinLabelField = [
-            { name: 'pinLabel', label: 'Button label', type: 'string' },
-            { text: 'Configure defaults for the created component:' },
-        ];
-        const config = await dialog(title, [...pinLabelField, ...fields], { pinLabel: pin.label ?? '', ...data });
-        if (config) {
-            const { _changed, pinLabel, ...defaults } = config;
-            pin.label = pinLabel || undefined;
-            pin.defaults = defaults;
-            // Update descriptor for components where config fields map back to '#t' (e.g. Gate type, Switch mode).
-            if (cls.updateDescriptorFromConfig) {
-                cls.updateDescriptorFromConfig(pin.descriptor, config);
-            }
-            const meta = cls.toolbarMeta?.(pin.descriptor);
-            buttonNode.textContent = pin.label ?? meta?.label ?? buttonNode.textContent;
-            pin.factory = cls.fromDescriptor(this, pin.descriptor, pin.defaults);
-            this.haveChanges = true;
-        }
     }
 
     // Called when a key is pressed and then repeatedly while being held.
@@ -585,7 +489,7 @@ class Application {
                 const text = label + (description ? ' (' + description + ').' : '.');
                 // place circuit as component
                 if (uid !== this.grid.circuit.uid && !this.circuits.subcircuitUIDs(uid).has(this.grid.circuit.uid)) {
-                    const componentButton = this.#createPinableComponentButton(circuitMenu, '&#9094;', text,
+                    const componentButton = circuitMenu.createPinnableComponentButton('&#9094;', text,
                         (grid, x, y) => grid.addItem(new CustomComponent(this, x, y, 0, uid), false), { '#c': 'CustomComponent', '#u': uid }, label);
                     componentButton.node.classList.add('toolbar-circuit-place');
                 }
@@ -609,15 +513,15 @@ class Application {
             // routing/utilities
             componentMenu.createMenuCategory('Routing &amp; labeling', 'Ports, tunnels, splitters, text.', (routingMenu) => {
                 routingMenu.clear();
-                this.#createPinableComponentButton(routingMenu, 'Port', `<b>Component IO pin</b>.`,
+                routingMenu.createPinnableComponentButton('Port', `<b>Component IO pin</b>.`,
                     (grid, x, y) => grid.addItem(new Port(this, x, y, defaults.port.rotation), false), { '#c': 'Port' });
-                this.#createPinableComponentButton(routingMenu, 'Splitter', `<b>Wire splitter/joiner</b>.`,
+                routingMenu.createPinnableComponentButton('Splitter', `<b>Wire splitter/joiner</b>.`,
                     (grid, x, y) => grid.addItem(new Splitter(this, x, y, defaults.splitter.rotation, defaults.splitter.numSplits), false), { '#c': 'Splitter' });
-                this.#createPinableComponentButton(routingMenu, 'Tunnel', `<b>Network tunnel</b>.`,
+                routingMenu.createPinnableComponentButton('Tunnel', `<b>Network tunnel</b>.`,
                     (grid, x, y) => grid.addItem(new Tunnel(this, x, y, defaults.tunnel.rotation), false), { '#c': 'Tunnel' });
-                this.#createPinableComponentButton(routingMenu, 'Probe', `<b>Net state probe</b>. Displays the state of attached net.`,
+                routingMenu.createPinnableComponentButton('Probe', `<b>Net state probe</b>. Displays the state of attached net.`,
                     (grid, x, y) => grid.addItem(new Probe(this, x, y, defaults.probe.rotation), false), { '#c': 'Probe' });
-                this.#createPinableComponentButton(routingMenu, 'Text', `<b>Userdefined text message</b>.`,
+                routingMenu.createPinnableComponentButton('Text', `<b>Userdefined text message</b>.`,
                     (grid, x, y) => grid.addItem(new TextLabel(this, x, y, defaults.textlabel.rotation), false), { '#c': 'TextLabel' });
 
             });
@@ -625,19 +529,19 @@ class Application {
             // io/utilities
             componentMenu.createMenuCategory('IO/Control', 'Clocks, constants, ...', (ioMenu) => {
                 ioMenu.clear();
-                this.#createPinableComponentButton(ioMenu, 'Clock', `<b>Clock</b>.`,
+                ioMenu.createPinnableComponentButton('Clock', `<b>Clock</b>.`,
                     (grid, x, y) => grid.addItem(new Clock(this, x, y, defaults.clock.rotation), false), { '#c': 'Clock' });
-                this.#createPinableComponentButton(ioMenu, 'Constant', `<b>Constant value</b>.`,
+                ioMenu.createPinnableComponentButton('Constant', `<b>Constant value</b>.`,
                     (grid, x, y) => grid.addItem(new Constant(this, x, y, defaults.constant.rotation), false), { '#c': 'Constant' });
-                this.#createPinableComponentButton(ioMenu, 'Pull resistor', `<b>Pull up/down resistor</b>.`,
+                ioMenu.createPinnableComponentButton('Pull resistor', `<b>Pull up/down resistor</b>.`,
                     (grid, x, y) => grid.addItem(new PullResistor(this, x, y, defaults.pull.rotation), false), { '#c': 'PullResistor' });
-                this.#createPinableComponentButton(ioMenu, 'Toggle switch', `<b>Toggle switch</b> with permanently saved state.`,
+                ioMenu.createPinnableComponentButton('Toggle switch', `<b>Toggle switch</b> with permanently saved state.`,
                     (grid, x, y) => grid.addItem(new Switch(this, x, y, defaults.switch.rotation, 'toggle'), false), { '#c': 'Switch', '#t': 'toggle' });
-                this.#createPinableComponentButton(ioMenu, 'Momentary switch', `<b>Momentary switch</b>.`,
+                ioMenu.createPinnableComponentButton('Momentary switch', `<b>Momentary switch</b>.`,
                     (grid, x, y) => grid.addItem(new Switch(this, x, y, defaults.switch.rotation, 'momentary'), false), { '#c': 'Switch', '#t': 'momentary' });
-                this.#createPinableComponentButton(ioMenu, 'ROM', `<b>Read-only memory</b>.`,
+                ioMenu.createPinnableComponentButton('ROM', `<b>Read-only memory</b>.`,
                     (grid, x, y) => grid.addItem(new Memory(this, x, y, defaults.rom.rotation, 'rom', defaults.rom.addressWidth, defaults.rom.dataWidth), false), { '#c': 'Memory', '#t': 'rom' });
-                this.#createPinableComponentButton(ioMenu, 'RAM', `<b>Read/write memory</b>.`,
+                ioMenu.createPinnableComponentButton('RAM', `<b>Read/write memory</b>.`,
                     (grid, x, y) => grid.addItem(new Memory(this, x, y, defaults.ram.rotation, 'ram', defaults.ram.addressWidth, defaults.ram.dataWidth, null, defaults.ram.combinedPorts), false), { '#c': 'Memory', '#t': 'ram' });
             });
 
@@ -646,7 +550,7 @@ class Application {
                 gatesMenu.clear();
                 for (const [ gateType, { joinOp } ] of Object.entries(Simulation.GATE_MAP)) {
                     const gateLabel = gateType.toUpperFirst();
-                    this.#createPinableComponentButton(gatesMenu, gateLabel, `<b>${gateLabel} gate</b>.`,
+                    gatesMenu.createPinnableComponentButton(gateLabel, `<b>${gateLabel} gate</b>.`,
                         (grid, x, y) => {
                             const numInputs = defaults[gateType]?.numInputs ?? defaults.gate.numInputs;
                             return grid.addItem(new Gate(this, x, y, defaults[gateType]?.rotation ?? defaults.gate.rotation, gateType, joinOp !== null ? numInputs : 1), false);
@@ -663,7 +567,7 @@ class Application {
                 }
                 builtins.sort((a, b) => a[1].localeCompare(b[1], 'en', { numeric: true }));
                 for (const [ builtinType, builtinLabel ] of values(builtins)) {
-                    this.#createPinableComponentButton(builtinMenu, builtinLabel, `<b>${builtinLabel}</b> builtin.`,
+                    builtinMenu.createPinnableComponentButton(builtinLabel, `<b>${builtinLabel}</b> builtin.`,
                         (grid, x, y) => grid.addItem(new Builtin(this, x, y, defaults[builtinType]?.rotation ?? defaults.builtin.rotation, builtinType), false),
                         { '#c': 'Builtin', '#t': builtinType });
                 }
@@ -684,7 +588,7 @@ class Application {
                         const text = label + (description ? ' (' + description + ').' : '.');
                         // place component as component
                         if (!isCurrentGrid) {
-                            const componentButton = this.#createPinableComponentButton(libraryMenu, '&#9094;', text,
+                            const componentButton = libraryMenu.createPinnableComponentButton('&#9094;', text,
                                 (grid, x, y) => grid.addItem(new CustomComponent(this, x, y, 0, uid), false), { '#c': 'CustomComponent', '#u': uid }, label);
                             componentButton.node.classList.add('toolbar-circuit-place');
                         }
@@ -924,7 +828,7 @@ class Application {
     // Define hotkey actions.
     #initHotkeys() {
         this.registerHotkey('e', 'down', () => this.toolbar.hoveredPin !== null, async () => {
-            await this.#editPin(this.toolbar.hoveredPin, this.toolbar.hoveredPinButton);
+            await this.toolbar.editPin(this.toolbar.hoveredPin, this.toolbar.hoveredPinButton);
         });
         this.registerHotkey('ctrl+s', 'down', null, async (e) => {
             await this.circuits.saveFile();

@@ -1,5 +1,29 @@
 "use strict";
 
+// ToolbarItem subclass that adds delegation for ComponentToolbar-specific methods.
+class ComponentToolbarItem extends ToolbarItem {
+    createComponentButton(...args) {
+        assert(this.subToolbar, 'This item does not contain a sub-toolbar');
+        return this.subToolbar.createComponentButton(...args);
+    }
+    createPinnableComponentButton(...args) {
+        assert(this.subToolbar, 'This item does not contain a sub-toolbar');
+        return this.subToolbar.createPinnableComponentButton(...args);
+    }
+    createPinnedComponentButton(...args) {
+        assert(this.subToolbar, 'This item does not contain a sub-toolbar');
+        return this.subToolbar.createPinnedComponentButton(...args);
+    }
+    clearPins(...args) {
+        assert(this.subToolbar, 'This item does not contain a sub-toolbar');
+        return this.subToolbar.clearPins(...args);
+    }
+    createTrashZone(...args) {
+        assert(this.subToolbar, 'This item does not contain a sub-toolbar');
+        return this.subToolbar.createTrashZone(...args);
+    }
+}
+
 // Toolbar subclass that adds component-button creation, toolbar pinning, and drag-to-grid support.
 class ComponentToolbar extends Toolbar {
 
@@ -15,6 +39,9 @@ class ComponentToolbar extends Toolbar {
 
     // Insertion indicator shown during toolbar reorder drags.
     #reorderIndicator = null;
+
+    // Pinned toolbar buttons: array of { label, descriptor, defaults?, factory } stored in the circuit file.
+    #toolbarPins = [];
 
     // Returns the currently hovered pinned-button's pin object, or null.
     get hoveredPin() {
@@ -44,7 +71,7 @@ class ComponentToolbar extends Toolbar {
         assert.function(onPin, true);
         const button = this.#makeComponentButtonNode(label, hoverMessage, create, onPin);
         this.node.appendChild(button);
-        return new ToolbarItem(this, button);
+        return this._makeItem(button);
     }
 
     // Creates a pinned component button (a component dragged onto the toolbar).
@@ -63,7 +90,7 @@ class ComponentToolbar extends Toolbar {
         } else {
             this.node.appendChild(button);
         }
-        return new ToolbarItem(this, button);
+        return this._makeItem(button);
     }
 
     // Removes all pinned component buttons from the toolbar.
@@ -71,6 +98,104 @@ class ComponentToolbar extends Toolbar {
         for (const el of [...this.node.querySelectorAll('[data-pin]')]) {
             el.remove();
         }
+    }
+
+    // Returns pinned toolbar button descriptors for serialization.
+    get toolbarPins() {
+        return this.#toolbarPins;
+    }
+
+    // Creates a component button (on this toolbar/submenu) that, when dragged onto the drop zone, pins to the main toolbar.
+    createPinnableComponentButton(label, hoverMessage, create, descriptor, toolbarLabel = label) {
+        assert.string(label);
+        assert.string(hoverMessage);
+        assert.function(create);
+        assert.string(toolbarLabel);
+        const mainToolbar = this.app.toolbar;
+        return this.createComponentButton(label, hoverMessage + ` ${Application.TOOLTIP_HINT_MENU}`, create,
+            () => {
+                // Adds a pinned button to the main toolbar and records it for serialization.
+                const cls = GridItem.CLASSES[descriptor['#c']];
+                const pin = cls?.toolbarMeta ? { descriptor } : { label: toolbarLabel, descriptor };
+                pin.factory = create;
+                const createFromPin = (grid, x, y) => pin.factory(grid, x, y);
+                const item = mainToolbar.createPinnedComponentButton(toolbarLabel, hoverMessage + ` ${Application.TOOLTIP_HINT_PIN}`, createFromPin,
+                    (buttonNode) => mainToolbar.#removePin(pin, buttonNode),
+                    () => mainToolbar.#syncPinsFromDOM());
+                item.node.__pin = pin;
+                mainToolbar.#toolbarPins.push(pin);
+                mainToolbar.dropZone.classList.add('toolbar-drop-zone-has-pins');
+                this.app.haveChanges = true;
+            });
+    }
+
+    // Rebuilds pinned toolbar buttons from stored descriptors (called on file load/reset).
+    loadPins(pins) {
+        this.clearPins();
+        this.#toolbarPins = [];
+        for (const pin of (pins ?? [])) {
+            const cls = GridItem.CLASSES[pin.descriptor['#c']];
+            const create = cls?.fromDescriptor?.(this.app, pin.descriptor, pin.defaults ?? {}) ?? null;
+            if (create) {
+                const meta = cls.toolbarMeta?.(pin.descriptor);
+                const label = pin.label ?? meta?.label;
+                if (!label) continue;
+                const storedPin = meta
+                    ? { descriptor: pin.descriptor, defaults: pin.defaults, ...(pin.label ? { label: pin.label } : {}) }
+                    : { label, descriptor: pin.descriptor, defaults: pin.defaults };
+                storedPin.factory = create;
+                const createFromPin = (grid, x, y) => storedPin.factory(grid, x, y);
+                const item = this.createPinnedComponentButton(label, (meta?.hoverMessage ?? label) + ` ${Application.TOOLTIP_HINT_PIN}`, createFromPin,
+                    (buttonNode) => this.#removePin(storedPin, buttonNode),
+                    () => this.#syncPinsFromDOM());
+                item.node.__pin = storedPin;
+                this.#toolbarPins.push(storedPin);
+            }
+        }
+        this.dropZone.classList.toggle('toolbar-drop-zone-has-pins', this.#toolbarPins.length > 0);
+    }
+
+    // Opens the edit dialog for a pinned toolbar button to configure its placement defaults.
+    async editPin(pin, buttonNode) {
+        const cls = GridItem.CLASSES[pin.descriptor['#c']];
+        if (!cls?.editDialogConfig) return;
+        const base = cls.getPlacementDefaults?.(this.app, pin.descriptor) ?? {};
+        const merged = { ...base, ...(pin.defaults ?? {}) };
+        const { title, fields, data } = cls.editDialogConfig(pin.descriptor, merged);
+        const pinLabelField = [
+            { name: 'pinLabel', label: 'Button label', type: 'string' },
+            { text: 'Configure defaults for the created component:' },
+        ];
+        const config = await dialog(title, [...pinLabelField, ...fields], { pinLabel: pin.label ?? '', ...data });
+        if (config) {
+            const { _changed, pinLabel, ...defaults } = config;
+            pin.label = pinLabel || undefined;
+            pin.defaults = defaults;
+            // Update descriptor for components where config fields map back to '#t' (e.g. Gate type, Switch mode).
+            if (cls.updateDescriptorFromConfig) {
+                cls.updateDescriptorFromConfig(pin.descriptor, config);
+            }
+            const meta = cls.toolbarMeta?.(pin.descriptor);
+            buttonNode.textContent = pin.label ?? meta?.label ?? buttonNode.textContent;
+            pin.factory = cls.fromDescriptor(this.app, pin.descriptor, pin.defaults);
+            this.app.haveChanges = true;
+        }
+    }
+
+    // Removes a pin entry and its button node from the toolbar.
+    #removePin(pin, buttonNode) {
+        buttonNode.remove();
+        this.#toolbarPins.splice(this.#toolbarPins.indexOf(pin), 1);
+        this.dropZone.classList.toggle('toolbar-drop-zone-has-pins', this.#toolbarPins.length > 0);
+        this.app.haveChanges = true;
+    }
+
+    // Re-syncs toolbar pin order from the current DOM order of pinned buttons.
+    #syncPinsFromDOM() {
+        const pinElements = [...this.node.querySelectorAll('[data-pin]')];
+        this.#toolbarPins = pinElements.map(el => el.__pin).filter(Boolean);
+        this.dropZone.classList.toggle('toolbar-drop-zone-has-pins', this.#toolbarPins.length > 0);
+        this.app.haveChanges = true;
     }
 
     // Creates a drop zone element at the end of the toolbar for pinning components.
@@ -92,6 +217,11 @@ class ComponentToolbar extends Toolbar {
     // Factory override: sub-menus of a ComponentToolbar are also ComponentToolbars.
     _makeSubToolbar(app, container, parent) {
         return new ComponentToolbar(app, container, parent);
+    }
+
+    // Factory override: items of a ComponentToolbar are ComponentToolbarItems.
+    _makeItem(element, stateFn = null) {
+        return new ComponentToolbarItem(this, element, stateFn);
     }
 
     // Returns the drag status bar message for the given multi-drop state.
