@@ -55,6 +55,7 @@ class Grid {
             document.addEventListener('mousemove', this.#debugHandleMouse.bind(this));
             this.circuitOverlay = this.registerOverlay(100, new CircuitOverlay(app));
             this.simulationOverlay = this.registerOverlay(1000, new SimulationOverlay(app));
+            this.dependentsOverlay = this.registerOverlay(500, new DependentsOverlay(app));
             this.monitorOverlay = this.registerOverlay(100, new MonitorOverlay(app));
             this.graphOverlay = this.registerOverlay(500, new GraphOverlay(app));
         }

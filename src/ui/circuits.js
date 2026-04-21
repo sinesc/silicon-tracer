@@ -251,6 +251,29 @@ class Circuits {
         return dependentLids;
     }
 
+    // Returns a Set of UIDs of circuits that directly or indirectly depend on the given circuit uid.
+    circuitDependents(uid) {
+        assert.string(uid);
+        const dependentUids = new Set([uid]);
+        const result = new Set();
+        let changed = true;
+        while (changed) {
+            changed = false;
+            for (const circuit of Object.values(this.#circuits)) {
+                if (result.has(circuit.uid)) continue;
+                for (const item of circuit.items) {
+                    if (item instanceof CustomComponent && dependentUids.has(item.uid)) {
+                        result.add(circuit.uid);
+                        dependentUids.add(circuit.uid);
+                        changed = true;
+                        break;
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
     // Recursively collects transitive non-packaged library lids that the given library depends on into visited.
     #collectLibraryDependencies(lid, visited = new Set()) {
         for (const circuit of Object.values(this.#circuits)) {

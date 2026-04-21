@@ -884,6 +884,22 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
     font-size: var(--font-size-normal);
     font-weight: bold;
 }
+/* dependents overlay list */
+.dependents-list {
+    max-height: 200px;
+    overflow-y: auto;
+    scrollbar-width: none;
+    pointer-events: auto;
+}
+.dependents-list::-webkit-scrollbar {
+    display: none;
+}
+.dependents-item {
+    cursor: pointer;
+}
+.dependents-item:hover {
+    color: color-mix(in srgb, var(--text-color) 70%, transparent);
+}
 /* simulation tree view overlay */
 .graph-tree {
     line-height: 1.4;
