@@ -196,12 +196,14 @@ class GridItem {
     set selected(status) { }
 
     // Extend to handle drag events. Return true to prevent parent action.
+    // TODO: onDrag is registered by subclass Component/Wire via registerMouseAction, this should not be here
     onDrag(x, y, status, what) {
         const selection = this.grid.selection;
         if (selection.length > 0 && this.selected) {
             if (status === 'start') {
-                what.items = (new Array(selection.length)).fill(null, 0, selection.length).map((_) => ({}));
-                if (this.app.modifierKeys.shiftKey) {
+                const isLengthDrag = this.app.modifierKeys.shiftKey;
+                what.items = (new Array(selection.length)).fill(null, 0, selection.length).map((_) => ({ isLengthDrag })); // FIXME: when refactoring the onDrag TODO above: this should probably set type=component/port
+                if (isLengthDrag) {
                     what.lengthDrag = Wire.findSelectionAttachedWires(this.grid, selection, x, y);
                 }
             }

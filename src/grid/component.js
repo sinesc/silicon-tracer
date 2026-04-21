@@ -492,16 +492,20 @@ class Component extends GridItem {
             this.#dropPreview.style.top = visualY + "px";
             this.#dropPreview.style.width = this.visual.width + "px";
             this.#dropPreview.style.height = this.visual.height + "px";
-            this.#updateGhostWires(alignedX, alignedY);
+            if (!what.isLengthDrag) {
+                this.#updateGhostWires(alignedX, alignedY);
+            }
         } else {
             this.grid.removeVisual(this.#dropPreview);
             this.#dropPreview = null;
             what.grabOffsetX = null;
             what.grabOffsetY = null;
-            if (this.app.modifierKeys.altKey) {
-                this.#commitGhostWires();
-            } else {
-                this.#clearGhostWires();
+            if (!what.isLengthDrag) {
+                if (this.app.modifierKeys.altKey) {
+                    this.#commitGhostWires();
+                } else {
+                    this.#clearGhostWires();
+                }
             }
             this.redraw();
         }
