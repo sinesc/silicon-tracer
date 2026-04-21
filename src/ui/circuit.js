@@ -7,7 +7,7 @@ class Circuit {
         { name: 'label', label: 'Circuit label', type: 'string' },
         { name: 'description', label: 'Optional description', type: 'string' },
         { name: 'visibleInLib', label: 'Visible when loaded as library', type: 'bool' },
-        { separator: true, text: 'Default settings. These can be overriden per placed component.' },
+        { separator: 'before', text: 'Default settings. These can be overriden per placed component.' },
         { name: 'spacing', label: 'Pin spacing', type: 'select', options: { 0: "None", 1: "One", 2: "Two" }, apply: (v, f) => Number.parseInt(v) },
         { name: 'parity', label: 'Side lengths', type: 'select', options: { auto: "Automatic", none: "Mixed (rotation snaps)", even: "Even", odd: "Odd" } },
         { name: 'gap', label: 'Pin gap (when lengths not mixed)', type: 'select', options: { start: "Top or left", middle: "Middle", end: "Bottom or right" } },
@@ -15,7 +15,7 @@ class Circuit {
 
     static EDIT_DIALOG = [
         ...Circuit.CREATE_DIALOG,
-        { separator: true, text: 'Optional comma-separated lists of custom port positions. Blank entries create gaps, e.g. <code>a,,b,c</code> creates a gap between a and b.' },
+        { separator: 'before', text: 'Optional comma-separated lists of custom port positions. Blank entries create gaps, e.g. <code>a,,b,c</code> creates a gap between a and b.' },
         { name: 'top', label: 'Top ports', type: 'string' },
         { name: 'left', label: 'Left ports', type: 'string' },
         { name: 'right', label: 'Right ports ', type: 'string' },

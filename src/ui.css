@@ -85,7 +85,7 @@
 
     --main-bg-color: #000;
     --grid-bg-color: #111;
-    --overlay-bg-color: #000000aa;
+    --overlay-bg-color: #111111bb;
     --overlay-border-color: #4444448a;
     --header-bg-color: #1a1a1a;
     --header-border-color: #222;
@@ -94,6 +94,8 @@
     --button-border-color: #666;
     --button-bg-hover-color: oklch(from var(--button-bg-color) calc(l * var(--button-hover-factor)) c h);
     --button-border-hover-color: oklch(from var(--button-border-color) calc(l * var(--button-hover-factor)) c h);
+    --radius-normal: 4px;
+    --radius-input: 2px;
     --text-color: #fff;
     --muted-text-color: #bbb;
     --disabled-text-color: #777;
@@ -324,7 +326,7 @@ body.no-focus #focus-hint:has(~div.grid:hover) {
     padding: 5px;
     background-color: var(--overlay-bg-color);
     border: 1px solid var(--overlay-border-color);
-    border-radius: 3px;
+    border-radius: var(--radius-normal);
     opacity: 1;
     transition: opacity 0.5s;
 }
@@ -392,7 +394,7 @@ body.no-focus #focus-hint:has(~div.grid:hover) {
     outline: 1px solid var(--component-border-color);
     color: var(--text-color);
     padding: 3px 2px;
-    border-radius: 2px;
+    border-radius: var(--radius-input);
     box-sizing: border-box;
     min-width: 2ch;
 }
@@ -456,6 +458,7 @@ body.no-focus #focus-hint:has(~div.grid:hover) {
     transform: translate(-50%, -50%);
     background-color: var(--component-body-color);
     border: 2px solid var(--component-border-color);
+    border-radius: var(--radius-normal);
 }
 .dialog-container .dialog-title {
     border: 2px solid var(--button-border-color);
@@ -463,6 +466,7 @@ body.no-focus #focus-hint:has(~div.grid:hover) {
     padding: 4px;
     color: black;
     font-weight: bold;
+    border-radius: var(--radius-normal) var(--radius-normal) 0 0;
 }
 .dialog-container.info-dialog .dialog-title {
     background: linear-gradient(135deg, #1e4d7a, #2a6499);
@@ -500,11 +504,17 @@ body.no-focus #focus-hint:has(~div.grid:hover) {
     color: var(--muted-text-color);
     max-width: 400px;
 }
-.dialog-row-label.dialog-row-separator {
+.dialog-row-label.dialog-row-separator, .dialog-row-label.dialog-row-separator-before, .dialog-row-label.dialog-row-separator-after {
     padding: 10px 0 0 0;
     line-height: 1.2;
     color: var(--comment-text-color);
     max-width: 400px;
+}
+.dialog-row-label.dialog-row-separator-before {
+    padding: 10px 0 0 0;
+}
+.dialog-row-label.dialog-row-separator-after {
+    padding: 0 0 10px 0;
 }
 .dialog-container .dialog-row-mask {
     text-align: right;
@@ -517,7 +527,7 @@ body.no-focus #focus-hint:has(~div.grid:hover) {
     width: 200px;
     padding: 4px;
     color: var(--text-color);
-    border-radius: 2px;
+    border-radius: var(--radius-input);
     font-size: var(--font-size-normal);
 }
 .dialog-container .dialog-row-mask input.dialog-error, .dialog-container .dialog-row-mask select.dialog-error {
@@ -545,6 +555,7 @@ body.no-focus #focus-hint:has(~div.grid:hover) {
     margin-left: 4px;
     min-width: 80px;
     text-align: center;
+    border-radius: var(--radius-normal);
 }
 .dialog-container .dialog-cancel, .dialog-container .dialog-confirm {
     text-shadow: 1px 1px 2px #555;
@@ -569,7 +580,7 @@ body.no-focus #focus-hint:has(~div.grid:hover) {
     box-sizing: border-box;
     padding: 4px 8px;
     color: var(--text-color);
-    border-radius: 2px;
+    border-radius: var(--radius-input);
     font-size: var(--font-size-normal);
     min-width: 0;
     cursor: pointer;
@@ -611,7 +622,7 @@ div.circuit-preview > div.grid > div.grid-info {
     display: inline-block;
     cursor: default;
     transition: border-color var(--component-color-transition-duration);
-    border-radius: 4px;
+    border-radius: var(--radius-normal);
     color: var(--text-color);;
     text-align: center;
     box-sizing: border-box;
@@ -835,9 +846,9 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
     min-width: 400px;
     max-width: 60%;
     z-index: 100;
-    background-color: var(--component-body-color);
+    background-color: var(--overlay-bg-color);
     border: 2px solid var(--component-border-color);
-    border-radius: 4px;
+    border-radius: var(--radius-normal);
     overflow: hidden;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
 }
@@ -856,7 +867,7 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
     box-sizing: border-box;
     padding: 4px;
     color: var(--text-color);
-    border-radius: 2px;
+    border-radius: var(--radius-input);
     font-size: var(--font-size-normal);
 }
 .search-bar-input:focus {
@@ -869,7 +880,7 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
     background-color: var(--button-bg-color);
     color: var(--inverted-text-color);
     border: 2px solid var(--button-border-color);
-    border-radius: 4px;
+    border-radius: var(--radius-normal);
     padding: 4px 8px;
     cursor: pointer;
     font-size: var(--font-size-normal);
@@ -907,7 +918,7 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
     text-overflow: ellipsis;
 }
 .search-bar-circuit-item:hover, .search-bar-circuit-item:focus {
-    background-color: var(--component-body-hover-color);
+    background-color: color-mix(in oklch, var(--component-body-hover-color), transparent 60%);
     color: var(--text-color);
     outline: none;
 }
@@ -961,6 +972,8 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
     text-align: right;
     width: 220px;
     color: color-mix(in srgb, var(--text-color) 30%, transparent);
+    border: 2px solid var(--component-border-color);
+    border-radius: var(--radius-normal);
 }
 .grid-info .info-section {
     font-size: var(--font-size-normal);

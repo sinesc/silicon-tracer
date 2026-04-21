@@ -360,10 +360,10 @@ class Application {
                 const removable = libs.filter(([ lid ]) => this.circuits.libraryDependents(lid).size === 0);
                 const nonRemovable = libs.filter(([ lid ]) => this.circuits.libraryDependents(lid).size > 0);
                 const fields = [];
-                if (nonRemovable.length > 0) {
-                    fields.push({ text: `The following libraries cannot be removed because other circuits depend on them: ${nonRemovable.map(([ , label ]) => `<b>${label}</b>`).join(', ')}.` });
-                }
                 fields.push({ name: 'lib', label: 'Library', type: 'select', options: Object.fromEntries(removable.map(([ lid, label ]) => [ lid, label ])) });
+                if (nonRemovable.length > 0) {
+                    fields.push({ separator: 'before', text: `The following libraries cannot be removed because other circuits depend on them: ${nonRemovable.map(([ , label ]) => `<b>${label}</b>`).join(', ')}.` });
+                }
                 const result = await dialog('Remove library', fields, { lib: removable[0]?.[0] ?? '' });
                 if (result) {
                     const libLabel = removable.find(([ lid ]) => lid === result.lib)[1];

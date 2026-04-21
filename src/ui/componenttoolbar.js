@@ -164,7 +164,7 @@ class ComponentToolbar extends Toolbar {
         const { title, fields, data } = cls.editDialogConfig(pin.descriptor, merged);
         const pinLabelField = [
             { name: 'pinLabel', label: 'Button label', type: 'string' },
-            { text: 'Configure defaults for the created component:' },
+            { separator: 'before', text: 'Configure defaults for the created component:' },
         ];
         const config = await dialog(title, [...pinLabelField, ...fields], { pinLabel: pin.label ?? '', ...data });
         if (config) {

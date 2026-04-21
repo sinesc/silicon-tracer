@@ -10,7 +10,7 @@ class Constant extends DisplayComponent {
             check: (v) => /^[0-9]+$/.test(v) || /^0x[0-9a-fA-F]+$/i.test(v) || /^0b[01~]+$/.test(v) || v === '~',
             apply: (v) => Constant.#parseValue(v),
         },
-        { text: 'Accepted formats: decimal (42), hex (0xFF), binary (0b1~01). Use ~ for high-impedance bits (binary only), or ~ alone for fully undriven.' },
+        { separator: 'after', text: 'Accepted formats: decimal (42), hex (0xFF), binary (0b1~01). Use ~ for high-impedance bits (binary only), or ~ alone for fully undriven.' },
         { name: 'displayFormat', label: 'Display format', type: 'select', options: DisplayComponent.DISPLAY_FORMATS },
         ...Component.EDIT_DIALOG,
     ];
