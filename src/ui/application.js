@@ -440,7 +440,17 @@ class Application {
                 }
             });
             // Remove current circuit.
-            const button = circuitMenu.createActionButton(`Remove "${this.circuits.current.label}"`, circuitList.length <= 1 ? 'Cannot remove last remaining circuit.' : 'Remove current circuit.', async () => {
+            const dependentUids = this.circuits.circuitDependents(this.circuits.current.uid);
+            const dependentLabels = [ ...dependentUids ].map((uid) => this.circuits.byUID(uid)?.label).filter(Boolean);
+            const dependentsStr = dependentLabels.join(', ');
+            const truncatedDependents = dependentsStr.length > 50 ? dependentsStr.slice(0, 50) + '...' : dependentsStr;
+            const removeDisabled = circuitList.length <= 1 || dependentUids.size > 0;
+            const removeHoverMessage = circuitList.length <= 1
+                ? 'Cannot remove last remaining circuit.'
+                : dependentUids.size > 0
+                    ? `Cannot remove, still used by: ${truncatedDependents}`
+                    : 'Remove current circuit.';
+            const button = circuitMenu.createActionButton(`Remove "${this.circuits.current.label}"`, removeHoverMessage, async () => {
                 circuitMenu.state(false);
                 if (await confirmDialog('Confirm deletion',`Delete "${this.circuits.current.label}" from project?`)) {
                     const deletedCircuit = this.circuits.current;
@@ -453,7 +463,7 @@ class Application {
                     this.refreshUndoButtons();
                 }
             });
-            button.node.classList.toggle('toolbar-menu-button-disabled', circuitList.length <= 1);
+            button.node.classList.toggle('toolbar-menu-button-disabled', removeDisabled);
             // Move current circuit to/from a library.
             const currentLid = this.circuits.current.lid;
             const nonPackagedLibs = [ ...this.circuits.libraries ].filter(([ lid ]) => !this.circuits.isPackaged(lid));
