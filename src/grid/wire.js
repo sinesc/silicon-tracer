@@ -281,7 +281,7 @@ class Wire extends GridItem {
     static compact(container) {
         assert(container instanceof Grid || container instanceof Circuit, 'container must be a Grid or Circuit');
 
-        const selection = container instanceof Grid ? container.selection : null;
+        const selection = container instanceof Grid ? container.selection.items : null;
         const allWires = container.items.filter((w) => w instanceof Wire).toArray();
         if (allWires.length === 0) return;
 

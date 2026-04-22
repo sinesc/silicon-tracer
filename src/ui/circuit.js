@@ -229,7 +229,7 @@ class Circuit {
     // Serializes circuit state for undo tracking (excludes gridConfig, uid, lid, visibleInLib).
     serializeForUndo() {
         const grid = this.#app.grid;
-        const selectedGids = new Set(grid.circuit === this ? grid.selection.map((i) => i.gid) : []);
+        const selectedGids = new Set(grid.circuit === this ? grid.selection.items.map((i) => i.gid) : []);
         return {
             label: this.label,
             description: this.description,

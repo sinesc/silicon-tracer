@@ -12,10 +12,9 @@ class Grid {
     #app;
     #element;
     #worldElement;
-    #selectionElement;
-    #selection = [];
+    #trimElement;
+    #selection;
     #selectionCenter = null;
-    #hadSelectedWires = false; // true when the previous selection contained wires (used to defer compact)
     #junctionElements = new Map(); // "x:y" => { element: HTMLElement, wire: Wire }
     #trimOverlays = [];
     #hotkeyTarget = null;
@@ -46,8 +45,20 @@ class Grid {
         this.#element = html(parent, 'div', 'grid');
         this.#worldElement = html(this.#element, 'div', 'grid-world');
         this.#infoBoxElement = html(this.#element, 'div', 'grid-info');
-        this.#selectionElement = html(this.#element, 'div', 'grid-selection hidden');
+        const selectionElement = html(this.#element, 'div', 'grid-selection hidden');
+        this.#trimElement = html(this.#element, 'div', 'grid-selection grid-selection-trim hidden');
         this.#debugElement = html(this.#element, 'div', 'debug-info');
+        this.#selection = new Selection(this, selectionElement, (isEmpty, hadWires) => {
+            this.#selectionCenter = null;
+            // Selected wires were deferred from compaction; now that selection is cleared, compact them.
+            // TODO: cleanup, callback arguments specific to callback implementation (hadWires)
+            if (isEmpty && hadWires) {
+                this.#pending.wireCompact = true;
+                this.#pending.recompile = true;
+                this.#pending.netColors = true;
+                this.#pending.junctionRebuild = true;
+            }
+        });
         this.#passive = passive;
         if (!passive) {
             this.#initHotkeys();
@@ -456,7 +467,7 @@ class Grid {
         this.zoom = Grid.#ZOOM_LEVELS[level];
     }
 
-    // Returns the currently selected grid items, if any.
+    // Returns the current Selection instance.
     get selection() {
         return this.#selection;
     }
@@ -481,24 +492,14 @@ class Grid {
         return this.#circuit?.readonly ?? false;
     }
 
-    // Invalidate the current selection. Needs to be called after changes to selection to recompute center point.
+    // Invalidates the current selection, recomputing center point on next use.
     invalidateSelection() {
-        this.#selectionCenter = null;
-        const hasWires = this.#selection.some(w => w instanceof Wire);
-        if (this.#selection.length === 0 && this.#hadSelectedWires) {
-            // Selected wires were deferred from compaction; now that selection is cleared, compact them.
-            this.#pending.wireCompact = true;
-            this.#pending.recompile = true;
-            this.#pending.netColors = true;
-            this.#pending.junctionRebuild = true;
-        }
-        this.#hadSelectedWires = hasWires;
+        this.#selection.invalidate();
     }
 
     // Replaces the current selection. Called by Circuit.restoreFromUndo() to reinstate selection after undo/redo.
     setSelection(items) {
-        this.#selection = items;
-        this.#selectionCenter = null;
+        this.#selection.set(items);
     }
 
     // Updates the current undo snapshot to reflect the latest selection state.
@@ -546,18 +547,17 @@ class Grid {
             item.x += 2 * Grid.SPACING;
             item.y += 2 * Grid.SPACING;
         }
-        // clear old selection
+        // clear selected flag on all circuit items
         for (const item of this.#circuit.items) {
             item.selected = false;
         }
-        // select pasted items
+        // add pasted items
         for (const item of items) {
             this.addItem(item);
             item.onPaste();
-            item.selected = true;
         }
-        this.#selection = items;
-        this.invalidateSelection();
+        // select pasted items
+        this.#selection.set(items);
         // Wire compact, simulation recompile, and selection pruning are triggered automatically
         // via onCircuitItemAdded events fired during addItem above.
         this.#app.haveChanges = true;
@@ -566,27 +566,23 @@ class Grid {
 
     // Copies selected items to clipboard.
     copySelection() {
-        return navigator.clipboard.writeText(JSON.stringify(this.#selection.map((item) => item.serialize())));
+        return navigator.clipboard.writeText(JSON.stringify(this.#selection.items.map((item) => item.serialize())));
     }
 
     // Deletes selected items.
     #deleteSelection() {
         this.#circuit.detachSimulation();
-        for (const item of this.#selection) {
+        for (const item of this.#selection.items) {
             this.removeItem(item); // fires onCircuitItemRemoved -> schedules compact/recompile/prune
         }
-        this.#selection = [];
-        this.invalidateSelection();
+        this.#selection.clear();
         // Wire compact, simulation recompile, and selection pruning handled automatically by circuit events.
         this.#app.haveChanges = true;
     }
 
-    // Remove unlinked items from selection (deleted items that are now only referenced by the selection)
+    // Removes unlinked items from selection (deleted items that are now only referenced by the selection).
     pruneSelection() {
-        if (this.#selection.length > 0) {
-            this.#selection = this.#selection.filter(item => item.grid === this);
-            this.#hadSelectedWires = this.#selection.some(w => w instanceof Wire);
-        }
+        this.#selection.prune();
     }
 
     // Applies net colors to component ports on the grid.
@@ -723,19 +719,14 @@ class Grid {
         // global hotkeys, override hover target hotkeys
         this.#app.registerHotkey('ctrl+f', 'down', null, () => this.#searchBar.toggle());
         this.#app.registerHotkey('ctrl+a', 'down', () => !this.readonly, async () => {
-            this.#selection = [];
-            for (const item of this.#circuit.items) {
-                item.selected = true;
-                this.#selection.push(item);
-            }
-            this.invalidateSelection();
+            this.#selection.set([ ...this.#circuit.items ]);
             this.#snapshotSelection();
         });
         this.#app.registerHotkey('ctrl+v', 'down', () => !this.readonly, () => this.actionPasteSelection());
-        this.#app.registerHotkey('ctrl+c', 'down', () => !this.readonly && this.#selection.length > 0, () => this.copySelection());
-        this.#app.registerHotkey('ctrl+x', 'down', () => !this.readonly && this.#selection.length > 0, () => this.actionCutSelection());
-        this.#app.registerHotkey('r', 'down', () => !this.readonly && this.#selection.length > 0, () => this.#actionRotateSelection());
-        this.#app.registerHotkey('Delete', 'down', () => !this.readonly && this.#selection.length > 0, () => this.actionDeleteSelection());
+        this.#app.registerHotkey('ctrl+c', 'down', () => !this.readonly && this.#selection.items.length > 0, () => this.copySelection());
+        this.#app.registerHotkey('ctrl+x', 'down', () => !this.readonly && this.#selection.items.length > 0, () => this.actionCutSelection());
+        this.#app.registerHotkey('r', 'down', () => !this.readonly && this.#selection.items.length > 0, () => this.#actionRotateSelection());
+        this.#app.registerHotkey('Delete', 'down', () => !this.readonly && this.#selection.items.length > 0, () => this.actionDeleteSelection());
 
         // send to hover target
         this.#app.registerHotkey(null, 'press', () => !this.readonly && this.#hotkeyTarget, (e) => {
@@ -792,7 +783,7 @@ class Grid {
     #computeSelectionCenter() {
         // find bounding box
         let bounds = { x1: Number.MAX_SAFE_INTEGER, y1: Number.MAX_SAFE_INTEGER, x2: Number.MIN_SAFE_INTEGER, y2: Number.MIN_SAFE_INTEGER };
-        for (const item of this.#selection) {
+        for (const item of this.#selection.items) {
             bounds.x1 = Math.min(item.x, bounds.x1);
             bounds.y1 = Math.min(item.y, bounds.y1);
             bounds.x2 = Math.max(item.x + item.width, bounds.x2);
@@ -812,7 +803,7 @@ class Grid {
     #actionRotateSelection() {
         const center = this.#selectionCenter ??= this.#computeSelectionCenter();
         // rotate items around center
-        for (const item of this.#selection) {
+        for (const item of this.#selection.items) {
             if (item instanceof Component || item instanceof TextLabel) {
                 // component.rotation causes a rotation around the component center, so we have to use that as our basis
                 const xc = item.x + (item.width / 2);
@@ -839,38 +830,13 @@ class Grid {
         return [ x, y, w, h ];
     }
 
-    // Renders a selection box in grid-div-relative coordinates and sets 'selected' property on components
-    #renderSelection(x, y, width, height, addSelection) {
-        // render box
-        [ x, y, width, height ] = Grid.#normalizeRect(x, y, width, height);
-        this.#selectionElement.style.left = x + "px";
-        this.#selectionElement.style.top = y + "px";
-        this.#selectionElement.style.width = width + "px";
-        this.#selectionElement.style.height = height + "px";
-        // compute grid internal coordinates
-        const sX = x / this.zoom - this.offsetX;
-        const sY = y / this.zoom - this.offsetY;
-        const sWidth = width / this.zoom;
-        const sHeight = height / this.zoom;
-        // update selection status on components
-        for (const c of this.#circuit.items) {
-            const currentlySelected = this.#selection.indexOf(c) > -1;
-            const b = c.selectionBounds;
-            if (b.x >= sX && b.y >= sY && b.x + b.width <= sX + sWidth && b.y + b.height <= sY + sHeight) {
-                c.selected = addSelection;
-            } else {
-                c.selected = currentlySelected;
-            }
-        }
-    }
-
     // Renders a trim-mode selection box and updates wire-segment trim overlays.
     #renderTrimBox(x, y, width, height) {
         [ x, y, width, height ] = Grid.#normalizeRect(x, y, width, height);
-        this.#selectionElement.style.left = x + "px";
-        this.#selectionElement.style.top = y + "px";
-        this.#selectionElement.style.width = width + "px";
-        this.#selectionElement.style.height = height + "px";
+        this.#trimElement.style.left = x + "px";
+        this.#trimElement.style.top = y + "px";
+        this.#trimElement.style.width = width + "px";
+        this.#trimElement.style.height = height + "px";
         const gx1 = x / this.zoom - this.offsetX;
         const gy1 = y / this.zoom - this.offsetY;
         this.#updateTrimOverlays(gx1, gy1, gx1 + width / this.zoom, gy1 + height / this.zoom);
@@ -963,18 +929,16 @@ class Grid {
             return;
         }
         if (e.which === 1) {
-            this.#selectionElement.classList.remove('hidden');
-            this.#selectionElement.classList.toggle('grid-selection-trim', altDown);
             if (altDown) {
-                // trim mode: show selection box only, do not modify selection
+                // trim mode: show trim box only, do not modify selection
+                this.#trimElement.classList.remove('hidden');
                 this.#renderTrimBox(dragStartX, dragStartY, 0, 0);
             } else {
                 // normal selection mode
                 if (!shiftDown && !ctrlDown) {
-                    this.#selection = [];
-                    this.invalidateSelection();
+                    this.#selection.clear();
                 }
-                this.#renderSelection(dragStartX, dragStartY, 0, 0, shiftDown);
+                this.#selection.renderBox(dragStartX, dragStartY, 0, 0, shiftDown);
             }
         } else if (e.which > 2) {
             return;
@@ -994,7 +958,7 @@ class Grid {
                 this.#renderTrimBox(dragStartX, dragStartY, deltaX, deltaY);
             } else {
                 // select area
-                this.#renderSelection(dragStartX, dragStartY, deltaX, deltaY, addSelection);
+                this.#selection.renderBox(dragStartX, dragStartY, deltaX, deltaY, addSelection);
             }
         } else if (e.which === 2) {
             // drag grid
@@ -1006,11 +970,10 @@ class Grid {
     // Called when mouse drag ends.
     #handleDragStop(dragStartX, dragStartY, altDown, e) {
         if (e.which === 1) {
-            this.#selectionElement.classList.add('hidden');
-            this.#selectionElement.classList.remove('grid-selection-trim');
             this.#clearTrimOverlays();
             if (altDown) {
                 // trim mode: remove wire segments inside the selection rectangle
+                this.#trimElement.classList.add('hidden');
                 const endX = e.clientX - this.#element.offsetLeft;
                 const endY = e.clientY - this.#element.offsetTop;
                 const [ x, y, w, h ] = Grid.#normalizeRect(dragStartX, dragStartY, endX - dragStartX, endY - dragStartY);
@@ -1018,12 +981,12 @@ class Grid {
                 const gy1 = y / this.zoom - this.offsetY;
                 const gx2 = gx1 + w / this.zoom;
                 const gy2 = gy1 + h / this.zoom;
-                this.#executeTrim(gx1, gy1, gx2, gy2)
+                this.#executeTrim(gx1, gy1, gx2, gy2);
                 this.trackAction('Trim wires');
             } else {
                 // normal selection: set selected items
-                this.#selection = this.items.filter((c) => c.selected).toArray();
-                this.invalidateSelection();
+                this.#selection.removeBox();
+                this.#selection.set(this.items.filter((c) => c.selected).toArray());
                 this.#snapshotSelection();
             }
         }

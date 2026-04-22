@@ -204,7 +204,7 @@ class GridItem {
     // Extend to handle drag events. Return true to prevent parent action.
     // TODO: onDrag is registered by subclass Component/Wire via registerMouseAction, this should not be here
     onDrag(x, y, status, what) {
-        const selection = this.grid.selection;
+        const selection = this.grid.selection.items;
         if (selection.length > 0 && this.selected) {
             if (status === 'start') {
                 const isLengthDrag = this.app.modifierKeys.shiftKey;
@@ -214,7 +214,7 @@ class GridItem {
                 }
             }
             const [ effectiveX, effectiveY ] = what.lengthDrag ? Wire.updateSelectionAttachedWires(x, y, what.lengthDrag, status) : [ x, y ];
-            for (const [ index, item ] of pairs(this.grid.selection)) {
+            for (const [ index, item ] of pairs(selection)) {
                 item.onMove(effectiveX, effectiveY, status, what.items[index]);
             }
             this.grid.invalidateSelection();
@@ -231,24 +231,13 @@ class GridItem {
     // Handle click events (item selection).
     onClick(modifier, ...args) {
         if (modifier.shift && !this.selected) {
-            this.grid.selection.push(this);
-            this.grid.invalidateSelection();
-            this.selected = true;
+            this.grid.selection.add(this);
             return true;
         } else if (modifier.ctrl && this.selected) {
-            const index = this.grid.selection.indexOf(this);
-            this.grid.selection.swapRemove(index);
-            this.grid.invalidateSelection();
-            this.selected = false;
+            this.grid.selection.remove(this);
             return true;
         } else {
-            for (const item of this.grid.selection) {
-                item.selected = false;
-            }
-            this.grid.selection.length = 0;
-            this.grid.selection.push(this);
-            this.grid.invalidateSelection();
-            this.selected = true;
+            this.grid.selection.set([this]);
             return true;
         }
     }
