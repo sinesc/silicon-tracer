@@ -217,7 +217,7 @@ class GridItem {
             for (const [ index, item ] of pairs(selection)) {
                 item.onMove(effectiveX, effectiveY, status, what.items[index]);
             }
-            this.grid.invalidateSelection();
+            this.grid.selection.invalidate();
             if (status === 'stop') {
                 delete what.lengthDrag;
                 this.grid.onWiresChanged(); // schedules compact + recompile; pruneSelection runs after compact

@@ -6,7 +6,6 @@ class Grid {
     static SPACING = 20;
     static STATUS_DELAY = 500;
 
-    static #RAD90 = Math.PI / 2; // 90°
     static #ZOOM_LEVELS = [ 0.5, 0.65, 0.85, 1.0, 1.25, 1.50, 1.75, 2.0, 2.5, 3.0 ];
 
     #app;
@@ -14,7 +13,6 @@ class Grid {
     #worldElement;
     #trimElement;
     #selection;
-    #selectionCenter = null;
     #junctionElements = new Map(); // "x:y" => { element: HTMLElement, wire: Wire }
     #trimOverlays = [];
     #hotkeyTarget = null;
@@ -48,9 +46,7 @@ class Grid {
         const selectionElement = html(this.#element, 'div', 'grid-selection hidden');
         this.#trimElement = html(this.#element, 'div', 'grid-selection grid-selection-trim hidden');
         this.#debugElement = html(this.#element, 'div', 'debug-info');
-        this.#selection = new Selection(this, selectionElement, () => {
-            this.#selectionCenter = null;
-        });
+        this.#selection = new Selection(this, selectionElement);
         this.#passive = passive;
         if (!passive) {
             this.#initHotkeys();
@@ -205,7 +201,7 @@ class Grid {
                 this.#suppressCircuitEvents = false;
                 this.#pending.wireCompact = false;
                 this.pruneSelection();
-                this.invalidateSelection();
+                this.#selection.invalidate();
                 this.#pending.recompile = true;
                 this.#pending.netColors = true;
                 this.#pending.junctionRebuild = true;
@@ -485,16 +481,6 @@ class Grid {
         return this.#circuit?.readonly ?? false;
     }
 
-    // Invalidates the current selection, recomputing center point on next use.
-    invalidateSelection() {
-        this.#selection.invalidate();
-    }
-
-    // Replaces the current selection. Called by Circuit.restoreFromUndo() to reinstate selection after undo/redo.
-    setSelection(items) {
-        this.#selection.set(items);
-    }
-
     // Updates the current undo snapshot to reflect the latest selection state.
     #snapshotSelection() {
         if (!this.readonly) {
@@ -513,64 +499,6 @@ class Grid {
             this.#app.haveChanges = true;
             this.#app.refreshUndoButtons();
         }
-    }
-
-    // Cuts the current selection and copies it to the clipboard.
-    async actionCutSelection() {
-        if (this.readonly) return;
-        await this.copySelection();
-        this.#deleteSelection();
-        this.trackAction('Cut selection');
-    }
-
-    // Deletes selected items.
-    actionDeleteSelection() {
-        if (this.readonly) return;
-        this.#deleteSelection();
-        this.trackAction('Delete selection');
-    }
-
-    // Pastes items from clipboard.
-    async actionPasteSelection() {
-        if (this.readonly) return;
-        const serialized = JSON.parse(await navigator.clipboard.readText());
-        const items = serialized.map((item) => GridItem.unserialize(this.#app, item));
-        // offset items a bit to help user visually identify the pasted selection
-        for (const item of items) {
-            item.x += 2 * Grid.SPACING;
-            item.y += 2 * Grid.SPACING;
-        }
-        // clear selected flag on all circuit items
-        for (const item of this.#circuit.items) {
-            item.selected = false;
-        }
-        // add pasted items
-        for (const item of items) {
-            this.addItem(item);
-            item.onPaste();
-        }
-        // select pasted items
-        this.#selection.set(items);
-        // Wire compact, simulation recompile, and selection pruning are triggered automatically
-        // via onCircuitItemAdded events fired during addItem above.
-        this.#app.haveChanges = true;
-        this.trackAction('Paste selection');
-    }
-
-    // Copies selected items to clipboard.
-    copySelection() {
-        return navigator.clipboard.writeText(JSON.stringify(this.#selection.items.map((item) => item.serialize())));
-    }
-
-    // Deletes selected items.
-    #deleteSelection() {
-        this.#circuit.detachSimulation();
-        for (const item of this.#selection.items) {
-            this.removeItem(item); // fires onCircuitItemRemoved -> schedules compact/recompile/prune
-        }
-        this.#selection.clear();
-        // Wire compact, simulation recompile, and selection pruning handled automatically by circuit events.
-        this.#app.haveChanges = true;
     }
 
     // Removes unlinked items from selection (deleted items that are now only referenced by the selection).
@@ -715,11 +643,11 @@ class Grid {
             this.#selection.set([ ...this.#circuit.items ]);
             this.#snapshotSelection();
         });
-        this.#app.registerHotkey('ctrl+v', 'down', () => !this.readonly, () => this.actionPasteSelection());
-        this.#app.registerHotkey('ctrl+c', 'down', () => !this.readonly && this.#selection.items.length > 0, () => this.copySelection());
-        this.#app.registerHotkey('ctrl+x', 'down', () => !this.readonly && this.#selection.items.length > 0, () => this.actionCutSelection());
-        this.#app.registerHotkey('r', 'down', () => !this.readonly && this.#selection.items.length > 0, () => this.#actionRotateSelection());
-        this.#app.registerHotkey('Delete', 'down', () => !this.readonly && this.#selection.items.length > 0, () => this.actionDeleteSelection());
+        this.#app.registerHotkey('ctrl+v', 'down', () => !this.readonly, () => Action.pasteSelection(this.#app));
+        this.#app.registerHotkey('ctrl+c', 'down', () => !this.readonly && this.#selection.items.length > 0, () => Action.copySelection(this.#app));
+        this.#app.registerHotkey('ctrl+x', 'down', () => !this.readonly && this.#selection.items.length > 0, () => Action.cutSelection(this.#app));
+        this.#app.registerHotkey('r', 'down', () => !this.readonly && this.#selection.items.length > 0, () => Action.rotateSelection(this.#app));
+        this.#app.registerHotkey('Delete', 'down', () => !this.readonly && this.#selection.items.length > 0, () => Action.deleteSelection(this.#app));
 
         // send to hover target
         this.#app.registerHotkey(null, 'press', () => !this.readonly && this.#hotkeyTarget, (e) => {
@@ -770,50 +698,6 @@ class Grid {
         // move grid to compensate so that the point we zoomed into is still at the cursor
         this.offsetX -= mouseGridX - mouseGridXAfter;
         this.offsetY -= mouseGridY - mouseGridYAfter;
-    }
-
-    // Compute selection center point for rotation.
-    #computeSelectionCenter() {
-        // find bounding box
-        let bounds = { x1: Number.MAX_SAFE_INTEGER, y1: Number.MAX_SAFE_INTEGER, x2: Number.MIN_SAFE_INTEGER, y2: Number.MIN_SAFE_INTEGER };
-        for (const item of this.#selection.items) {
-            bounds.x1 = Math.min(item.x, bounds.x1);
-            bounds.y1 = Math.min(item.y, bounds.y1);
-            bounds.x2 = Math.max(item.x + item.width, bounds.x2);
-            bounds.y2 = Math.max(item.y + item.height, bounds.y2);
-        }
-        // compute a rotation center, ensure exact grid snapping
-        const width = bounds.x2 - bounds.x1;
-        const height = bounds.y2 - bounds.y1;
-        const centerX = bounds.x1 + (width / 2);
-        const centerY = bounds.y1 + (height / 2);
-        const roundX = Math.round(centerX / Grid.SPACING) * Grid.SPACING;
-        const roundY = Math.round(centerY / Grid.SPACING) * Grid.SPACING;
-        return point(roundX, roundY);
-    }
-
-    // Rotates the current selection 90° around its center.
-    #actionRotateSelection() {
-        const center = this.#selectionCenter ??= this.#computeSelectionCenter();
-        // rotate items around center
-        for (const item of this.#selection.items) {
-            if (item instanceof Component || item instanceof TextLabel) {
-                // component.rotation causes a rotation around the component center, so we have to use that as our basis
-                const xc = item.x + (item.width / 2);
-                const yc = item.y + (item.height / 2);
-                const offset = point(xc, yc).rotateAround(center, Grid.#RAD90).round();
-                // offset item by difference so we don't have to compute with center again
-                item.x += offset.x - xc;
-                item.y += offset.y - yc;
-                item.rotation += 1;
-            } else if (item instanceof Wire) {
-                const start = point(item.x, item.y).rotateAround(center, Grid.#RAD90).round();
-                const end = point(item.x + item.width, item.y + item.height).rotateAround(center, Grid.#RAD90).round();
-                item.setEndpoints(start.x, start.y, end.x, end.y);
-            }
-        }
-        this.onTopologyChanged();
-        this.trackAction('Rotate selection');
     }
 
     // Normalizes a rectangle given as (x, y, w, h) where w/h may be negative, returning top-left + positive dimensions.

@@ -271,7 +271,7 @@ class Circuit {
             // Restore selection: match items by their restored GIDs.
             const newSelection = this.#data.filter((item) => selectedGids.has(item.gid));
             newSelection.forEach((item) => item.selected = true);
-            grid.setSelection(newSelection);
+            grid.selection.set(newSelection);
             grid.onWiresChanged(); // deferred compact runs next frame with correct selection context
         }
     }

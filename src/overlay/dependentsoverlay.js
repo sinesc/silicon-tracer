@@ -36,10 +36,7 @@ class DependentsOverlay extends Overlay {
             next.onclick = (e) => {
                 const item = e.target.closest('[data-uid]');
                 if (!item) return;
-                const uid = item.dataset.uid;
-                this.app.circuits.select(uid);
-                this.app.simulations.select(this.app.circuits.current, this.app.config.autoCompile);
-                this.app.history.record();
+                Action.selectCircuit(this.app, item.dataset.uid);
             };
         }
     }

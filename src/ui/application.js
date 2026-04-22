@@ -302,126 +302,76 @@ class Application {
             // Open circuit file.
             fileMenu.createActionButton('Open...', 'Close all circuits and load new circuits from a file.', async () => {
                 fileMenu.state(false);
-                if (!this.haveChanges || await unsavedDialog('Click Ok to discard and open another project anyway or Cancel to abort.')) {
-                    await this.circuits.loadFile(true);
-                    this.simulations.clear();
-                    this.simulations.select(this.circuits.current, this.config.autoCompile);
-                    this.history.init();
-                    document.title = this.circuits.fileName + ' - Silicon Tracer';
-                    this.haveChanges = false;
-                }
+                await Action.openFile(this);
             });
             // Open and merge circuits from file to currently loaded circuits.
             const addButton = fileMenu.createActionButton('Merge...', 'Load additional circuits from a file, keeping open circuits.', async () => {
                 fileMenu.state(false);
-                await this.circuits.loadFile(false, false);
-                this.haveChanges = true;
+                await Action.mergeFile(this);
             });
             addButton.node.classList.toggle('toolbar-menu-button-disabled', this.circuits.allEmpty());
             fileMenu.createSeparator();
             // Open as library
             fileMenu.createActionButton('Include library...', 'Add circuits in file as library components. These are accessible via the <i>Component</i> menu and do not show in <i>Circuit</i>.', async () => {
                 fileMenu.state(false);
-                await this.circuits.loadFile(false, false, true);
-                this.haveChanges = true;
+                await Action.includeLibrary(this);
             });
             // Create a new empty library.
             fileMenu.createActionButton('Create library...', 'Create a new empty library accessible via the <i>Component</i> menu.', async () => {
                 fileMenu.state(false);
-                const result = await dialog('Create library', [
-                    { name: 'label', label: 'Library name', type: 'string', postCheck: (v) => v.length > 0 },
-                ], { label: '' });
-                if (result) {
-                    this.circuits.addLibrary(result.label, null, false);
-                    this.showNotice(`Added empty library "${result.label}" to the Component menu.`);
-                    this.haveChanges = true;
-                }
+                await Action.createLibrary(this);
             });
             // Extract a non-packaged library to a file.
             const hasCircuit = (lid) => Object.values(this.circuits.all).some((c) => c.lid === lid);
             const nonPackagedForExtract = [ ...this.circuits.libraries ].filter(([ lid ]) => !this.circuits.isPackaged(lid) && hasCircuit(lid));
             const extractButton = fileMenu.createActionButton('Extract library...', 'Save all circuits belonging to a library to a file.', async () => {
                 fileMenu.state(false);
-                const libs = [ ...this.circuits.libraries ].filter(([ lid ]) => !this.circuits.isPackaged(lid) && hasCircuit(lid));
-                const options = Object.fromEntries(libs.map(([ lid, label ]) => [ lid, label ]));
-                const result = await dialog('Extract library', [
-                    { name: 'lib', label: 'Library', type: 'select', options },
-                ], { lib: libs[0][0] });
-                if (result) {
-                    await this.circuits.extractLibrary(result.lib);
-                }
+                await Action.extractLibrary(this);
             });
             extractButton.node.classList.toggle('toolbar-menu-button-disabled', nonPackagedForExtract.length === 0);
             // Remove a non-packaged library and its circuits from memory.
             const nonPackagedForRemove = [ ...this.circuits.libraries ].filter(([ lid ]) => !this.circuits.isPackaged(lid));
             const removeLibButton = fileMenu.createActionButton('Remove library...', 'Remove a library and its circuits from memory.', async () => {
                 fileMenu.state(false);
-                const libs = [ ...this.circuits.libraries ].filter(([ lid ]) => !this.circuits.isPackaged(lid));
-                const removable = libs.filter(([ lid ]) => this.circuits.libraryDependents(lid).size === 0);
-                const nonRemovable = libs.filter(([ lid ]) => this.circuits.libraryDependents(lid).size > 0);
-                const fields = [];
-                fields.push({ name: 'lib', label: 'Library', type: 'select', options: Object.fromEntries(removable.map(([ lid, label ]) => [ lid, label ])) });
-                if (nonRemovable.length > 0) {
-                    fields.push({ separator: 'before', text: `The following libraries cannot be removed because other circuits depend on them: ${nonRemovable.map(([ , label ]) => `<b>${label}</b>`).join(', ')}.` });
-                }
-                const result = await dialog('Remove library', fields, { lib: removable[0]?.[0] ?? '' });
-                if (result) {
-                    const libLabel = removable.find(([ lid ]) => lid === result.lib)[1];
-                    this.circuits.removeLibrary(result.lib);
-                    this.simulations.clear();
-                    this.simulations.select(this.circuits.current, this.config.autoCompile);
-                    this.showNotice(`Removed library "${libLabel}".`);
-                    this.haveChanges = true;
-                }
+                await Action.removeLibrary(this);
             });
             removeLibButton.node.classList.toggle('toolbar-menu-button-disabled', nonPackagedForRemove.length === 0);
             fileMenu.createSeparator();
             // Import circuits and add to currently loaded circuits.
             fileMenu.createActionButton('Import...', 'Import files produced by other applications.', async () => {
                 fileMenu.state(false);
-                await this.circuits.importFile();
-                this.haveChanges = true;
+                await Action.importFile(this);
             });
             fileMenu.createSeparator();
             // Save circuits to last opened file.
             const saveButton = fileMenu.createActionButton(this.circuits.fileName ? 'Save <i>' + this.circuits.fileName + '</i>' : 'Save', 'Save circuits to file. Hotkey: <i>CTRL+S</i>', async () => {
                 fileMenu.state(false);
-                await this.circuits.saveFile();
-                this.haveChanges = false;
+                await Action.saveFile(this);
             });
             saveButton.node.classList.toggle('toolbar-menu-button-disabled', !this.circuits.fileName);
             // Save circuits as new file.
             fileMenu.createActionButton('Save as...', 'Save circuits to a new file.', async () => {
                 fileMenu.state(false);
-                await this.circuits.saveFileAs();
-                this.haveChanges = false;
-                document.title = this.circuits.fileName + ' - Silicon Tracer';
+                await Action.saveFileAs(this);
             });
             fileMenu.createSeparator();
             // Close circuits.
             fileMenu.createActionButton('Close', 'Close all open circuits. Hold <i>CTRL</i> to include packaged libraries.', async () => {
                 fileMenu.state(false);
-                if (!this.haveChanges || await unsavedDialog('Click Ok to close it anyway or Cancel to abort.')) {
-                    this.circuits.closeFile(this.modifierKeys.ctrlKey);
-                    this.simulations.clear();
-                    this.simulations.select(this.circuits.current, this.config.autoCompile);
-                    this.history.init();
-                    this.haveChanges = false;
-                    document.title = 'Silicon Tracer';
-                }
+                await Action.closeFile(this, this.modifierKeys.ctrlKey);
             });
         });
 
         // Edit menu with undo/redo/cut/copy/paste
         this.toolbar.createMenuButton('Edit', 'Edit operations menu.', (editMenu) => {
             editMenu.clear();
-            this.#undoButton = editMenu.createActionButton('Undo', 'Undo last change. Hotkey: <i>CTRL+Z</i>.', () => this.#undoAction());
-            this.#redoButton = editMenu.createActionButton('Redo', 'Redo last undone change. Hotkey: <i>CTRL+Y</i>.', () => this.#redoAction());
+            this.#undoButton = editMenu.createActionButton('Undo', 'Undo last change. Hotkey: <i>CTRL+Z</i>.', () => Action.undo(this));
+            this.#redoButton = editMenu.createActionButton('Redo', 'Redo last undone change. Hotkey: <i>CTRL+Y</i>.', () => Action.redo(this));
             this.refreshUndoButtons();
             editMenu.createSeparator();
-            const cutButton = editMenu.createActionButton('Cut', 'Cut selected items. Hotkey: <i>CTRL+X</i>.', () => this.grid.actionCutSelection());
-            const copyButton = editMenu.createActionButton('Copy', 'Copy selected items to clipboard. Hotkey: <i>CTRL+C</i>.', () => this.grid.copySelection());
-            const pasteButton = editMenu.createActionButton('Paste', 'Paste items from clipboard. Hotkey: <i>CTRL+V</i>.', () => this.grid.actionPasteSelection());
+            const cutButton = editMenu.createActionButton('Cut', 'Cut selected items. Hotkey: <i>CTRL+X</i>.', () => Action.cutSelection(this));
+            const copyButton = editMenu.createActionButton('Copy', 'Copy selected items to clipboard. Hotkey: <i>CTRL+C</i>.', () => Action.copySelection(this));
+            const pasteButton = editMenu.createActionButton('Paste', 'Paste items from clipboard. Hotkey: <i>CTRL+V</i>.', () => Action.pasteSelection(this));
             cutButton.node.classList.toggle('toolbar-menu-button-disabled', this.grid.selection.items.length === 0 || this.grid.readonly);
             copyButton.node.classList.toggle('toolbar-menu-button-disabled', this.grid.selection.items.length === 0);
             //pasteButton.node.classList.toggle('toolbar-menu-button-disabled', await navigator.clipboard.readText().length === 0); // cannot currently do this without annoying confirmation popup
@@ -434,10 +384,7 @@ class Application {
             // Create new circuit.
             circuitMenu.createActionButton('New...', 'Create a new circuit.', async () => {
                 circuitMenu.state(false);
-                if (await this.circuits.create()) {
-                    this.simulations.select(this.circuits.current, this.config.autoCompile);
-                    this.haveChanges = true;
-                }
+                await Action.newCircuit(this);
             });
             // Remove current circuit.
             const dependentUids = this.circuits.circuitDependents(this.circuits.current.uid);
@@ -452,44 +399,22 @@ class Application {
                     : 'Remove current circuit.';
             const button = circuitMenu.createActionButton(`Remove "${this.circuits.current.label}"`, removeHoverMessage, async () => {
                 circuitMenu.state(false);
-                if (await confirmDialog('Confirm deletion',`Delete "${this.circuits.current.label}" from project?`)) {
-                    const deletedCircuit = this.circuits.current;
-                    this.circuits.globalUndoStack.push(`Delete "${deletedCircuit.label}"`, deletedCircuit.serialize(), null, false);
-                    this.simulations.delete(deletedCircuit);
-                    this.circuits.delete(deletedCircuit.uid);
-                    this.simulations.select(this.circuits.current, this.config.autoCompile);
-                    this.history.record();
-                    this.haveChanges = true;
-                    this.refreshUndoButtons();
-                }
+                await Action.deleteCircuit(this, this.circuits.current);
             });
             button.node.classList.toggle('toolbar-menu-button-disabled', removeDisabled);
             // Move current circuit to/from a library.
             const currentLid = this.circuits.current.lid;
-            const nonPackagedLibs = [ ...this.circuits.libraries ].filter(([ lid ]) => !this.circuits.isPackaged(lid));
+            const haveCustomLibs = this.circuits.libraries.some(([ lid ]) => !this.circuits.isPackaged(lid))
             if (currentLid === null) {
-                const moveToLibButton = circuitMenu.createActionButton('Move to library...', nonPackagedLibs.length > 0 ? 'Move this circuit into a library.' : 'No non-packaged libraries loaded.', async () => {
+                const moveToLibButton = circuitMenu.createActionButton('Move to library...', haveCustomLibs ? 'Move this circuit into a library.' : 'No non-packaged libraries loaded.', () => {
                     circuitMenu.state(false);
-                    const options = Object.fromEntries(nonPackagedLibs.map(([ lid, label ]) => [ lid, label ]));
-                    const result = await dialog('Move to library', [
-                        { name: 'lib', label: 'Library', type: 'select', options },
-                    ], { lib: nonPackagedLibs[0][0] });
-                    if (result) {
-                        const circuit = this.circuits.current;
-                        const libLabel = nonPackagedLibs.find(([ lid ]) => lid === result.lib)[1];
-                        circuit.lid = result.lib;
-                        this.showNotice(`Circuit "${circuit.label}" was moved to "${libLabel}".`);
-                        this.haveChanges = true;
-                    }
+                    Action.moveCircuitToLibrary(this);
                 });
-                moveToLibButton.node.classList.toggle('toolbar-menu-button-disabled', nonPackagedLibs.length === 0);
+                moveToLibButton.node.classList.toggle('toolbar-menu-button-disabled', !haveCustomLibs);
             } else if (!this.circuits.isPackaged(currentLid)) {
                 circuitMenu.createActionButton('Move to circuits', 'Move this library circuit into regular circuits.', () => {
                     circuitMenu.state(false);
-                    const circuit = this.circuits.current;
-                    circuit.lid = null;
-                    this.showNotice(`Circuit "${circuit.label}" was moved to circuits.`);
-                    this.haveChanges = true;
+                    Action.moveCircuitToCircuits(this);
                 });
             }
             circuitMenu.createSeparator();
@@ -506,9 +431,7 @@ class Application {
                 // circuit select
                 const switchButton = circuitMenu.createActionButton(label, text + (isCurrentGrid ? 'Currently on the grid.' : '<i>Click</i> Edit on the grid.'), () => {
                     circuitMenu.state(false);
-                    this.circuits.select(uid);
-                    this.simulations.select(this.circuits.current, this.config.autoCompile);
-                    this.history.record();
+                    Action.selectCircuit(this, uid);
                 });
                 switchButton.node.classList.add(!isCurrentGrid ? 'toolbar-circuit-select' : 'toolbar-circuit-select-fullrow');
                 switchButton.node.classList.toggle('toolbar-menu-button-disabled', isCurrentGrid);
@@ -605,9 +528,7 @@ class Application {
                         // component select
                         const switchButton = libraryMenu.createActionButton(label, text + (isCurrentGrid ? 'Currently on the grid.' : '<i>Click</i> Edit on the grid.'), () => {
                             componentMenu.state(false);
-                            this.circuits.select(uid);
-                            this.simulations.select(this.circuits.current, this.config.autoCompile);
-                            this.history.record();
+                            Action.selectCircuit(this, uid);
                         });
                         switchButton.node.classList.add(!isCurrentGrid ? 'toolbar-circuit-select' : 'toolbar-circuit-select-fullrow');
                         switchButton.node.classList.toggle('toolbar-menu-button-disabled', isCurrentCircuit);
@@ -648,32 +569,12 @@ class Application {
             // Simulate current grid
             simulationMenu.createActionButton(toggleButtonText(toggleAction()), 'Toggle simulation on/off.', () => {
                 simulationMenu.state(false);
-                const action = toggleAction();
-                if (action === 'stop') {
-                    this.config.autoCompile = false;
-                    if (this.simulations.current) {
-                        const circuit = this.circuits.byUID(this.simulations.current.uid);
-                        if (circuit) {
-                            this.simulations.delete(circuit);
-                        }
-                    }
-                    this.simulations.select(null);
-                    // switch to whatever circuit was being viewed when the simulation ended
-                    this.circuits.select(this.grid.circuit.uid);
-                } else if (action === 'resume' || action === 'start') {
-                    // start will just resume if the simulation already exists
-                    this.config.singleStep = false;
-                    this.simulations.select(this.circuits.current, true);
-                }
+                Action.toggleSimulation(this);
             });
             // Configure simulation speed.
             simulationMenu.createActionButton(`Set ticks/s limit (${Number.formatSI(this.config.targetTPS)})...`, 'Configure simulation speed.', async () => {
                 simulationMenu.state(false);
-                const result = await dialog('Simulation speed', [ { label: "Ticks per second", name: "targetTPS", type: "int", postCheck: (v, f) => v >= 1 } ], { targetTPS: this.config.targetTPS });
-                if (result) {
-                    this.config.targetTPS = result.targetTPS;
-                    this.simulations.updateClocks(this.config.targetTPS);
-                }
+                await Action.setSimulationSpeed(this);
             });
             // Switch simulation. Generate menu items for each running simulation.
             if (this.simulations.list().length > 0) {
@@ -683,10 +584,7 @@ class Application {
                 const isCurrent = uid === this.simulations.current?.uid;
                 const button = simulationMenu.createActionButton(label, isCurrent ? 'This is the current simulation' : 'Switch to/resume simulation "' + label + '".', () => {
                     simulationMenu.state(false);
-                    this.circuits.select(uid);
-                    this.config.singleStep = false;
-                    this.simulations.select(this.circuits.current, this.config.autoCompile);
-                    this.history.record();
+                    Action.selectSimulation(this, uid);
                 });
                 button.node.classList.toggle('toolbar-menu-button-disabled', isCurrent);
             }
@@ -737,17 +635,9 @@ class Application {
             stepButton.node.classList.toggle('toolbar-menu-button-disabled', !this.config.singleStep);
             // Break-on-condition expressions.
             debuggerMenu.createSeparator();
-            const EXPRESSION_HELP = 'Probe labels are available as variables, e.g. <code>!pA &amp;&amp; (pB || pC)</code>. Undriven probes return <code>null</code>, conflicting probes <code>-1</code>.';
             debuggerMenu.createActionButton('Add condition...', 'Break simulation on a custom probe expression.', async () => {
                 debuggerMenu.state(false);
-                const result = await dialog('Add break condition', [
-                    { text: 'Enter an expression.' + EXPRESSION_HELP },
-                    { label: 'Expression', name: 'expression', type: 'string', check: (v) => v.trim() !== '' }
-                ], { expression: '' });
-                if (result) {
-                    this.config.breakConditions.push(result.expression.trim());
-                    this.simulations.markDirty(null);
-                }
+                await Action.addBreakCondition(this);
             });
             if (this.config.breakConditions.length > 0) {
                 debuggerMenu.createSeparator();
@@ -756,17 +646,7 @@ class Application {
                 const expr = this.config.breakConditions[i];
                 debuggerMenu.createActionButton(expr, 'Click to edit. Clear expression to delete.', async () => {
                     debuggerMenu.state(false);
-                    const result = await dialog('Edit break condition', [
-                        { text: 'Edit the expression below. Clear expression and confirm to delete. ' + EXPRESSION_HELP },
-                        { label: 'Expression', name: 'expression', type: 'string' }
-                    ], { expression: expr });
-                    if (result) {
-                        if (result.expression.trim() === '') {
-                            this.config.breakConditions.splice(i, 1);
-                        } else {
-                            this.config.breakConditions[i] = result.expression.trim();
-                        }
-                        this.simulations.markDirty(null);
+                    if (await Action.editBreakCondition(this, i, expr)) {
                         debuggerMenu.open();
                     }
                 });
@@ -807,51 +687,23 @@ class Application {
         this.#redoButton.node.classList.toggle('toolbar-menu-button-disabled', !redoLabel);
     }
 
-    // Performs undo on the most recently changed stack (per-circuit or global, whichever is newer).
-    #undoAction() {
-        const perStack = this.circuits.current?.undoStack;
-        const globalStack = this.circuits.globalUndoStack;
-        if (globalStack.undoTimestamp > (perStack?.undoTimestamp ?? -Infinity) && globalStack.canUndo) {
-            const { snapshot } = globalStack.undo();
-            this.circuits.restoreDeletedCircuit(snapshot);
-        } else if (perStack?.canUndo) {
-            const { snapshot } = perStack.undo();
-            this.circuits.current.restoreFromUndo(snapshot);
-            this.simulations.markDirty(this.circuits.current);
-            this.haveChanges = true;
-        }
-        this.refreshUndoButtons();
-    }
-
-    // Performs redo on the current circuit's undo stack.
-    #redoAction() {
-        const perStack = this.circuits.current?.undoStack;
-        if (perStack?.canRedo) {
-            const { snapshot } = perStack.redo();
-            this.circuits.current.restoreFromUndo(snapshot);
-            this.simulations.markDirty(this.circuits.current);
-            this.haveChanges = true;
-        }
-        this.refreshUndoButtons();
-    }
 
     // Define hotkey actions.
     #initHotkeys() {
         this.registerHotkey('e', 'down', () => this.toolbar.hoveredPin !== null, async () => {
             await this.toolbar.editPin(this.toolbar.hoveredPin, this.toolbar.hoveredPinButton);
         });
-        this.registerHotkey('ctrl+s', 'down', null, async (e) => {
-            await this.circuits.saveFile();
-            this.haveChanges = false;
+        this.registerHotkey('ctrl+s', 'down', null, async () => {
+            await Action.saveFile(this);
         });
         this.registerHotkey('t', 'down', null, () => {
             this.#singleStep();
         });
         this.registerHotkey('ctrl+z', 'down', null, () => {
-            this.#undoAction();
+            Action.undo(this);
         });
         this.registerHotkey('ctrl+y', 'down', null, () => {
-            this.#redoAction();
+            Action.redo(this);
         });
     }
 

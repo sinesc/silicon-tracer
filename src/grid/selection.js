@@ -6,14 +6,16 @@ class Selection {
     #hadWires = false;
     #element;
     #grid;
-    #onInvalidate;
+    #rotationCenter = null;
 
-    // onInvalidate() is called when selection state is invalidated.
-    constructor(grid, element, onInvalidate) {
+    constructor(grid, element) {
         this.#grid = grid;
         this.#element = element;
-        this.#onInvalidate = onInvalidate;
     }
+
+    // Cached rotation center for the current selection. Cleared automatically on any selection change.
+    get rotationCenter() { return this.#rotationCenter; }
+    set rotationCenter(v) { this.#rotationCenter = v; }
 
     // Returns the current selection items array.
     get items() { return this.#items; }
@@ -58,7 +60,7 @@ class Selection {
         }
         this.#items = [];
         this.#hadWires = false;
-        this.#onInvalidate();
+        this.#rotationCenter = null;
     }
 
     // Removes items no longer on the grid from the selection.
@@ -118,9 +120,9 @@ class Selection {
         const hadWires = this.#hadWires;
         const hasWires = this.#items.some(w => w instanceof Wire);
         this.#hadWires = hasWires;
+        this.#rotationCenter = null;
         if (this.#items.length === 0 && hadWires) {
             this.#grid.onWiresChanged();
         }
-        this.#onInvalidate();
     }
 }
