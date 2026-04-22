@@ -327,9 +327,11 @@ class Circuit {
                     const component = this.itemByGID(gid);
                     if (component) {
                         const port = component.portByName(name);
-                        port.netIds ??= [];
-                        if (net.netId !== null) {
-                            port.netIds[channel] = net.netId;
+                        if (port) {
+                            port.netIds ??= [];
+                            if (net.netId !== null) {
+                                port.netIds[channel] = net.netId;
+                            }
                         }
                     }
                 }
