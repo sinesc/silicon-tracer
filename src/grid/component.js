@@ -174,7 +174,7 @@ class ComponentPort {
 // General component used as a base class for Gates/Builtins or user defined circuits when represented within other circuits.
 class Component extends GridItem {
 
-    static HOTKEYS = '<i>LMB</i> Drag to move, <i>SHIFT+LMB</i> Drag to move and adjust wire length, <i>ALT</i> Drop to accept ghost wires, <i>R</i> Rotate, <i>DEL</i> Delete, ' + GridItem.HOTKEYS;
+    static HOTKEYS = '<i>Drag</i> Move, <i>SHIFT+Drag</i> Move and adjust wire length, <i>ALT+Drop</i> Accept ghost wires, <i>R</i> Rotate, <i>DEL</i> Delete, ' + GridItem.HOTKEYS;
 
     static EDIT_DIALOG = [
         { name: 'rotation', label: 'Rotation', type: 'select', options: { 0: "Default", 1: "90°", 2: "180°", 3: "270°" }, apply: (v, f) => parseInt(v) },
@@ -270,7 +270,7 @@ class Component extends GridItem {
             const message = () => {
                 const channels = item.netIds?.length ?? 1;
                 const kind = channels === 1 ? 'Port' : `<b>${channels}-bit</b> port`;
-                return `${kind} <b>${item.label}</b> of <b>${this.#type}</b>. <i>LMB</i> Drag to connect.`;
+                return `${kind} <b>${item.label}</b> of <b>${this.#type}</b>. <i>Drag</i> Connect.`;
             };
             this.setHoverMessage(port, message, { type: 'hover-port' });
             // port hover label

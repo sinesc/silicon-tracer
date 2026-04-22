@@ -394,7 +394,7 @@ class Grid {
         const netColor = `<span data-net-color="${this.#netColor}">default net color</span>`;
         const sim = this.#app.simulations.current;
         const hasParent = sim && sim.instanceId > 0;
-        return 'Grid. <i>LMB</i> Drag to select area, <i>SHIFT/CTRL+LMB</i> Drag to add/subtract selection, <i>ALT+LMB</i> Drag to trim wires, <i>MMB</i> Drag grid, <i>MW</i> Zoom grid, <i>E</i> Configure circuit, <i>0</i> - <i>9</i> Set ' + netColor + ', ' + (hasParent ? '' : '<u>') + '<i>W</i> Switch to parent simulation' + (hasParent ? '' : '</u>');
+        return 'Grid. <i>Drag</i> Select area, <i>SHIFT/CTRL+Drag</i> Add/subtract selection, <i>ALT+Drag</i> Trim wires, <i>Drag (middle)</i> Pan grid, <i>MW</i> Zoom grid, <i>E</i> Configure circuit, <i>0</i> - <i>9</i> Set ' + netColor + ', ' + (hasParent ? '' : '<u>') + '<i>W</i> Switch to parent simulation' + (hasParent ? '' : '</u>');
     }
 
     // Sets the zoom factor.

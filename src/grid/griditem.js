@@ -3,7 +3,7 @@
 // Base class for grid items.
 class GridItem {
 
-    static HOTKEYS = '<i>SHIFT/CTRL+LMB</i> Click to select/deselect';
+    static HOTKEYS = '<i>Click</i> Select, <i>SHIFT/CTRL+Click</i> Add/remove from selection';
 
     // Serializable GridItem subclasses. Registration at the bottom of each subclass file.
     static CLASSES = {};
@@ -228,7 +228,7 @@ class GridItem {
         return false;
     }
 
-    // Implement to handle click events. Return true to prevent parent action.
+    // Handle click events (item selection).
     onClick(modifier, ...args) {
         if (modifier.shift && !this.selected) {
             this.grid.selection.push(this);
@@ -241,8 +241,16 @@ class GridItem {
             this.grid.invalidateSelection();
             this.selected = false;
             return true;
+        } else {
+            for (const item of this.grid.selection) {
+                item.selected = false;
+            }
+            this.grid.selection.length = 0;
+            this.grid.selection.push(this);
+            this.grid.invalidateSelection();
+            this.selected = true;
+            return true;
         }
-        return false;
     }
 
     // Implement to handle hover hotkey events. Should call parent and exit early on true result.
@@ -498,7 +506,7 @@ class GridItem {
             this.grid.releaseHotkeyTarget(this);
         }
         // set the status message, if any
-        const message = !this.selected ? this.#hoverMessages.get(element) : '<b>Multiple items.</b> <i>LMB</i> Drag to move, <i>SHIFT+LMB</i> Drag to move and adjust wire length, <i>R</i> Rotate, <i>DEL</i> Delete, <i>CTRL+C</i> Copy, <i>CTRL+X</i> Cut';
+        const message = !this.selected ? this.#hoverMessages.get(element) : '<b>Multiple items.</b> <i>Drag</i> Move, <i>SHIFT+Drag</i> Move and adjust wire length, <i>R</i> Rotate, <i>DEL</i> Delete, <i>CTRL+C</i> Copy, <i>CTRL+X</i> Cut';
         if (message) {
             if (status === 'start') {
                 this.#app.setStatus(message, false, this);

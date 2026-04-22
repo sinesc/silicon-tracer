@@ -20,8 +20,8 @@ class Application {
         { descriptor: { '#c': 'Gate', '#t': 'xnor' } },
     ];
 
-    static TOOLTIP_HINT_MENU = '<i>LMB</i> Drag to move onto grid or toolbar.';
-    static TOOLTIP_HINT_PIN = '<i>LMB</i> Drag to move onto grid, <i>E</i> Configure defaults for this pin.';
+    static TOOLTIP_HINT_MENU = '<i>Drag</i> Move onto grid or toolbar.';
+    static TOOLTIP_HINT_PIN = '<i>Drag</i> Move onto grid, <i>E</i> Configure defaults for this pin.';
 
     config = {
         targetTPS: 10000,
@@ -494,7 +494,7 @@ class Application {
                     componentButton.node.classList.add('toolbar-circuit-place');
                 }
                 // circuit select
-                const switchButton = circuitMenu.createActionButton(label, text + (isCurrentGrid ? 'Currently on the grid.' : '<i>LMB</i> Edit on the grid.'), () => {
+                const switchButton = circuitMenu.createActionButton(label, text + (isCurrentGrid ? 'Currently on the grid.' : '<i>Click</i> Edit on the grid.'), () => {
                     circuitMenu.state(false);
                     this.circuits.select(uid);
                     this.simulations.select(this.circuits.current, this.config.autoCompile);
@@ -593,7 +593,7 @@ class Application {
                             componentButton.node.classList.add('toolbar-circuit-place');
                         }
                         // component select
-                        const switchButton = libraryMenu.createActionButton(label, text + (isCurrentGrid ? 'Currently on the grid.' : '<i>LMB</i> Edit on the grid.'), () => {
+                        const switchButton = libraryMenu.createActionButton(label, text + (isCurrentGrid ? 'Currently on the grid.' : '<i>Click</i> Edit on the grid.'), () => {
                             componentMenu.state(false);
                             this.circuits.select(uid);
                             this.simulations.select(this.circuits.current, this.config.autoCompile);
