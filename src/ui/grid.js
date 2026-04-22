@@ -48,16 +48,8 @@ class Grid {
         const selectionElement = html(this.#element, 'div', 'grid-selection hidden');
         this.#trimElement = html(this.#element, 'div', 'grid-selection grid-selection-trim hidden');
         this.#debugElement = html(this.#element, 'div', 'debug-info');
-        this.#selection = new Selection(this, selectionElement, (isEmpty, hadWires) => {
+        this.#selection = new Selection(this, selectionElement, () => {
             this.#selectionCenter = null;
-            // Selected wires were deferred from compaction; now that selection is cleared, compact them.
-            // TODO: cleanup, callback arguments specific to callback implementation (hadWires)
-            if (isEmpty && hadWires) {
-                this.#pending.wireCompact = true;
-                this.#pending.recompile = true;
-                this.#pending.netColors = true;
-                this.#pending.junctionRebuild = true;
-            }
         });
         this.#passive = passive;
         if (!passive) {
@@ -102,6 +94,7 @@ class Grid {
         if (!this.#circuit) {
             return;
         }
+        this.#selection.reset();
         this.#circuit.setGridListener(null);
         this.#circuit.unlink();
         this.#circuit = null;

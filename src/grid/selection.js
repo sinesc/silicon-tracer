@@ -8,7 +8,7 @@ class Selection {
     #grid;
     #onInvalidate;
 
-    // onInvalidate(isEmpty, hadWires) is called when selection state is invalidated.
+    // onInvalidate() is called when selection state is invalidated.
     constructor(grid, element, onInvalidate) {
         this.#grid = grid;
         this.#element = element;
@@ -48,6 +48,17 @@ class Selection {
     // Clears the selection.
     clear() {
         this.set([]);
+    }
+
+    // Clears selection state without triggering onWiresChanged. Use when switching circuits,
+    // where deferred wire compact should not carry over to the incoming circuit.
+    reset() {
+        for (const item of this.#items) {
+            item.selected = false;
+        }
+        this.#items = [];
+        this.#hadWires = false;
+        this.#onInvalidate();
     }
 
     // Removes items no longer on the grid from the selection.
@@ -107,6 +118,9 @@ class Selection {
         const hadWires = this.#hadWires;
         const hasWires = this.#items.some(w => w instanceof Wire);
         this.#hadWires = hasWires;
-        this.#onInvalidate(this.#items.length === 0, hadWires);
+        if (this.#items.length === 0 && hadWires) {
+            this.#grid.onWiresChanged();
+        }
+        this.#onInvalidate();
     }
 }
