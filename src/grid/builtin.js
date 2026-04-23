@@ -7,11 +7,6 @@ class Builtin extends SimulationComponent {
         ...Component.EDIT_DIALOG,
     ];
 
-    static #LEGACY_RENAME = {
-        flipflop: 'dflipflop',
-        latch: 'dlatch',
-    };
-
     static META_INFO = {
         dlatch: { label: 'D latch', gateCount: 4, layoutOverride: null },
         adlatch: { label: 'D latch, async. reset', gateCount: 8, layoutOverride: { left: [ 'load', null, 'data' ], right: [ null, 'q', null ], top: [ 'set' ], bottom: [ 'reset' ] } },
@@ -37,7 +32,6 @@ class Builtin extends SimulationComponent {
     gates;
 
     constructor(app, x, y, rotation, type) {
-        type = Builtin.#LEGACY_RENAME[type] ?? type;
         const { left, right, inputs, outputs } = Builtin.#generatePorts(type);
         const ioTypes = Object.fromEntries([ ...inputs.map((i) => [ i, 'in' ]), ...outputs.map((o) => [ o, 'out' ]) ]);
         const meta = Builtin.META_INFO[type];
@@ -46,7 +40,7 @@ class Builtin extends SimulationComponent {
     }
 
     // Returns the builtin's label string.
-    get label() {
+    get topMarkings() {
         return Builtin.META_INFO[this.type]?.label ?? this.type.toUpperFirst();
     }
 
@@ -62,7 +56,7 @@ class Builtin extends SimulationComponent {
     link(grid) {
         super.link(grid);
         this.element.classList.add('builtin');
-        this.setHoverMessage(this.inner, `<b>${this.label}</b>. <i>E</i> Edit, ${Component.HOTKEYS}.`, { type: 'hover' });
+        this.setHoverMessage(this.inner, `<b>${this.typeLabel}</b>. <i>E</i> Edit, ${Component.HOTKEYS}.`, { type: 'hover' });
     }
 
     // Declare component simulation item.
@@ -144,9 +138,9 @@ class Builtin extends SimulationComponent {
         return { left, right, inputs, outputs };
     }
 
-    static toolbarMeta(desc) {
+    static descriptorInfo(desc) {
         const label = Builtin.META_INFO[desc['#t']]?.label ?? desc['#t'].toUpperFirst();
-        return { label, hoverMessage: `<b>${label}</b> builtin.` };
+        return { label, hoverMessage: `<b>${label}</b>.` };
     }
 
     static fromDescriptor(app, desc, overrideDefaults = {}) {

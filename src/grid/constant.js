@@ -3,6 +3,9 @@
 // A constant output component that drives a configurable value onto the circuit.
 class Constant extends DisplayComponent {
 
+    static TYPE_LABEL = 'Constant';
+    static TYPE_LABEL_LONG = 'Constant value';
+
     static EDIT_DIALOG = [
         { name: 'name', label: 'Label', type: 'string' },
         { name: 'dataWidth', label: 'Data width (bits)', type: 'select', options: { 1: '1', 2: '2', 4: '4', 8: '8', 16: '16', 32: '32' }, apply: (v) => parseInt(v) },
@@ -30,7 +33,7 @@ class Constant extends DisplayComponent {
         assert.integer(dataWidth);
         assert.string(displayFormat);
         const leftCount = DisplayComponent.lookupSize(dataWidth, displayFormat);
-        super(app, x, y, rotation, { 'top': [ 'q' ], 'left': Array(leftCount).fill(null) }, 'toggle');
+        super(app, x, y, rotation, { 'top': [ 'q' ], 'left': Array(leftCount).fill(null) });
         this.#port = this.portByName('q');
         this.#port.label = '';
         this.#port.numChannels = dataWidth > 1 ? dataWidth : null;
@@ -88,7 +91,7 @@ class Constant extends DisplayComponent {
     }
 
     // Override inner component label.
-    get label() {
+    get topMarkings() {
         return DisplayComponent.formatValue(this.#value, this.#driven, this.#dataWidth, this.#displayFormat);
     }
 
@@ -227,10 +230,6 @@ class Constant extends DisplayComponent {
         if (this.element.getAttribute('data-net-state') !== state) {
             this.element.setAttribute('data-net-state', state);
         }
-    }
-
-    static toolbarMeta(_desc) {
-        return { label: 'Constant', hoverMessage: '<b>Constant value</b>.' };
     }
 
     static fromDescriptor(app, _desc, overrideDefaults = {}) {

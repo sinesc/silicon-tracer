@@ -3,6 +3,9 @@
 // Wire splitter/joiner.
 class Splitter extends VirtualComponent {
 
+    static TYPE_LABEL = 'Splitter';
+    static TYPE_DESCRIPTION = 'Wire splitter/joiner';
+
     static MULTI_PORT_TEMPLATE = 'n{i}';
     static SINGLE_PORT_NAME = 'm';
 
@@ -146,10 +149,6 @@ class Splitter extends VirtualComponent {
         }
 
         return { left, right/*, channelMap*/ };
-    }
-
-    static toolbarMeta(_desc) {
-        return { label: 'Splitter', hoverMessage: '<b>Wire splitter/joiner</b>.' };
     }
 
     static fromDescriptor(app, _desc, overrideDefaults = {}) {

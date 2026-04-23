@@ -3,6 +3,9 @@
 // An IO port to interface with other circuits.
 class Port extends SimulationComponent {
 
+    static TYPE_LABEL = 'Port';
+    static TYPE_LABEL_LONG = 'Component IO-Port'
+
     static EDIT_DIALOG = [
         { name: 'name', label: 'Name', type: 'string', check: function(v, f) { return v === '' || this.checkNameIsUnique(v, this.grid.circuit) } },
         ...Component.EDIT_DIALOG,
@@ -179,10 +182,6 @@ class Port extends SimulationComponent {
     // Returns the app-level placement defaults relevant to this component descriptor.
     static getPlacementDefaults(app, _descriptor) {
         return app.config.placementDefaults.port;
-    }
-
-    static toolbarMeta(_desc) {
-        return { label: 'Port', hoverMessage: '<b>Component IO pin</b>.' };
     }
 
     static fromDescriptor(app, _desc, overrideDefaults = {}) {

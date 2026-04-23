@@ -39,11 +39,11 @@ class Gate extends SimulationComponent {
     link(grid) {
         super.link(grid);
         this.element.classList.add('gate');
-        this.setHoverMessage(this.inner, `<b>${this.label}-Gate</b>. <i>E</i> Edit, ${Component.HOTKEYS}.`, { type: 'hover' });
+        this.setHoverMessage(this.inner, `<b>${this.typeLabel}</b>. <i>E</i> Edit, ${Component.HOTKEYS}.`, { type: 'hover' });
     }
 
-    get actionLabel() {
-        return `${this.label} gate`;
+    get typeLabel() {
+        return `${this.topMarkings}-Gate`;
     }
 
     // Declare component simulation item.
@@ -131,9 +131,9 @@ class Gate extends SimulationComponent {
         descriptor['#t'] = config.type;
     }
 
-    static toolbarMeta(desc) {
+    static descriptorInfo(desc) {
         const label = desc['#t'].toUpperFirst();
-        return { label, hoverMessage: `<b>${label} gate</b>.` };
+        return { label, hoverMessage: `<b>${label}-gate</b>.` };
     }
 
     static fromDescriptor(app, desc, overrideDefaults = {}) {

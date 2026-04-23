@@ -106,20 +106,23 @@ class ComponentToolbar extends Toolbar {
     }
 
     // Creates a component button (on this toolbar/submenu) that, when dragged onto the drop zone, pins to the main toolbar.
-    createPinnableComponentButton(label, hoverMessage, create, descriptor, toolbarLabel = label) {
-        assert.string(label);
-        assert.string(hoverMessage);
+    createPinnableComponentButton(create, descriptor, label = null) {
         assert.function(create);
-        assert.string(toolbarLabel);
+        assert.object(descriptor);
+        assert.string(label, true);
         const mainToolbar = this.app.toolbar;
-        return this.createComponentButton(label, hoverMessage + ` ${Application.TOOLTIP_HINT_MENU}`, create,
+        const cls = GridItem.CLASSES[descriptor['#c']];
+        const descriptorInfo = cls?.descriptorInfo?.(descriptor);
+        const descriptorLabel = descriptorInfo?.label;
+        const buttonLabel = label ?? descriptorLabel;
+        const hoverMessage = descriptorInfo?.hoverMessage ?? `${descriptorLabel ?? label}.`;
+        return this.createComponentButton(buttonLabel, hoverMessage + ` ${Application.TOOLTIP_HINT_MENU}`, create,
             () => {
                 // Adds a pinned button to the main toolbar and records it for serialization.
-                const cls = GridItem.CLASSES[descriptor['#c']];
-                const pin = cls?.toolbarMeta ? { descriptor } : { label: toolbarLabel, descriptor };
+                const pin = cls?.descriptorInfo ? { descriptor } : { label: buttonLabel, descriptor };
                 pin.factory = create;
                 const createFromPin = (grid, x, y) => pin.factory(grid, x, y);
-                const item = mainToolbar.createPinnedComponentButton(toolbarLabel, hoverMessage + ` ${Application.TOOLTIP_HINT_PIN}`, createFromPin,
+                const item = mainToolbar.createPinnedComponentButton(descriptorLabel, hoverMessage + ` ${Application.TOOLTIP_HINT_PIN}`, createFromPin,
                     (buttonNode) => mainToolbar.#removePin(pin, buttonNode),
                     () => mainToolbar.#syncPinsFromDOM());
                 item.node.__pin = pin;
@@ -137,7 +140,7 @@ class ComponentToolbar extends Toolbar {
             const cls = GridItem.CLASSES[pin.descriptor['#c']];
             const create = cls?.fromDescriptor?.(this.app, pin.descriptor, pin.defaults ?? {}) ?? null;
             if (create) {
-                const meta = cls.toolbarMeta?.(pin.descriptor);
+                const meta = cls.descriptorInfo?.(pin.descriptor);
                 const label = pin.label ?? meta?.label;
                 if (!label) continue;
                 const storedPin = meta
@@ -145,7 +148,7 @@ class ComponentToolbar extends Toolbar {
                     : { label, descriptor: pin.descriptor, defaults: pin.defaults };
                 storedPin.factory = create;
                 const createFromPin = (grid, x, y) => storedPin.factory(grid, x, y);
-                const item = this.createPinnedComponentButton(label, (meta?.hoverMessage ?? label) + ` ${Application.TOOLTIP_HINT_PIN}`, createFromPin,
+                const item = this.createPinnedComponentButton(label, (meta?.hoverMessage ?? `${label}.`) + ` ${Application.TOOLTIP_HINT_PIN}`, createFromPin,
                     (buttonNode) => this.#removePin(storedPin, buttonNode),
                     () => this.#syncPinsFromDOM());
                 item.node.__pin = storedPin;
@@ -175,7 +178,7 @@ class ComponentToolbar extends Toolbar {
             if (cls.updateDescriptorFromConfig) {
                 cls.updateDescriptorFromConfig(pin.descriptor, config);
             }
-            const meta = cls.toolbarMeta?.(pin.descriptor);
+            const meta = cls.descriptorInfo?.(pin.descriptor);
             buttonNode.textContent = pin.label ?? meta?.label ?? buttonNode.textContent;
             pin.factory = cls.fromDescriptor(this.app, pin.descriptor, pin.defaults);
             this.app.haveChanges = true;

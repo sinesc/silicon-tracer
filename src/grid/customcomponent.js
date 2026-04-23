@@ -54,11 +54,11 @@ class CustomComponent extends VirtualComponent {
         this.type = circuit.label;
         super.link(grid);
         this.element.classList.add('custom');
-        this.setHoverMessage(this.inner, () => `<b>${this.label}</b>. <i>E</i> Edit, <i>W</i> Switch to sub-circuit ${this.app.simulations.current ? ' simulation, ' : ', '} ${Component.HOTKEYS}.`, { type: 'hover' });
+        this.setHoverMessage(this.inner, () => `<b>${this.typeLabel}</b>. <i>E</i> Edit, <i>W</i> Switch to sub-circuit ${this.app.simulations.current ? ' simulation, ' : ', '} ${Component.HOTKEYS}.`, { type: 'hover' });
     }
 
-    get actionLabel() {
-        return `"${this.label}" component`;
+    get typeLabel() {
+        return `"${this.topMarkings}" component`;
     }
 
     // Update ports from circuit.
@@ -243,6 +243,15 @@ class CustomComponent extends VirtualComponent {
     // Returns the app-level placement defaults relevant to this component descriptor.
     static getPlacementDefaults(_app, _descriptor) {
         return {};
+    }
+
+    static descriptorInfo(desc) {
+        const uid = desc['#u'];
+        const circuit = app.circuits.byUID(uid);
+        if (!circuit) {
+            return super.descriptorInfo(desc);
+        }
+        return { label: circuit.label, hoverMessage: `<b>${circuit.label}</b>. ${circuit.description ? "(" + circuit.description + ")" : ""}` };
     }
 
     static fromDescriptor(app, desc, overrideDefaults = {}) {

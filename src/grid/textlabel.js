@@ -3,6 +3,9 @@
 // Custom text
 class TextLabel extends GridItem {
 
+    static TYPE_LABEL = 'Text';
+    static TYPE_DESCRIPTION = 'Userdefined text message.';
+
     static EDIT_DIALOG = [
         { name: 'text', label: 'Text', type: 'string', check: (v, f) => v.trim().length > 0 },
         { name: 'fontSize', label: 'Font size', type: 'select', options: { "small": "Small", "medium": "Medium", "large": "Large" } },
@@ -287,8 +290,9 @@ class TextLabel extends GridItem {
         this.#element.style.top = v.y + "px";
     }
 
-    static toolbarMeta(_desc) {
-        return { label: 'Text', hoverMessage: '<b>Userdefined text message</b>.' };
+    // Returns default button label and hover message for component factory buttons.
+    static descriptorInfo(_desc) {
+        return { label: this.TYPE_LABEL ?? this.name /*the classname*/, hoverMessage: `<b>${this.TYPE_LABEL_LONG ?? this.TYPE_LABEL ?? this.name}</b>. ${this.TYPE_DESCRIPTION ?? ''}` };
     }
 
     static fromDescriptor(app, _desc, overrideDefaults = {}) {

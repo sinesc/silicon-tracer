@@ -3,6 +3,9 @@
 // A probe component that displays the state of a net it is attached to.
 class Probe extends DisplayComponent {
 
+    static TYPE_LABEL = 'Probe';
+    static TYPE_DESCRIPTION = 'Displays the state of the attached net.';
+
     static EDIT_DIALOG = [
         { name: 'name', label: 'Name', type: 'string', check: (v) => v ==='' || /^\w+$/.test(v) },
         { name: 'displayFormat', label: 'Display format', type: 'select', options: DisplayComponent.DISPLAY_FORMATS },
@@ -30,7 +33,7 @@ class Probe extends DisplayComponent {
     link(grid) {
         super.link(grid);
         const sim = this.app.simulations;
-        this.setHoverMessage(this.inner, () => `Probe <b>${this.#displayName(this.instanceId)}</b>. <i>E</i> Edit, ${sim.current ? '' : '<u>'}<i>M</i> Monitor, <i>SHIFT+M</i> Monitor all instances${sim.current ? '' : '</u>'}, ${Component.HOTKEYS}.`, { type: 'hover' });
+        this.setHoverMessage(this.inner, () => `<b>${this.typeLabel}</b> <b>${this.#displayName(this.instanceId)}</b>. <i>E</i> Edit, ${sim.current ? '' : '<u>'}<i>M</i> Monitor, <i>SHIFT+M</i> Monitor all instances${sim.current ? '' : '</u>'}, ${Component.HOTKEYS}.`, { type: 'hover' });
         this.#labelElement = html(this.element, 'div', 'port-name');
         this.element.classList.add('probe', 'status-outline');
     }
@@ -109,12 +112,17 @@ class Probe extends DisplayComponent {
     // Computes the display label from the current net state of all attached nets.
     // For single-bit nets: '0', '1', 'E' (conflict), or '~' (undriven).
     // For multi-bit nets: formatted integer value, 'E' (conflict), or '~' (undriven).
-    get label() {
+    get topMarkings() {
         const netIds = this.#input.netIds;
         if (!netIds || netIds.length === 0) return '~';
         const engine = this.app.simulations?.current?.engine;
         if (!engine) return '~';
         return Probe.#displayValue(engine, netIds, this.displayFormat);
+    }
+
+    // Returns the component type label used in undo action descriptions and hover messages.
+    get typeLabel() {
+        return 'Network probe';
     }
 
     // Returns the formatted value for a named probe. Probe component is not required to be linked.
@@ -174,16 +182,12 @@ class Probe extends DisplayComponent {
 
         // Render the current state of the input net(s).
         const state = this.getNetState(this.#input.netIds);
-        const currentLabel = this.label;
+        const currentLabel = this.topMarkings;
         if (this.element.getAttribute('data-net-state') !== state || this.#prevLabel !== currentLabel) {
             this.element.setAttribute('data-net-state', state);
             this.inner.innerHTML = '<span>' + currentLabel + '</span>';
             this.#prevLabel = currentLabel;
         }
-    }
-
-    static toolbarMeta(_desc) {
-        return { label: 'Probe', hoverMessage: '<b>Net state probe</b>. Displays the state of attached net.' };
     }
 
     static fromDescriptor(app, _desc, overrideDefaults = {}) {

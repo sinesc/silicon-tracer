@@ -426,8 +426,7 @@ class Application {
                 const text = label + (description ? ' (' + description + ').' : '.');
                 // place circuit as component
                 if (uid !== this.grid.circuit.uid && !this.circuits.subcircuitUIDs(uid).has(this.grid.circuit.uid)) {
-                    const componentButton = circuitMenu.createPinnableComponentButton('&#9094;', text,
-                        (grid, x, y) => grid.addItem(new CustomComponent(this, x, y, 0, uid), false), { '#c': 'CustomComponent', '#u': uid }, label);
+                    const componentButton = circuitMenu.createPinnableComponentButton((grid, x, y) => grid.addItem(new CustomComponent(this, x, y, 0, uid), false), { '#c': 'CustomComponent', '#u': uid }, '&#9094;');
                     componentButton.node.classList.add('toolbar-circuit-place');
                 }
                 // circuit select
@@ -448,63 +447,54 @@ class Application {
             // routing/utilities
             componentMenu.createMenuCategory('Routing &amp; labeling', 'Ports, tunnels, splitters, text.', (routingMenu) => {
                 routingMenu.clear();
-                routingMenu.createPinnableComponentButton('Port', `<b>Component IO pin</b>.`,
-                    (grid, x, y) => grid.addItem(new Port(this, x, y, defaults.port.rotation), false), { '#c': 'Port' });
-                routingMenu.createPinnableComponentButton('Splitter', `<b>Wire splitter/joiner</b>.`,
-                    (grid, x, y) => grid.addItem(new Splitter(this, x, y, defaults.splitter.rotation, defaults.splitter.numSplits), false), { '#c': 'Splitter' });
-                routingMenu.createPinnableComponentButton('Tunnel', `<b>Network tunnel</b>.`,
-                    (grid, x, y) => grid.addItem(new Tunnel(this, x, y, defaults.tunnel.rotation), false), { '#c': 'Tunnel' });
-                routingMenu.createPinnableComponentButton('Probe', `<b>Net state probe</b>. Displays the state of attached net.`,
-                    (grid, x, y) => grid.addItem(new Probe(this, x, y, defaults.probe.rotation), false), { '#c': 'Probe' });
-                routingMenu.createPinnableComponentButton('Text', `<b>Userdefined text message</b>.`,
-                    (grid, x, y) => grid.addItem(new TextLabel(this, x, y, defaults.textlabel.rotation), false), { '#c': 'TextLabel' });
+                routingMenu.createPinnableComponentButton((grid, x, y) => grid.addItem(new Port(this, x, y, defaults.port.rotation), false), { '#c': 'Port' });
+                routingMenu.createPinnableComponentButton((grid, x, y) => grid.addItem(new Splitter(this, x, y, defaults.splitter.rotation, defaults.splitter.numSplits), false), { '#c': 'Splitter' });
+                routingMenu.createPinnableComponentButton((grid, x, y) => grid.addItem(new Tunnel(this, x, y, defaults.tunnel.rotation), false), { '#c': 'Tunnel' });
+                routingMenu.createPinnableComponentButton((grid, x, y) => grid.addItem(new Probe(this, x, y, defaults.probe.rotation), false), { '#c': 'Probe' });
+                routingMenu.createPinnableComponentButton((grid, x, y) => grid.addItem(new TextLabel(this, x, y, defaults.textlabel.rotation), false), { '#c': 'TextLabel' });
 
             });
 
             // io/utilities
             componentMenu.createMenuCategory('IO/Control', 'Clocks, constants, ...', (ioMenu) => {
                 ioMenu.clear();
-                ioMenu.createPinnableComponentButton('Clock', `<b>Clock</b>.`,
-                    (grid, x, y) => grid.addItem(new Clock(this, x, y, defaults.clock.rotation), false), { '#c': 'Clock' });
-                ioMenu.createPinnableComponentButton('Constant', `<b>Constant value</b>.`,
-                    (grid, x, y) => grid.addItem(new Constant(this, x, y, defaults.constant.rotation), false), { '#c': 'Constant' });
-                ioMenu.createPinnableComponentButton('Pull resistor', `<b>Pull up/down resistor</b>.`,
-                    (grid, x, y) => grid.addItem(new PullResistor(this, x, y, defaults.pull.rotation), false), { '#c': 'PullResistor' });
-                ioMenu.createPinnableComponentButton('Toggle switch', `<b>Toggle switch</b> with permanently saved state.`,
-                    (grid, x, y) => grid.addItem(new Switch(this, x, y, defaults.switch.rotation, 'toggle'), false), { '#c': 'Switch', '#t': 'toggle' });
-                ioMenu.createPinnableComponentButton('Momentary switch', `<b>Momentary switch</b>.`,
-                    (grid, x, y) => grid.addItem(new Switch(this, x, y, defaults.switch.rotation, 'momentary'), false), { '#c': 'Switch', '#t': 'momentary' });
-                ioMenu.createPinnableComponentButton('ROM', `<b>Read-only memory</b>.`,
-                    (grid, x, y) => grid.addItem(new Memory(this, x, y, defaults.rom.rotation, 'rom', defaults.rom.addressWidth, defaults.rom.dataWidth), false), { '#c': 'Memory', '#t': 'rom' });
-                ioMenu.createPinnableComponentButton('RAM', `<b>Read/write memory</b>.`,
-                    (grid, x, y) => grid.addItem(new Memory(this, x, y, defaults.ram.rotation, 'ram', defaults.ram.addressWidth, defaults.ram.dataWidth, null, defaults.ram.combinedPorts), false), { '#c': 'Memory', '#t': 'ram' });
+                ioMenu.createPinnableComponentButton((grid, x, y) => grid.addItem(new Clock(this, x, y, defaults.clock.rotation), false), { '#c': 'Clock' });
+                ioMenu.createPinnableComponentButton((grid, x, y) => grid.addItem(new Constant(this, x, y, defaults.constant.rotation), false), { '#c': 'Constant' });
+                ioMenu.createPinnableComponentButton((grid, x, y) => grid.addItem(new PullResistor(this, x, y, defaults.pull.rotation), false), { '#c': 'PullResistor' });
+                ioMenu.createPinnableComponentButton((grid, x, y) => grid.addItem(new Switch(this, x, y, defaults.switch.rotation, 'toggle'), false), { '#c': 'Switch', '#t': 'toggle' });
+                ioMenu.createPinnableComponentButton((grid, x, y) => grid.addItem(new Switch(this, x, y, defaults.switch.rotation, 'momentary'), false), { '#c': 'Switch', '#t': 'momentary' });
+                ioMenu.createPinnableComponentButton((grid, x, y) => grid.addItem(new Memory(this, x, y, defaults.rom.rotation, 'rom', defaults.rom.addressWidth, defaults.rom.dataWidth), false), { '#c': 'Memory', '#t': 'rom' });
+                ioMenu.createPinnableComponentButton((grid, x, y) => grid.addItem(new Memory(this, x, y, defaults.ram.rotation, 'ram', defaults.ram.addressWidth, defaults.ram.dataWidth, null, defaults.ram.combinedPorts), false), { '#c': 'Memory', '#t': 'ram' });
             });
 
             // add gates
             componentMenu.createMenuCategory('Gates', 'Basic gates.', (gatesMenu) => {
                 gatesMenu.clear();
                 for (const [ gateType, { joinOp } ] of Object.entries(Simulation.GATE_MAP)) {
-                    const gateLabel = gateType.toUpperFirst();
-                    gatesMenu.createPinnableComponentButton(gateLabel, `<b>${gateLabel} gate</b>.`,
+                    gatesMenu.createPinnableComponentButton(
                         (grid, x, y) => {
                             const numInputs = defaults[gateType]?.numInputs ?? defaults.gate.numInputs;
                             return grid.addItem(new Gate(this, x, y, defaults[gateType]?.rotation ?? defaults.gate.rotation, gateType, joinOp !== null ? numInputs : 1), false);
-                        }, { '#c': 'Gate', '#t': gateType });
+                        },
+                        { '#c': 'Gate', '#t': gateType }
+                    );
                 }
             });
 
             // add extra gate-like builtins
             componentMenu.createMenuCategory('Logic components', 'Latches, muxes, ...', (builtinMenu) => {
                 builtinMenu.clear();
+                // todo: only required so we can sort by actual label, should add support method for this of manually sort the source array
                 const builtins = [];
                 for (const [ builtinType, builtin ] of pairs(Builtin.META_INFO)) {
                     builtins.push([ builtinType, builtin.label ?? builtinType.toUpperFirst() ]);
                 }
                 builtins.sort((a, b) => a[1].localeCompare(b[1], 'en', { numeric: true }));
-                for (const [ builtinType, builtinLabel ] of values(builtins)) {
-                    builtinMenu.createPinnableComponentButton(builtinLabel, `<b>${builtinLabel}</b> builtin.`,
+                for (const [ builtinType ] of values(builtins)) {
+                    builtinMenu.createPinnableComponentButton(
                         (grid, x, y) => grid.addItem(new Builtin(this, x, y, defaults[builtinType]?.rotation ?? defaults.builtin.rotation, builtinType), false),
-                        { '#c': 'Builtin', '#t': builtinType });
+                        { '#c': 'Builtin', '#t': builtinType }
+                    );
                 }
             });
 
@@ -523,8 +513,7 @@ class Application {
                         const text = label + (description ? ' (' + description + ').' : '.');
                         // place component as component
                         if (!isCurrentGrid) {
-                            const componentButton = libraryMenu.createPinnableComponentButton('&#9094;', text,
-                                (grid, x, y) => grid.addItem(new CustomComponent(this, x, y, 0, uid), false), { '#c': 'CustomComponent', '#u': uid }, label);
+                            const componentButton = libraryMenu.createPinnableComponentButton((grid, x, y) => grid.addItem(new CustomComponent(this, x, y, 0, uid), false), { '#c': 'CustomComponent', '#u': uid }, '&#9094;');
                             componentButton.node.classList.add('toolbar-circuit-place');
                         }
                         // component select

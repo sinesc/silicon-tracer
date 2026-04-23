@@ -3,6 +3,10 @@
 // A network tunnel connecting all tunnels of the same name/circuit.
 class Tunnel extends VirtualComponent {
 
+    static TYPE_LABEL = 'Tunnel';
+    static TYPE_LABEL_LONG = 'Network tunnel';
+    static TYPE_DESCRIPTION = 'Tunnels of the same name connect.';
+
     static EDIT_DIALOG = [
         { name: 'name', label: 'Network name', type: 'string' /*, check: (v, f) => v !== '' */ },
         ...Component.EDIT_DIALOG,
@@ -72,11 +76,11 @@ class Tunnel extends VirtualComponent {
     }
 
     // Override inner component label.
-    get label() {
+    get topMarkings() {
         return '';
     }
 
-    get actionLabel() {
+    get typeLabel() {
         return 'Tunnel';
     }
 
@@ -102,10 +106,6 @@ class Tunnel extends VirtualComponent {
         if (this.element.getAttribute('data-net-state') !== state) {
             this.element.setAttribute('data-net-state', state);
         }
-    }
-
-    static toolbarMeta(_desc) {
-        return { label: 'Tunnel', hoverMessage: '<b>Network tunnel</b>.' };
     }
 
     static fromDescriptor(app, _desc, overrideDefaults = {}) {

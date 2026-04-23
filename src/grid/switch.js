@@ -199,14 +199,13 @@ class Switch extends SimulationComponent {
         }
     }
 
-    static toolbarMeta(desc) {
+    static descriptorInfo(desc) {
         if (desc['#t'] === 'toggle') {
             return { label: 'Toggle switch', hoverMessage: '<b>Toggle switch</b> with permanently saved state.' };
-        }
-        if (desc['#t'] === 'momentary') {
+        } else if (desc['#t'] === 'momentary') {
             return { label: 'Momentary switch', hoverMessage: '<b>Momentary switch</b>.' };
         }
-        return null;
+        return super.descriptorInfo(desc);
     }
 
     static fromDescriptor(app, desc, overrideDefaults = {}) {

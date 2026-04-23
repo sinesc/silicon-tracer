@@ -3,6 +3,9 @@
 // Basic clock provider.
 class PullResistor extends SimulationComponent {
 
+    static TYPE_LABEL = 'Pull resistor';
+    static TYPE_LABEL_LONG = 'Pull up/down resistor';
+
     static EDIT_DIALOG = [
         { name: 'direction', label: 'Pull direction', type: 'select', options: { "up": "Up", "down": "Down" } },
         ...Component.EDIT_DIALOG,
@@ -37,7 +40,7 @@ class PullResistor extends SimulationComponent {
     }
 
     // Override inner component label.
-    get label() {
+    get topMarkings() {
         return this.#direction.toUpperFirst();
     }
 
@@ -65,10 +68,6 @@ class PullResistor extends SimulationComponent {
             this.redraw();
             this.grid.trackAction('Edit pull resistor');
         }
-    }
-
-    static toolbarMeta(_desc) {
-        return { label: 'Pull resistor', hoverMessage: '<b>Pull up/down resistor</b>.' };
     }
 
     static fromDescriptor(app, _desc, overrideDefaults = {}) {

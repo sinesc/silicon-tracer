@@ -3,6 +3,8 @@
 // Basic clock provider.
 class Clock extends SimulationComponent {
 
+    static TYPE_LABEL = 'Clock';
+
     static EDIT_DIALOG = [
         { name: 'frequency', label: 'Frequency in Hz', type: 'int', postCheck: (v, f) => isFinite(v) && v >= 1 },
         ...Component.EDIT_DIALOG,
@@ -67,10 +69,6 @@ class Clock extends SimulationComponent {
             }
             this.grid.trackAction('Edit clock');
         }
-    }
-
-    static toolbarMeta(_desc) {
-        return { label: 'Clock', hoverMessage: '<b>Clock</b>.' };
     }
 
     static fromDescriptor(app, _desc, overrideDefaults = {}) {

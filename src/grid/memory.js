@@ -44,7 +44,7 @@ class Memory extends SimulationComponent {
         this.#relabelDataPorts();
     }
 
-    get label() {
+    get topMarkings() {
         return `${this.#memType.toUpperCase()} ${this.#addressWidth}x${this.#dataWidth}`;
     }
 
@@ -67,7 +67,7 @@ class Memory extends SimulationComponent {
     link(grid) {
         super.link(grid);
         this.element.classList.add('memory');
-        this.setHoverMessage(this.inner, `<b>${this.label}</b>. <i>E</i> Edit, <i>SHIFT+E</i> Edit contents, ${Component.HOTKEYS}.`, { type: 'hover' });
+        this.setHoverMessage(this.inner, `<b>${this.typeLabel}</b>. <i>E</i> Edit, <i>SHIFT+E</i> Edit contents, ${Component.HOTKEYS}.`, { type: 'hover' });
     }
 
     // Handle hotkeys - add shift+e for hex edit
@@ -96,7 +96,7 @@ class Memory extends SimulationComponent {
     // Handle edit hotkey.
     async onEdit() {
         const editDialog = this.#memType === 'ram' ? Memory.#RAM_EDIT_DIALOG : Memory.#ROM_EDIT_DIALOG;
-        const config = await dialog(`Configure ${this.label}`, editDialog, { data: this.#data, addressWidth: this.#addressWidth, dataWidth: this.#dataWidth, combinedPorts: this.#combinedPorts, rotation: this.rotation });
+        const config = await dialog(`Configure ${this.typeLabel}`, editDialog, { data: this.#data, addressWidth: this.#addressWidth, dataWidth: this.#dataWidth, combinedPorts: this.#combinedPorts, rotation: this.rotation });
         if (config) {
             if (config._changed) {
                 const grid = this.grid;
@@ -222,10 +222,13 @@ class Memory extends SimulationComponent {
         return app.config.placementDefaults[memType] ?? {};
     }
 
-    static toolbarMeta(desc) {
-        if (desc['#t'] === 'rom') return { label: 'ROM', hoverMessage: '<b>Read-only memory</b>.' };
-        if (desc['#t'] === 'ram') return { label: 'RAM', hoverMessage: '<b>Read/write memory</b>.' };
-        return null;
+    static descriptorInfo(desc) {
+        if (desc['#t'] === 'rom') {
+            return { label: 'ROM', hoverMessage: '<b>Read-only memory</b>.' };
+        } else if (desc['#t'] === 'ram') {
+            return { label: 'RAM', hoverMessage: '<b>Read/write memory</b>.' };
+        }
+        return super.descriptorInfo(desc);
     }
 
     static fromDescriptor(app, desc, overrideDefaults = {}) {

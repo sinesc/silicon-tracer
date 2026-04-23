@@ -174,6 +174,10 @@ class ComponentPort {
 // General component used as a base class for Gates/Builtins or user defined circuits when represented within other circuits.
 class Component extends GridItem {
 
+    static TYPE_LABEL = null;
+    static TYPE_LABEL_LONG = null;
+    static TYPE_DESCRIPTION = null;
+
     static HOTKEYS = '<i>Drag</i> Move, <i>SHIFT+Drag</i> Move and adjust wire length, <i>ALT+Drop</i> Accept ghost wires, <i>R</i> Rotate, <i>DEL</i> Delete, ' + GridItem.HOTKEYS;
 
     static EDIT_DIALOG = [
@@ -202,12 +206,12 @@ class Component extends GridItem {
     #rotation = 0;
     #portLabelCharPos;
 
-    constructor(app, x, y, rotation, ports, type, portChannels = null, portIoTypes = null) {
+    constructor(app, x, y, rotation, ports, type = null, portChannels = null, portIoTypes = null) {
         assert.integer(rotation);
-        assert.string(type);
+        assert.string(type, true);
         super(app, x, y);
         this.#rotation = rotation & 3;
-        this.#type = type;
+        this.#type = type ?? this.constructor.name.toLowerCase();
         this.setPortsFromNames(ports, portChannels, portIoTypes);
     }
 
@@ -258,7 +262,7 @@ class Component extends GridItem {
         // container and inner area with name
         this.#element = html(null, 'div', 'component');
         this.#element.setAttribute('data-component-type', this.#type);
-        this.#inner = html(this.#element, 'div', 'component-inner', `<span>${this.label}</span>`);
+        this.#inner = html(this.#element, 'div', 'component-inner', `<span>${this.topMarkings}</span>`);
         this.registerMouseAction(this.#inner, { type: "component", grabOffsetX: null, grabOffsetY: null });
         this.#findPortLabelCharPos();
 
@@ -337,7 +341,7 @@ class Component extends GridItem {
     // Returns true if the search string matches this component.
     match(string) {
         assert.string(string);
-        return this.label.toLowerCase().includes(string);
+        return this.topMarkings.toLowerCase().includes(string);
     }
 
     // Return grid item rotation.
@@ -379,7 +383,7 @@ class Component extends GridItem {
         }
     }
 
-    // Get component type string.
+    // Get component type string (used for CSS styling, base value for default topMarkings and typeLabel)
     get type() {
         return this.#type;
     }
@@ -392,18 +396,18 @@ class Component extends GridItem {
             this.#element.setAttribute('data-component-type', this.#type); // TODO set dirty instead
         }
         if (this.#inner) {
-            this.#inner.innerHTML = '<span>' + this.label + '</span>';
+            this.#inner.innerHTML = '<span>' + this.topMarkings + '</span>';
         }
     }
 
-    // Returns the component label string.
-    get label() {
+    // Returns the text displayed ontop of the component.
+    get topMarkings() {
         return this.#type.toUpperFirst()
     }
 
-    // Returns the label used in undo action descriptions.
-    get actionLabel() {
-        return this.label;
+    // Returns the component type label used in text referring to what the component is.
+    get typeLabel() {
+        return this.topMarkings;
     }
 
     // Returns the component root element.
@@ -453,11 +457,11 @@ class Component extends GridItem {
                 // queue class removal for next render call to avoid brief flickering
                 this.redraw(true, () => this.#element.classList.remove('component-rotate-animation'));
             }, 150);
-            this.grid.trackAction(`Rotate ${this.actionLabel}`);
+            this.grid.trackAction(`Rotate ${this.typeLabel}`);
             return true;
         } else if (key === 'Delete' && what.type === 'hover') {
             const grid = this.grid;
-            const label = this.actionLabel;
+            const label = this.typeLabel;
             this.#element.classList.add('component-delete-animation');
             setTimeout(() => {
                 if (this.#element) { // deletion might already be in progress
@@ -554,7 +558,7 @@ class Component extends GridItem {
                     delete what.singleLengthDrag;
                     this.grid.markWiresChanged();
                 }
-                this.grid.trackAction(what.isNew ? `Add ${this.actionLabel}` : `Move ${this.actionLabel}`);
+                this.grid.trackAction(what.isNew ? `Add ${this.typeLabel}` : `Move ${this.typeLabel}`);
             }
             return true;
         } else if (what.type === 'port' && status === 'start') {
@@ -638,7 +642,7 @@ class Component extends GridItem {
     // Override redraw to also update the inner label.
     redraw(recompile = true, beforeRender = null) {
         super.redraw(recompile, beforeRender);
-        this.#inner.innerHTML = `<span>${this.label}</span>`;
+        this.#inner.innerHTML = `<span>${this.topMarkings}</span>`;
     }
 
     // Renders/updates the current net state of the component ports to the grid.
@@ -650,6 +654,11 @@ class Component extends GridItem {
                 item.element.setAttribute('data-net-state', state);
             }
         }
+    }
+
+    // Returns default button label and hover message for component factory buttons.
+    static descriptorInfo(_desc) {
+        return { label: this.TYPE_LABEL ?? this.name /*the classname*/, hoverMessage: `<b>${this.TYPE_LABEL_LONG ?? this.TYPE_LABEL ?? this.name}</b>. ${this.TYPE_DESCRIPTION ?? ''}` };
     }
 
     // Removes all current ghost wires from the grid.
