@@ -45,6 +45,7 @@ function loadScript(filePath) {
 // Parse script load order from index.html, skipping files that require a real
 // browser environment (UI-only) or that the harness replaces with stubs.
 const SKIP_SCRIPTS = new Set([
+    'src/ui/componenttoolbar.js',
     'src/ui/toolbar.js',
     'src/ui/dialog.js',
     'src/ui/simulations.js',
@@ -77,6 +78,7 @@ const APPLICATION_STUB = `
             debug: false,
         };
         grid = { trackAction() {}, setCircuit() {}, setCircuitLabel() {}, setSimulationLabel() {} };
+        toolbar = { loadPins() {} };
         simulations = { current: null };
         circuits = null;
         toolbarPins = [];
