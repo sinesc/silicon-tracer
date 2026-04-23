@@ -32,7 +32,6 @@ class Grid {
         viewportUpdate: false,          // zoom changed -> propagate NEEDS_FULL_RENDER to all items
         monitorRefresh: false,          // simulation recompiled, need to update probes
     };
-    #suppressCircuitEvents = false;     // true while Wire.compact runs inside render()
     #infoBoxElement = null;
     #infoBoxSections = [];              // Array<{ id, interval, overlay, node, lastRenderTime }>
     #searchBar = null;
@@ -93,7 +92,6 @@ class Grid {
         }
         this.#savedSelections.set(this.#circuit, this.#selection.items.slice());
         this.#selection.reset();
-        this.#circuit.setGridListener(null);
         this.#circuit.unlink();
         this.#circuit = null;
         this.#clearJunctions();
@@ -111,7 +109,6 @@ class Grid {
         this.unsetCircuit();
         this.#circuit = circuit;
         this.#circuit.link(this);
-        this.#circuit.setGridListener(this);
         if (this.circuitOverlay) {
             this.circuitOverlay.setLabel(circuit.label);
             this.circuitOverlay.setInstanceId(null);
@@ -119,7 +116,9 @@ class Grid {
         this.#pending.bgPattern = true;
         this.#pending.netColors = true;
         this.#pending.junctionRebuild = true;
-        for (const entry of this.#infoBoxSections) entry.lastRenderTime = null;
+        for (const entry of this.#infoBoxSections) {
+            entry.lastRenderTime = null;
+        }
         this.#updateWorldTransform();
         if (!circuit.readonly && circuit.undoStack.currentSnapshot === null) {
             circuit.undoStack.init(this.#captureUndoState());
@@ -134,30 +133,41 @@ class Grid {
         }
     }
 
-    // Adds an item to the grid. Automatically done by GridItem constructor.
-    // restart=false suppresses circuit events (e.g. for temporary limbo wires in WireBuilder).
+    // Adds an item to the grid. restart=false skips scheduling recompile (e.g. limbo wires in WireBuilder).
     addItem(item, restart = true) {
         assert.class(GridItem, item);
         assert.bool(restart);
-        if (!restart) this.#suppressCircuitEvents = true;
-        this.#circuit.addItem(item); // fires onCircuitItemAdded unless suppressed
-        if (!restart) this.#suppressCircuitEvents = false;
+        this.#circuit.addItem(item);
         item.link(this);
         this.#app.haveChanges = true;
+        if (restart) {
+            if (item instanceof Wire && !item.limbo) {
+                this.#pending.wireCompact = true;
+            }
+            this.#pending.recompile = true;
+            this.#pending.netColors = true;
+            this.#pending.junctionRebuild = true;
+        }
         return item;
     }
 
-    // Removes an item from the grid and the current circuit.
-    // restart=false suppresses circuit events (e.g. for temporary limbo wires in WireBuilder).
+    // Removes an item from the grid and the current circuit. restart=false skips scheduling recompile.
     removeItem(item, restart = true) {
         assert.class(GridItem, item);
         assert.bool(restart);
         item.unlink();
-        if (!restart) this.#suppressCircuitEvents = true;
-        this.#circuit.removeItem(item); // fires onCircuitItemRemoved unless suppressed
-        if (!restart) this.#suppressCircuitEvents = false;
+        this.#circuit.removeItem(item);
         this.releaseHotkeyTarget(item);
         this.#app.haveChanges = true;
+        if (restart) {
+            if (item instanceof Wire) {
+                this.#pending.wireCompact = true;
+            }
+            this.#selection.prune();
+            this.#pending.recompile = true;
+            this.#pending.netColors = true;
+            this.#pending.junctionRebuild = true;
+        }
         return item;
     }
 
@@ -206,9 +216,7 @@ class Grid {
         if (!this.#passive) {
             // compact wires (must run before sim recompile to expose final wire topology)
             if (this.#pending.wireCompact && this.#circuit) {
-                this.#suppressCircuitEvents = true;
                 Wire.compact(this);
-                this.#suppressCircuitEvents = false;
                 this.#pending.wireCompact = false;
                 this.#selection.prune();
                 this.#selection.invalidate();
@@ -347,29 +355,6 @@ class Grid {
         this.#pending.netColors = true;
         this.#pending.junctionRebuild = true;
         this.#pending.monitorRefresh = true;
-    }
-
-    // Called by Circuit when an item is added. Schedules wire compact and simulation recompile as needed.
-    onCircuitItemAdded(item) {
-        if (this.#suppressCircuitEvents) return;
-        if (item instanceof Wire && !item.limbo) {
-            this.#pending.wireCompact = true;
-        }
-        this.#pending.recompile = true;
-        this.#pending.netColors = true;
-        this.#pending.junctionRebuild = true;
-    }
-
-    // Called by Circuit when an item is removed. Schedules wire compact, simulation recompile, and selection pruning.
-    onCircuitItemRemoved(item) {
-        if (this.#suppressCircuitEvents) return;
-        if (item instanceof Wire) {
-            this.#pending.wireCompact = true;
-        }
-        this.#selection.prune();
-        this.#pending.recompile = true;
-        this.#pending.netColors = true;
-        this.#pending.junctionRebuild = true;
     }
 
     // Signals that wires have structurally changed (moved, built, trimmed).
@@ -511,7 +496,6 @@ class Grid {
         const parsed = JSON.parse(snapshot);
         this.#selection.reset(); // clear stale refs before unlink() nulls wire elements
         circuit.unlink();
-        circuit.setGridListener(null); // suppress circuit events during rebuild
         circuit.clearItems();
         circuit.label = parsed.label;
         circuit.description = parsed.description;
@@ -520,7 +504,6 @@ class Grid {
         for (const raw of parsed.data) {
             circuit.addItem(GridItem.unserialize(this.#app, raw, [], null, []));
         }
-        circuit.setGridListener(this); // restore listener before re-linking
         circuit.link(this);
         this.circuitOverlay.setLabel(circuit.label);
         this.simulationOverlay.setLabel(circuit.label);

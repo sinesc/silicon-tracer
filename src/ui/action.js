@@ -324,7 +324,7 @@ class Action {
     // Performs undo on the most recently changed stack (per-circuit or global, whichever is newer).
     static undo(app) {
         assert.class(Application, app);
-        const perStack = app.circuits.current?.undoStack;
+        const perStack = app.grid.circuit?.undoStack;
         const globalStack = app.circuits.globalUndoStack;
         if (globalStack.undoTimestamp > (perStack?.undoTimestamp ?? -Infinity) && globalStack.canUndo) {
             const { snapshot } = globalStack.undo();
@@ -332,7 +332,7 @@ class Action {
         } else if (perStack?.canUndo) {
             const { snapshot } = perStack.undo();
             app.grid.restoreFromUndo(snapshot);
-            app.simulations.markDirty(app.circuits.current);
+            app.simulations.markDirty(app.grid.circuit);
             app.haveChanges = true;
         }
         app.refreshUndoButtons();
@@ -341,11 +341,11 @@ class Action {
     // Performs redo on the current circuit's undo stack.
     static redo(app) {
         assert.class(Application, app);
-        const perStack = app.circuits.current?.undoStack;
+        const perStack = app.grid.circuit?.undoStack;
         if (perStack?.canRedo) {
             const { snapshot } = perStack.redo();
             app.grid.restoreFromUndo(snapshot);
-            app.simulations.markDirty(app.circuits.current);
+            app.simulations.markDirty(app.grid.circuit);
             app.haveChanges = true;
         }
         app.refreshUndoButtons();

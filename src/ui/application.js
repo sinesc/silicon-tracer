@@ -676,7 +676,7 @@ class Application {
     // Updates the undo/redo button labels and enabled state.
     refreshUndoButtons() {
         if (!this.#undoButton || !this.#redoButton) return;
-        const perStack = this.circuits.current?.undoStack;
+        const perStack = this.grid.circuit?.undoStack;
         const globalStack = this.circuits.globalUndoStack;
         const useGlobal = globalStack.undoTimestamp > (perStack?.undoTimestamp ?? -Infinity) && globalStack.canUndo;
         const undoLabel = useGlobal ? globalStack.undoLabel : (perStack?.undoLabel ?? null);

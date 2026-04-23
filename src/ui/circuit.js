@@ -34,7 +34,6 @@ class Circuit {
     #data;
     #gidLookup;
     #lid;
-    #gridListener = null; // Grid currently subscribed to this circuit's item changes.
 
     constructor(app, label, uid = null, data = [], gridConfig = {}, portConfig = {}, lid = null, visibleInLib = true) {
         assert.class(Application, app);
@@ -144,11 +143,6 @@ class Circuit {
         };
     }
 
-    // Subscribes (or unsubscribes when null) a grid to receive item add/remove notifications.
-    setGridListener(grid) {
-        this.#gridListener = grid;
-    }
-
     // Returns item by GID.
     itemByGID(gid) {
         assert.string(gid);
@@ -161,7 +155,6 @@ class Circuit {
         assert.class(GridItem, item);
         this.#data.push(item);
         this.#gidLookup.set(item.gid, new WeakRef(item));
-        this.#gridListener?.onCircuitItemAdded(item);
         return item;
     }
 
@@ -181,7 +174,6 @@ class Circuit {
         } else {
             throw new Error('Failed to find item');
         }
-        this.#gridListener?.onCircuitItemRemoved(item);
         return item;
     }
 

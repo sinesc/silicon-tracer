@@ -190,7 +190,7 @@ class Component extends GridItem {
         { side: 'bottom', other: 'top',    axis: 'x' },
     ];
 
-    static #MAX_GHOST_DISTANCE = 2;
+    static #MAX_GHOST_DISTANCE = 3;
     static #INNER_MARGIN = 5;
 
     #element;
@@ -698,7 +698,8 @@ class Component extends GridItem {
 
                     for (const np of neighborPorts) {
                         const nc = np.coords(neighbor.width, neighbor.height, neighbor.rotation);
-                        const npAbsAxis = axis === 'y' ? neighbor.y + nc.y : neighbor.x + nc.x;
+                        const [ neighborAlignedX, neighborAlignedY ] = this.align(neighbor.x, neighbor.y);
+                        const npAbsAxis = axis === 'y' ? neighborAlignedY + nc.y : neighborAlignedX + nc.x;
 
                         if (spAbsAxis !== npAbsAxis) continue;
 
@@ -707,7 +708,7 @@ class Component extends GridItem {
                         if (axis === 'y') {
                             // horizontal wire
                             const selfAbsX     = alignedX + sc.x;
-                            const neighborAbsX = neighbor.x + nc.x;
+                            const neighborAbsX = neighborAlignedX + nc.x;
                             wx   = Math.min(selfAbsX, neighborAbsX);
                             wy   = spAbsAxis;
                             wLen = Math.abs(selfAbsX - neighborAbsX);
@@ -715,7 +716,7 @@ class Component extends GridItem {
                         } else {
                             // vertical wire
                             const selfAbsY     = alignedY + sc.y;
-                            const neighborAbsY = neighbor.y + nc.y;
+                            const neighborAbsY = neighborAlignedY + nc.y;
                             wx   = spAbsAxis;
                             wy   = Math.min(selfAbsY, neighborAbsY);
                             wLen = Math.abs(selfAbsY - neighborAbsY);

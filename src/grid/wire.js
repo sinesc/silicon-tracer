@@ -68,13 +68,13 @@ class Wire extends GridItem {
 
     // Return whether the element is selected.
     get selected() {
-        return this.#element.classList.contains('selected');
+        return this.#element?.classList.contains('selected') ?? false;
     }
 
     // Apply/remove component selection effect.
     set selected(status) {
         assert.bool(status, true);
-        this.#element.classList.toggle('selected', status);
+        this.#element?.classList.toggle('selected', status);
     }
 
     // Returns the DOM element used by the wire.
@@ -168,7 +168,7 @@ class Wire extends GridItem {
             setTimeout(() => {
                 if (this.#element) { // deletion might already be in progress
                     this.#element.classList.remove('wire-delete-animation');
-                    this.grid.removeItem(this); // fires onCircuitItemRemoved -> compact + recompile + prune
+                    this.grid.removeItem(this); // schedules compact + recompile + prune
                 }
             }, 150);
             return true;
@@ -286,6 +286,10 @@ class Wire extends GridItem {
         if (allWires.length === 0) return;
 
         const app = allWires[0].app;
+        // Grid.addItem/removeItem schedule recompile on restart=true; compact must suppress that.
+        const isGrid = container instanceof Grid;
+        const removeWire = isGrid ? (w) => container.removeItem(w, false) : (w) => container.removeItem(w);
+        const addWire = isGrid ? (w) => container.addItem(w, false) : (w) => container.addItem(w);
 
         // Selected wires are excluded from the merge pass - user may still reposition them.
         // Endpoints still included in cut-point computation so T-junctions stay correct.
@@ -370,12 +374,12 @@ class Wire extends GridItem {
                         ...interiorCuts.sort((a, b) => a - b),
                         groupEnd ];
 
-                    for (const w of groupWires) container.removeItem(w.wire);
+                    for (const w of groupWires) removeWire(w.wire);
 
                     const color = groupWires[0].wire.color;
                     for (let i = 0; i < splitPoints.length - 1; i++) {
                         const from = splitPoints[i], to = splitPoints[i + 1];
-                        container.addItem(new Wire(app, isH ? from : trackCoord, isH ? trackCoord : from, to - from, direction, color));
+                        addWire(new Wire(app, isH ? from : trackCoord, isH ? trackCoord : from, to - from, direction, color));
                     }
                 };
 
