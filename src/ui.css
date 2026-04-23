@@ -984,10 +984,10 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
     user-select: none;
 }
 .grid-info .info-section::after {
-    content: ' ▾';
+    content: ' ▲';
 }
 .grid-info > div.collapsed .info-section::after {
-    content: ' ▸';
+    content: ' ▼';
 }
 .grid-info > div.collapsed > :not(.info-section) {
     display: none;
