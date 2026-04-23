@@ -165,6 +165,12 @@ class Circuit {
         return item;
     }
 
+    // Removes all items from the circuit.
+    clearItems() {
+        this.#data = [];
+        this.#gidLookup = new Map();
+    }
+
     // Removes an item from the circuit.
     removeItem(item) {
         assert.class(GridItem, item);
@@ -224,56 +230,6 @@ class Circuit {
             }
         });
         return { label: this.label, description: this.description, uid: this.uid, data, gridConfig: this.gridConfig, portConfig: this.portConfig, lid: this.#lid, visibleInLib: this.visibleInLib };
-    }
-
-    // Serializes circuit state for undo tracking (excludes gridConfig, uid, lid, visibleInLib).
-    serializeForUndo() {
-        const grid = this.#app.grid;
-        const selectedGids = new Set(grid.circuit === this ? grid.selection.items.map((i) => i.gid) : []);
-        return {
-            label: this.label,
-            description: this.description,
-            portConfig: JSON.parse(JSON.stringify(this.portConfig)),
-            data: this.#data.map((item) => ({ ...item.serialize(), '#gid': item.gid, '#selected': selectedGids.has(item.gid) })),
-        };
-    }
-
-    // Restores circuit state from an undo snapshot produced by serializeForUndo().
-    // Re-links to the grid if this circuit is currently displayed.
-    restoreFromUndo(snapshot) {
-        const grid = this.#app.grid;
-        const isDisplayed = grid.circuit === this;
-        if (isDisplayed) {
-            this.unlink();
-            this.setGridListener(null); // suppress circuit events during rebuild
-        }
-        this.#data = [];
-        this.#gidLookup = new Map();
-        this.label = snapshot.label;
-        this.description = snapshot.description;
-        Object.assign(this.portConfig, snapshot.portConfig);
-        this.portConfig.placement = Object.assign({}, snapshot.portConfig.placement);
-        const selectedGids = new Set();
-        for (const raw of snapshot.data) {
-            const item = GridItem.unserialize(this.#app, raw, [], null, []);
-            if (raw['#gid']) {
-                item.restoreGid(raw['#gid']);
-                if (raw['#selected']) selectedGids.add(raw['#gid']);
-            }
-            this.addItem(item);
-        }
-        if (isDisplayed) {
-            this.setGridListener(grid); // restore listener before re-linking
-            this.link(grid);
-            grid.circuitOverlay.setLabel(this.label);
-            grid.simulationOverlay.setLabel(this.label);
-            grid.onSimulationRecompiled();
-            // Restore selection: match items by their restored GIDs.
-            const newSelection = this.#data.filter((item) => selectedGids.has(item.gid));
-            newSelection.forEach((item) => item.selected = true);
-            grid.selection.set(newSelection);
-            grid.onWiresChanged(); // deferred compact runs next frame with correct selection context
-        }
     }
 
     // Unserializes circuit from decoded JSON-object and adds it to Circuits. Dependencies of CustomComponents will also be added.

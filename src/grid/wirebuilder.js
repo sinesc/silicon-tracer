@@ -115,7 +115,7 @@ class WireBuilder extends GridItem { // Note: Not actually a grid item, but uses
                 this.grid.removeVisual(this['debug' + i]);
             }
         }
-        // limbo=false makes both wires real; schedule compact + recompile + pruneSelection for next frame.
+        // limbo=false makes both wires real; schedule compact + recompile + selection prune for next frame.
         this.grid.onWiresChanged();
     }
 

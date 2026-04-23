@@ -397,6 +397,7 @@ class Circuits {
     // Restores a circuit that was previously deleted (from a global undo snapshot).
     restoreDeletedCircuit(snapshot) {
         const errors = [];
+        snapshot = JSON.parse(snapshot);
         Circuit.unserialize(this.#app, snapshot, [], null, errors);
         this.select(snapshot.uid);
         this.#app.simulations.select(this.current, this.#app.config.autoCompile);

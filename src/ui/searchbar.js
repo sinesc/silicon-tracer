@@ -209,8 +209,8 @@ class SearchBar {
 
     #collectResults(query) {
         const currentCircuit = this.#app.grid.circuit;
-        const labelResults = []; // { uid, label } — circuit label matches query
-        const itemResults  = []; // { uid, label, count } — circuit has matching items (label didn't match)
+        const labelResults = []; // { uid, label } -> circuit label matches query
+        const itemResults  = []; // { uid, label, count } -> circuit has matching items (label didn't match)
         for (const [uid, circuit] of Object.entries(this.#app.circuits.all)) {
             if (circuit.lid !== null && !this.#includeLibs) continue;
             const isCurrent = circuit === currentCircuit;

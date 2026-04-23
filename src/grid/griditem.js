@@ -220,7 +220,7 @@ class GridItem {
             this.grid.selection.invalidate();
             if (status === 'stop') {
                 delete what.lengthDrag;
-                this.grid.onWiresChanged(); // schedules compact + recompile; pruneSelection runs after compact
+                this.grid.onWiresChanged(); // schedules compact + recompile; selection prune runs after compact
                 this.grid.trackAction('Move selection');
             }
             return true;
@@ -232,12 +232,15 @@ class GridItem {
     onClick(modifier, ...args) {
         if (modifier.shift && !this.selected) {
             this.grid.selection.add(this);
+            this.grid.trackAction('Add item to selection');
             return true;
         } else if (modifier.ctrl && this.selected) {
             this.grid.selection.remove(this);
+            this.grid.trackAction('Remove item from selection');
             return true;
         } else {
             this.grid.selection.set([this]);
+            this.grid.trackAction('Select item');
             return true;
         }
     }
@@ -326,11 +329,6 @@ class GridItem {
     // Return grid item id.
     get gid() {
         return this.#gid;
-    }
-
-    // Restores the GID from an undo snapshot. Only called by Circuit.restoreFromUndo().
-    restoreGid(gid) {
-        this.#gid = gid;
     }
 
     // Gets the grid-relative screen coordinate/dimensions for this grid item.

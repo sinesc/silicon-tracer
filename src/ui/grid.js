@@ -13,6 +13,7 @@ class Grid {
     #worldElement;
     #trimElement;
     #selection;
+    #savedSelections = new WeakMap(); // circuit -> saved selection items[]
     #junctionElements = new Map(); // "x:y" => { element: HTMLElement, wire: Wire }
     #trimOverlays = [];
     #hotkeyTarget = null;
@@ -90,6 +91,7 @@ class Grid {
         if (!this.#circuit) {
             return;
         }
+        this.#savedSelections.set(this.#circuit, this.#selection.items.slice());
         this.#selection.reset();
         this.#circuit.setGridListener(null);
         this.#circuit.unlink();
@@ -120,7 +122,15 @@ class Grid {
         for (const entry of this.#infoBoxSections) entry.lastRenderTime = null;
         this.#updateWorldTransform();
         if (!circuit.readonly && circuit.undoStack.currentSnapshot === null) {
-            circuit.undoStack.init(circuit.serializeForUndo());
+            circuit.undoStack.init(this.#captureUndoState());
+        }
+        // restore selection
+        const savedItems = this.#savedSelections.get(circuit);
+        if (savedItems) {
+            const validItems = savedItems.filter((item) => item.grid === this); // TODO: given that the grid is the only way to change circuits, is this really required?
+            if (validItems.length > 0) {
+                this.#selection.set(validItems);
+            }
         }
     }
 
@@ -200,7 +210,7 @@ class Grid {
                 Wire.compact(this);
                 this.#suppressCircuitEvents = false;
                 this.#pending.wireCompact = false;
-                this.pruneSelection();
+                this.#selection.prune();
                 this.#selection.invalidate();
                 this.#pending.recompile = true;
                 this.#pending.netColors = true;
@@ -356,7 +366,7 @@ class Grid {
         if (item instanceof Wire) {
             this.#pending.wireCompact = true;
         }
-        this.pruneSelection();
+        this.#selection.prune();
         this.#pending.recompile = true;
         this.#pending.netColors = true;
         this.#pending.junctionRebuild = true;
@@ -481,11 +491,44 @@ class Grid {
         return this.#circuit?.readonly ?? false;
     }
 
-    // Updates the current undo snapshot to reflect the latest selection state.
-    #snapshotSelection() {
-        if (!this.readonly) {
-            this.#circuit.undoStack.updateCurrentSnapshot(this.#circuit.serializeForUndo());
+    // Captures circuit state and selection indices for undo tracking. Returns a JSON string.
+    #captureUndoState() {
+        const circuit = this.#circuit;
+        const allItems = [...circuit.items];
+        return JSON.stringify({
+            label: circuit.label,
+            description: circuit.description,
+            portConfig: circuit.portConfig,
+            data: allItems.map((i) => i.serialize()),
+            selection: this.#selection.items.map((i) => allItems.indexOf(i)).filter((i) => i >= 0),
+        });
+    }
+
+    // Restores the current circuit to a snapshot produced by #captureUndoState().
+    restoreFromUndo(snapshot) {
+        assert.string(snapshot);
+        const circuit = this.#circuit;
+        const parsed = JSON.parse(snapshot);
+        this.#selection.reset(); // clear stale refs before unlink() nulls wire elements
+        circuit.unlink();
+        circuit.setGridListener(null); // suppress circuit events during rebuild
+        circuit.clearItems();
+        circuit.label = parsed.label;
+        circuit.description = parsed.description;
+        Object.assign(circuit.portConfig, parsed.portConfig);
+        circuit.portConfig.placement = Object.assign({}, parsed.portConfig.placement);
+        for (const raw of parsed.data) {
+            circuit.addItem(GridItem.unserialize(this.#app, raw, [], null, []));
         }
+        circuit.setGridListener(this); // restore listener before re-linking
+        circuit.link(this);
+        this.circuitOverlay.setLabel(circuit.label);
+        this.simulationOverlay.setLabel(circuit.label);
+        this.onSimulationRecompiled();
+        const allItems = [...circuit.items];
+        const newSelection = (parsed.selection ?? []).map((i) => allItems[i]).filter(Boolean);
+        this.#selection.set(newSelection);
+        this.onWiresChanged(); // deferred compact runs next frame with correct selection context
     }
 
     // Logs an action to the undo system unless circuit is unchanged.
@@ -493,17 +536,12 @@ class Grid {
         assert.string(label);
         const circuit = this.#circuit;
         const before = circuit.undoStack.currentSnapshot;
-        const after = circuit.serializeForUndo();
-        if (JSON.stringify(before) !== JSON.stringify(after)) {
+        const after = this.#captureUndoState();
+        if (before !== after) {
             circuit.undoStack.push(label, before, after, true);
             this.#app.haveChanges = true;
             this.#app.refreshUndoButtons();
         }
-    }
-
-    // Removes unlinked items from selection (deleted items that are now only referenced by the selection).
-    pruneSelection() {
-        this.#selection.prune();
     }
 
     // Applies net colors to component ports on the grid.
@@ -641,7 +679,7 @@ class Grid {
         this.#app.registerHotkey('ctrl+f', 'down', null, () => this.#searchBar.toggle());
         this.#app.registerHotkey('ctrl+a', 'down', () => !this.readonly, async () => {
             this.#selection.set([ ...this.#circuit.items ]);
-            this.#snapshotSelection();
+            this.trackAction('Select all');
         });
         this.#app.registerHotkey('ctrl+v', 'down', () => !this.readonly, () => Action.pasteSelection(this.#app));
         this.#app.registerHotkey('ctrl+c', 'down', () => !this.readonly && this.#selection.items.length > 0, () => Action.copySelection(this.#app));
@@ -719,7 +757,7 @@ class Grid {
         this.#updateTrimOverlays(gx1, gy1, gx1 + width / this.zoom, gy1 + height / this.zoom);
     }
 
-    // Iterates over wire segments that fall inside [gx1,gy1]–[gx2,gy2] with inward-snapped boundaries.
+    // Iterates over wire segments that fall inside [gx1,gy1] - [gx2,gy2] with inward-snapped boundaries.
     // Calls callback(wire, fixed, wireStart, wireEnd, trimA, trimB, dir) for each affected segment.
     // fixed = the perpendicular coordinate; wireStart/End = full wire span; trimA/B = trimmed span; dir = 'h'|'v'.
     #forEachTrimSegment(gx1, gy1, gx2, gy2, callback) {
@@ -771,7 +809,7 @@ class Grid {
         });
     }
 
-    // Removes the portions of wires inside the given grid-space rectangle [gx1,gy1]–[gx2,gy2].
+    // Removes the portions of wires inside the given grid-space rectangle [gx1,gy1] - [gx2,gy2].
     #executeTrim(gx1, gy1, gx2, gy2) {
         const segments = [];
         this.#forEachTrimSegment(gx1, gy1, gx2, gy2, (...args) => segments.push(args));
@@ -783,7 +821,7 @@ class Grid {
             if (trimB < wireEnd)
                 this.addItem(new Wire(this.#app, dir === 'h' ? trimB : fixed, dir === 'h' ? fixed : trimB, wireEnd - trimB, dir, wire.color), false);
         }
-        this.pruneSelection();
+        this.#selection.prune();
         this.onWiresChanged();
     }
 
@@ -864,7 +902,7 @@ class Grid {
                 // normal selection: set selected items
                 this.#selection.removeBox();
                 this.#selection.set(this.items.filter((c) => c.selected).toArray());
-                this.#snapshotSelection();
+                this.trackAction(this.#selection.items.length > 0 ? 'Select items' : 'Clear selection');
             }
         }
         document.onmouseup = null;

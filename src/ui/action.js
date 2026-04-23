@@ -34,7 +34,7 @@ class Action {
         assert.class(Application, app);
         assert.class(Circuit, circuit);
         if (await confirmDialog('Confirm deletion', `Delete "${circuit.label}" from project?`)) {
-            app.circuits.globalUndoStack.push(`Delete "${circuit.label}"`, circuit.serialize(), null, false);
+            app.circuits.globalUndoStack.push(`Delete "${circuit.label}"`, JSON.stringify(circuit.serialize()), null, false);
             app.simulations.delete(circuit);
             app.circuits.delete(circuit.uid);
             app.simulations.select(app.circuits.current, app.config.autoCompile);
@@ -331,7 +331,7 @@ class Action {
             app.circuits.restoreDeletedCircuit(snapshot);
         } else if (perStack?.canUndo) {
             const { snapshot } = perStack.undo();
-            app.circuits.current.restoreFromUndo(snapshot);
+            app.grid.restoreFromUndo(snapshot);
             app.simulations.markDirty(app.circuits.current);
             app.haveChanges = true;
         }
@@ -344,7 +344,7 @@ class Action {
         const perStack = app.circuits.current?.undoStack;
         if (perStack?.canRedo) {
             const { snapshot } = perStack.redo();
-            app.circuits.current.restoreFromUndo(snapshot);
+            app.grid.restoreFromUndo(snapshot);
             app.simulations.markDirty(app.circuits.current);
             app.haveChanges = true;
         }
