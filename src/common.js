@@ -10,6 +10,17 @@ Object.map = function(object, c) {
     return result;
 };
 
+// Merges properties from source into target. Nested plain objects are merged recursively; arrays and primitives are assigned directly.
+Object.merge = function(target, source) {
+    for (const [key, value] of Object.entries(source)) {
+        if (value !== null && typeof value === 'object' && !Array.isArray(value) && typeof target[key] === 'object' && target[key] !== null && !Array.isArray(target[key])) {
+            Object.merge(target[key], value);
+        } else {
+            target[key] = value;
+        }
+    }
+};
+
 // Filters object properties using given callback c(k, v, object).
 Object.filter = function(object, c) {
     assert.function(c);

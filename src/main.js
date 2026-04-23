@@ -1,9 +1,11 @@
 "use strict";
 
-const app = Application.create(document.querySelector('#content'), document.querySelector('#toolbar'));
+const storedConfig = JSON.parse(localStorage.getItem('silicon-tracer-config') ?? 'null') ?? {};
+const app = Application.create(document.querySelector('#content'), document.querySelector('#toolbar'), storedConfig);
 
 // confirm when leaving page with unsaved changes
 window.addEventListener("beforeunload", (event) => {
+    localStorage.setItem('silicon-tracer-config', JSON.stringify(app.config));
     if (app.haveChanges) {
         event.preventDefault();
         event.returnValue = true;

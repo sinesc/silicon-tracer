@@ -979,6 +979,18 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
     font-size: var(--font-size-normal);
     font-weight: bold;
     color: color-mix(in srgb, var(--text-color) 50%, transparent);
+    cursor: pointer;
+    pointer-events: auto;
+    user-select: none;
+}
+.grid-info .info-section::after {
+    content: ' ▾';
+}
+.grid-info > div.collapsed .info-section::after {
+    content: ' ▸';
+}
+.grid-info > div.collapsed > :not(.info-section) {
+    display: none;
 }
 .grid-info > div + div {
     margin-top: 8px;

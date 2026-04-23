@@ -54,6 +54,7 @@ class Application {
             rom: { rotation: 0, addressWidth: 4, dataWidth: 8 },
             ram: { rotation: 0, addressWidth: 4, dataWidth: 8, combinedPorts: true },
         },
+        overlays: {},
     };
 
     grid;
@@ -94,9 +95,10 @@ class Application {
         fps: 0,
     };
 
-    constructor(gridParent, toolbarParent) {
+    constructor(gridParent, toolbarParent, config = {}) {
         assert.class(Node, gridParent);
         assert.class(Node, toolbarParent);
+        Object.merge(this.config, config);
         document.addEventListener('keydown', this.#handleHotkey.bind(this));
         document.addEventListener('keyup', this.#handleHotkey.bind(this));
         this.#initHotkeys(); // must happen before grid creation or global hotkeys may be overriden by per-component hotkeys
@@ -121,8 +123,8 @@ class Application {
     }
 
     // Creates a new application and returns it.
-    static create(gridParent, toolbarParent) {
-        return new Application(gridParent, toolbarParent);
+    static create(gridParent, toolbarParent, config = {}) {
+        return new Application(gridParent, toolbarParent, config);
     }
 
     // Sets a status message. Pass null to unset and revert back to default status.

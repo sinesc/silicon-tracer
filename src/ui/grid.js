@@ -66,8 +66,19 @@ class Grid {
     registerOverlay(interval, overlay) {
         assert.integer(interval);
         assert.class(Overlay, overlay);
+        const name = overlay.constructor.name;
+        const overlayConfig = this.#app.config.overlays[name] ??= {};
         const node = html(this.#infoBoxElement, 'div');
-        this.#infoBoxSections.push({ interval, overlay, node, lastRenderTime: null });
+        const entry = { interval, overlay, node, lastRenderTime: null, collapsed: overlayConfig.collapsed ?? false };
+        node.classList.toggle('collapsed', entry.collapsed);
+        node.addEventListener('click', e => {
+            if (e.target.closest('.info-section')) {
+                entry.collapsed = !entry.collapsed;
+                overlayConfig.collapsed = entry.collapsed;
+                node.classList.toggle('collapsed', entry.collapsed);
+            }
+        });
+        this.#infoBoxSections.push(entry);
         return overlay;
     }
 
