@@ -375,7 +375,7 @@ class Component extends GridItem {
             this.#rotation = value;
         }
         if (changed) {
-            this.grid?.onTopologyChanged();
+            this.grid?.markTopologyChanged();
         }
     }
 
@@ -552,7 +552,7 @@ class Component extends GridItem {
             if (status === 'stop') {
                 if (what.singleLengthDrag) {
                     delete what.singleLengthDrag;
-                    this.grid.onWiresChanged();
+                    this.grid.markWiresChanged();
                 }
                 this.grid.trackAction(what.isNew ? `Add ${this.actionLabel}` : `Move ${this.actionLabel}`);
             }
@@ -667,7 +667,7 @@ class Component extends GridItem {
             wire.limbo = false;
         }
         this.#ghostWires = [];
-        this.grid.onWiresChanged();
+        this.grid.markWiresChanged();
     }
 
     // Builds ghost wires between this component (at alignedX/Y) and neighboring components.

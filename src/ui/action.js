@@ -293,7 +293,7 @@ class Action {
                 item.setEndpoints(start.x, start.y, end.x, end.y);
             }
         }
-        app.grid.onTopologyChanged();
+        app.grid.markTopologyChanged();
         app.grid.trackAction('Rotate selection');
     }
 

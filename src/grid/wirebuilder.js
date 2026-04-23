@@ -116,7 +116,7 @@ class WireBuilder extends GridItem { // Note: Not actually a grid item, but uses
             }
         }
         // limbo=false makes both wires real; schedule compact + recompile + selection prune for next frame.
-        this.grid.onWiresChanged();
+        this.grid.markWiresChanged();
     }
 
     // Sets wire corner bounding box.

@@ -161,7 +161,7 @@ class Wire extends GridItem {
             for (const netWire of netList.nets[myNetId].wires) {
                 this.grid.circuit.itemByGID(netWire.gid).color = color;
             }
-            this.grid.onNetColorsChanged();
+            this.grid.markNetColorsChanged();
             return true;
         } else if (key === 'Delete' && what.type === 'hover') {
             this.#element.classList.add('wire-delete-animation');

@@ -180,7 +180,7 @@ class GridItem {
             this.#beforeRender.push(beforeRender);
         }
         if (recompile) {
-            this.grid?.onTopologyChanged();
+            this.grid?.markTopologyChanged();
         }
         this.renderFlags |= GridItem.NEEDS_FULL_RENDER;
         this.#app.haveChanges = true;
@@ -220,7 +220,7 @@ class GridItem {
             this.grid.selection.invalidate();
             if (status === 'stop') {
                 delete what.lengthDrag;
-                this.grid.onWiresChanged(); // schedules compact + recompile; selection prune runs after compact
+                this.grid.markWiresChanged(); // schedules compact + recompile; selection prune runs after compact
                 this.grid.trackAction('Move selection');
             }
             return true;

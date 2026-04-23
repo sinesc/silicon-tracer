@@ -51,7 +51,7 @@ class MonitorOverlay extends Overlay {
         this.#monitorsBySimUid.delete(uid);
     }
 
-    // Re-resolves probe references after a simulation recompile. Called by Grid.onSimulationRecompiled().
+    // Re-resolves probe references after a simulation recompile. Called by Grid.markSimulationRecompiled().
     refresh() {
         if (this.#monitor.length === 0) return;
         if (!this.app.simulations.current) {

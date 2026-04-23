@@ -168,7 +168,7 @@ class Probe extends DisplayComponent {
         const desiredCount = DisplayComponent.lookupSize(channels, this.#effectiveDisplayFormat(channels));
         if (desiredCount !== this.#prevLeftCount) {
             this.#resizeToChannels(channels);
-            this.grid?.onTopologyChanged();
+            this.grid?.markTopologyChanged();
             return;
         }
 

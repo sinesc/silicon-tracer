@@ -361,32 +361,29 @@ class Grid {
         }
     }
 
-    // Called by Simulation after a recompile or attach/detach. Schedules net color and junction updates.
-    onSimulationRecompiled() {
+    // Schedules net color and junction updates.
+    markSimulationRecompiled() {
         this.#pending.netColors = true;
         this.#pending.junctionRebuild = true;
         this.#pending.monitorRefresh = true;
     }
 
-    // Signals that wires have structurally changed (moved, built, trimmed).
     // Schedules a wire compact and simulation recompile for the next frame.
-    onWiresChanged() {
+    markWiresChanged() {
         this.#pending.wireCompact = true;
         this.#pending.recompile = true;
         this.#pending.netColors = true;
         this.#pending.junctionRebuild = true;
     }
 
-    // Signals that circuit topology has changed without a structural wire change (rotation, move-stop).
     // Schedules a simulation recompile for the next frame.
-    onTopologyChanged() {
+    markTopologyChanged() {
         this.#pending.recompile = true;
         this.#pending.netColors = true;
     }
 
-    // Signals that wire colors changed without a topology change.
     // Schedules net color propagation to ports for the next frame.
-    onNetColorsChanged() {
+    markNetColorsChanged() {
         this.#pending.netColors = true;
     }
 
@@ -518,11 +515,11 @@ class Grid {
         circuit.link(this);
         this.circuitOverlay.setLabel(circuit.label);
         this.simulationOverlay.setLabel(circuit.label);
-        this.onSimulationRecompiled();
+        this.markSimulationRecompiled();
         const allItems = [...circuit.items];
         const newSelection = (parsed.selection ?? []).map((i) => allItems[i]).filter(Boolean);
         this.#selection.set(newSelection);
-        this.onWiresChanged(); // deferred compact runs next frame with correct selection context
+        this.markWiresChanged(); // deferred compact runs next frame with correct selection context
     }
 
     // Logs an action to the undo system unless circuit is unchanged.
@@ -816,7 +813,7 @@ class Grid {
                 this.addItem(new Wire(this.#app, dir === 'h' ? trimB : fixed, dir === 'h' ? fixed : trimB, wireEnd - trimB, dir, wire.color), false);
         }
         this.#selection.prune();
-        this.onWiresChanged();
+        this.markWiresChanged();
     }
 
     // Removes all active trim overlay elements.

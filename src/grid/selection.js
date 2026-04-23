@@ -52,7 +52,7 @@ class Selection {
         this.set([]);
     }
 
-    // Clears selection state without triggering onWiresChanged. Use when switching circuits,
+    // Clears selection state without triggering markWiresChanged. Use when switching circuits,
     // where deferred wire compact should not carry over to the incoming circuit.
     reset() {
         for (const item of this.#items) {
@@ -122,7 +122,7 @@ class Selection {
         this.#hadWires = hasWires;
         this.#rotationCenter = null;
         if (this.#items.length === 0 && hadWires) {
-            this.#grid.onWiresChanged();
+            this.#grid.markWiresChanged();
         }
     }
 }
