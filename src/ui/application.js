@@ -522,18 +522,6 @@ class Application {
         // Simulation menu
         this.toolbar.createMenuButton('Simulation', 'Simulation management menu.', (simulationMenu) => {
             simulationMenu.clear();
-            const toggleAction = () => {
-                const sim = this.simulations.current;
-                const isCurrent = this.circuits.current.uid === sim?.uid;
-                return isCurrent && sim ? 'stop' : 'start';
-            };
-            const toggleButtonText = (action) => {
-                if (action === 'start') {
-                    return `Start at "${this.circuits.current.label}"`;
-                } else if (action === 'stop') {
-                    return `Stop "${this.simulations.current.label}"`;
-                }
-            };
             // Continuous simulation toggle.
             simulationMenu.createToggleButton('Autostart', 'Automatically starts a new simulation when switching circuits.', this.config.autoCompile, (enabled) => {
                 this.config.autoCompile = enabled;
@@ -548,11 +536,19 @@ class Application {
                 this.config.lockSimulation = enabled;
                 simulationMenu.open();
             });
-            // Simulate current grid
-            simulationMenu.createActionButton(toggleButtonText(toggleAction()), 'Toggle simulation on/off.', () => {
+            // Start simulation at current grid circuit.
+            const startButton = simulationMenu.createActionButton(`Start at "${this.grid.circuit.label}"`, 'Start a simulation rooted at the current circuit.', () => {
                 simulationMenu.state(false);
-                Action.toggleSimulation(this);
+                Action.startSimulation(this);
             });
+            const sim = this.simulations.current;
+            startButton.node.classList.toggle('toolbar-menu-button-disabled', sim && this.grid.circuit.uid === sim.uid);
+            // Stop current simulation.
+            const stopButton = simulationMenu.createActionButton(sim ? `Stop "${sim.label}"` : 'Stop simulation', 'Stop the currently running simulation.', () => {
+                simulationMenu.state(false);
+                Action.stopSimulation(this);
+            });
+            stopButton.node.classList.toggle('toolbar-menu-button-disabled', !sim);
             // Configure simulation speed.
             simulationMenu.createActionButton(`Set ticks/s limit (${Number.formatSI(this.config.targetTPS)})...`, 'Configure simulation speed.', async () => {
                 simulationMenu.state(false);

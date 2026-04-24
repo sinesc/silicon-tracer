@@ -184,23 +184,24 @@ class Action {
         }
     }
 
-    // Toggle the current simulation on or off.
-    static toggleSimulation(app) {
+    // Stop the current simulation.
+    static stopSimulation(app) {
         assert.class(Application, app);
         const sim = app.simulations.current;
-        const isCurrent = app.circuits.current.uid === sim?.uid;
-        if (isCurrent && sim) {
-            app.config.autoCompile = false;
-            const circuit = app.circuits.byUID(sim.uid);
-            if (circuit) {
-                app.simulations.delete(circuit);
-            }
-            app.simulations.select(null);
-            app.circuits.select(app.grid.circuit.uid);
-        } else {
-            app.config.singleStep = false;
-            app.simulations.select(app.circuits.current, true);
+        app.config.autoCompile = false;
+        const circuit = app.circuits.byUID(sim.uid);
+        if (circuit) {
+            app.simulations.delete(circuit);
         }
+        app.simulations.select(null);
+        app.circuits.select(app.grid.circuit.uid);
+    }
+
+    // Start a simulation rooted at the current grid circuit.
+    static startSimulation(app) {
+        assert.class(Application, app);
+        app.config.singleStep = false;
+        app.simulations.select(app.grid.circuit, true);
     }
 
     // Set the simulation ticks-per-second limit via dialog.
