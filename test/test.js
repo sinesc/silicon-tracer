@@ -132,6 +132,25 @@ test("pull resistors drive undriven nets", () => {
     assert(sim.getProbeValue('p0') === 1, `p0 should be 1 (switch d0 closed), got ${sim.getProbeValue('p0')}`);
 });
 
+test("switches pass or block signal", () => {
+    const sim = compileCircuit('data/tests.stc', 'Switches');
+    sim.simulate(5);
+
+    // Open switches: output is hi-Z regardless of input constant value
+    assert(sim.getProbeValue('p1') === null, `p1 should be hi-Z (switch open), got ${sim.getProbeValue('p1')}`);
+    assert(sim.getProbeValue('p2') === null, `p2 should be hi-Z (switch open), got ${sim.getProbeValue('p2')}`);
+    assert(sim.getProbeValue('p3') === null, `p3 should be hi-Z (switch open), got ${sim.getProbeValue('p3')}`);
+
+    // Closed switch, constant=0: output is 0
+    assert(sim.getProbeValue('p4') === 0, `p4 should be 0 (switch closed, input=0), got ${sim.getProbeValue('p4')}`);
+
+    // Closed switch, constant=1: output is 1
+    assert(sim.getProbeValue('p5') === 1, `p5 should be 1 (switch closed, input=1), got ${sim.getProbeValue('p5')}`);
+
+    // Closed switch with zero-width constant: output should be hi-Z (currently fails — reads 0)
+    assert(sim.getProbeValue('p6') === null, `p6 should be hi-Z (zero-width constant through closed switch), got ${sim.getProbeValue('p6')}`);
+});
+
 test("no false positive conflict on AND gate output", () => {
     const sim = compileCircuit('data/tests.stc', 'ConflictGate');
     const cA = sim.getConstId('cA');

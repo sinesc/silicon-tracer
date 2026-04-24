@@ -10,110 +10,101 @@ loadFiles.push(
 			"uid": "uba4d80be70d7416c8626e5d3342f2159",
 			"data": [
 				{
-					"#c": "Switch",
+					"#c": "Button",
 					"#a": [
 						570,
 						90,
 						0,
 						"toggle",
-						0,
-						false
+						0
 					],
 					"name": ""
 				},
 				{
-					"#c": "Switch",
+					"#c": "Button",
 					"#a": [
 						570,
 						150,
 						0,
 						"toggle",
-						0,
-						false
+						0
 					],
 					"name": ""
 				},
 				{
-					"#c": "Switch",
+					"#c": "Button",
 					"#a": [
 						570,
 						190,
 						0,
 						"toggle",
-						0,
-						false
+						0
 					],
 					"name": ""
 				},
 				{
-					"#c": "Switch",
+					"#c": "Button",
 					"#a": [
 						570,
 						250,
 						0,
 						"toggle",
-						0,
-						false
+						0
 					],
 					"name": ""
 				},
 				{
-					"#c": "Switch",
+					"#c": "Button",
 					"#a": [
 						570,
 						290,
 						0,
 						"toggle",
-						0,
-						false
+						0
 					],
 					"name": ""
 				},
 				{
-					"#c": "Switch",
+					"#c": "Button",
 					"#a": [
 						570,
 						350,
 						0,
 						"toggle",
-						0,
-						false
+						0
 					],
 					"name": ""
 				},
 				{
-					"#c": "Switch",
+					"#c": "Button",
 					"#a": [
 						570,
 						390,
 						0,
 						"toggle",
-						0,
-						false
+						0
 					],
 					"name": ""
 				},
 				{
-					"#c": "Switch",
+					"#c": "Button",
 					"#a": [
 						570,
 						450,
 						0,
 						"toggle",
-						0,
-						false
+						0
 					],
 					"name": ""
 				},
 				{
-					"#c": "Switch",
+					"#c": "Button",
 					"#a": [
 						570,
 						490,
 						0,
 						"toggle",
-						0,
-						false
+						0
 					],
 					"name": ""
 				},
@@ -317,110 +308,101 @@ loadFiles.push(
 					]
 				},
 				{
-					"#c": "Switch",
+					"#c": "Button",
 					"#a": [
 						930,
 						90,
 						0,
 						"toggle",
-						0,
-						false
+						0
 					],
 					"name": ""
 				},
 				{
-					"#c": "Switch",
+					"#c": "Button",
 					"#a": [
 						930,
 						150,
 						0,
 						"toggle",
-						0,
-						false
+						0
 					],
 					"name": ""
 				},
 				{
-					"#c": "Switch",
+					"#c": "Button",
 					"#a": [
 						930,
 						190,
 						0,
 						"toggle",
-						0,
-						false
+						0
 					],
 					"name": ""
 				},
 				{
-					"#c": "Switch",
+					"#c": "Button",
 					"#a": [
 						930,
 						250,
 						0,
 						"toggle",
-						0,
-						false
+						0
 					],
 					"name": ""
 				},
 				{
-					"#c": "Switch",
+					"#c": "Button",
 					"#a": [
 						930,
 						290,
 						0,
 						"toggle",
-						0,
-						false
+						0
 					],
 					"name": ""
 				},
 				{
-					"#c": "Switch",
+					"#c": "Button",
 					"#a": [
 						930,
 						350,
 						0,
 						"toggle",
-						0,
-						false
+						0
 					],
 					"name": ""
 				},
 				{
-					"#c": "Switch",
+					"#c": "Button",
 					"#a": [
 						930,
 						390,
 						0,
 						"toggle",
-						0,
-						false
+						0
 					],
 					"name": ""
 				},
 				{
-					"#c": "Switch",
+					"#c": "Button",
 					"#a": [
 						930,
 						450,
 						0,
 						"toggle",
-						0,
-						false
+						0
 					],
 					"name": ""
 				},
 				{
-					"#c": "Switch",
+					"#c": "Button",
 					"#a": [
 						930,
 						490,
 						0,
 						"toggle",
-						0,
-						false
+						0
 					],
 					"name": ""
 				},
@@ -649,26 +631,24 @@ loadFiles.push(
 			"uid": "u1ae3192620df449d80d1ae47da95ef24",
 			"data": [
 				{
-					"#c": "Switch",
+					"#c": "Button",
 					"#a": [
 						190,
 						110,
 						0,
 						"toggle",
-						0,
-						false
+						0
 					],
 					"name": ""
 				},
 				{
-					"#c": "Switch",
+					"#c": "Button",
 					"#a": [
 						190,
 						270,
 						0,
 						"toggle",
-						0,
-						false
+						0
 					],
 					"name": ""
 				},
@@ -748,14 +728,13 @@ loadFiles.push(
 					"name": "a"
 				},
 				{
-					"#c": "Switch",
+					"#c": "Button",
 					"#a": [
 						510,
 						210,
 						3,
 						"toggle",
-						0,
-						false
+						0
 					],
 					"name": ""
 				},
@@ -770,14 +749,13 @@ loadFiles.push(
 					]
 				},
 				{
-					"#c": "Switch",
+					"#c": "Button",
 					"#a": [
 						530,
 						250,
 						2,
 						"toggle",
-						0,
-						false
+						0
 					],
 					"name": ""
 				},
@@ -829,14 +807,13 @@ loadFiles.push(
 					"name": "b"
 				},
 				{
-					"#c": "Switch",
+					"#c": "Button",
 					"#a": [
 						730,
 						390,
 						2,
 						"toggle",
-						0,
-						false
+						0
 					],
 					"name": ""
 				},
@@ -851,14 +828,13 @@ loadFiles.push(
 					]
 				},
 				{
-					"#c": "Switch",
+					"#c": "Button",
 					"#a": [
 						830,
 						210,
 						2,
 						"toggle",
-						0,
-						false
+						0
 					],
 					"name": ""
 				}
@@ -888,62 +864,57 @@ loadFiles.push(
 			"uid": "ua89d909dcd794d6e855af64247f521c8",
 			"data": [
 				{
-					"#c": "Switch",
+					"#c": "Button",
 					"#a": [
 						190,
 						110,
 						0,
 						"toggle",
-						0,
-						false
+						0
 					],
 					"name": ""
 				},
 				{
-					"#c": "Switch",
+					"#c": "Button",
 					"#a": [
 						190,
 						150,
 						0,
 						"toggle",
-						0,
-						false
+						0
 					],
 					"name": ""
 				},
 				{
-					"#c": "Switch",
+					"#c": "Button",
 					"#a": [
 						190,
 						190,
 						0,
 						"toggle",
-						0,
-						false
+						0
 					],
 					"name": ""
 				},
 				{
-					"#c": "Switch",
+					"#c": "Button",
 					"#a": [
 						190,
 						230,
 						0,
 						"toggle",
-						0,
-						false
+						0
 					],
 					"name": ""
 				},
 				{
-					"#c": "Switch",
+					"#c": "Button",
 					"#a": [
 						190,
 						270,
 						0,
 						"toggle",
-						0,
-						false
+						0
 					],
 					"name": ""
 				},
@@ -1373,62 +1344,57 @@ loadFiles.push(
 					]
 				},
 				{
-					"#c": "Switch",
+					"#c": "Button",
 					"#a": [
 						790,
 						110,
 						2,
 						"toggle",
-						0,
-						false
+						0
 					],
 					"name": ""
 				},
 				{
-					"#c": "Switch",
+					"#c": "Button",
 					"#a": [
 						790,
 						150,
 						2,
 						"toggle",
-						0,
-						false
+						0
 					],
 					"name": ""
 				},
 				{
-					"#c": "Switch",
+					"#c": "Button",
 					"#a": [
 						790,
 						190,
 						2,
 						"toggle",
-						0,
-						false
+						0
 					],
 					"name": ""
 				},
 				{
-					"#c": "Switch",
+					"#c": "Button",
 					"#a": [
 						790,
 						230,
 						2,
 						"toggle",
-						0,
-						false
+						0
 					],
 					"name": ""
 				},
 				{
-					"#c": "Switch",
+					"#c": "Button",
 					"#a": [
 						790,
 						270,
 						2,
 						"toggle",
-						0,
-						false
+						0
 					],
 					"name": ""
 				}
@@ -1458,26 +1424,24 @@ loadFiles.push(
 			"uid": "ue964011161fd4758828f95d36d661c5b",
 			"data": [
 				{
-					"#c": "Switch",
+					"#c": "Button",
 					"#a": [
 						230,
 						150,
 						0,
 						"toggle",
-						0,
-						false
+						0
 					],
 					"name": ""
 				},
 				{
-					"#c": "Switch",
+					"#c": "Button",
 					"#a": [
 						230,
 						270,
 						0,
 						"toggle",
-						0,
-						false
+						0
 					],
 					"name": ""
 				},
@@ -1560,26 +1524,24 @@ loadFiles.push(
 					]
 				},
 				{
-					"#c": "Switch",
+					"#c": "Button",
 					"#a": [
 						470,
 						150,
 						2,
 						"toggle",
-						0,
-						false
+						0
 					],
 					"name": ""
 				},
 				{
-					"#c": "Switch",
+					"#c": "Button",
 					"#a": [
 						470,
 						270,
 						2,
 						"toggle",
-						0,
-						false
+						0
 					],
 					"name": ""
 				}
@@ -2273,14 +2235,13 @@ loadFiles.push(
 					]
 				},
 				{
-					"#c": "Switch",
+					"#c": "Button",
 					"#a": [
 						610,
 						430,
 						0,
 						"toggle",
-						0,
-						false
+						0
 					],
 					"name": ""
 				},

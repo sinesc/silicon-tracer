@@ -1,12 +1,12 @@
 "use strict";
 
-// A switch component with toggle or momentary mode, routing an input signal to an output.
-class Switch extends SimulationComponent {
+// A button component with toggle or momentary mode, driving an output to 0 or 1 directly.
+class Button extends SimulationComponent {
 
     static EDIT_DIALOG = [
         { name: 'name', label: 'Label', type: 'string' },
         { name: 'mode', label: 'Mode', type: 'select', options: { "toggle": "Toggle", "momentary": "Momentary" } },
-        { name: 'defaultState', label: 'Default (momentary)', type: 'select', options: { "0": "Open", "1": "Closed" } },
+        { name: 'defaultState', label: 'Default (momentary)', type: 'select', options: { "0": "Off", "1": "On" } },
         ...Component.EDIT_DIALOG,
     ];
 
@@ -18,8 +18,8 @@ class Switch extends SimulationComponent {
     name = '';
 
     constructor(app, x, y, rotation, mode = 'toggle', defaultState = 0, uiState = 0) {
-        super(app, x, y, rotation, { top: [ null ], left: [ 'input' ], right: [ 'output' ] }, 'switch');
-        this.#output = this.portByName('output');
+        super(app, x, y, rotation, { top: [ null ], left: [ null ], right: [ 'q' ] }, 'button');
+        this.#output = this.portByName('q');
         this.#mode = mode;
         this.#defaultState = defaultState;
         this.#uiState = uiState;
@@ -31,7 +31,7 @@ class Switch extends SimulationComponent {
         const hotkeyHint = () => this.#mode === 'toggle'
             ? `<i>1</i> Close circuit, <i>2</i> Open circuit, <i>E</i> Edit, ${Component.HOTKEYS}.`
             : `<i>1</i> Hold to ${this.#defaultState === 0 ? 'close' : 'open'} circuit, <i>E</i> Edit, ${Component.HOTKEYS}.`;
-        const modeLabel = () => this.#mode === 'toggle' ? 'Toggle switch' : 'Momentary switch';
+        const modeLabel = () => this.#mode === 'toggle' ? 'Toggle button' : 'Momentary button';
         this.setHoverMessage(this.inner, () => `${modeLabel()} <b>${this.name}</b>. ${hotkeyHint()}`, { type: 'hover' });
         this.#labelElement = html(this.element, 'div', 'port-name');
         this.element.classList.add('port', 'status-outline'); // reuse port lightbulb css here
@@ -48,10 +48,7 @@ class Switch extends SimulationComponent {
 
     // Declare component simulation item.
     declare(sim, config, suffix) {
-        sim.declareBuiltin('switch', suffix); // use a switch component to allow/block signal passing
-        const c = sim.declareConst(this.#effectiveState, suffix); // use const to store switch state (open/closed)
-        sim.declareNet(['close' + suffix, 'q' + suffix]); // connect controllable const (output q) with switch control
-        return c;
+        return sim.declareConst(this.#effectiveState, suffix);
     }
 
     // Returns the effective state passed to the simulation.
@@ -100,8 +97,8 @@ class Switch extends SimulationComponent {
     // Returns { title, fields, data } for the edit dialog given a descriptor and defaults.
     static editDialogConfig(descriptor, defaults = {}) {
         return {
-            title: 'Configure switch',
-            fields: Switch.EDIT_DIALOG,
+            title: 'Configure button',
+            fields: Button.EDIT_DIALOG,
             data: {
                 name: defaults.name ?? '',
                 rotation: defaults.rotation ?? 0,
@@ -113,7 +110,7 @@ class Switch extends SimulationComponent {
 
     // Returns the app-level placement defaults relevant to this component descriptor.
     static getPlacementDefaults(app, _descriptor) {
-        return app.config.placementDefaults.switch;
+        return app.config.placementDefaults.button;
     }
 
     // Updates the descriptor in-place from a completed dialog config (for mode changes).
@@ -123,7 +120,7 @@ class Switch extends SimulationComponent {
 
     // Handle edit hotkey.
     async onEdit() {
-        const { title, fields, data } = Switch.editDialogConfig({ '#t': this.#mode }, {
+        const { title, fields, data } = Button.editDialogConfig({ '#t': this.#mode }, {
             name: this.name,
             rotation: this.rotation,
             defaultState: this.#defaultState,
@@ -140,18 +137,18 @@ class Switch extends SimulationComponent {
                 sim.engine.setConstValue(this.simIds[0], this.#effectiveState);
             }
             this.redraw();
-            this.grid.trackAction('Edit switch');
+            this.grid.trackAction('Edit button');
         }
     }
 
-    // Renders the switch onto the grid.
+    // Renders the button onto the grid.
     renderFull() {
         if (!super.renderFull()) {
             return false;
         }
 
         // render permanently visible label
-        const side = ComponentPort.portSide(this.rotation, 'bottom');
+        const side = ComponentPort.portSide(this.rotation, 'left');
         const labelCoords = ComponentPort.portCoords(this.width, this.height, side, 0, true);
         ComponentPort.renderLabel(this, this.#labelElement, side, labelCoords.x * this.grid.zoom, labelCoords.y * this.grid.zoom, this.name, false, true);
 
@@ -180,9 +177,9 @@ class Switch extends SimulationComponent {
 
     static descriptorInfo(desc) {
         if (desc['#t'] === 'toggle') {
-            return { label: 'Toggle switch', hoverMessage: '<b>Toggle switch</b> with permanently saved state.' };
+            return { label: 'Toggle button', hoverMessage: '<b>Toggle button</b> with permanently saved state.' };
         } else if (desc['#t'] === 'momentary') {
-            return { label: 'Momentary switch', hoverMessage: '<b>Momentary switch</b>.' };
+            return { label: 'Momentary button', hoverMessage: '<b>Momentary button</b>.' };
         }
         return super.descriptorInfo(desc);
     }
@@ -192,13 +189,13 @@ class Switch extends SimulationComponent {
         if (mode !== 'toggle' && mode !== 'momentary') return null;
         const d = app.config.placementDefaults;
         return (grid, x, y) => {
-            const rotation = overrideDefaults.rotation ?? d.switch.rotation;
+            const rotation = overrideDefaults.rotation ?? d.button.rotation;
             const defaultState = overrideDefaults.defaultState != null ? Number.parseInt(overrideDefaults.defaultState) : 0;
-            const sw = new Switch(app, x, y, rotation, mode, defaultState);
-            if (overrideDefaults.name) sw.name = overrideDefaults.name;
-            return grid.addItem(sw, false);
+            const btn = new Button(app, x, y, rotation, mode, defaultState);
+            if (overrideDefaults.name) btn.name = overrideDefaults.name;
+            return grid.addItem(btn, false);
         };
     }
 }
 
-GridItem.CLASSES['Switch'] = Switch;
+GridItem.CLASSES['Button'] = Button;

@@ -441,12 +441,12 @@ class LogiSim {
                 offsetPort(item, 'input');
                 circuit.addItem(item);
             } else if (rawComp.name === 'Switch') {
-                const item = new Switch(this.#app, x, y, rotation(rawComp.facing ?? 'east') + 3, 'toggle', rawComp.value === '0x1' ? 1 : 0, true);
+                const item = new Switch(this.#app, x, y, rotation(rawComp.facing ?? 'east') + 3, 'toggle', rawComp.value === '0x1' ? 1 : 0);
                 offsetPort(item, 'output');
                 circuit.addItem(item);
             } else if (rawComp.name === 'Button') {
-                const item = new Switch(this.#app, x, y, rotation(rawComp.facing ?? 'east') + 3, 'momentary', rawComp.value === '0x1' ? 1 : 0, false);
-                offsetPort(item, 'output');
+                const item = new Button(this.#app, x, y, rotation(rawComp.facing ?? 'east') + 3, 'momentary', rawComp.value === '0x1' ? 1 : 0);
+                offsetPort(item, 'q');
                 circuit.addItem(item);
             } else if (rawComp.name === 'NoConnect') {
                 const item = new TextLabel(this.#app, x - Grid.SPACING * 0.5, y - Grid.SPACING * 0.5, rotation(rawComp.facing ?? 'east') + 3, 200, 'X', 'medium', 4);

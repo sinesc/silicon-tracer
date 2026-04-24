@@ -2,7 +2,7 @@ loadFiles.push(
 {
 	"version": 4,
 	"label": "tests",
-	"currentUID": "ud5327500cf2144b99c3ff468eb00fc4e",
+	"currentUID": "ufe6bff15192e4a8999a095aefca4a62f",
 	"circuits": [
 		{
 			"label": "ConflictBuffer",
@@ -3658,38 +3658,38 @@ loadFiles.push(
 			"uid": "ua8a40223b0644e4fb1ab71293acda3ef",
 			"data": [
 				{
-					"#c": "Switch",
+					"#c": "Button",
 					"#a": [
 						410,
 						230,
 						0,
 						"toggle",
 						0,
-						false
+						0
 					],
 					"name": "d2"
 				},
 				{
-					"#c": "Switch",
+					"#c": "Button",
 					"#a": [
 						410,
 						290,
 						0,
 						"toggle",
 						0,
-						false
+						0
 					],
 					"name": "d1"
 				},
 				{
-					"#c": "Switch",
+					"#c": "Button",
 					"#a": [
 						410,
 						350,
 						0,
 						"toggle",
 						0,
-						false
+						0
 					],
 					"name": "d0"
 				},
@@ -3822,6 +3822,385 @@ loadFiles.push(
 				"zoom": 2,
 				"offsetX": -310.2619047619047,
 				"offsetY": -164.95714285714286
+			},
+			"portConfig": {
+				"spacing": 0,
+				"gap": "middle",
+				"parity": "auto",
+				"placement": {
+					"top": "",
+					"right": "",
+					"bottom": "",
+					"left": ""
+				}
+			},
+			"lid": null,
+			"visibleInLib": true
+		},
+		{
+			"label": "Switches",
+			"description": "",
+			"uid": "ufe6bff15192e4a8999a095aefca4a62f",
+			"data": [
+				{
+					"#c": "TextLabel",
+					"#a": [
+						200,
+						0,
+						0,
+						400,
+						"p1, p2 and p3 should be high impedance, p4 should be 0, p5 should be 1 and p6 should be high impedance",
+						"small",
+						null
+					]
+				},
+				{
+					"#c": "Constant",
+					"#a": [
+						210,
+						70,
+						1,
+						0,
+						1,
+						1,
+						"dec"
+					],
+					"name": "c1",
+					"inputFormat": "dec"
+				},
+				{
+					"#c": "Constant",
+					"#a": [
+						210,
+						110,
+						1,
+						1,
+						1,
+						1,
+						"dec"
+					],
+					"name": "c2",
+					"inputFormat": "dec"
+				},
+				{
+					"#c": "Constant",
+					"#a": [
+						210,
+						150,
+						1,
+						0,
+						0,
+						1,
+						"dec"
+					],
+					"name": "c3",
+					"inputFormat": "bin"
+				},
+				{
+					"#c": "Constant",
+					"#a": [
+						210,
+						210,
+						1,
+						0,
+						1,
+						1,
+						"dec"
+					],
+					"name": "c4",
+					"inputFormat": "dec"
+				},
+				{
+					"#c": "Constant",
+					"#a": [
+						210,
+						250,
+						1,
+						1,
+						1,
+						1,
+						"dec"
+					],
+					"name": "c5",
+					"inputFormat": "dec"
+				},
+				{
+					"#c": "Constant",
+					"#a": [
+						210,
+						290,
+						1,
+						0,
+						0,
+						1,
+						"dec"
+					],
+					"name": "c6",
+					"inputFormat": "bin"
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						250,
+						90,
+						100,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						250,
+						130,
+						100,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						250,
+						170,
+						100,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						250,
+						230,
+						100,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						250,
+						270,
+						100,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						250,
+						310,
+						100,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Switch",
+					"#a": [
+						350,
+						70,
+						0,
+						"toggle",
+						0,
+						0
+					],
+					"name": ""
+				},
+				{
+					"#c": "Switch",
+					"#a": [
+						350,
+						110,
+						0,
+						"toggle",
+						0,
+						0
+					],
+					"name": ""
+				},
+				{
+					"#c": "Switch",
+					"#a": [
+						350,
+						150,
+						0,
+						"toggle",
+						0,
+						0
+					],
+					"name": ""
+				},
+				{
+					"#c": "Switch",
+					"#a": [
+						350,
+						210,
+						0,
+						"toggle",
+						0,
+						1
+					],
+					"name": ""
+				},
+				{
+					"#c": "Switch",
+					"#a": [
+						350,
+						250,
+						0,
+						"toggle",
+						0,
+						1
+					],
+					"name": ""
+				},
+				{
+					"#c": "Switch",
+					"#a": [
+						350,
+						290,
+						0,
+						"toggle",
+						0,
+						1
+					],
+					"name": ""
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						390,
+						90,
+						100,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						390,
+						130,
+						100,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						390,
+						170,
+						100,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						390,
+						230,
+						100,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						390,
+						270,
+						100,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						390,
+						310,
+						100,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Probe",
+					"#a": [
+						490,
+						70,
+						3,
+						"p1",
+						1
+					],
+					"displayFormat": "auto"
+				},
+				{
+					"#c": "Probe",
+					"#a": [
+						490,
+						110,
+						3,
+						"p2",
+						1
+					],
+					"displayFormat": "auto"
+				},
+				{
+					"#c": "Probe",
+					"#a": [
+						490,
+						150,
+						3,
+						"p3",
+						1
+					],
+					"displayFormat": "auto"
+				},
+				{
+					"#c": "Probe",
+					"#a": [
+						490,
+						210,
+						3,
+						"p4",
+						1
+					],
+					"displayFormat": "auto"
+				},
+				{
+					"#c": "Probe",
+					"#a": [
+						490,
+						250,
+						3,
+						"p5",
+						1
+					],
+					"displayFormat": "auto"
+				},
+				{
+					"#c": "Probe",
+					"#a": [
+						490,
+						290,
+						3,
+						"p6",
+						1
+					],
+					"displayFormat": "auto"
+				}
+			],
+			"gridConfig": {
+				"zoom": 1.25,
+				"offsetX": -20.8,
+				"offsetY": 64
 			},
 			"portConfig": {
 				"spacing": 0,

@@ -60,8 +60,8 @@ class BackendJavascript {
                 // falling edge detection
                 return `(mem[${port.elementIndexP}] & ~mem[${port.elementIndex2}])`;
             } else if (mode === '?') {
-                // read signal bit
-                return `mem[${port.elementIndex3}]`;
+                // read signal bit: if no signal element exists the port is always driven
+                return port.elementIndex3 !== null ? `mem[${port.elementIndex3}]` : '~0';
             } else {
                 return `mem[${port.elementIndex2}]`;
             }

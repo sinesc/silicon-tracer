@@ -50,7 +50,7 @@ class Simulation {
         srlatch     : { outputs: { q: 's | (~r & q)', nq: '!q' }, inputs: [ 'r', 's' ] },
         srflipflop  : { outputs: { q: '(+clock & (s | (~r & q))) | (~+clock & q)' }, inputs: [ 'clock', 'r', 's' ] },
         asrflipflop : { outputs: { q: '~reset & (set | ((+clock & (s | (~r & q))) | (~+clock & q)))' }, inputs: [ 'clock', 'r', 's', 'reset', 'set' ] },
-        switch      : { outputs: { output: 'input' }, signals: { output: 'close' }, inputs: [ 'close', 'input' ] }, // FIXME: signals should be: { output: 'close & ?input' } but ?input not yet supported (reconsider even using this because switch behaviour is inconvenient [requiring an input])
+        switch      : { outputs: { output: 'input' }, signals: { output: 'close & ?input' }, inputs: [ 'close', 'input' ] },
         buffer3     : { outputs: { q: 'data' }, signals: { q: 'enable' }, inputs: [ 'enable', 'data' ] },
         not3        : { outputs: { q: '~data' }, signals: { q: 'enable' }, inputs: [ 'enable', 'data' ] },
         adder       : { outputs: { cOut: '((a ^ b) & cIn) | (a & b)', q: '(a ^ b) ^ cIn' }, inputs: [ 'a', 'b', 'cIn' ]  },
@@ -94,7 +94,7 @@ class Simulation {
     #clocks = [];
 
     // Computed simulation memory layout, operations, etc...
-    #layout = { netToInputBitmap: null, outputToNetBitmap: null, operations: null, pullMasks: null };
+    #layout = { netToInputBitmap: null, netToInputSignalBitmap: null, outputToNetBitmap: null, operations: null, pullMasks: null };
 
     // Compiled tick function.
     #compiledTicks;
@@ -183,7 +183,8 @@ class Simulation {
         const rules = Simulation.BUILTIN_MAP[type] ?? this.#customBuiltinMap[type] ?? error('Undefined builtin');
         for (const input of rules.inputs) {
             const detectEdges = values(rules.outputs).map((eq) => eq.includes(`+${input}`) || eq.includes(`-${input}`)).some((t) => t);
-            this.#declarePort(input, suffix, 'i', false, detectEdges, type);
+            const readSignal = values(rules.signals ?? {}).some((eq) => eq.includes(`?${input}`));
+            this.#declarePort(input, suffix, 'i', readSignal, detectEdges, type);
         }
         for (const output of keys(rules.outputs)) {
             const isTristate = !!rules.signals?.[output];
@@ -939,6 +940,18 @@ class Simulation {
         return bitmaps;
     }
 
+    // Generate bit mappings to copy net driven-state into input ports that need it (used by the ? operator).
+    #generateNetToInputSignalBitmap() {
+        const ports = this.#ports.all.filter((p) => p.ioType === 'i' && p.elementIndex3 !== null);
+        const rawBitmaps = [];
+        for (const port of ports) {
+            const net = this.#nets.byPort[port.name];
+            if (!net) continue;
+            rawBitmaps.push({ mode: null, srcBit: net.bitIndex, destBit: port.bitIndex, srcElementIndex2: net.elementIndex3, destElementIndex2: port.elementIndex3 });
+        }
+        return this.#optimizeBitmaps(rawBitmaps);
+    }
+
     // Generate bit mappings to set nets from outputs.
     #generateOutputToNetBitmap() {
         // none of the output bits will align with net bits (since we priorized aligning input bits
@@ -1029,6 +1042,7 @@ class Simulation {
         }
         // ----
         this.#layout.netToInputBitmap = this.#generateNetToInputBitmap();
+        this.#layout.netToInputSignalBitmap = this.#generateNetToInputSignalBitmap();
         this.#layout.outputToNetBitmap = this.#generateOutputToNetBitmap();
         this.#layout.pullMasks = this.#generatePullResistorMasks();
         return globalElementIndex;
@@ -1062,6 +1076,10 @@ class Simulation {
         const inputGrouped = this.#groupBitmapsByDest(this.#layout.netToInputBitmap);
         for (const [destElementIndex, group] of pairs(inputGrouped)) {
             this.#backend.emitNetToInput(destElementIndex, group, 'net to input');
+        }
+        const inputSignalGrouped = this.#groupBitmapsByDest(this.#layout.netToInputSignalBitmap);
+        for (const [destElementIndex, group] of pairs(inputSignalGrouped)) {
+            this.#backend.emitNetToInput(destElementIndex, group, 'net to input signal');
         }
 
         // step 2.5: memory access (ROM/RAM)
