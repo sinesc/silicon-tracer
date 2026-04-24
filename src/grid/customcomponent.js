@@ -251,7 +251,7 @@ class CustomComponent extends VirtualComponent {
         if (!circuit) {
             return super.descriptorInfo(desc);
         }
-        return { label: circuit.label, hoverMessage: `<b>${circuit.label}</b>. ${circuit.description ? "(" + circuit.description + ")" : ""}` };
+        return { label: circuit.label, hoverMessage: `<b>${circuit.label}</b>${circuit.description ? " (" + circuit.description + ")." : "."}` };
     }
 
     static fromDescriptor(app, desc, overrideDefaults = {}) {

@@ -12,7 +12,7 @@ class Action {
             { name: 'lib', label: 'Library', type: 'select', options },
         ], { lib: nonPackagedLibs[0][0] });
         if (result) {
-            const circuit = app.circuits.current;
+            const circuit = app.grid.circuit;
             const libLabel = nonPackagedLibs.find(([ lid ]) => lid === result.lib)[1];
             circuit.lid = result.lib;
             app.showNotice(`Circuit "${circuit.label}" was moved to "${libLabel}".`);
@@ -23,16 +23,16 @@ class Action {
     // Move current grid circuit from a library to the the main circuits list.
     static moveCircuitToCircuits(app) {
         assert.class(Application, app);
-        const circuit = app.circuits.current;
+        const circuit = app.grid.circuit;
         circuit.lid = null;
         app.showNotice(`Circuit "${circuit.label}" was moved to circuits.`);
         app.haveChanges = true;
     }
 
-    // Delete a circuit from the project after user confirmation.
-    static async deleteCircuit(app, circuit) {
+    // Delete current circuit from the project after user confirmation.
+    static async deleteCircuit(app) {
         assert.class(Application, app);
-        assert.class(Circuit, circuit);
+        const circuit = app.grid.circuit;
         if (await confirmDialog('Confirm deletion', `Delete "${circuit.label}" from project?`)) {
             app.circuits.globalUndoStack.push(`Delete "${circuit.label}"`, JSON.stringify(circuit.serialize()), null, false);
             app.simulations.delete(circuit);

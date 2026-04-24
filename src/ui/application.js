@@ -298,6 +298,25 @@ class Application {
     // Create main menu entries and toolbar.
     #initToolbar() {
 
+        // Makes combined switch to/drag onto grid buttons for circuits/components
+        const makeSwitchAndDragButtons = (menu, uid) => {
+            const info = CustomComponent.descriptorInfo({ '#u': uid });
+            const isSwitchable = uid === this.grid.circuit.uid; // TBD: may not even want to block this case since switching to the already on the grid circuit also switches the simulation, which might be what the user wants
+            const isPlaceable = uid !== this.grid.circuit.uid && !this.circuits.subcircuitUIDs(uid).has(this.grid.circuit.uid); // prevent placing super- into sub-components -> infinite recursion
+            // drag&place
+            if (isPlaceable) {
+                const componentButton = menu.createPinnableComponentButton((grid, x, y) => grid.addItem(new CustomComponent(this, x, y, 0, uid), false), { '#c': 'CustomComponent', '#u': uid }, '&#9094;');
+                componentButton.node.classList.add('toolbar-circuit-place');
+            }
+            // select for grid
+            const switchButton = menu.createActionButton(info.label, info.hoverMessage + (isSwitchable ? 'Currently on the grid.' : '<i>Click</i> Edit on the grid.'), () => {
+                menu.state(false);
+                Action.selectCircuit(this, uid);
+            });
+            switchButton.node.classList.add(isPlaceable ? 'toolbar-circuit-select' : 'toolbar-circuit-select-fullrow');
+            switchButton.node.classList.toggle('toolbar-menu-button-disabled', isSwitchable);
+        };
+
         // Add file operations to toolbar
         this.toolbar.createMenuButton('File', 'File operations menu.', (fileMenu) => {
             fileMenu.clear();
@@ -389,7 +408,7 @@ class Application {
                 await Action.newCircuit(this);
             });
             // Remove current circuit.
-            const dependentUids = this.circuits.circuitDependents(this.circuits.current.uid);
+            const dependentUids = this.circuits.circuitDependents(this.grid.circuit.uid);
             const dependentLabels = [ ...dependentUids ].map((uid) => this.circuits.byUID(uid)?.label).filter(Boolean);
             const dependentsStr = dependentLabels.join(', ');
             const truncatedDependents = dependentsStr.length > 50 ? dependentsStr.slice(0, 50) + '...' : dependentsStr;
@@ -399,13 +418,13 @@ class Application {
                 : dependentUids.size > 0
                     ? `Cannot remove, still used by: ${truncatedDependents}`
                     : 'Remove current circuit.';
-            const button = circuitMenu.createActionButton(`Remove "${this.circuits.current.label}"`, removeHoverMessage, async () => {
+            const button = circuitMenu.createActionButton(`Remove "${this.grid.circuit.label}"`, removeHoverMessage, async () => {
                 circuitMenu.state(false);
-                await Action.deleteCircuit(this, this.circuits.current);
+                await Action.deleteCircuit(this);
             });
             button.node.classList.toggle('toolbar-menu-button-disabled', removeDisabled);
             // Move current circuit to/from a library.
-            const currentLid = this.circuits.current.lid;
+            const currentLid = this.grid.circuit.lid;
             const haveCustomLibs = this.circuits.libraries.some(([ lid ]) => !this.circuits.isPackaged(lid))
             if (currentLid === null) {
                 const moveToLibButton = circuitMenu.createActionButton('Move to library...', haveCustomLibs ? 'Move this circuit into a library.' : 'No non-packaged libraries loaded.', () => {
@@ -421,21 +440,8 @@ class Application {
             }
             circuitMenu.createSeparator();
             // Switch circuit. Generate menu items for each circuit.
-            for (const [ uid, label, description ] of circuitList) {
-                const isCurrentGrid = uid === this.grid.circuit.uid; // grid circuit may be different from current circuit when navigating through simulation subcomponents
-                const text = label + (description ? ' (' + description + ').' : '.');
-                // place circuit as component
-                if (uid !== this.grid.circuit.uid && !this.circuits.subcircuitUIDs(uid).has(this.grid.circuit.uid)) {
-                    const componentButton = circuitMenu.createPinnableComponentButton((grid, x, y) => grid.addItem(new CustomComponent(this, x, y, 0, uid), false), { '#c': 'CustomComponent', '#u': uid }, '&#9094;');
-                    componentButton.node.classList.add('toolbar-circuit-place');
-                }
-                // circuit select
-                const switchButton = circuitMenu.createActionButton(label, text + (isCurrentGrid ? 'Currently on the grid.' : '<i>Click</i> Edit on the grid.'), () => {
-                    circuitMenu.state(false);
-                    Action.selectCircuit(this, uid);
-                });
-                switchButton.node.classList.add(!isCurrentGrid ? 'toolbar-circuit-select' : 'toolbar-circuit-select-fullrow');
-                switchButton.node.classList.toggle('toolbar-menu-button-disabled', isCurrentGrid);
+            for (const [ uid ] of circuitList) {
+                makeSwitchAndDragButtons(circuitMenu, uid);
             }
         });
 
@@ -452,7 +458,6 @@ class Application {
                 routingMenu.createPinnableComponentButton((grid, x, y) => grid.addItem(new Tunnel(this, x, y, defaults.tunnel.rotation), false), { '#c': 'Tunnel' });
                 routingMenu.createPinnableComponentButton((grid, x, y) => grid.addItem(new Probe(this, x, y, defaults.probe.rotation), false), { '#c': 'Probe' });
                 routingMenu.createPinnableComponentButton((grid, x, y) => grid.addItem(new TextLabel(this, x, y, defaults.textlabel.rotation), false), { '#c': 'TextLabel' });
-
             });
 
             // io/utilities
@@ -507,22 +512,8 @@ class Application {
                     libraryMenu.clear();
                     const componentList = this.circuits.list(lid);
                     // Switch component. Generate menu items for each component.
-                    for (const [ uid, label, description ] of componentList) {
-                        const isCurrentGrid = uid === this.grid.circuit.uid; // grid component may be different from current component when navigating through simulation subcomponents
-                        const isCurrentCircuit = uid === this.circuits.current.uid;
-                        const text = label + (description ? ' (' + description + ').' : '.');
-                        // place component as component
-                        if (!isCurrentGrid) {
-                            const componentButton = libraryMenu.createPinnableComponentButton((grid, x, y) => grid.addItem(new CustomComponent(this, x, y, 0, uid), false), { '#c': 'CustomComponent', '#u': uid }, '&#9094;');
-                            componentButton.node.classList.add('toolbar-circuit-place');
-                        }
-                        // component select
-                        const switchButton = libraryMenu.createActionButton(label, text + (isCurrentGrid ? 'Currently on the grid.' : '<i>Click</i> Edit on the grid.'), () => {
-                            componentMenu.state(false);
-                            Action.selectCircuit(this, uid);
-                        });
-                        switchButton.node.classList.add(!isCurrentGrid ? 'toolbar-circuit-select' : 'toolbar-circuit-select-fullrow');
-                        switchButton.node.classList.toggle('toolbar-menu-button-disabled', isCurrentCircuit);
+                    for (const [ uid ] of componentList) {
+                        makeSwitchAndDragButtons(libraryMenu, uid);
                     }
                 });
             }

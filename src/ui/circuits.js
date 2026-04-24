@@ -186,7 +186,7 @@ class Circuits {
         this.#circuits[circuit.uid] = circuit;
     }
 
-    // Returns a map(uid=>label) of loaded circuits or library circuits.
+    // Returns a list of [ uid, label, description ] of loaded circuits or library circuits.
     list(lid = null) {
         assert.string(lid, true);
         const circuits = Object.values(this.#circuits).filter((c) => c.lid === lid && (lid === null || c.visibleInLib)).map((c) => [ c.uid, c.label, c.description ]);
