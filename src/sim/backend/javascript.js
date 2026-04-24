@@ -209,9 +209,9 @@ class BackendJavascript {
     // probeMap is { [probeName]: { elementIndex2, bitIndex } | null | Array<{...}> } - null probes are substituted with null,
     // single-bit probes are 0/1/-1/null, multi-bit probes (arrays) are combined into an integer (LSB = index 0).
     emitBreakOnCondition(expr, probeMap) {
-        const names = Object.keys(probeMap).sort((a, b) => b.length - a.length);
-        // Replace unknown identifiers with null before probe substitution.
-        let translated = expr.replace(/\b[a-zA-Z_$][\w$]*\b/g, (m) => Object.hasOwn(probeMap, m) ? m : 'null');
+        const names = Object.keys(probeMap).filter((n) => n).sort((a, b) => b.length - a.length);
+        // Replace unknown identifiers with 0 before probe substitution (silently ignore missing probes).
+        let translated = expr.replace(/\b[a-zA-Z_$][\w$]*\b/g, (m) => Object.hasOwn(probeMap, m) ? m : '0');
         for (const name of names) {
             const p = probeMap[name];
             let replacement;
