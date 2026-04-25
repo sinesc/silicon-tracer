@@ -221,6 +221,22 @@ class Grid {
         return [ mouseGridX, mouseGridY ];
     }
 
+    // Pans to bring item into the visible area.
+    panToItem(item) {
+        const gw = this.#element.offsetWidth;
+        const gh = this.#element.offsetHeight;
+        const zoom = this.zoom;
+        const cx = item.x + item.width / 2;
+        const cy = item.y + item.height / 2;
+        const sx = (cx + this.offsetX) * zoom;
+        const sy = (cy + this.offsetY) * zoom;
+        const margin = Grid.SPACING * 4 * zoom;
+        if (sx < margin || sx > gw - margin || sy < margin || sy > gh - margin) {
+            this.offsetX = gw / (2 * zoom) - cx;
+            this.offsetY = gh / (2 * zoom) - cy;
+        }
+    }
+
     // Renders the grid and its components.
     render() {
 

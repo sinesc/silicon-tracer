@@ -306,22 +306,6 @@ class SearchBar {
         }
         this.#selectedItem = this.#matches[this.#matchIndex];
         this.#selectedItem.selected = true;
-        this.#panToItem(this.#selectedItem);
-    }
-
-    // Pans the grid to bring item into the visible area if it is outside it.
-    #panToItem(item) {
-        const gw = this.#gridElement.offsetWidth;
-        const gh = this.#gridElement.offsetHeight;
-        const zoom = this.#app.grid.zoom;
-        const cx = item.x + item.width / 2;
-        const cy = item.y + item.height / 2;
-        const sx = (cx + this.#app.grid.offsetX) * zoom;
-        const sy = (cy + this.#app.grid.offsetY) * zoom;
-        const margin = Grid.SPACING * 4 * zoom;
-        if (sx < margin || sx > gw - margin || sy < margin || sy > gh - margin) {
-            this.#app.grid.offsetX = gw / (2 * zoom) - cx;
-            this.#app.grid.offsetY = gh / (2 * zoom) - cy;
-        }
+        this.#app.grid.panToItem(this.#selectedItem);
     }
 }
