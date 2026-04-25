@@ -79,15 +79,17 @@ class Action {
     // Merge circuits from a file into the currently loaded circuits.
     static async mergeFile(app) {
         assert.class(Application, app);
-        await app.circuits.loadFile(false, false);
-        app.haveChanges = true;
+        if (await app.circuits.loadFile(false, false)) {
+            app.haveChanges = true;
+        }
     }
 
     // Load a file as a library into the Component menu.
     static async includeLibrary(app) {
         assert.class(Application, app);
-        await app.circuits.loadFile(false, false, true);
-        app.haveChanges = true;
+        if (await app.circuits.loadFile(false, false, true)) {
+            app.haveChanges = true;
+        }
     }
 
     // Create a new empty library via dialog.
@@ -142,8 +144,9 @@ class Action {
     // Import circuits from a foreign file format.
     static async importFile(app) {
         assert.class(Application, app);
-        await app.circuits.importFile();
-        app.haveChanges = true;
+        if (await app.circuits.importFile()) {
+            app.haveChanges = true;
+        }
     }
 
     // Save circuits to the previously opened file.

@@ -38,7 +38,13 @@ class Circuits {
         assert.bool(clear);
         assert.bool(switchTo);
         const haveCircuits = !this.allEmpty();
-        const [ handle ] = await File.open(this.#fileHandle);
+        let handle;
+        try {
+            [ handle ] = await File.open(this.#fileHandle);
+        } catch (e) {
+            if (e.name !== 'AbortError') throw e;
+            return;
+        }
         const file = await handle.getFile();
         let content;
         try {
@@ -85,15 +91,23 @@ class Circuits {
         if (errors.length > 0) {
             await errorDialog('Circuit issues detected', '<b>Some components or component types used in the file are missing or unsupported.</b><br><br>Please check the the loaded circuits carefully as <b><u>you will lose the missing/unsupported components</u></b> if you save the file now. If you have unloaded packaged libraries (via CTRL+Close) the circuits might depend on those. Otherwise, if you are not on the latest version of Silicon Tracer updating might fix the issue.');
         }
+        return true;
     }
 
     // Import file and add circuits to loaded circuits.
     async importFile() {
-        const [ handle ] = await File.open(this.#fileHandle, '.circ');
+        let handle;
+        try {
+            [ handle ] = await File.open(this.#fileHandle, '.circ');
+        } catch (e) {
+            if (e.name !== 'AbortError') throw e;
+            return;
+        }
         const file = await handle.getFile();
         const text = await file.text();
         if (text.includes('This file is intended to be loaded by Logisim')) {
             await LogiSim.import(this.#app, handle, text);
+            return true;
         } else {
             await errorDialog('Unsupported file format', 'The file does not appear to be a valid LogiSim Evolution file.');
         }
@@ -104,7 +118,13 @@ class Circuits {
         let writable;
         let name;
         if (!this.#fileHandle || !File.verifyPermission(this.#fileHandle)) {
-            const handle = await File.saveAs();
+            let handle;
+            try {
+                handle = await File.saveAs();
+            } catch (e) {
+                if (e.name !== 'AbortError') throw e;
+                return;
+            }
             name = handle.name;
             writable = await handle.createWritable();
         } else {
@@ -119,7 +139,13 @@ class Circuits {
     // Saves circuits as a new file.
     async saveFileAs() {
         const all = this.list();
-        const handle = await File.saveAs(this.#fileName ?? all[0][1]);
+        let handle;
+        try {
+            handle = await File.saveAs(this.#fileName ?? all[0][1]);
+        } catch (e) {
+            if (e.name !== 'AbortError') throw e;
+            return;
+        }
         const writable = await handle.createWritable();
         await writable.write(Circuits.#encodeJSON(this.#serialize(File.makeLabel(handle.name))));
         await writable.close();
@@ -333,7 +359,13 @@ class Circuits {
     async extractLibrary(lid) {
         assert.string(lid);
         const label = this.#libraries[lid].label;
-        const handle = await File.saveAs(label);
+        let handle;
+        try {
+            handle = await File.saveAs(label);
+        } catch (e) {
+            if (e.name !== 'AbortError') throw e;
+            return;
+        }
         const writable = await handle.createWritable();
         await writable.write(Circuits.#encodeJSON(this.serializeLibrary(lid)));
         await writable.close();
