@@ -430,8 +430,16 @@ class LogiSim {
                 offsetPort(item, 'q');
                 circuit.addItem(item);
             } else if ([ 'Controlled Buffer', 'Controlled Inverter' ].includes(rawComp.name)) {
+                const size = Number.parseInt(rawComp.size ?? '30');
                 const item = new Builtin(this.#app, x, y, rotation(rawComp.facing ?? 'east') + 3, rawComp.name === 'Controlled Buffer' ? 'buffer3' : 'not3');
                 offsetPort(item, 'q');
+                if (size > 20 && rawComp.name === 'Controlled Inverter') {
+                    const vector = direction(rotation(rawComp.facing ?? 'east') + 2);
+                    const dist = (size - 20) / 10;
+                    item.x += vector.x * dist * Grid.SPACING;
+                    item.y += vector.y * dist * Grid.SPACING;
+                    this.#addHelperWire(circuit, item, 'q', direction(rotation(rawComp.facing ?? 'east')), dist);
+                }
                 circuit.addItem(item);
             } else if (rawComp.name === 'Text') {
                 const item = new TextLabel(this.#app, x - Grid.SPACING * 0.5, y - 2 * Grid.SPACING + Grid.SPACING * 0.5, rotation(rawComp.facing ?? 'east') + 3, 200, rawComp.text);
@@ -451,7 +459,6 @@ class LogiSim {
             } else if (rawComp.name === 'NoConnect') {
                 const item = new TextLabel(this.#app, x - Grid.SPACING * 0.5, y - Grid.SPACING * 0.5, rotation(rawComp.facing ?? 'east') + 3, 200, 'X', 'medium', 4);
                 circuit.addItem(item);
-                // since these aren't required for the circuit to work we'll not generate a problems log entry for them
             } else if ([ 'ROM', 'RAM' ].includes(rawComp.name)) {
                 const memType = rawComp.name.toLowerCase();
                 const addressWidth = Number.parseInt(rawComp.addrWidth ?? '8');
