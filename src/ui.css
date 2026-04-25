@@ -1263,6 +1263,28 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
 }
 
 /*
+ * Segment display
+ */
+[data-component-type="segmentdisplay"] > .component-inner > span {
+    display: none;
+}
+.sd-seg {
+    position: absolute;
+    pointer-events: none;
+    z-index: 13;
+    background: var(--net-color-high);
+    opacity: 0.12;
+    transition: opacity 0.04s;
+}
+.sd-seg[data-on="1"]  {
+    opacity: 1;
+    filter: drop-shadow(1px 1px 3px var(--net-color-high-alpha)) drop-shadow(-1px -1px 3px var(--net-color-high-alpha));
+}
+.sd-seg[data-on="-1"] {
+    background: var(--wire-colorE1) !important; opacity: 1;
+}
+
+/*
  * Tunnel
  */
 .component.tunnel[data-component-rotation="1"] .component-inner, .component.tunnel[data-component-rotation="3"] .component-inner {

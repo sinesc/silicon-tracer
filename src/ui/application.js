@@ -52,6 +52,7 @@ class Application {
             switch: { rotation: 0, },
             button: { rotation: 0, },
             probe: { rotation: 1, },
+            segmentdisplay: { rotation: 0, color: 4 },
             rom: { rotation: 0, addressWidth: 4, dataWidth: 8 },
             ram: { rotation: 0, addressWidth: 4, dataWidth: 8, combinedPorts: true },
         },
@@ -455,22 +456,23 @@ class Application {
             componentMenu.createMenuCategory('Routing &amp; labeling', 'Ports, tunnels, splitters, text.', (routingMenu) => {
                 routingMenu.clear();
                 routingMenu.createPinnableComponentButton((grid, x, y) => grid.addItem(new Port(this, x, y, defaults.port.rotation), false), { '#c': 'Port' });
-                routingMenu.createPinnableComponentButton((grid, x, y) => grid.addItem(new Splitter(this, x, y, defaults.splitter.rotation, defaults.splitter.numSplits), false), { '#c': 'Splitter' });
-                routingMenu.createPinnableComponentButton((grid, x, y) => grid.addItem(new Tunnel(this, x, y, defaults.tunnel.rotation), false), { '#c': 'Tunnel' });
                 routingMenu.createPinnableComponentButton((grid, x, y) => grid.addItem(new Probe(this, x, y, defaults.probe.rotation), false), { '#c': 'Probe' });
+                routingMenu.createPinnableComponentButton((grid, x, y) => grid.addItem(new Splitter(this, x, y, defaults.splitter.rotation, defaults.splitter.numSplits), false), { '#c': 'Splitter' });
                 routingMenu.createPinnableComponentButton((grid, x, y) => grid.addItem(new TextLabel(this, x, y, defaults.textlabel.rotation), false), { '#c': 'TextLabel' });
+                routingMenu.createPinnableComponentButton((grid, x, y) => grid.addItem(new Tunnel(this, x, y, defaults.tunnel.rotation), false), { '#c': 'Tunnel' });
             });
 
             // io/utilities
             componentMenu.createMenuCategory('IO/Control', 'Clocks, constants, ...', (ioMenu) => {
                 ioMenu.clear();
+                ioMenu.createPinnableComponentButton((grid, x, y) => grid.addItem(new SegmentDisplay(this, x, y, defaults.segmentdisplay.rotation, defaults.segmentdisplay.color), false), { '#c': 'SegmentDisplay' });
+                ioMenu.createPinnableComponentButton((grid, x, y) => grid.addItem(new Button(this, x, y, defaults.button.rotation, 'toggle'), false), { '#c': 'Button', '#t': 'toggle' });
+                ioMenu.createPinnableComponentButton((grid, x, y) => grid.addItem(new Button(this, x, y, defaults.button.rotation, 'momentary'), false), { '#c': 'Button', '#t': 'momentary' });
                 ioMenu.createPinnableComponentButton((grid, x, y) => grid.addItem(new Clock(this, x, y, defaults.clock.rotation), false), { '#c': 'Clock' });
                 ioMenu.createPinnableComponentButton((grid, x, y) => grid.addItem(new Constant(this, x, y, defaults.constant.rotation), false), { '#c': 'Constant' });
                 ioMenu.createPinnableComponentButton((grid, x, y) => grid.addItem(new PullResistor(this, x, y, defaults.pull.rotation), false), { '#c': 'PullResistor' });
                 ioMenu.createPinnableComponentButton((grid, x, y) => grid.addItem(new Switch(this, x, y, defaults.switch.rotation, 'toggle'), false), { '#c': 'Switch', '#t': 'toggle' });
                 ioMenu.createPinnableComponentButton((grid, x, y) => grid.addItem(new Switch(this, x, y, defaults.switch.rotation, 'momentary'), false), { '#c': 'Switch', '#t': 'momentary' });
-                ioMenu.createPinnableComponentButton((grid, x, y) => grid.addItem(new Button(this, x, y, defaults.button.rotation, 'toggle'), false), { '#c': 'Button', '#t': 'toggle' });
-                ioMenu.createPinnableComponentButton((grid, x, y) => grid.addItem(new Button(this, x, y, defaults.button.rotation, 'momentary'), false), { '#c': 'Button', '#t': 'momentary' });
                 ioMenu.createPinnableComponentButton((grid, x, y) => grid.addItem(new Memory(this, x, y, defaults.rom.rotation, 'rom', defaults.rom.addressWidth, defaults.rom.dataWidth), false), { '#c': 'Memory', '#t': 'rom' });
                 ioMenu.createPinnableComponentButton((grid, x, y) => grid.addItem(new Memory(this, x, y, defaults.ram.rotation, 'ram', defaults.ram.addressWidth, defaults.ram.dataWidth, null, defaults.ram.combinedPorts), false), { '#c': 'Memory', '#t': 'ram' });
             });
