@@ -8,7 +8,7 @@ class Memory extends SimulationComponent {
     static #ROM_EDIT_DIALOG = [
         { name: 'addressWidth', label: 'Address width (bits)', type: 'int', postCheck: (v, f) => isFinite(v) && v >= 1 && v <= 24 },
         { name: 'dataWidth', label: 'Data width (bits)', type: 'select', options: { 1: "1", 2: "2", 4: "4", 8: "8", 16: "16", 32: "32" }, apply: (v) => parseInt(v) },
-        { name: 'data', label: 'Initial data', type: 'textfile', extension: '.rom', apply: (txt) => Memory.decodeData(txt), restore: (a) => a.toHex(), filestatus: (d) => d === null ? '0 bytes' : `${d.length} bytes` },
+        { name: 'data', label: 'Initial data', type: 'textfile', extension: '.rom', apply: (txt) => Memory.decodeData(txt), restore: (a) => a.toHex(), filestatus: (d) => d === null ? '0 bytes' : `${Number.formatSI(d.length)} bytes` },
         ...Component.EDIT_DIALOG,
     ];
     static #RAM_EDIT_DIALOG = [

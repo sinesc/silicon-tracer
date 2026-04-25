@@ -524,7 +524,7 @@ body.no-focus #focus-hint:has(~div.grid:hover) {
     background-color: var(--component-body-color);
     border: none;
     box-sizing: border-box;
-    width: 200px;
+    width: 240px;
     padding: 4px;
     color: var(--text-color);
     border-radius: var(--radius-input);
@@ -572,6 +572,7 @@ body.no-focus #focus-hint:has(~div.grid:hover) {
     display: flex;
     align-items: center;
     gap: 4px;
+    width: 240px;
 }
 .dialog-container .dialog-row-mask .dialog-button-small {
     outline: 1px solid var(--component-border-color);
@@ -589,9 +590,19 @@ body.no-focus #focus-hint:has(~div.grid:hover) {
 .dialog-container .dialog-row-mask .dialog-button-small:hover {
     outline-color: var(--button-border-hover-color);
 }
+.dialog-container .dialog-row-mask .dialog-button-small.dialog-button-disabled {
+    opacity: 0.4;
+    cursor: default;
+    pointer-events: none;
+}
 .dialog-container .dialog-textfile-info {
-    margin-left: auto;
-    padding: 4px;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 4px 0;
+    text-align: left;
     font-size: var(--font-size-normal);
 }
 

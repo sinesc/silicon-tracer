@@ -109,14 +109,16 @@ function dialog(title, fields, data, extraOptions) {
                 fieldElement.onchange = triggerOnChange;
             } else if (field.type === 'textfile') {
                 const valueRef = { value: initialValue, focus() {}, onkeydown: null };
-                const openButton = html(rowRight, 'span', 'dialog-button dialog-button-small', 'Open');
-                const clearButton = html(rowRight, 'span', 'dialog-button dialog-button-small', 'Clear');
                 const infoDiv = html(rowRight, 'div', 'dialog-textfile-info');
+                const openButton = html(rowRight, 'span', 'dialog-button dialog-button-small', 'Open');
+                const saveButton = html(rowRight, 'span', 'dialog-button dialog-button-small', 'Save');
+                const clearButton = html(rowRight, 'span', 'dialog-button dialog-button-small', 'Clear');
                 const applyFn = field.apply ?? validations[field.type].apply;
                 const filestatus = field.filestatus ?? ((v) => v != null ? `${Number.formatSI(v.length)} chars` : 'No file');
                 const updateInfo = () => {
                     const applied = valueRef.value != null ? applyFn.call(context, valueRef.value, field) : null;
                     infoDiv.textContent = filestatus.call(context, applied, field);
+                    saveButton.classList.toggle('dialog-button-disabled', !valueRef.value);
                 };
                 updateInfo();
                 openButton.onclick = async () => {
@@ -126,6 +128,17 @@ function dialog(title, fields, data, extraOptions) {
                         valueRef.value = await file.text();
                         updateInfo();
                         triggerOnChange();
+                    } catch (e) {
+                        if (e.name !== 'AbortError') throw e;
+                    }
+                };
+                saveButton.onclick = async () => {
+                    if (!valueRef.value) return;
+                    try {
+                        const handle = await File.saveAs(field.saveName ?? null, field.extension);
+                        const writable = await handle.createWritable();
+                        await writable.write(valueRef.value);
+                        await writable.close();
                     } catch (e) {
                         if (e.name !== 'AbortError') throw e;
                     }

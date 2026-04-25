@@ -611,7 +611,7 @@ class File {
     }
 
     static async saveAs(suggestedName, extension = '.stc') {
-        const name = File.makeName(suggestedName);
+        const name = File.makeName(suggestedName, extension);
         const def = File.#makeDef(extension);
         return await window.showSaveFilePicker({
             ...def,
