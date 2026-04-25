@@ -143,9 +143,9 @@ class SegmentDisplay extends SimulationComponent {
         };
     }
 
-    // Sets data-net-color on the component element to drive segment color via CSS.
+    // Sets data-sd-color on the component element to drive segment color via CSS.
     #applyColor() {
-        this.element?.setAttribute('data-net-color', this.#color);
+        this.element?.setAttribute('data-sd-color', this.#color);
     }
 }
 

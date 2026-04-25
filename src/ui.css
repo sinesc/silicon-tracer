@@ -1229,9 +1229,6 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
     color: var(--text-color);
     filter: brightness(1.75) saturate(0.5);
 }
-.component-port[data-net-state="null"] { background-color: var(--wire-colorD-null); }
-.component-port[data-net-state="0"] { background-color: var(--wire-colorD-low); }
-.component-port[data-net-state="1"] { background-color: var(--wire-colorD-high); box-shadow: 1px 1px 3px var(--wire-colorD-high-alpha), -1px -1px 3px var(--wire-colorD-high-alpha); }
 .component-port-label {
     pointer-events: none;
     z-index: 13;
@@ -1265,6 +1262,16 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
 /*
  * Segment display
  */
+[data-sd-color="0"] { --sd-on: var(--wire-color0-high); --sd-on-alpha: var(--wire-color0-high-alpha); }
+[data-sd-color="1"] { --sd-on: var(--wire-color1-high); --sd-on-alpha: var(--wire-color1-high-alpha); }
+[data-sd-color="2"] { --sd-on: var(--wire-color2-high); --sd-on-alpha: var(--wire-color2-high-alpha); }
+[data-sd-color="3"] { --sd-on: var(--wire-color3-high); --sd-on-alpha: var(--wire-color3-high-alpha); }
+[data-sd-color="4"] { --sd-on: var(--wire-color4-high); --sd-on-alpha: var(--wire-color4-high-alpha); }
+[data-sd-color="5"] { --sd-on: var(--wire-color5-high); --sd-on-alpha: var(--wire-color5-high-alpha); }
+[data-sd-color="6"] { --sd-on: var(--wire-color6-high); --sd-on-alpha: var(--wire-color6-high-alpha); }
+[data-sd-color="7"] { --sd-on: var(--wire-color7-high); --sd-on-alpha: var(--wire-color7-high-alpha); }
+[data-sd-color="8"] { --sd-on: var(--wire-color8-high); --sd-on-alpha: var(--wire-color8-high-alpha); }
+[data-sd-color="9"] { --sd-on: var(--wire-color9-high); --sd-on-alpha: var(--wire-color9-high-alpha); }
 [data-component-type="segmentdisplay"] > .component-inner > span {
     display: none;
 }
@@ -1272,13 +1279,13 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
     position: absolute;
     pointer-events: none;
     z-index: 13;
-    background: var(--net-color-high);
+    background: var(--sd-on);
     opacity: 0.12;
     transition: opacity 0.04s;
 }
 .sd-seg[data-on="1"]  {
     opacity: 1;
-    filter: drop-shadow(1px 1px 3px var(--net-color-high-alpha)) drop-shadow(-1px -1px 3px var(--net-color-high-alpha));
+    filter: drop-shadow(1px 1px 3px var(--sd-on-alpha)) drop-shadow(-1px -1px 3px var(--sd-on-alpha));
 }
 .sd-seg[data-on="-1"] {
     background: var(--wire-colorE1) !important; opacity: 1;
@@ -1521,6 +1528,7 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
  * Net colors
  */
 /* per-color variable mappings (also used by .component:has() for status outlines) */
+[data-net-color=""] { --net-color: var(--wire-colorD); --net-color-null: var(--wire-colorD-null); --net-color-low: var(--wire-colorD-low); --net-color-high: var(--wire-colorD-high); --net-color-high-alpha: var(--wire-colorD-high-alpha); }
 [data-net-color="0"] { --net-color: var(--wire-color0); --net-color-null: var(--wire-color0-null); --net-color-high: var(--wire-color0-high); --net-color-high-alpha: var(--wire-color0-high-alpha); }
 [data-net-color="1"] { --net-color: var(--wire-color1); --net-color-null: var(--wire-color1-null); --net-color-low: var(--wire-color1-low); --net-color-high: var(--wire-color1-high); --net-color-high-alpha: var(--wire-color1-high-alpha); }
 [data-net-color="2"] { --net-color: var(--wire-color2); --net-color-null: var(--wire-color2-null); --net-color-low: var(--wire-color2-low); --net-color-high: var(--wire-color2-high); --net-color-high-alpha: var(--wire-color2-high-alpha); }
