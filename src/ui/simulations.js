@@ -144,9 +144,34 @@ Simulations.Simulation = class {
         return this.#attached;
     }
 
-    // Returns circuit stats.
+    // Returns simulation-wide circuit stats (all instances combined).
     get stats() {
         return this.#stats;
+    }
+
+    // Returns stats for an instance and all instances nested within it.
+    instanceStats(instanceId) {
+        assert.integer(instanceId);
+        const subtree = new Set();
+        const collect = (id) => {
+            subtree.add(id);
+            for (const subId of Object.values(this.#netList.instances[id].subInstances)) {
+                collect(subId);
+            }
+        };
+        collect(instanceId);
+        let gates = 0;
+        for (const id of subtree) {
+            for (const item of this.#netList.instances[id].circuit.items) {
+                if (item instanceof Gate) {
+                    gates += 1;
+                } else if (item instanceof Builtin) {
+                    gates += item.gates;
+                }
+            }
+        }
+        const nets = this.#netList.nets.filter((n) => n.ports.some((p) => subtree.has(p.instanceId))).length;
+        return { gates, nets };
     }
 
     get instances() {

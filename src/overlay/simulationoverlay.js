@@ -18,10 +18,12 @@ class SimulationOverlay extends Overlay {
         if (!this.app.simulations.current) {
             return `<div class="info-details">${details}</div>`;
         } else {
+            const simStats = this.app.simulations.current.stats;
             const ticks = `${Number.formatSI(this.app.config.targetTPS)} ticks/s limit<br>${Number.formatSI(Math.round(stats.tps))} ticks/s actual<br>`;
+            const simDetails = `Gates: ${simStats.gates}<br>Nets: ${simStats.nets}<br>Max delay: ${simStats.maxDelay}<br>`;
             const isLocked = this.app.config.lockSimulation ? '<span class="warning">Locked</span> ' : '';
             const singleStep = this.app.config.singleStep ? '<span class="warning">Single Step</span> ' : '';
-            return `<div class="info-section">${singleStep}${isLocked}Simulation</div><div class="info-title">${this.#label}</div><div class="info-details">${ticks}${details}</div>`;
+            return `<div class="info-section">${singleStep}${isLocked}Simulation</div><div class="info-title">${this.#label}</div><div class="info-details">${simDetails}${ticks}${details}</div>`;
         }
     }
 

@@ -20,7 +20,8 @@ class CircuitOverlay extends Overlay {
         const isReadonly = this.app.grid.readonly ? '<span class="warning">Read-only</span> ' : '';
         const suffix = this.#instanceId != null && this.#instanceId !== 0 ? `@${this.#instanceId}` : '';
         const sim = this.app.simulations.current;
-        const details = sim ? `Gates: ${sim.stats.gates}<br>Max delay: ${sim.stats.maxDelay}<br>Nets: ${sim.stats.nets}` : null;
+        const istats = sim ? sim.instanceStats(this.#instanceId ?? 0) : null;
+        const details = istats ? `Gates: ${istats.gates}<br>Nets: ${istats.nets}` : null;
         return `<div class="info-section">${isReadonly}Circuit</div><div class="info-title">${this.#label ?? ''}${suffix}</div>` +
             (!details ? '' : `<div class="info-details">${details}</div>`);
     }
