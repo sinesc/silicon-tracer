@@ -4,7 +4,7 @@
 class Splitter extends VirtualComponent {
 
     static TYPE_LABEL = 'Splitter';
-    static TYPE_LABEL = 'Wire splitter/joiner';
+    static TYPE_LABEL_LONG = 'Wire splitter/joiner';
     static TYPE_DESCRIPTION = 'Forms busses from wires';
 
     static MULTI_PORT_TEMPLATE = 'n{i}';
