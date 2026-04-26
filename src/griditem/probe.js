@@ -8,7 +8,7 @@ class Probe extends DisplayComponent {
     static TYPE_DESCRIPTION = 'Displays the state of the attached net.';
 
     static EDIT_DIALOG = [
-        { name: 'name', label: 'Name', type: 'string', check: (v) => v ==='' || /^\w+$/.test(v) },
+        { name: 'name', label: 'Name', type: 'string', check: function(v) { return v === '' || (/^\w+$/.test(v) && this.checkNameIsUnique(v, this.grid.circuit)); } },
         { name: 'displayFormat', label: 'Display format', type: 'select', options: DisplayComponent.DISPLAY_FORMATS },
         ...Component.EDIT_DIALOG,
     ];
@@ -60,6 +60,16 @@ class Probe extends DisplayComponent {
         }
     }
 
+    // Checks whether the given name is unique among probes in the circuit.
+    checkNameIsUnique(name, circuit = null) {
+        for (const probe of values(circuit.items.filter((i) => i instanceof Probe))) {
+            if (probe !== this && probe.name === name) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     // Handle hover hotkeys.
     onHotkey(key, action, what) {
         if (super.onHotkey(key, action, what)) return true;
@@ -90,7 +100,7 @@ class Probe extends DisplayComponent {
     // Handle edit hotkey.
     async onEdit() {
         const { title, fields, data } = Probe.editDialogConfig({}, { name: this.name, displayFormat: this.displayFormat, rotation: this.rotation });
-        const config = await dialog(title, fields, data);
+        const config = await dialog(title, fields, data, { context: this });
         if (config) {
             this.name = config.name;
             this.rotation = config.rotation;
