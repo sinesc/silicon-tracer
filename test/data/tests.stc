@@ -319,7 +319,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "ConflictGate",
@@ -485,7 +486,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "Counter",
@@ -1483,7 +1485,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "DelayedConflict",
@@ -1752,7 +1755,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "WireJunction3",
@@ -1843,7 +1847,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "WireJunction4",
@@ -1955,7 +1960,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "WireCrossing",
@@ -2050,7 +2056,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "RAM",
@@ -2303,7 +2310,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "ROMs",
@@ -3246,7 +3254,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "RAM4",
@@ -3530,7 +3539,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "WireStraightH",
@@ -3590,7 +3600,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "WireStraightV",
@@ -3650,7 +3661,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "Pullresistors",
@@ -3658,7 +3670,81 @@ loadFiles.push(
 			"uid": "ua8a40223b0644e4fb1ab71293acda3ef",
 			"data": [
 				{
-					"#c": "Button",
+					"#c": "Constant",
+					"#a": [
+						330,
+						230,
+						1,
+						1,
+						1,
+						1,
+						"dec"
+					],
+					"name": "",
+					"inputFormat": "dec"
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						370,
+						250,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						390,
+						250,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						390,
+						250,
+						60,
+						"v",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						390,
+						310,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						390,
+						310,
+						60,
+						"v",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						390,
+						370,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Switch",
 					"#a": [
 						410,
 						230,
@@ -3667,10 +3753,10 @@ loadFiles.push(
 						0,
 						0
 					],
-					"name": "d2"
+					"name": ""
 				},
 				{
-					"#c": "Button",
+					"#c": "Switch",
 					"#a": [
 						410,
 						290,
@@ -3679,10 +3765,10 @@ loadFiles.push(
 						0,
 						0
 					],
-					"name": "d1"
+					"name": ""
 				},
 				{
-					"#c": "Button",
+					"#c": "Switch",
 					"#a": [
 						410,
 						350,
@@ -3691,7 +3777,7 @@ loadFiles.push(
 						0,
 						0
 					],
-					"name": "d0"
+					"name": ""
 				},
 				{
 					"#c": "Wire",
@@ -3835,7 +3921,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "Switches",
@@ -4214,7 +4301,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		}
 	],
 	"libraries": {},
