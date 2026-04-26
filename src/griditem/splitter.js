@@ -14,7 +14,7 @@ class Splitter extends VirtualComponent {
         { name: 'ordering', label: 'Order of n-ports', type: 'select', options: { ltr: "0 ... n", rtl: "n ... 0" } },
         { name: 'orientation', label: 'Position of single port', type: 'select', options: { start: "Opposite of n0", middle: "Middle", end: "Opposite of nMax" } },
         { name: 'spacing', label: 'Pin spacing', type: 'select', options: { 0: "None", 1: "One", 2: "Two" } },
-        { name: 'gapPosition', label: 'Pin gap (when n-ports is even)', type: 'select', options: { start: "Next to n0", middle: "Middle", end: "Next to nMax", none: "None (rotation snaps)" } },
+        { name: 'gapPosition', label: 'Pin gap (when n-ports is even)', type: 'select', options: { start: "Next to n0", middle: "Middle", end: "Next to nMax", none: "None" } },
         ...Component.EDIT_DIALOG,
     ];
 

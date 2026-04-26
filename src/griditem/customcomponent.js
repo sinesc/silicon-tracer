@@ -4,10 +4,9 @@
 class CustomComponent extends VirtualComponent {
 
     static EDIT_DIALOG = [
-        //{ name: 'label', label: 'Component label', type: 'string' },
         ...Component.EDIT_DIALOG,
         { name: 'spacing', label: 'Pin spacing', type: 'select', options: { 0: "None", 1: "One", 2: "Two" } },
-        { name: 'parity', label: 'Side lengths', type: 'select', options: { auto: "Automatic", none: "Mixed (rotation snaps)", even: "Even", odd: "Odd" } },
+        { name: 'parity', label: 'Side lengths', type: 'select', options: { auto: "Automatic", none: "Mixed", even: "Even", odd: "Odd" } },
         { name: 'gap', label: 'Pin gap (when not mixed)', type: 'select', options: { start: "Top or left", middle: "Middle", end: "Bottom or right" } },
     ];
 

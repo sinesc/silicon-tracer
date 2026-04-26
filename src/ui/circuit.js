@@ -7,9 +7,10 @@ class Circuit {
         { name: 'label', label: 'Circuit label', type: 'string' },
         { name: 'description', label: 'Optional description', type: 'string' },
         { name: 'visibleInLib', label: 'Visible when loaded as library', type: 'bool' },
+        { name: 'exportName', label: 'Optional export name', type: 'string' },
         { separator: 'before', text: 'Default settings. These can be overriden per placed component.' },
         { name: 'spacing', label: 'Pin spacing', type: 'select', options: { 0: "None", 1: "One", 2: "Two" }, apply: (v, f) => Number.parseInt(v) },
-        { name: 'parity', label: 'Side lengths', type: 'select', options: { auto: "Automatic", none: "Mixed (rotation snaps)", even: "Even", odd: "Odd" } },
+        { name: 'parity', label: 'Side lengths', type: 'select', options: { auto: "Automatic", none: "Mixed", even: "Even", odd: "Odd" } },
         { name: 'gap', label: 'Pin gap (when lengths not mixed)', type: 'select', options: { start: "Top or left", middle: "Middle", end: "Bottom or right" } },
     ];
 
@@ -24,6 +25,7 @@ class Circuit {
 
     label;
     description = '';
+    exportName = '';
     uid;
     gridConfig;
     portConfig;
@@ -85,6 +87,7 @@ class Circuit {
             right: this.portConfig.placement.right,
             bottom: this.portConfig.placement.bottom,
             left: this.portConfig.placement.left,
+            exportName: this.exportName,
         }, { onChange: componentPreview });
         if (config) {
             this.label = config.label;
@@ -97,6 +100,7 @@ class Circuit {
             this.portConfig.placement.right = config.right;
             this.portConfig.placement.bottom = config.bottom;
             this.portConfig.placement.left = config.left;
+            this.exportName = config.exportName;
             this.#app.grid.circuitOverlay.setLabel(config.label);
             this.#app.grid.simulationOverlay.setLabel(config.label);
             this.#app.grid.trackAction('Edit circuit');
@@ -210,6 +214,7 @@ class Circuit {
 
     // Serializes the circuit for saving to file.
     serialize() {
+        // sort wires/components by location to minimize diff against previous save (if any)
         const data = this.#data.map((item) => item.serialize()).sort((a, b) => {
             const x = a['#a'][0] - b['#a'][0];
             if (x !== 0) return x;
@@ -221,7 +226,7 @@ class Circuit {
                 return a['#c'] === 'Wire' ? -1 : (b['#c'] === 'Wire' ? 1 : compare(a['#c'], b['#c']));
             }
         });
-        return { label: this.label, description: this.description, uid: this.uid, data, gridConfig: this.gridConfig, portConfig: this.portConfig, lid: this.#lid, visibleInLib: this.visibleInLib };
+        return { label: this.label, description: this.description, uid: this.uid, data, gridConfig: this.gridConfig, portConfig: this.portConfig, lid: this.#lid, visibleInLib: this.visibleInLib, exportName: this.exportName };
     }
 
     // Unserializes circuit from decoded JSON-object and adds it to Circuits. Dependencies of CustomComponents will also be added.
@@ -234,6 +239,7 @@ class Circuit {
         const items = rawCircuit.data.map((item) => GridItem.unserialize(app, item, rawOthers, setLid, errors));
         const circuit = new Circuit(app, rawCircuit.label, rawCircuit.uid, items, rawCircuit.gridConfig, rawCircuit.portConfig, rawCircuit.lid ?? setLid, rawCircuit.visibleInLib ?? true);
         circuit.description = rawCircuit.description ?? '';
+        circuit.exportName = rawCircuit.exportName ?? '';
         Wire.compact(circuit);
         app.circuits.add(circuit);
     }
