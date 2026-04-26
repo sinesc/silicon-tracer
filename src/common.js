@@ -683,3 +683,10 @@ class XML {
         return obj;
     }
 }
+
+// Returns a stack trace (array of frames below trace()). Required because Chrome console.trace does not currently honor the browser
+// dev-tools 'disable async stack traces' and generates massive, useless traces flooded with requestAnimationFrame entries.
+function trace(asString=true) {
+    const result = (new Error()).stack.split("\n").slice(2).map((f) => f.replace(/file:\/\/\/.+?\/src\//, 'src/').replace(/^\s*at\s*/, ''));
+    return asString ? result.join("\n") : result;
+}
