@@ -74,6 +74,7 @@ class Application {
     #undoButton = null;
     #redoButton = null;
     #noticeTimer = null;
+    #debuggerMenu = null;
 
     #modifierKeys = {
         ctrlKey: false,
@@ -319,7 +320,7 @@ class Application {
             }
             // select for grid
             const switchButton = menu.createActionButton(info.label, info.hoverMessage + (isSwitchable ? 'Currently on the grid.' : '<i>Click</i> Edit on the grid.'), () => {
-                menu.state(false);
+                menu.close();
                 Action.selectCircuit(this, uid);
             });
             switchButton.node.classList.add(isPlaceable ? 'toolbar-circuit-select' : 'toolbar-circuit-select-fullrow');
@@ -331,63 +332,63 @@ class Application {
             fileMenu.clear();
             // Open circuit file.
             fileMenu.createActionButton('Open...', 'Close all circuits and load new circuits from a file.', async () => {
-                fileMenu.state(false);
+                fileMenu.close();
                 await Action.openFile(this);
             });
             // Open and merge circuits from file to currently loaded circuits.
             const addButton = fileMenu.createActionButton('Merge...', 'Load additional circuits from a file, keeping open circuits.', async () => {
-                fileMenu.state(false);
+                fileMenu.close();
                 await Action.mergeFile(this);
             });
             addButton.node.classList.toggle('toolbar-menu-button-disabled', this.circuits.allEmpty());
             fileMenu.createSeparator();
             // Open as library
             fileMenu.createActionButton('Include library...', 'Add circuits in file as library components. These are accessible via the <i>Component</i> menu and do not show in <i>Circuit</i>.', async () => {
-                fileMenu.state(false);
+                fileMenu.close();
                 await Action.includeLibrary(this);
             });
             // Create a new empty library.
             fileMenu.createActionButton('Create library...', 'Create a new empty library accessible via the <i>Component</i> menu.', async () => {
-                fileMenu.state(false);
+                fileMenu.close();
                 await Action.createLibrary(this);
             });
             // Extract a non-packaged library to a file.
             const hasCircuit = (lid) => Object.values(this.circuits.all).some((c) => c.lid === lid);
             const nonPackagedForExtract = [ ...this.circuits.libraries ].filter(([ lid ]) => !this.circuits.isPackaged(lid) && hasCircuit(lid));
             const extractButton = fileMenu.createActionButton('Extract library...', 'Save all circuits belonging to a library to a file.', async () => {
-                fileMenu.state(false);
+                fileMenu.close();
                 await Action.extractLibrary(this);
             });
             extractButton.node.classList.toggle('toolbar-menu-button-disabled', nonPackagedForExtract.length === 0);
             // Remove a non-packaged library and its circuits from memory.
             const nonPackagedForRemove = [ ...this.circuits.libraries ].filter(([ lid ]) => !this.circuits.isPackaged(lid));
             const removeLibButton = fileMenu.createActionButton('Remove library...', 'Remove a library and its circuits from memory.', async () => {
-                fileMenu.state(false);
+                fileMenu.close();
                 await Action.removeLibrary(this);
             });
             removeLibButton.node.classList.toggle('toolbar-menu-button-disabled', nonPackagedForRemove.length === 0);
             fileMenu.createSeparator();
             // Import circuits and add to currently loaded circuits.
             fileMenu.createActionButton('Import...', 'Import files produced by other applications.', async () => {
-                fileMenu.state(false);
+                fileMenu.close();
                 await Action.importFile(this);
             });
             fileMenu.createSeparator();
             // Save circuits to last opened file.
             const saveButton = fileMenu.createActionButton(this.circuits.fileName ? 'Save <i>' + this.circuits.fileName + '</i>' : 'Save', 'Save circuits to file. Hotkey: <i>CTRL+S</i>', async () => {
-                fileMenu.state(false);
+                fileMenu.close();
                 await Action.saveFile(this);
             });
             saveButton.node.classList.toggle('toolbar-menu-button-disabled', !this.circuits.fileName);
             // Save circuits as new file.
             fileMenu.createActionButton('Save as...', 'Save circuits to a new file.', async () => {
-                fileMenu.state(false);
+                fileMenu.close();
                 await Action.saveFileAs(this);
             });
             fileMenu.createSeparator();
             // Close circuits.
             fileMenu.createActionButton('Close', 'Close all open circuits. Hold <i>CTRL</i> to include packaged libraries.', async () => {
-                fileMenu.state(false);
+                fileMenu.close();
                 await Action.closeFile(this, this.modifierKeys.ctrlKey);
             });
         });
@@ -413,7 +414,7 @@ class Application {
             circuitMenu.clear();
             // Create new circuit.
             circuitMenu.createActionButton('New...', 'Create a new circuit.', async () => {
-                circuitMenu.state(false);
+                circuitMenu.close();
                 await Action.newCircuit(this);
             });
             // Remove current circuit.
@@ -428,7 +429,7 @@ class Application {
                     ? `Cannot remove, still used by: ${truncatedDependents}`
                     : 'Remove current circuit.';
             const button = circuitMenu.createActionButton(`Remove "${this.grid.circuit.label}"`, removeHoverMessage, async () => {
-                circuitMenu.state(false);
+                circuitMenu.close();
                 await Action.deleteCircuit(this);
             });
             button.node.classList.toggle('toolbar-menu-button-disabled', removeDisabled);
@@ -437,13 +438,13 @@ class Application {
             const haveCustomLibs = this.circuits.libraries.some(([ lid ]) => !this.circuits.isPackaged(lid))
             if (currentLid === null) {
                 const moveToLibButton = circuitMenu.createActionButton('Move to library...', haveCustomLibs ? 'Move this circuit into a library.' : 'No non-packaged libraries loaded.', () => {
-                    circuitMenu.state(false);
+                    circuitMenu.close();
                     Action.moveCircuitToLibrary(this);
                 });
                 moveToLibButton.node.classList.toggle('toolbar-menu-button-disabled', !haveCustomLibs);
             } else if (!this.circuits.isPackaged(currentLid)) {
                 circuitMenu.createActionButton('Move to circuits', 'Move this library circuit into regular circuits.', () => {
-                    circuitMenu.state(false);
+                    circuitMenu.close();
                     Action.moveCircuitToCircuits(this);
                 });
             }
@@ -550,20 +551,20 @@ class Application {
             });
             // Start simulation at current grid circuit.
             const startButton = simulationMenu.createActionButton(`Start at "${this.grid.circuit.label}"`, 'Start a simulation rooted at the current circuit.', () => {
-                simulationMenu.state(false);
+                simulationMenu.close();
                 Action.startSimulation(this);
             });
             const sim = this.simulations.current;
             startButton.node.classList.toggle('toolbar-menu-button-disabled', sim && this.grid.circuit.uid === sim.uid);
             // Stop current simulation.
             const stopButton = simulationMenu.createActionButton(sim ? `Stop "${sim.label}"` : 'Stop simulation', 'Stop the currently running simulation.', () => {
-                simulationMenu.state(false);
+                simulationMenu.close();
                 Action.stopSimulation(this);
             });
             stopButton.node.classList.toggle('toolbar-menu-button-disabled', !sim);
             // Configure simulation speed.
             simulationMenu.createActionButton(`Set ticks/s limit (${Number.formatSI(this.config.targetTPS)})...`, 'Configure simulation speed.', async () => {
-                simulationMenu.state(false);
+                simulationMenu.close();
                 await Action.setSimulationSpeed(this);
             });
             // Switch simulation. Generate menu items for each running simulation.
@@ -573,7 +574,7 @@ class Application {
             for (const [ uid, label ] of this.simulations.list()) {
                 const isCurrent = uid === this.simulations.current?.uid;
                 const button = simulationMenu.createActionButton(label, isCurrent ? 'This is the current simulation' : 'Switch to/resume simulation "' + label + '".', () => {
-                    simulationMenu.state(false);
+                    simulationMenu.close();
                     Action.selectSimulation(this, uid);
                 });
                 button.node.classList.toggle('toolbar-menu-button-disabled', isCurrent);
@@ -581,7 +582,7 @@ class Application {
         });
 
         // Debugger menu
-        this.toolbar.createMenuButton('Debugger', 'Debugging tools.', (debuggerMenu) => {
+        this.#debuggerMenu = this.toolbar.createMenuButton('Debugger', 'Debugging tools.', (debuggerMenu) => {
             debuggerMenu.clear();
             // Recompile simulation to flag conflicting networks (and show them in UI).
             debuggerMenu.createToggleButton('Show net conflicts', 'Networks with conflicting gate outputs will be highlighted. Increases simulation complexity.', this.config.checkNetConflicts, (enabled) => {
@@ -626,7 +627,7 @@ class Application {
             // Break-on-condition expressions.
             debuggerMenu.createSeparator();
             debuggerMenu.createActionButton('Add condition...', 'Break simulation on a custom probe expression.', async () => {
-                debuggerMenu.state(false);
+                debuggerMenu.close();
                 await Action.addBreakCondition(this);
             });
             if (this.config.breakConditions.length > 0) {
@@ -635,10 +636,8 @@ class Application {
             for (let i = 0; i < this.config.breakConditions.length; i++) {
                 const expr = this.config.breakConditions[i];
                 debuggerMenu.createActionButton(expr, 'Click to edit. Clear expression to delete.', async () => {
-                    debuggerMenu.state(false);
-                    if (await Action.editBreakCondition(this, i, expr)) {
-                        debuggerMenu.open();
-                    }
+                    debuggerMenu.close();
+                    await Action.editBreakCondition(this, i, expr);
                 });
             }
         });
@@ -660,6 +659,10 @@ class Application {
         sim.tick(ticks);
         if (!alreadySingleStep) {
             this.showNotice(reason === 1 ? 'Breaking on conflict' : (reason === 2 ? 'Breaking on condition' : 'Simulation single-step enabled' ));
+            // update already open debugger menu
+            if (this.#debuggerMenu.state()) {
+                this.#debuggerMenu.open();
+            }
         }
     }
 
