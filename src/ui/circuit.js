@@ -59,7 +59,7 @@ class Circuit {
 
     // Creates a new circuit.
     static async create(app, label) {
-        const config = await dialog("Create circuit", Circuit.CREATE_DIALOG, { label, spacing: '0', gap: 'middle', parity: 'automatic', visibleInLib: true, description: '' });
+        const config = await dialog("Create circuit", Circuit.CREATE_DIALOG, { label, spacing: '0', gap: 'middle', parity: 'automatic', visibleInLib: true, description: '', exportName: '' });
         if (config) {
             const circuit = new Circuit(app, config.label);
             circuit.portConfig.spacing = config.spacing;
