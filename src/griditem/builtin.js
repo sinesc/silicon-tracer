@@ -39,9 +39,14 @@ class Builtin extends SimulationComponent {
         this.gates = meta.gateCount ?? 0;
     }
 
-    // Returns the builtin's label string.
+    // Override top-markings with builtin label.
     get topMarkings() {
         return Builtin.META_INFO[this.type]?.label ?? this.type.toUpperFirst();
+    }
+
+    // Returns the builtin's label string.
+    get typeLabel() {
+        return this.topMarkings;
     }
 
     // Serializes the object for writing to disk.

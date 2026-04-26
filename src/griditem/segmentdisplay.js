@@ -64,14 +64,9 @@ class SegmentDisplay extends SimulationComponent {
         super.unlink();
     }
 
-    // Returns empty string so component-inner shows no text label.
+    // Overrides method to disable top-markings.
     get topMarkings() {
         return '';
-    }
-
-    // Returns the component type label used in action descriptions.
-    get typeLabel() {
-        return '7-segment display';
     }
 
     // Serializes the object for writing to disk.

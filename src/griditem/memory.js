@@ -44,6 +44,7 @@ class Memory extends SimulationComponent {
         this.#relabelDataPorts();
     }
 
+    // Override top-markings with memory configuration details.
     get topMarkings() {
         return `${this.#memType.toUpperCase()} ${this.#addressWidth}x${this.#dataWidth}`;
     }

@@ -4,6 +4,7 @@
 class TextLabel extends GridItem {
 
     static TYPE_LABEL = 'Text';
+    static TYPE_LABEL_LONG = 'Text element';
     static TYPE_DESCRIPTION = 'Userdefined text message.';
 
     static EDIT_DIALOG = [
@@ -54,7 +55,7 @@ class TextLabel extends GridItem {
         this.#element = html(null, 'div', 'text');
         this.#inner = html(this.#element, 'span', 'inner'); // not assigning contents here since we don't want to use innerHTML
         this.#inner.innerText = this.#text;
-        this.setHoverMessage(this.#inner, () => `Text element. <i>E</i> Edit, ${Component.HOTKEYS}.`, { type: 'hover' });
+        this.setHoverMessage(this.#inner, () => `<b>${this.typeLabel}</b>. <i>E</i> Edit, ${Component.HOTKEYS}.`, { type: 'hover' });
         this.registerMouseAction(this.#inner, { type: "component", grabOffsetX: null, grabOffsetY: null });
         this.grid.addVisual(this.#element);
     }

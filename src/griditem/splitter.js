@@ -4,7 +4,8 @@
 class Splitter extends VirtualComponent {
 
     static TYPE_LABEL = 'Splitter';
-    static TYPE_DESCRIPTION = 'Wire splitter/joiner';
+    static TYPE_LABEL = 'Wire splitter/joiner';
+    static TYPE_DESCRIPTION = 'Forms busses from wires';
 
     static MULTI_PORT_TEMPLATE = 'n{i}';
     static SINGLE_PORT_NAME = 'm';
@@ -49,7 +50,7 @@ class Splitter extends VirtualComponent {
     link(grid) {
         super.link(grid);
         this.element.classList.add('splitter');
-        this.setHoverMessage(this.inner, `<b>Wire-splitter/joiner</b>. <i>E</i> Edit, ${Component.HOTKEYS}.`, { type: 'hover' });
+        this.setHoverMessage(this.inner, `<b>${this.typeLabel}</b>. <i>E</i> Edit, ${Component.HOTKEYS}.`, { type: 'hover' });
     }
 
     // Returns { title, fields, data } for the edit dialog given a descriptor and defaults.

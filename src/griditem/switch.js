@@ -3,6 +3,8 @@
 // A switch component with toggle or momentary mode, routing an input signal to an output.
 class Switch extends SimulationComponent {
 
+    static TYPE_DESCRIPTION = 'Switches allow a signal to pass based on the button-state.';
+
     static EDIT_DIALOG = [
         { name: 'name', label: 'Label', type: 'string' },
         { name: 'mode', label: 'Mode', type: 'select', options: { "toggle": "Toggle", "momentary": "Momentary" } },
@@ -15,7 +17,7 @@ class Switch extends SimulationComponent {
     #mode;
     #defaultState;
     #uiState = 0;
-    name = '';
+    name = ''; // TODO rename to label, names should have meaning in the circuit, e.g. same named tunnels connect, circuit-port names map to component-port names,...
 
     constructor(app, x, y, rotation, mode = 'toggle', defaultState = 0, uiState = 0) {
         super(app, x, y, rotation, { top: [ null ], left: [ 'input' ], right: [ 'output' ] }, 'switch');
@@ -31,8 +33,7 @@ class Switch extends SimulationComponent {
         const hotkeyHint = () => this.#mode === 'toggle'
             ? `<i>1</i> Close circuit, <i>2</i> Open circuit, <i>E</i> Edit, ${Component.HOTKEYS}.`
             : `<i>1</i> Hold to ${this.#defaultState === 0 ? 'close' : 'open'} circuit, <i>E</i> Edit, ${Component.HOTKEYS}.`;
-        const modeLabel = () => this.#mode === 'toggle' ? 'Toggle switch' : 'Momentary switch';
-        this.setHoverMessage(this.inner, () => `${modeLabel()} <b>${this.name}</b>. ${hotkeyHint()}`, { type: 'hover' });
+        this.setHoverMessage(this.inner, () => `${this.typeLabel} <b>${this.name}</b>. ${hotkeyHint()}`, { type: 'hover' });
         this.#labelElement = html(this.element, 'div', 'port-name');
         this.element.classList.add('port', 'status-outline'); // reuse port lightbulb css here
     }
@@ -44,6 +45,11 @@ class Switch extends SimulationComponent {
             '#a': [ this.x, this.y, this.rotation, this.#mode, this.#defaultState, this.#uiState ],
             name: this.name,
         };
+    }
+
+    // Returns the button's type label string.
+    get typeLabel() {
+        return this.#mode === 'toggle' ? 'Toggle switch' : 'Momentary switch';
     }
 
     // Declare component simulation item.
@@ -180,9 +186,9 @@ class Switch extends SimulationComponent {
 
     static descriptorInfo(desc) {
         if (desc['#t'] === 'toggle') {
-            return { label: 'Toggle switch', hoverMessage: '<b>Toggle switch</b> with permanently saved state.' };
+            return { label: 'Toggle switch', hoverMessage: `<b>Toggle switch</b>. ${this.TYPE_DESCRIPTION ?? ''}` };
         } else if (desc['#t'] === 'momentary') {
-            return { label: 'Momentary switch', hoverMessage: '<b>Momentary switch</b>.' };
+            return { label: 'Momentary switch', hoverMessage: `<b>Momentary switch</b>. ${this.TYPE_DESCRIPTION ?? ''}` };
         }
         return super.descriptorInfo(desc);
     }

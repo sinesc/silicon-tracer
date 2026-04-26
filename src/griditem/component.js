@@ -174,9 +174,9 @@ class ComponentPort {
 // General component used as a base class for Gates/Builtins or user defined circuits when represented within other circuits.
 class Component extends GridItem {
 
-    static TYPE_LABEL = null;
-    static TYPE_LABEL_LONG = null;
-    static TYPE_DESCRIPTION = null;
+    static TYPE_LABEL = null;           // base type label, used in menu entries
+    static TYPE_LABEL_LONG = null;      // long type label, used in hover-infos (grid and menu), fallback to base type label, per instance override via get typeLabel()
+    static TYPE_DESCRIPTION = null;     // description, used in hover-info for menu entries
 
     static HOTKEYS = '<i>Drag</i> Move, <i>SHIFT+Drag</i> Move and adjust wire length, <i>ALT+Drop</i> Accept ghost wires, <i>R</i> Rotate, <i>DEL</i> Delete, ' + GridItem.HOTKEYS;
 
@@ -397,7 +397,7 @@ class Component extends GridItem {
 
     // Returns the component type label used in text referring to what the component is.
     get typeLabel() {
-        return this.topMarkings;
+        return this.constructor.TYPE_LABEL_LONG ?? this.constructor.TYPE_LABEL;
     }
 
     // Returns the component root element.

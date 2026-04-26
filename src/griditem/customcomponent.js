@@ -56,6 +56,7 @@ class CustomComponent extends VirtualComponent {
         this.setHoverMessage(this.inner, () => `<b>${this.typeLabel}</b>. <i>E</i> Edit, <i>W</i> Switch to sub-circuit ${this.app.simulations.current ? ' simulation, ' : ', '} ${Component.HOTKEYS}.`, { type: 'hover' });
     }
 
+    // Override top-markings with component label.
     get typeLabel() {
         return `"${this.topMarkings}" component`;
     }

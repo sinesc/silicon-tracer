@@ -25,7 +25,7 @@ class Constant extends DisplayComponent {
     #dataWidth = 1;
     inputFormat = 'dec';
     #displayFormat = 'auto';
-    name = '';
+    name = ''; // TODO rename to label, names should have meaning in the circuit, e.g. same named tunnels connect, circuit-port names map to component-port names,...
 
     constructor(app, x, y, rotation, value = 0, driven = 1, dataWidth = 1, displayFormat = 'dec') {
         assert.integer(value);
@@ -68,7 +68,7 @@ class Constant extends DisplayComponent {
     // Link port to a grid, enabling it to be rendered.
     link(grid) {
         super.link(grid);
-        this.setHoverMessage(this.inner, () => `Constant value <b>${this.name}</b>. <i>E</i> Edit, ${Component.HOTKEYS}.`, { type: 'hover' });
+        this.setHoverMessage(this.inner, () => `${this.typeLabel} <b>${this.name}</b>. <i>E</i> Edit, ${Component.HOTKEYS}.`, { type: 'hover' });
         this.#labelElement = html(this.element, 'div', 'port-name');
         this.element.classList.add('constant', 'status-outline');
     }

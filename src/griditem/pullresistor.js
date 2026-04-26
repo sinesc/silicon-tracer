@@ -39,7 +39,7 @@ class PullResistor extends SimulationComponent {
         return sim.declarePullResistor(this.#direction, suffix);
     }
 
-    // Override inner component label.
+    // Override top-markings with resistor pull direction.
     get topMarkings() {
         return this.#direction.toUpperFirst();
     }

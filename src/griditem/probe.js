@@ -4,6 +4,7 @@
 class Probe extends DisplayComponent {
 
     static TYPE_LABEL = 'Probe';
+    static TYPE_LABEL_LONG = 'Network probe';
     static TYPE_DESCRIPTION = 'Displays the state of the attached net.';
 
     static EDIT_DIALOG = [
@@ -109,7 +110,7 @@ class Probe extends DisplayComponent {
         return this.name.toLowerCase().includes(string);
     }
 
-    // Computes the display label from the current net state of all attached nets.
+    // Computes the top-markings from the current net state of all attached nets.
     // For single-bit nets: '0', '1', 'E' (conflict), or '~' (undriven).
     // For multi-bit nets: formatted integer value, 'E' (conflict), or '~' (undriven).
     get topMarkings() {
@@ -118,11 +119,6 @@ class Probe extends DisplayComponent {
         const engine = this.app.simulations?.current?.engine;
         if (!engine) return '~';
         return Probe.#displayValue(engine, netIds, this.displayFormat);
-    }
-
-    // Returns the component type label used in undo action descriptions and hover messages.
-    get typeLabel() {
-        return 'Network probe';
     }
 
     // Returns the formatted value for a named probe. Probe component is not required to be linked.

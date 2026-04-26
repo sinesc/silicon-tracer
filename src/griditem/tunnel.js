@@ -75,13 +75,9 @@ class Tunnel extends VirtualComponent {
         return this.name.toLowerCase().includes(string);
     }
 
-    // Override inner component label.
+    // Overrides method to disable top-markings.
     get topMarkings() {
         return '';
-    }
-
-    get typeLabel() {
-        return 'Tunnel';
     }
 
     // Renders the tunnel onto the grid.
