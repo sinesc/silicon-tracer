@@ -39,6 +39,11 @@ class Application {
         debugShowWireBox: false,
         debugSingleStep: false,
         debugSerializeSimulation: false,
+        animations: {
+            "component-rotate": 150,
+            "component-delete": 150,
+            "wire-delete": 150,
+        },
         placementDefaults: {
             port: { rotation: 1, },
             tunnel: { rotation: 1, },

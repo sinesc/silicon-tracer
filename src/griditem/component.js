@@ -467,39 +467,33 @@ class Component extends GridItem {
         }
         if (key === 'r' && what.type === 'hover') {
             // rotate component with R while mouse is hovering
-            this.#element.classList.add('component-rotate-animation');
-            // animation only: CSS transition is an in-place rotation, but in reality we also move the component to maintain grid snap (required if width%2 != height%2)
-            // this computes the visual offset and updates the component left/top position immediately so that these can also be animated via the transition
-            if (((this.width / Grid.SPACING) % 2) !== ((this.height / Grid.SPACING) % 2)) {
-                // compute total offset
-                const rawOffset = this.#rotationOffset(this.rotation+1, false);
-                const alignedOffset = this.#rotationOffset(this.rotation+1, true);
-                // we only need to fix the difference between this and the aligned value and reinterpret 0 offset-components as 10 to counter the 'walking away' fix in rotationOffset
-                const differenceOffset = new Point(alignedOffset.x - rawOffset.x, alignedOffset.y - rawOffset.y);
-                const v = this.visual;
-                this.#element.style.left = (v.x + (differenceOffset.x || 10) * this.grid.zoom)  + "px";  //
-                this.#element.style.top = (v.y + (differenceOffset.y || 10) * this.grid.zoom) + "px";
-                // FIXME: there is another glitch that appears to delay the style application during high-load simulations which makes it look like this has no effect.
-                // animation is correct with simulation stopped though
-            }
-            this.rotation += 1;
-            setTimeout(() => {
-                // queue class removal for next render call to avoid brief flickering
-                this.redraw(false, () => this.#element.classList.remove('component-rotate-animation'));
-            }, 150);
-            this.grid.trackAction(`Rotate ${this.typeLabel}`);
+            this.animateAction(this.#element, 'component-rotate', () => {
+                // animation only: CSS transition is an in-place rotation, but in reality we also move the component to maintain grid snap (required if width%2 != height%2)
+                // this computes the visual offset and updates the component left/top position immediately so that these can also be animated via the transition
+                if (((this.width / Grid.SPACING) % 2) !== ((this.height / Grid.SPACING) % 2)) {
+                    // compute total offset
+                    const rawOffset = this.#rotationOffset(this.rotation+1, false);
+                    const alignedOffset = this.#rotationOffset(this.rotation+1, true);
+                    // we only need to fix the difference between this and the aligned value and reinterpret 0 offset-components as 10 to counter the 'walking away' fix in rotationOffset
+                    const differenceOffset = new Point(alignedOffset.x - rawOffset.x, alignedOffset.y - rawOffset.y);
+                    const v = this.visual;
+                    this.#element.style.left = (v.x + (differenceOffset.x || 10) * this.grid.zoom)  + "px";
+                    this.#element.style.top = (v.y + (differenceOffset.y || 10) * this.grid.zoom) + "px";
+                }
+            }, () => {
+                this.rotation += 1;
+                this.grid.trackAction(`Rotate ${this.typeLabel}`);
+            });
             return true;
         } else if (key === 'Delete' && what.type === 'hover') {
             const grid = this.grid;
-            const label = this.typeLabel;
-            this.#element.classList.add('component-delete-animation');
-            setTimeout(() => {
-                if (this.#element) { // deletion might already be in progress
-                    this.#element.classList.remove('component-delete-animation');
+            this.animateAction(this.#element, 'component-delete', null, () => {
+                if (this.#element) { // deletion might already be in progress (TODO: verify this can still happen with animateAction limiting to single animation)
+                    const label = this.typeLabel;
                     grid.removeItem(this);
                     grid.trackAction(`Delete ${label}`);
                 }
-            }, 150);
+            });
             return true;
         } else if (key === 'e' && what.type === 'hover') {
             this.onEdit();
@@ -672,7 +666,9 @@ class Component extends GridItem {
     // Override redraw to also update the inner label.
     redraw(recompile = true, beforeRender = null) {
         super.redraw(recompile, beforeRender);
-        this.#inner.innerHTML = `<span>${this.topMarkings}</span>`;
+        if (this.#inner) {
+            this.#inner.innerHTML = `<span>${this.topMarkings}</span>`;
+        }
     }
 
     // Renders/updates the current net state of the component ports to the grid.

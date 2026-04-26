@@ -136,24 +136,19 @@ class TextLabel extends GridItem {
             return;
         }
         if (key === 'r' && what.type === 'hover') {
-            // rotate component with R while mouse is hovering
-            this.#rotation = (this.#rotation + 1) & 3;
-            this.app.config.placementDefaults.textlabel ??= {};
-            this.app.config.placementDefaults.textlabel.rotation = this.#rotation;
-            this.#element.classList.add('component-rotate-animation');
-            setTimeout(() => {
-                // queue class removal for next render call to avoid brief flickering
-                this.redraw(false, () => this.#element.classList.remove('component-rotate-animation'));
-            }, 150);
+            this.animateAction(this.#element, 'component-rotate', () => {
+                // rotate component with R while mouse is hovering
+                this.#rotation = (this.#rotation + 1) & 3;
+                this.app.config.placementDefaults.textlabel ??= {};
+                this.app.config.placementDefaults.textlabel.rotation = this.#rotation;
+            });
             return true;
         } else if (key === 'Delete' && what.type === 'hover') {
-            this.#element.classList.add('component-delete-animation');
-            setTimeout(() => {
+            this.animateAction(this.#element, 'component-delete', null, () => {
                 if (this.#element) { // deletion might already be in progress
-                    this.#element.classList.remove('component-delete-animation');
                     this.grid.removeItem(this);
                 }
-            }, 150);
+            });
             return true;
         } else if (key === 'e' && what.type === 'hover') {
             this.onEdit();

@@ -32,6 +32,7 @@ class Grid {
         viewportUpdate: false,          // zoom changed -> propagate NEEDS_FULL_RENDER to all items
         monitorRefresh: false,          // simulation recompiled, need to update probes
     };
+    animating = false;                  // set to true by grid items while animating, used to defer recompiles until after the animation is done
     #infoBoxElement = null;
     #infoBoxSections = [];              // Array<{ id, interval, overlay, node, lastRenderTime }>
     #searchBar = null;
@@ -252,8 +253,8 @@ class Grid {
                 this.#pending.junctionRebuild = true;
             }
 
-            // trigger simulation recompile if topology changed
-            if (this.#pending.recompile && this.#circuit) {
+            // trigger simulation recompile if topology changed, wait until potentially running animations are done
+            if (this.#pending.recompile && !this.animating && this.#circuit) {
                 this.#app.simulations.markDirty(this.#circuit);
                 this.#pending.recompile = false;
             }

@@ -18,27 +18,15 @@ class GridItem {
     // Render flag: full re-render including position, size, and content.
     static NEEDS_FULL_RENDER = 4;
 
-    // Reference to linked grid, if linked.
-    grid = null;
-
-    // Pending render work: bitmask of NEEDS_POSITION_UPDATE / NEEDS_DETAIL_RENDER / NEEDS_FULL_RENDER.
-    renderFlags = 0;
-
-    // Reference to the application
+    grid = null;        // Reference to linked grid, only if linked.
+    renderFlags = 0;    // Pending render work: bitmask of NEEDS_POSITION_UPDATE / NEEDS_DETAIL_RENDER / NEEDS_FULL_RENDER.
     #app;
-
-    // Ephemeral grid ID used to link simulation items with grid items
-    #gid;
-
-    // Position/size on grid
+    #gid;               // Ephemeral grid ID used to link simulation items with grid items
     #position;
     #size;
-
-    // Registered hover messages, Map(element => message).
-    #hoverMessages;
-
-    // List of functions to call once before the next render.
-    #beforeRender = [];
+    #hoverMessages;     // Registered hover messages, Map(element => message).
+    #beforeRender = []; // List of functions to call once before the next render.
+    #animating = false; // True while this item is animated, blocks further animations.
 
     constructor(app, x, y) {
         assert.class(Application, app);
@@ -360,6 +348,32 @@ class GridItem {
     // Aligns coordinates to the grid. Subclasses may override for custom snapping.
     align(x, y) {
         return Grid.align(x, y);
+    }
+
+    // Register init and done callbacks to animate an action, blocks other animated actions while the animation is running.
+    animateAction(domElement, classBasename, init = null, done = null) {
+        assert.class(Node, domElement);
+        assert.string(classBasename);
+        assert.function(init, true);
+        assert.function(done, true);
+        if (this.#animating) {
+            return;
+        }
+        const classname = classBasename + '-animation';
+        const grid = this.grid; // save grid incase action unlinks it
+        const gridWasAnimating = grid.animating;
+        const doneWrapper = () => {
+            done && done();
+            this.redraw(false, () => domElement.classList.remove(classname)); // queue class removal for next render call to coincide with potential topology changes to avoid brief flickering
+            this.#animating = false;
+            if (!gridWasAnimating) {
+                setTimeout(() => grid.animating = false, 10); // clear recompilation-defer if we were the one to request it
+            }
+        };
+        grid.animating = true; // defers recompilation
+        domElement.classList.add(classname);
+        init && init();
+        setTimeout(doneWrapper, this.#app.config.animations[classBasename] ?? 150);
     }
 
     // Sets the optionally aligned item position.
