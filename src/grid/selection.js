@@ -8,9 +8,9 @@ class Selection {
     #grid;
     #rotationCenter = null;
 
-    constructor(grid, element) {
+    constructor(grid, container) {
         this.#grid = grid;
-        this.#element = element;
+        this.#element = html(container, 'div', 'grid-selection hidden');
     }
 
     // Cached rotation center for the current selection. Cleared automatically on any selection change.

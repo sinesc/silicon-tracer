@@ -11,11 +11,10 @@ class Grid {
     #app;
     #element;
     #worldElement;
-    #trimElement;
+    #trimBox;
     #selection;
     #savedSelections = new WeakMap(); // circuit -> saved selection items[]
     #junctionElements = new Map(); // "x:y" => { element: HTMLElement, wire: Wire }
-    #trimOverlays = [];
     #hotkeyTarget = null;
     #circuit;
     #netColor = 1;
@@ -44,10 +43,9 @@ class Grid {
         this.#element = html(parent, 'div', 'grid');
         this.#worldElement = html(this.#element, 'div', 'grid-world');
         this.#infoBoxElement = html(this.#element, 'div', 'grid-info');
-        const selectionElement = html(this.#element, 'div', 'grid-selection hidden');
-        this.#trimElement = html(this.#element, 'div', 'grid-selection grid-selection-trim hidden');
+        this.#selection = new Selection(this, this.#element);
+        this.#trimBox = new TrimBox(this, this.#element);
         this.#debugElement = html(this.#element, 'div', 'debug-info');
-        this.#selection = new Selection(this, selectionElement);
         this.#passive = passive;
         if (!passive) {
             this.#initHotkeys();
@@ -481,6 +479,10 @@ class Grid {
         return this.#selection;
     }
 
+    get app() {
+        return this.#app;
+    }
+
     // Utility function to align given x/y to grid coordinates and return them.
     static align(x, y) {
         assert.number(x);
@@ -746,99 +748,6 @@ class Grid {
         this.offsetY -= mouseGridY - mouseGridYAfter;
     }
 
-    // Normalizes a rectangle given as (x, y, w, h) where w/h may be negative, returning top-left + positive dimensions.
-    static #normalizeRect(x, y, w, h) {
-        if (w < 0) { x += w; w = -w; }
-        if (h < 0) { y += h; h = -h; }
-        return [ x, y, w, h ];
-    }
-
-    // Renders a trim-mode selection box and updates wire-segment trim overlays.
-    #renderTrimBox(x, y, width, height) {
-        [ x, y, width, height ] = Grid.#normalizeRect(x, y, width, height);
-        this.#trimElement.style.left = x + "px";
-        this.#trimElement.style.top = y + "px";
-        this.#trimElement.style.width = width + "px";
-        this.#trimElement.style.height = height + "px";
-        const gx1 = x / this.zoom - this.offsetX;
-        const gy1 = y / this.zoom - this.offsetY;
-        this.#updateTrimOverlays(gx1, gy1, gx1 + width / this.zoom, gy1 + height / this.zoom);
-    }
-
-    // Iterates over wire segments that fall inside [gx1,gy1] - [gx2,gy2] with inward-snapped boundaries.
-    // Calls callback(wire, fixed, wireStart, wireEnd, trimA, trimB, dir) for each affected segment.
-    // fixed = the perpendicular coordinate; wireStart/End = full wire span; trimA/B = trimmed span; dir = 'h'|'v'.
-    #forEachTrimSegment(gx1, gy1, gx2, gy2, callback) {
-        const s = Grid.SPACING / 2;
-        const snapIn  = (v) => Math.ceil( (v + s) / Grid.SPACING) * Grid.SPACING - s;
-        const snapOut = (v) => Math.floor((v + s) / Grid.SPACING) * Grid.SPACING - s;
-        const snapX1 = snapIn(gx1),  snapX2 = snapOut(gx2);
-        const snapY1 = snapIn(gy1),  snapY2 = snapOut(gy2);
-        for (const wire of this.items) {
-            if (!(wire instanceof Wire)) continue;
-            const [ p1, p2 ] = wire.points();
-            if (wire.width !== 0) {
-                const wy = p1.y;
-                if (wy < gy1 || wy > gy2) continue;
-                const wx1 = Math.min(p1.x, p2.x), wx2 = Math.max(p1.x, p2.x);
-                const trimLeft = Math.max(wx1, snapX1), trimRight = Math.min(wx2, snapX2);
-                if (trimLeft < trimRight) callback(wire, wy, wx1, wx2, trimLeft, trimRight, 'h');
-            } else {
-                const wx = p1.x;
-                if (wx < gx1 || wx > gx2) continue;
-                const wy1 = Math.min(p1.y, p2.y), wy2 = Math.max(p1.y, p2.y);
-                const trimTop = Math.max(wy1, snapY1), trimBottom = Math.min(wy2, snapY2);
-                if (trimTop < trimBottom) callback(wire, wx, wy1, wy2, trimTop, trimBottom, 'v');
-            }
-        }
-    }
-
-    // Creates/updates overlay divs highlighting the wire segments that will be trimmed.
-    #updateTrimOverlays(gx1, gy1, gx2, gy2) {
-        for (const el of this.#trimOverlays) el.remove();
-        this.#trimOverlays = [];
-        const thickness = 3 * this.zoom, t = thickness / 2;
-        this.#forEachTrimSegment(gx1, gy1, gx2, gy2, (wire, fixed, _ws, _we, trimA, trimB, dir) => {
-            const div = document.createElement('div');
-            div.className = 'wire-trim-overlay';
-            if (dir === 'h') {
-                div.style.left   = (trimA + this.offsetX) * this.zoom - t + 'px';
-                div.style.top    = (fixed + this.offsetY) * this.zoom - t + 'px';
-                div.style.width  = (trimB - trimA) * this.zoom + thickness + 'px';
-                div.style.height = thickness + 'px';
-            } else {
-                div.style.left   = (fixed + this.offsetX) * this.zoom - t + 'px';
-                div.style.top    = (trimA + this.offsetY) * this.zoom - t + 'px';
-                div.style.width  = thickness + 'px';
-                div.style.height = (trimB - trimA) * this.zoom + thickness + 'px';
-            }
-            this.#element.appendChild(div);
-            this.#trimOverlays.push(div);
-        });
-    }
-
-    // Removes the portions of wires inside the given grid-space rectangle [gx1,gy1] - [gx2,gy2].
-    #executeTrim(gx1, gy1, gx2, gy2) {
-        const segments = [];
-        this.#forEachTrimSegment(gx1, gy1, gx2, gy2, (...args) => segments.push(args));
-        if (segments.length === 0) return;
-        for (const [ wire, fixed, wireStart, wireEnd, trimA, trimB, dir ] of segments) {
-            this.removeItem(wire, false);
-            if (wireStart < trimA)
-                this.addItem(new Wire(this.#app, dir === 'h' ? wireStart : fixed, dir === 'h' ? fixed : wireStart, trimA - wireStart, dir, wire.color), false);
-            if (trimB < wireEnd)
-                this.addItem(new Wire(this.#app, dir === 'h' ? trimB : fixed, dir === 'h' ? fixed : trimB, wireEnd - trimB, dir, wire.color), false);
-        }
-        this.#selection.prune();
-        this.markWiresChanged();
-    }
-
-    // Removes all active trim overlay elements.
-    #clearTrimOverlays() {
-        for (const el of this.#trimOverlays) el.remove();
-        this.#trimOverlays = [];
-    }
-
     // Called when mouse drag starts.
     #handleDragStart(e) {
         e.preventDefault();
@@ -854,8 +763,8 @@ class Grid {
         if (e.which === 1) {
             if (altDown) {
                 // trim mode: show trim box only, do not modify selection
-                this.#trimElement.classList.remove('hidden');
-                this.#renderTrimBox(dragStartX, dragStartY, 0, 0);
+                this.#trimBox.show();
+                this.#trimBox.renderBox(dragStartX, dragStartY, 0, 0);
             } else {
                 // normal selection mode
                 if (!shiftDown && !ctrlDown) {
@@ -878,7 +787,7 @@ class Grid {
         const deltaY = (e.clientY - this.#element.offsetTop) - dragStartY;
         if (e.which === 1) {
             if (trimSelection) {
-                this.#renderTrimBox(dragStartX, dragStartY, deltaX, deltaY);
+                this.#trimBox.renderBox(dragStartX, dragStartY, deltaX, deltaY);
             } else {
                 // select area
                 this.#selection.renderBox(dragStartX, dragStartY, deltaX, deltaY, addSelection);
@@ -893,18 +802,13 @@ class Grid {
     // Called when mouse drag ends.
     #handleDragStop(dragStartX, dragStartY, altDown, e) {
         if (e.which === 1) {
-            this.#clearTrimOverlays();
+            this.#trimBox.clearOverlays();
             if (altDown) {
                 // trim mode: remove wire segments inside the selection rectangle
-                this.#trimElement.classList.add('hidden');
+                this.#trimBox.hide();
                 const endX = e.clientX - this.#element.offsetLeft;
                 const endY = e.clientY - this.#element.offsetTop;
-                const [ x, y, w, h ] = Grid.#normalizeRect(dragStartX, dragStartY, endX - dragStartX, endY - dragStartY);
-                const gx1 = x / this.zoom - this.offsetX;
-                const gy1 = y / this.zoom - this.offsetY;
-                const gx2 = gx1 + w / this.zoom;
-                const gy2 = gy1 + h / this.zoom;
-                this.#executeTrim(gx1, gy1, gx2, gy2);
+                this.#trimBox.execute(dragStartX, dragStartY, endX - dragStartX, endY - dragStartY);
                 this.trackAction('Trim wires');
             } else {
                 // normal selection: set selected items
