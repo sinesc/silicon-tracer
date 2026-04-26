@@ -1172,7 +1172,7 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
     outline-offset: -4px;
 }
 .component-rotate-animation {
-    transition: transform var(--component-rotate-duration);
+    transition: transform var(--component-rotate-duration), left var(--component-rotate-duration), top var(--component-rotate-duration);
     transform: rotate(90deg);
 }
 .component-delete-animation {

@@ -354,32 +354,22 @@ class Component extends GridItem {
         assert.integer(value);
         value = value & 3; // clamp to 0-3
         const changed = this.#rotation !== value;
-        if (changed) this.renderFlags |= GridItem.NEEDS_FULL_RENDER;
         if (this.grid && (value & 1) !== (this.#rotation & 1)) {
-            let x = this.x + (this.width - this.height) / 2;
-            let y = this.y - (this.width - this.height) / 2;
-            // Rotating a rectangle with differing side length parity on a grid causes the sides to become unaligned with the grid.
-            // This is because for an odd length side the center must be between two grid points but for an even length it must be
-            // on a grid point if the edges of the rectangle are supposed to align with the grid. Therefore a 90° turn around a fixed
-            // center would cause the edges to fall between two grid points. To correct this, half a grid unit is added to x or y of
-            // the center. To prevent the component from "walking away" each time it is rotated, we switch between adding to x or y.
-            if (((this.width / Grid.SPACING) % 2) !== ((this.height / Grid.SPACING) % 2)) {
-                if (this.width < this.height) {
-                    x += Grid.SPACING / 2;
-                } else {
-                    y += Grid.SPACING / 2;
-                }
-            }
-            [ this.x, this.y ] = this.align(x, y);
+            const offset = this.#rotationOffset(value);
+            this.x += offset.x;
+            this.y += offset.y;
             this.#rotation = value;
-            this.app.config.placementDefaults[this.#type] ??= {};
-            this.app.config.placementDefaults[this.#type].rotation = value;
             this.updateDimensions();
         } else {
             this.#rotation = value;
         }
         if (changed) {
-            this.grid?.markTopologyChanged();
+            this.app.config.placementDefaults[this.#type] ??= {};
+            this.app.config.placementDefaults[this.#type].rotation = value;
+            if (this.grid) {
+                this.renderFlags |= GridItem.NEEDS_FULL_RENDER;
+                this.grid?.markTopologyChanged();
+            }
         }
     }
 
@@ -444,6 +434,32 @@ class Component extends GridItem {
         return Component.SIDES[(3 + this.rotation) % 4];
     }
 
+    // Computes required x/y offset for a rotation.
+    #rotationOffset(value, align = true) {
+        if ((value & 1) !== (this.#rotation & 1)) {
+            let x = this.x + (this.width - this.height) / 2;
+            let y = this.y - (this.width - this.height) / 2;
+            // Rotating a rectangle with differing side length parity on a grid causes the sides to become unaligned with the grid.
+            // This is because for an odd length side the center must be between two grid points but for an even length it must be
+            // on a grid point if the edges of the rectangle are supposed to align with the grid. Therefore a 90° turn around a fixed
+            // center would cause the edges to fall between two grid points. To correct this, half a grid unit is added to x or y of
+            // the center. To prevent the component from "walking away" each time it is rotated, we switch between adding to x or y.
+            if (((this.width / Grid.SPACING) % 2) !== ((this.height / Grid.SPACING) % 2)) {
+                if (this.width < this.height) {
+                    x += Grid.SPACING / 2;
+                } else {
+                    y += Grid.SPACING / 2;
+                }
+            }
+            if (align) {
+                [ x, y ] = this.align(x, y);
+            }
+            return new Point(x - this.x, y - this.y);
+        } else {
+            return new Point(0, 0);
+        }
+    }
+
     // Hover hotkey actions
     onHotkey(key, action, what) {
         if (action !== 'down') {
@@ -451,8 +467,22 @@ class Component extends GridItem {
         }
         if (key === 'r' && what.type === 'hover') {
             // rotate component with R while mouse is hovering
-            this.rotation += 1;
             this.#element.classList.add('component-rotate-animation');
+            // animation only: CSS transition is an in-place rotation, but in reality we also move the component to maintain grid snap (required if width%2 != height%2)
+            // this computes the visual offset and updates the component left/top position immediately so that these can also be animated via the transition
+            if (((this.width / Grid.SPACING) % 2) !== ((this.height / Grid.SPACING) % 2)) {
+                // compute total offset
+                const rawOffset = this.#rotationOffset(this.rotation+1, false);
+                const alignedOffset = this.#rotationOffset(this.rotation+1, true);
+                // we only need to fix the difference between this and the aligned value and reinterpret 0 offset-components as 10 to counter the 'walking away' fix in rotationOffset
+                const differenceOffset = new Point(alignedOffset.x - rawOffset.x, alignedOffset.y - rawOffset.y);
+                const v = this.visual;
+                this.#element.style.left = (v.x + (differenceOffset.x || 10) * this.grid.zoom)  + "px";  //
+                this.#element.style.top = (v.y + (differenceOffset.y || 10) * this.grid.zoom) + "px";
+                // FIXME: there is another glitch that appears to delay the style application during high-load simulations which makes it look like this has no effect.
+                // animation is correct with simulation stopped though
+            }
+            this.rotation += 1;
             setTimeout(() => {
                 // queue class removal for next render call to avoid brief flickering
                 this.redraw(true, () => this.#element.classList.remove('component-rotate-animation'));
