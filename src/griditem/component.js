@@ -485,7 +485,7 @@ class Component extends GridItem {
             this.rotation += 1;
             setTimeout(() => {
                 // queue class removal for next render call to avoid brief flickering
-                this.redraw(true, () => this.#element.classList.remove('component-rotate-animation'));
+                this.redraw(false, () => this.#element.classList.remove('component-rotate-animation'));
             }, 150);
             this.grid.trackAction(`Rotate ${this.typeLabel}`);
             return true;
