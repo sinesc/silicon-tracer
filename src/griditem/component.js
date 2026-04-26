@@ -338,6 +338,25 @@ class Component extends GridItem {
         this.#element?.classList.toggle('highlighted', status);
     }
 
+    // Return whether the component has keyboard focus.
+    get keyboardFocused() {
+        return this.#element?.classList.contains('keyboard-focused') ?? false;
+    }
+
+    // Apply/remove keyboard focus effect (mirrors mouse :hover styling).
+    set keyboardFocused(status) {
+        assert.bool(status);
+        this.#element?.classList.toggle('keyboard-focused', status);
+    }
+
+    // Returns the hover status message for this component (portName=null) or for the named port.
+    hoverStatusMessage(portName = null) {
+        if (portName === null) {
+            return this.getHoverMessage(this.inner);
+        }
+        return this.getHoverMessage(this.portByName(portName).element);
+    }
+
     // Returns true if the search string matches this component.
     match(string) {
         assert.string(string);

@@ -16,6 +16,7 @@ class Grid {
     #savedSelections = new WeakMap(); // circuit -> saved selection items[]
     #junctionElements = new Map(); // "x:y" => { element: HTMLElement, wire: Wire }
     #hotkeyTarget = null;
+    #keyboardHoverItem = null;
     #circuit;
     #netColor = 1;
     #debugElement;
@@ -109,6 +110,7 @@ class Grid {
             this.circuitOverlay.setLabel('');
             this.circuitOverlay.setInstanceId(null);
         }
+        this.#clearKeyboardHover();
         this.#hotkeyTarget = null;
         this.#app.clearStatus(true);
     }
@@ -363,6 +365,10 @@ class Grid {
         assert.class(GridItem, gridItem);
         assert.bool(lock);
         if (!this.#hotkeyTarget || !this.#hotkeyTarget.locked) {
+            if (this.#keyboardHoverItem && gridItem !== this.#keyboardHoverItem) {
+                this.#keyboardHoverItem.keyboardFocused = false;
+                this.#keyboardHoverItem = null;
+            }
             this.#hotkeyTarget = { gridItem, args, locked: lock, keysDown: { } };
         }
     }
@@ -374,6 +380,79 @@ class Grid {
         if (this.#hotkeyTarget && this.#hotkeyTarget.gridItem === gridItem && (!this.#hotkeyTarget.locked || unlock)) {
             this.#hotkeyTarget = null;
         }
+    }
+
+    // Clears keyboard hover state without affecting mouse-driven hotkeyTarget.
+    #clearKeyboardHover() {
+        if (!this.#keyboardHoverItem) {
+            return;
+        }
+        this.#keyboardHoverItem.keyboardFocused = false;
+        this.releaseHotkeyTarget(this.#keyboardHoverItem);
+        this.#app.clearStatus();
+        this.#keyboardHoverItem = null;
+    }
+
+    // Marks a component as keyboard-hovered, replacing any previous keyboard hover.
+    #setKeyboardHover(item) {
+        assert.class(Component, item);
+        if (this.#keyboardHoverItem === item) {
+            return;
+        }
+        this.#clearKeyboardHover();
+        this.#keyboardHoverItem = item;
+        item.keyboardFocused = true;
+        this.requestHotkeyTarget(item, false, { type: 'hover' });
+        this.#app.setStatus(item.hoverStatusMessage(), false, item);
+    }
+
+    // Returns the Component closest to the given direction from the current keyboard-hover item,
+    // or closest to the visible center if no item is currently keyboard-hovered (direction ignored).
+    #findClosestComponent(direction) {
+        const components = [ ...this.#circuit.items ].filter(item => item instanceof Component);
+        if (!components.length) {
+            return null;
+        }
+        const current = this.#keyboardHoverItem;
+        if (!current) {
+            const cx = -this.offsetX + this.#element.clientWidth / 2 / this.zoom;
+            const cy = -this.offsetY + this.#element.clientHeight / 2 / this.zoom;
+            let best = null;
+            let bestDist = Infinity;
+            for (const c of components) {
+                const dx = (c.x + c.width / 2) - cx;
+                const dy = (c.y + c.height / 2) - cy;
+                const dist = dx * dx + dy * dy;
+                if (dist < bestDist) {
+                    bestDist = dist;
+                    best = c;
+                }
+            }
+            return best;
+        }
+        const cx = current.x + current.width / 2;
+        const cy = current.y + current.height / 2;
+        let best = null;
+        let bestScore = Infinity;
+        for (const c of components) {
+            if (c === current) {
+                continue;
+            }
+            const dx = (c.x + c.width / 2) - cx;
+            const dy = (c.y + c.height / 2) - cy;
+            if (direction === 'left' && dx >= 0) { continue; }
+            if (direction === 'right' && dx <= 0) { continue; }
+            if (direction === 'up' && dy >= 0) { continue; }
+            if (direction === 'down' && dy <= 0) { continue; }
+            const primary = (direction === 'left' || direction === 'right') ? Math.abs(dx) : Math.abs(dy);
+            const secondary = (direction === 'left' || direction === 'right') ? Math.abs(dy) : Math.abs(dx);
+            const score = primary + 2 * secondary;
+            if (score < bestScore) {
+                bestScore = score;
+                best = c;
+            }
+        }
+        return best;
     }
 
     // Schedules net color and junction updates.
@@ -696,6 +775,14 @@ class Grid {
         this.#app.registerHotkey('ctrl+x', 'down', () => !this.readonly && this.#selection.items.length > 0, () => Action.cutSelection(this.#app));
         this.#app.registerHotkey('r', 'down', () => !this.readonly && this.#selection.items.length > 0, () => Action.rotateSelection(this.#app));
         this.#app.registerHotkey('Delete', 'down', () => !this.readonly && this.#selection.items.length > 0, () => Action.deleteSelection(this.#app));
+
+        // keyboard navigation between components
+        const arrowCondition = () => !this.readonly && (!this.#hotkeyTarget || !this.#hotkeyTarget.locked);
+        const arrowDirs = { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down' };
+        this.#app.registerHotkey(Object.keys(arrowDirs), 'down', arrowCondition, (e) => {
+            const n = this.#findClosestComponent(arrowDirs[e.key]);
+            if (n) { this.#setKeyboardHover(n); }
+        });
 
         // send to hover target
         this.#app.registerHotkey(null, 'press', () => !this.readonly && this.#hotkeyTarget, (e) => {

@@ -185,29 +185,31 @@ class Application {
         this.#status.timer = setTimeout(() => this.setStatus(), Grid.STATUS_DELAY);
     }
 
-    // Registers a hotkey (e.g. 'ctrl+v', 'ctrl+alt+x', ...) with an optional condition check to trigger the given handler.
+    // Registers a hotkey (e.g. 'ctrl+v', 'ctrl+alt+x', ...) or an array of hotkeys with an optional condition check to trigger the given handler.
     // If hotkey is null the handler will be called whenever the condition is met.
     registerHotkey(hotkey, mode, condition, handler) {
-        assert.string(hotkey, true);
         assert.function(condition, true);
         assert.enum([ 'up', 'down', 'press' ], mode);
         assert.function(handler);
-        // parse hotkey string into key definition
-        let keyDef = { catchAll: hotkey === null, ctrlKey: false, altKey: false, shiftKey: false, key: null, condition: condition ?? (() => true), handler, mode };
-        if (hotkey !== null) {
-            for (let part of hotkey.split('+')) {
-                if (part === 'ctrl') {
-                    keyDef.ctrlKey = true;
-                } else if (part === 'alt') {
-                    keyDef.altKey = true;
-                } else if (part === 'shift') {
-                    keyDef.shiftKey = true;
-                } else {
-                    keyDef.key = part;
+        for (const key of (Array.isArray(hotkey) ? hotkey : [ hotkey ])) {
+            assert.string(key, true);
+            // parse hotkey string into key definition
+            let keyDef = { catchAll: key === null, ctrlKey: false, altKey: false, shiftKey: false, key: null, condition: condition ?? (() => true), handler, mode };
+            if (key !== null) {
+                for (let part of key.split('+')) {
+                    if (part === 'ctrl') {
+                        keyDef.ctrlKey = true;
+                    } else if (part === 'alt') {
+                        keyDef.altKey = true;
+                    } else if (part === 'shift') {
+                        keyDef.shiftKey = true;
+                    } else {
+                        keyDef.key = part;
+                    }
                 }
             }
+            this.#hotkeyDefs.push(keyDef);
         }
-        this.#hotkeyDefs.push(keyDef);
     }
 
     // Returns status of modifier-keys.

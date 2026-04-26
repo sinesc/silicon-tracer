@@ -1245,11 +1245,16 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
 .grid-zoom-below-125 .component-port-label {
     display: none;
 }
-.component:hover {
+.component:hover, .component.keyboard-focused {
     z-index: 12; /* required for labels to pop over other components */
 }
-.component:hover .component-port-label {
+.component:hover .component-port-label, .component.keyboard-focused .component-port-label {
     opacity: 1;
+}
+.component.keyboard-focused .component-inner {
+    background-color: var(--component-body-hover-color);
+    border-color: var(--component-border-hover-color);
+    color: var(--text-color);
 }
 
 /*

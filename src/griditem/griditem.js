@@ -388,6 +388,11 @@ class GridItem {
         this.y = y;
     }
 
+    // Returns the registered hover message for a given element (string or function), or undefined if none.
+    getHoverMessage(element) {
+        return this.#hoverMessages?.get(element);
+    }
+
     // Sets a status message to be displayed while mouse-hovering the visual element. Additional arguments will be passed to the
     // onHotkey() handler that may be triggered while an element with a hover-message is being hovered.
     setHoverMessage(element, message, ...args) {
