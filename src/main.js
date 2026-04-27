@@ -36,12 +36,17 @@ if (location.hostname === 'sinesc.github.io' && location.pathname === '/silicon-
 }
 
 // dev/debug stuff
-app.debug = () => {
+app.debug = (enable = true) => {
 
-    app.config.debugCompileComments = true;
-    app.config.debugShowGid = true;
-    app.config.debugShowCoords = true;
-    app.config.debugShowWireBox = true;
+    app.config.debugCompileComments = enable;
+    app.config.debugShowGid = enable;
+    app.config.debugShowCoords = enable;
+    app.config.debugShowWireBox = enable;
+
+    if (window.bin || !enable) {
+        console.log(enable ? 'DEBUG already enabled.' : 'DEBUG configuration disabled, debug tools remain.');
+        return;
+    }
 
     const bin = window.bin = function(value) {
         let result = '';
