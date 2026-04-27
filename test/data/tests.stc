@@ -2,7 +2,7 @@ loadFiles.push(
 {
 	"version": 4,
 	"label": "tests",
-	"currentUID": "ufe6bff15192e4a8999a095aefca4a62f",
+	"currentUID": "u6f36680336984ffab15a4603b597558d",
 	"circuits": [
 		{
 			"label": "ConflictBuffer",
@@ -2075,7 +2075,7 @@ loadFiles.push(
 						1,
 						"dec"
 					],
-					"name": "cwe",
+					"name": "coe",
 					"inputFormat": "dec"
 				},
 				{
@@ -2089,7 +2089,7 @@ loadFiles.push(
 						1,
 						"dec"
 					],
-					"name": "coe",
+					"name": "cwe",
 					"inputFormat": "dec"
 				},
 				{
@@ -2145,7 +2145,7 @@ loadFiles.push(
 					"#a": [
 						250,
 						170,
-						40,
+						20,
 						"h",
 						1
 					]
@@ -2184,6 +2184,26 @@ loadFiles.push(
 					"#c": "Wire",
 					"#a": [
 						270,
+						150,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						270,
+						150,
+						20,
+						"v",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						270,
 						190,
 						20,
 						"h",
@@ -2214,6 +2234,16 @@ loadFiles.push(
 					]
 				},
 				{
+					"#c": "Wire",
+					"#a": [
+						290,
+						170,
+						20,
+						"v",
+						1
+					]
+				},
+				{
 					"#c": "Constant",
 					"#a": [
 						290,
@@ -2231,8 +2261,8 @@ loadFiles.push(
 					"#c": "Wire",
 					"#a": [
 						310,
-						210,
-						60,
+						190,
+						80,
 						"v",
 						1
 					]
@@ -3273,7 +3303,7 @@ loadFiles.push(
 						1,
 						"dec"
 					],
-					"name": "cwe",
+					"name": "coe",
 					"inputFormat": "dec"
 				},
 				{
@@ -3287,7 +3317,7 @@ loadFiles.push(
 						1,
 						"dec"
 					],
-					"name": "coe",
+					"name": "cwe",
 					"inputFormat": "dec"
 				},
 				{
@@ -3343,7 +3373,7 @@ loadFiles.push(
 					"#a": [
 						250,
 						170,
-						40,
+						20,
 						"h",
 						1
 					]
@@ -3382,6 +3412,26 @@ loadFiles.push(
 					"#c": "Wire",
 					"#a": [
 						270,
+						150,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						270,
+						150,
+						20,
+						"v",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						270,
 						190,
 						20,
 						"h",
@@ -3409,6 +3459,16 @@ loadFiles.push(
 						4,
 						"",
 						true
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						290,
+						170,
+						20,
+						"v",
+						1
 					]
 				},
 				{
@@ -4288,6 +4348,44 @@ loadFiles.push(
 				"zoom": 1.25,
 				"offsetX": -20.8,
 				"offsetY": 64
+			},
+			"portConfig": {
+				"spacing": 0,
+				"gap": "middle",
+				"parity": "auto",
+				"placement": {
+					"top": "",
+					"right": "",
+					"bottom": "",
+					"left": ""
+				}
+			},
+			"lid": null,
+			"visibleInLib": true,
+			"exportName": ""
+		},
+		{
+			"label": "ProbesInSubcircuit",
+			"description": "",
+			"uid": "u6f36680336984ffab15a4603b597558d",
+			"data": [
+				{
+					"#c": "CustomComponent",
+					"#a": [
+						450,
+						210,
+						0,
+						"ud5327500cf2144b99c3ff468eb00fc4e",
+						"auto",
+						"middle",
+						0
+					]
+				}
+			],
+			"gridConfig": {
+				"zoom": 1.25,
+				"offsetX": 0,
+				"offsetY": 0
 			},
 			"portConfig": {
 				"spacing": 0,

@@ -239,6 +239,15 @@ test("break on conflict (clock-driven)", () => {
     assert(breakAgain, `conflict should recur at count 11 (q0 and q3 both high again)`);
 });
 
+test("bus probes in subcircuit read correct values", () => {
+    const sim = compileCircuit('data/tests.stc', 'ProbesInSubcircuit');
+    sim.simulate(100);
+    assert(sim.getProbeValue('p2@1') === 0, `p2@1 should be 0, got ${sim.getProbeValue('p2@1')}`);
+    assert(sim.getProbeValue('p4@1') === 3, `p4@1 should be 3, got ${sim.getProbeValue('p4@1')}`);
+    assert(sim.getProbeValue('p8@1') === 6, `p8@1 should be 6, got ${sim.getProbeValue('p8@1')}`);
+    assert(sim.getProbeValue('p16@1') === 3340, `p16@1 should be 3340, got ${sim.getProbeValue('p16@1')}`);
+});
+
 console.log('\nMemory (ROM/RAM) tests:');
 
 test("ROM read with 2-bit address and 8-bit data", () => {
