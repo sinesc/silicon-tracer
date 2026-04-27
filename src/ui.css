@@ -519,7 +519,7 @@ body.no-focus #focus-hint:has(~div.grid:hover) {
 .dialog-container .dialog-row-mask {
     text-align: right;
 }
-.dialog-container .dialog-row-mask input, .dialog-container .dialog-row-mask select {
+.dialog-container .dialog-row-mask input:not([type="checkbox"]):not([type="radio"]), .dialog-container .dialog-row-mask select {
     outline: 1px solid var(--component-border-color);
     background-color: var(--component-body-color);
     border: none;
@@ -529,6 +529,20 @@ body.no-focus #focus-hint:has(~div.grid:hover) {
     color: var(--text-color);
     border-radius: var(--radius-input);
     font-size: var(--font-size-normal);
+}
+.dialog-checklist, .dialog-radiolist {
+    text-align: left;
+}
+.dialog-checklist-item, .dialog-radiolist-item {
+    display: block;
+}
+.dialog-container .dialog-row-mask input:not([type="checkbox"]):not([type="radio"]):focus-visible,
+.dialog-container .dialog-row-mask select:focus-visible {
+    outline-color: var(--button-border-hover-color);
+}
+.dialog-container .dialog-row-mask input[type="checkbox"]:focus-visible,
+.dialog-container .dialog-row-mask input[type="radio"]:focus-visible {
+    outline: 1px solid var(--button-border-hover-color);
 }
 .dialog-container .dialog-row-mask input.dialog-error, .dialog-container .dialog-row-mask select.dialog-error {
     outline-color: var(--error-text-color);

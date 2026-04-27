@@ -5,7 +5,7 @@
 //   name:      key in the data object
 //   text:      if present, text contents will be displayed, other field properties are ignored
 //   focus:     if true element will receive focus on dialog open
-//   type:      one of int, float, string, select, bool, textfile
+//   type:      one of int, float, string, select, bool, textfile, checklist, radiolist
 //   label:     display label (defaults to capitalized name)
 //   options:   map of value->label pairs (select type only)
 //   extension: file extension filter (textfile type only)
@@ -31,6 +31,8 @@ function dialog(title, fields, data, extraOptions) {
         select: { check: (v, f) => Object.keys(f.options).includes(v), apply: (v, f) => v },
         bool: { check: (v, f) => v === 'true' || v === 'false', apply: (v, f) => v === 'true' },
         textfile: { check: (v, f) => true, apply: (v, f) => v },
+        checklist: { check: (v, f) => Array.isArray(v), apply: (v, f) => v },
+        radiolist: { check: (v, f) => Object.keys(f.options).includes(v), apply: (v, f) => v },
     };
 
     // build html form
@@ -149,6 +151,47 @@ function dialog(title, fields, data, extraOptions) {
                     triggerOnChange();
                 };
                 fieldElement = valueRef;
+            } else if (field.type === 'checklist') {
+                const containerDiv = html(rowRight, 'div', 'dialog-checklist');
+                const checkboxes = [];
+                for (const [key, optLabel] of Object.entries(field.options)) {
+                    const labelEl = html(containerDiv, 'label', 'dialog-checklist-item');
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.checked = Array.isArray(initialValue) && initialValue.includes(key);
+                    checkbox.onchange = triggerOnChange;
+                    labelEl.appendChild(checkbox);
+                    labelEl.appendChild(document.createTextNode(' ' + optLabel));
+                    checkboxes.push({ key, checkbox });
+                }
+                fieldElement = {
+                    get value() { return checkboxes.filter(({ checkbox }) => checkbox.checked).map(({ key }) => key); },
+                    focus() { checkboxes[0]?.checkbox.focus(); },
+                    classList: containerDiv.classList,
+                    onkeydown: null,
+                };
+            } else if (field.type === 'radiolist') {
+                const containerDiv = html(rowRight, 'div', 'dialog-radiolist');
+                const radios = [];
+                const groupName = 'dialog-radio-' + field.name;
+                for (const [key, optLabel] of Object.entries(field.options)) {
+                    const labelEl = html(containerDiv, 'label', 'dialog-radiolist-item');
+                    const radio = document.createElement('input');
+                    radio.type = 'radio';
+                    radio.name = groupName;
+                    radio.value = key;
+                    radio.checked = initialValue === key;
+                    radio.onchange = triggerOnChange;
+                    labelEl.appendChild(radio);
+                    labelEl.appendChild(document.createTextNode(' ' + optLabel));
+                    radios.push({ key, radio });
+                }
+                fieldElement = {
+                    get value() { return radios.find(({ radio }) => radio.checked)?.key ?? ''; },
+                    focus() { radios[0]?.radio.focus(); },
+                    classList: containerDiv.classList,
+                    onkeydown: null,
+                };
             } else {
                 fieldElement = html(rowRight, 'input', 'dialog-row-input', { name: field.name, value: initialValue });
                 fieldElement.onkeyup = triggerOnChange;
@@ -186,7 +229,7 @@ function dialog(title, fields, data, extraOptions) {
                 resolve(result);
             } else {
                 for (const { element, field } of values(form)) {
-                    if (field.type !== 'textfile') {
+                    if (field.type !== 'textfile' && field.type !== 'checklist' && field.type !== 'radiolist') {
                         element.classList.toggle('dialog-error', errors.includes(field.name));
                     }
                 }
@@ -198,7 +241,7 @@ function dialog(title, fields, data, extraOptions) {
         };
         // handle enter/escape for text inputs
         for (const { element, field } of values(form)) {
-            if (field.type !== 'select' && field.type !== 'textfile') {
+            if (field.type !== 'select' && field.type !== 'textfile' && field.type !== 'checklist' && field.type !== 'radiolist') {
                 element.onkeydown = (e) => {
                     e.stopPropagation();
                     if (e.keyCode === 13) {
