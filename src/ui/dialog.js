@@ -181,11 +181,17 @@ function dialog(title, fields, data, extraOptions) {
                     radio.name = groupName;
                     radio.value = key;
                     radio.checked = initialValue === key;
+                    radio.tabIndex = 0;
                     radio.onchange = triggerOnChange;
                     labelEl.appendChild(radio);
                     labelEl.appendChild(document.createTextNode(' ' + optLabel));
                     radios.push({ key, radio });
                 }
+                containerDiv.addEventListener('keydown', (e) => {
+                    if (e.key.startsWith('Arrow')) {
+                        e.stopPropagation();
+                    }
+                });
                 fieldElement = {
                     get value() { return radios.find(({ radio }) => radio.checked)?.key ?? ''; },
                     focus() { radios[0]?.radio.focus(); },
@@ -209,6 +215,10 @@ function dialog(title, fields, data, extraOptions) {
     const rowElement = html(contentElement, 'div', 'dialog-button-row', );
     const cancelElement = cancelable ? html(rowElement, 'span', 'dialog-button dialog-cancel', 'Cancel') : null;
     const confirmElement = html(rowElement, 'span', 'dialog-button dialog-confirm', 'Ok');
+    confirmElement.tabIndex = 0;
+    if (cancelElement) {
+        cancelElement.tabIndex = 0;
+    }
     document.body.appendChild(blackout);
     triggerOnChange();
 
@@ -253,8 +263,24 @@ function dialog(title, fields, data, extraOptions) {
             }
         }
         confirmElement.onclick = confirm;
+        confirmElement.onkeydown = (e) => {
+            e.stopPropagation();
+            if (e.key === 'Enter' || e.key === ' ') {
+                confirm();
+            } else if (e.key === 'Escape') {
+                cancel();
+            }
+        };
         if (cancelable) {
             cancelElement.onclick = cancel;
+            cancelElement.onkeydown = (e) => {
+                e.stopPropagation();
+                if (e.key === 'Enter' || e.key === ' ') {
+                    cancel();
+                } else if (e.key === 'Escape') {
+                    cancel();
+                }
+            };
         }
         containerElement.onclick = (e) => e.stopPropagation();
         blackout.onclick = cancel;

@@ -572,13 +572,15 @@ body.no-focus #focus-hint:has(~div.grid:hover) {
     border-radius: var(--radius-normal);
 }
 .dialog-container .dialog-cancel, .dialog-container .dialog-confirm {
+    outline: none;
     text-shadow: 1px 1px 2px #555;
     border: 2px solid var(--button-border-color);
     background-color: var(--button-bg-color);
     color: var(--inverted-text-color);
     transition: border-color var(--component-color-transition-duration), background-color var(--component-color-transition-duration);
 }
-.dialog-container .dialog-cancel:hover, .dialog-container .dialog-confirm:hover {
+.dialog-container .dialog-cancel:hover, .dialog-container .dialog-confirm:hover,
+.dialog-container .dialog-cancel:focus-visible, .dialog-container .dialog-confirm:focus-visible {
     border-color: var(--button-border-hover-color);
     background-color: var(--button-bg-hover-color);
 }
