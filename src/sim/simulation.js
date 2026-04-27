@@ -267,7 +267,7 @@ class Simulation {
     }
 
     // Declares a probe that can be attached to a net like a port (named 'input'). Name must be unique. This does not add
-    // simulation complexity as it is essentially just another name for a net.
+    // simulation complexity as it is essentially just another name for a net. Net-ids are set by declareNet()
     declareProbe(name, suffix) {
         assert.string(name);
         assert.string(suffix);
@@ -374,7 +374,7 @@ class Simulation {
             ports: this.#ports.all.map((p) => ({ id: p.id, name: p.name, ioType: p.ioType, isTriState: p.isTriState, detectEdges: p.detectEdges, batchType: p.batchType, batchName: p.batchName, batchComponent: p.batchComponent })),
             clocks: this.#clocks.map((c) => ({ id: c.id, frequency: c.frequency, tps: c.tps, enablePortName: c.enablePortName, outputPortName: c.outputPortName })),
             memories: this.#memories.map((m) => Object.filter(m, (k, v) => k !== 'baseOffset')),
-            probes: values(this.#probes.byName).map((p) => ({ name: p.name, suffix: p.suffix, netId: p.netId })).toArray(),
+            probes: values(this.#probes.byName).map((p) => ({ name: p.name, suffix: p.suffix, netIds: p.netIds })).toArray(),
         }
     }
 

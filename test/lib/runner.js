@@ -115,7 +115,7 @@ vm.runInContext(`
         const app = new Application();
         app.circuits.unserialize(content, null, false, []);
         const circuit = circuitLabel
-            ? app.circuits.byLabel(circuitLabel)
+            ? (app.circuits.byLabel(circuitLabel) ?? Object.values(app.circuits.all).find(c => c.label === circuitLabel) ?? null)
             : app.circuits.byUID(content.currentUID);
         if (!circuit) throw new Error('Circuit not found: ' + circuitLabel);
         const wires = circuit.items.filter(w => w instanceof Wire).toArray();
@@ -133,7 +133,7 @@ vm.runInContext(`
         if (shortGids) app.config.debugCompileComments = true;
         app.circuits.unserialize(content, null, false, []);
         const circuit = circuitLabel
-            ? app.circuits.byLabel(circuitLabel)
+            ? (app.circuits.byLabel(circuitLabel) ?? Object.values(app.circuits.all).find(c => c.label === circuitLabel) ?? null)
             : app.circuits.byUID(content.currentUID);
         if (!circuit) throw new Error('Circuit not found: ' + circuitLabel);
         const netList = NetList.identify(circuit, app.circuits.all);

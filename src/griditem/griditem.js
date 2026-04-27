@@ -4,19 +4,14 @@
 class GridItem {
 
     static HOTKEYS = '<i>Click</i> Select, <i>SHIFT/CTRL+Click</i> Add/remove from selection';
+    static #SELECTION_MARGIN = 5;       // Bounding box inset during selection.
 
-    // Serializable GridItem subclasses. Registration at the bottom of each subclass file.
-    static CLASSES = {};
+    static CLASSES = {};                // Serializable GridItem subclasses. Registration at the bottom of each subclass file.
+    static #DEBUG_GID = 0;              // Used to generate stable GIDs for debugging purposes.
 
-    // Bounding box inset during selection.
-    static #SELECTION_MARGIN = 5;
-
-    // Render flag: update CSS left/top only (mid-drag move).
-    static NEEDS_POSITION_UPDATE = 1;
-    // Render flag: update labels and port content only (no geometry change).
-    static NEEDS_DETAIL_RENDER = 2;
-    // Render flag: full re-render including position, size, and content.
-    static NEEDS_FULL_RENDER = 4;
+    static NEEDS_POSITION_UPDATE = 1;   // Render flag: update CSS left/top only (mid-drag move).
+    static NEEDS_DETAIL_RENDER = 2;     // Render flag: update labels and port content only (no geometry change).
+    static NEEDS_FULL_RENDER = 4;       // Render flag: full re-render including position, size, and content.
 
     grid = null;        // Reference to linked grid, only if linked.
     renderFlags = 0;    // Pending render work: bitmask of NEEDS_POSITION_UPDATE / NEEDS_DETAIL_RENDER / NEEDS_FULL_RENDER.
@@ -44,7 +39,7 @@ class GridItem {
         if (!readable) {
             return 'g' + crypto.randomUUID().replaceAll('-', '');
         } else {
-            return 'g' + crypto.randomUUID().replaceAll('-', '').slice(0, 6);
+            return 'g' + (this.#DEBUG_GID++);
         }
     }
 
