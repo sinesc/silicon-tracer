@@ -373,6 +373,11 @@ class Application {
                 fileMenu.close();
                 await Action.importFile(this);
             });
+            // Prune unused circuits.
+            fileMenu.createActionButton('Prune unused...', 'Find and remove circuits that are not used by any other circuit.', async () => {
+                fileMenu.close();
+                await Action.pruneUnused(this);
+            });
             fileMenu.createSeparator();
             // Save circuits to last opened file.
             const saveButton = fileMenu.createActionButton(this.circuits.fileName ? 'Save <i>' + this.circuits.fileName + '</i>' : 'Save', 'Save circuits to file. Hotkey: <i>CTRL+S</i>', async () => {

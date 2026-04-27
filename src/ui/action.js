@@ -141,6 +141,100 @@ class Action {
         }
     }
 
+    // Prune unused circuits via a two-step dialog.
+    static async pruneUnused(app) {
+        assert.class(Application, app);
+        const nonPackagedLibs = [ ...app.circuits.libraries ].filter(([ lid ]) => !app.circuits.isPackaged(lid));
+        const groupOptions = { '__main__': 'Main circuits' };
+        for (const [ lid, label ] of nonPackagedLibs) {
+            groupOptions[lid] = label;
+        }
+        const step1Result = await dialog('Prune unused circuits', [
+            { text: 'Select which groups of circuits to check for unused circuits. Circuits without dependents will be listed for deletion.', separator: 'after' },
+            { name: 'groups', label: 'Check groups', type: 'checklist', options: groupOptions },
+        ], { groups: [ '__main__' ] });
+        if (!step1Result) {
+            return;
+        }
+        const selectedGroups = step1Result.groups;
+        if (selectedGroups.length === 0) {
+            return;
+        }
+        // Find circuits with no dependents in selected groups.
+        const allCircuits = Object.values(app.circuits.all);
+        const unusedByGroup = {};
+        for (const group of selectedGroups) {
+            const lid = group === '__main__' ? null : group;
+            const groupCircuits = allCircuits.filter((c) => c.lid === lid);
+            const unused = groupCircuits.filter((c) => app.circuits.circuitDependents(c.uid).size === 0);
+            if (unused.length > 0) {
+                unusedByGroup[group] = unused;
+            }
+        }
+        if (Object.keys(unusedByGroup).length === 0) {
+            await infoDialog('Prune unused circuits', 'No unused circuits found in the selected groups.');
+            return;
+        }
+        // Build step 2 dialog fields.
+        const step2Fields = [
+            { text: 'The following circuits have no reachable dependents. Select which ones are to be deleted. Circuits that are solely depended on by these will also be deleted.', separator: 'after' },
+        ];
+        const step2Defaults = {};
+        for (const group of selectedGroups) {
+            if (!unusedByGroup[group]) continue;
+            const label = groupOptions[group];
+            const options = Object.fromEntries(unusedByGroup[group].map((c) => [ c.uid, c.label ]));
+            step2Fields.push({ name: group, label, type: 'checklist', options });
+            step2Defaults[group] = unusedByGroup[group].map((c) => c.uid);
+        }
+        const step2Result = await dialog('Prune unused circuits', step2Fields, step2Defaults);
+        if (!step2Result) {
+            return;
+        }
+        // Collect UIDs to delete: selected circuits plus anything that becomes solely dependent on them.
+        const toDelete = new Set();
+        for (const group of selectedGroups) {
+            if (!step2Result[group]) continue;
+            for (const uid of step2Result[group]) {
+                toDelete.add(uid);
+            }
+        }
+        if (toDelete.size === 0) {
+            app.showNotice('No circuits found eligible for pruning.');
+            return;
+        }
+        // Iteratively find circuits whose only dependents are already in toDelete.
+        let changed = true;
+        while (changed) {
+            changed = false;
+            for (const circuit of Object.values(app.circuits.all)) {
+                if (toDelete.has(circuit.uid)) continue;
+                if (circuit.lid && app.circuits.isPackaged(circuit.lid)) continue;
+                const dependents = app.circuits.circuitDependents(circuit.uid);
+                if (dependents.size > 0 && [ ...dependents ].every((uid) => toDelete.has(uid))) {
+                    toDelete.add(circuit.uid);
+                    changed = true;
+                }
+            }
+        }
+        const libLabels = Object.fromEntries([ ...app.circuits.libraries ]);
+        const deletedItems = [ ...toDelete ].map((uid) => {
+            const circuit = app.circuits.byUID(uid);
+            const libLabel = circuit.lid ? libLabels[circuit.lid] : null;
+            return { uid, label: circuit.label, libLabel };
+        });
+        for (const { uid } of deletedItems) {
+            app.simulations.delete(app.circuits.byUID(uid));
+            app.circuits.delete(uid);
+        }
+        app.simulations.select(app.circuits.current, app.config.autoCompile);
+        app.haveChanges = true;
+        const listItems = deletedItems.map(({ label, libLabel }) =>
+            `<li>${label}${libLabel ? ` (${libLabel})` : ''}</li>`
+        ).join('');
+        await infoDialog('Pruned unused circuits', `The following circuits were deleted:<ul>${listItems}</ul>`);
+    }
+
     // Import circuits from a foreign file format.
     static async importFile(app) {
         assert.class(Application, app);
