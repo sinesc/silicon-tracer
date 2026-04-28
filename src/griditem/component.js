@@ -11,6 +11,7 @@ class ComponentPort {
     element = null;
     labelElement = null;
     shadow = false; // shadow ports share coordinates with another port and are not rendered
+    position = null; // optional fixed position (Point) overriding portCoords computation
 
     // Net-id for this item. Directly set by Circuit.attachSimulation()
     netIds = null;
@@ -69,6 +70,9 @@ class ComponentPort {
 
     // Returns the port coordinates after component rotation is considered. Also requires component width and height as input.
     coords(width, height, rotation, offsetCenter = false) {
+        if (this.position !== null) {
+            return offsetCenter ? new Point(this.position.x - Component.PORT_SIZE / 2, this.position.y - Component.PORT_SIZE / 2) : this.position;
+        }
         return ComponentPort.portCoords(width, height, this.side(rotation), this.index, offsetCenter);
     }
 

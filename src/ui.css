@@ -1412,6 +1412,43 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
     outline-color: var(--net-color-high, transparent);
     box-shadow: 1px 1px 3px var(--net-color-high-alpha, transparent), -1px -1px 3px var(--net-color-high-alpha, transparent);
 }
+/* power/ground/nc symbol */
+.component[data-component-type="power"] {
+    z-index: 13; /* render above component-inner (z-index 12) of other components */
+}
+.component[data-component-type="power"] > .component-inner {
+    background: none;
+    border-color: transparent;
+    box-shadow: none;
+    font-size: calc(var(--zoom-factor) / 100 * 18px);
+    font-weight: bold;
+    line-height: 1 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    writing-mode: horizontal-tb !important;
+    overflow: visible;
+}
+.component[data-component-type="power"] .component-port {
+    opacity: 0;
+    pointer-events: none;
+}
+.component[data-component-type="power"] .component-port-label {
+    display: none !important;
+}
+.component[data-component-type="power"][data-power-mode="ground"] > .component-inner {
+    color: var(--wire-color1-high);
+}
+.component[data-component-type="power"][data-power-mode="power"] > .component-inner {
+    color: var(--wire-color3-high);
+}
+.component[data-component-type="power"][data-power-mode="power"] > .component-inner > span > span {
+    font-size: calc(var(--zoom-factor) / 100 * 12px);
+    margin-left: calc(var(--zoom-factor) / 100 * -4px);
+}
+.component[data-component-type="power"][data-power-mode="nc"] > .component-inner {
+    color: var(--wire-color4-high);
+}
 /* toggle state */
 .component.port > .component-inner > span:before {
     content: '';

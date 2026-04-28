@@ -468,7 +468,10 @@ class Application {
             // routing/utilities
             componentMenu.createMenuCategory('Routing &amp; labeling', 'Ports, tunnels, splitters, text.', (routingMenu) => {
                 routingMenu.clear();
+                routingMenu.createPinnableComponentButton((grid, x, y) => grid.addItem(new Power(this, x, y, defaults.power?.rotation ?? 0, 'ground'), false), { '#c': 'Power', '#t': 'ground' });
+                routingMenu.createPinnableComponentButton((grid, x, y) => grid.addItem(new Power(this, x, y, defaults.power?.rotation ?? 0, 'nc'), false), { '#c': 'Power', '#t': 'nc' });
                 routingMenu.createPinnableComponentButton((grid, x, y) => grid.addItem(new Port(this, x, y, defaults.port.rotation), false), { '#c': 'Port' });
+                routingMenu.createPinnableComponentButton((grid, x, y) => grid.addItem(new Power(this, x, y, defaults.power?.rotation ?? 0, 'power'), false), { '#c': 'Power', '#t': 'power' });
                 routingMenu.createPinnableComponentButton((grid, x, y) => grid.addItem(new Probe(this, x, y, defaults.probe.rotation), false), { '#c': 'Probe' });
                 routingMenu.createPinnableComponentButton((grid, x, y) => grid.addItem(new Splitter(this, x, y, defaults.splitter.rotation, defaults.splitter.numSplits), false), { '#c': 'Splitter' });
                 routingMenu.createPinnableComponentButton((grid, x, y) => grid.addItem(new TextLabel(this, x, y, defaults.textlabel.rotation), false), { '#c': 'TextLabel' });

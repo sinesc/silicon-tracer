@@ -184,6 +184,15 @@ class NetList {
                     }
                 }
             }
+            // find colocated ports (same grid coordinate, connected without a wire)
+            for (let p = remainingPorts.length - 1; p >= 0; --p) {
+                const other = remainingPorts[p];
+                if (other.instanceId === portCurrent.instanceId && other.point.x === portCurrent.point.x && other.point.y === portCurrent.point.y) {
+                    remainingPorts.swapRemove(p);
+                    ports.push(other);
+                    portsTodo.push(other);
+                }
+            }
         }
         // traverse subcomponents
         if (recurse) {
