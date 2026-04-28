@@ -71,6 +71,11 @@ class TextLabel extends GridItem {
         super.unlink();
     }
 
+    // Returns the component type label used in text referring to what the component is.
+    get typeLabel() {
+        return this.constructor.TYPE_LABEL_LONG ?? this.constructor.TYPE_LABEL;
+    }
+
     // Return whether the element is selected.
     get selected() {
         return this.#element?.classList.contains('selected') ?? false;
