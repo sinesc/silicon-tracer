@@ -227,13 +227,24 @@ function dialog(title, fields, data, extraOptions) {
         if (focusElement.select) {
             focusElement.select();
         }
+    } else if (confirmElement) {
+        confirmElement.focus();
     }
 
     // return a promise that resolves on ok/cancel
     return new Promise((resolve, reject) => {
+        const onDocKeydown = (e) => {
+            if (e.key === 'Escape') {
+                e.stopPropagation();
+                cancelable ? cancel() : confirm();
+            } else if (e.key.startsWith('Arrow')) {
+                e.stopPropagation();
+            }
+        };
         const confirm = () => {
             const [ result, changed, errors ] = validate();
             if (result) {
+                document.removeEventListener('keydown', onDocKeydown, true);
                 blackout.remove();
                 result._changed = changed; // TODO: tbd whether to return [ result, changed ] instead. would also have to return [ null, null ] in cancel case or deconstructs would error
                 resolve(result);
@@ -246,6 +257,7 @@ function dialog(title, fields, data, extraOptions) {
             }
         };
         const cancel = () => {
+            document.removeEventListener('keydown', onDocKeydown, true);
             blackout.remove();
             resolve(null);
         };
@@ -256,8 +268,6 @@ function dialog(title, fields, data, extraOptions) {
                     e.stopPropagation();
                     if (e.keyCode === 13) {
                         confirm();
-                    } else if (e.keyCode === 27) {
-                        cancel();
                     }
                 };
             }
@@ -267,8 +277,6 @@ function dialog(title, fields, data, extraOptions) {
             e.stopPropagation();
             if (e.key === 'Enter' || e.key === ' ') {
                 confirm();
-            } else if (e.key === 'Escape') {
-                cancel();
             }
         };
         if (cancelable) {
@@ -277,11 +285,10 @@ function dialog(title, fields, data, extraOptions) {
                 e.stopPropagation();
                 if (e.key === 'Enter' || e.key === ' ') {
                     cancel();
-                } else if (e.key === 'Escape') {
-                    cancel();
                 }
             };
         }
+        document.addEventListener('keydown', onDocKeydown, true);
         containerElement.onclick = (e) => e.stopPropagation();
         blackout.onclick = cancel;
     })
