@@ -418,14 +418,6 @@ class LogiSim {
                 this.#addHelperWire(circuit, inverter, 'q', direction(1), 1);
                 circuit.addItem(new Wire(this.#app, x - Grid.SPACING, y + Grid.SPACING, Grid.SPACING, 'v', LogiSim.WIRECOLOR));
                 circuit.addItem(new Wire(this.#app, x - Grid.SPACING, y + 4 * Grid.SPACING, Grid.SPACING, 'v', LogiSim.WIRECOLOR));
-            } else if (rawComp.name === 'Ground') {
-                const item = new Constant(this.#app, x, y, rotation(rawComp.facing ?? 'south') + 2, 0);
-                offsetPort(item, 'q');
-                circuit.addItem(item);
-            } else if (rawComp.name === 'Power') {
-                const item = new Constant(this.#app, x, y, rotation(rawComp.facing ?? 'north') + 2, 1);
-                offsetPort(item, 'q');
-                circuit.addItem(item);
             } else if (rawComp.name === 'Constant') {
                 const item = new Constant(this.#app, x, y, rotation(rawComp.facing ?? 'east'), rawComp.value === '0x1' ? 1 : 0);
                 offsetPort(item, 'q');
@@ -457,8 +449,9 @@ class LogiSim {
                 const item = new Button(this.#app, x, y, rotation(rawComp.facing ?? 'east') + 3, 'momentary', rawComp.value === '0x1' ? 1 : 0);
                 offsetPort(item, 'q');
                 circuit.addItem(item);
-            } else if (rawComp.name === 'NoConnect') {
-                const item = new TextLabel(this.#app, x - Grid.SPACING * 0.5, y - Grid.SPACING * 0.5, rotation(rawComp.facing ?? 'east') + 3, 200, 'X', 'medium', 4);
+            } else if ([ 'NoConnect', 'Power', 'Ground' ].includes(rawComp.name)) {
+                const mapping = { 'NoConnect': 'nc', 'Power': 'power', 'Ground': 'ground' };
+                const item = new Power(this.#app, x - Grid.SPACING * 0.5, y - Grid.SPACING * 0.5, rotation(rawComp.facing ?? 'east') + 3, mapping[rawComp.name]);
                 circuit.addItem(item);
             } else if ([ 'ROM', 'RAM' ].includes(rawComp.name)) {
                 const memType = rawComp.name.toLowerCase();
