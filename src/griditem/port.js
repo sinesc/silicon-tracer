@@ -101,14 +101,20 @@ class Port extends SimulationComponent {
     async onEdit() {
         const config = await dialog("Configure port", Port.EDIT_DIALOG, { name: this.name, rotation: this.rotation }, { context: this });
         if (config) {
-            this.name = config.name;
+            const previousName = this.name.trim();
+            this.name = config.name.trim();
             this.rotation = config.rotation;
+            // update ports on all custom components that are NOT on the grid (firstly because that unlinks them and secondly because the
+            // circuit this port belongs to is the one being edited on the grid, so can't possibly have a component of itself on the grid
             for (const circuit of values(this.app.circuits.all)) {
-                // update ports on all custom components that are NOT on the grid (firstly because that unlinks them and secondly because the
-                // circuit this port belongs to is the one being edited on the grid, so can't possibly have a component of itself on the grid
                 for (const component of circuit.items.filter((i) => i.grid === null && i instanceof CustomComponent)) {
                     component.updatePorts();
                 }
+            }
+            // update port names in circuit placement overrides
+            const placement = this.grid.circuit.portConfig.placement;
+            for (const side of Component.SIDES) {
+                placement[side] = placement[side].split(',').map((n) => n.trim() === previousName ? this.name : n).join(',');
             }
             this.redraw();
             this.app.grid.trackAction('Edit port');
