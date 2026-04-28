@@ -69,7 +69,7 @@ class Power extends SimulationComponent {
         if (this.#mode === 'power') {
             return 'V<span>cc</span>';
         }
-        return 'X';
+        return 'x';
     }
 
     // Override top-markings with the gate type.
@@ -87,12 +87,12 @@ class Power extends SimulationComponent {
     }
 
     // Returns { title, fields, data } for the edit dialog.
-    static editDialogConfig(_descriptor, defaults = {}) {
+    static editDialogConfig(descriptor, defaults = {}) {
         return {
             title: 'Configure power symbol',
             fields: Power.EDIT_DIALOG,
             data: {
-                mode: defaults.mode ?? 'ground',
+                mode: descriptor['#t'] ?? defaults.mode ?? 'ground',
                 rotation: defaults.rotation ?? 0,
             },
         };

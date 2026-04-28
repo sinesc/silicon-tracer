@@ -119,11 +119,6 @@ class Button extends SimulationComponent {
         return app.config.placementDefaults.button;
     }
 
-    // Updates the descriptor in-place from a completed dialog config (for mode changes).
-    static updateDescriptorFromConfig(descriptor, config) {
-        descriptor['#t'] = config.mode;
-    }
-
     // Handle edit hotkey.
     async onEdit() {
         const { title, fields, data } = Button.editDialogConfig({ '#t': this.#mode }, {
@@ -179,6 +174,11 @@ class Button extends SimulationComponent {
         if (this.element.getAttribute('data-net-state') !== state) {
             this.element.setAttribute('data-net-state', state);
         }
+    }
+
+    // Updates the descriptor in-place from a completed dialog config (for mode changes).
+    static updateDescriptorFromConfig(descriptor, config) {
+        descriptor['#t'] = config.mode;
     }
 
     static descriptorInfo(desc) {
