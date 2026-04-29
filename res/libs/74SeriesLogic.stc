@@ -15,9 +15,9 @@ loadFiles.push(
 						20,
 						40,
 						0,
-						200,
+						600,
 						"Logisim 7400 series integrated circuits library",
-						"small",
+						"large",
 						null
 					]
 				},
@@ -27,9 +27,9 @@ loadFiles.push(
 						20,
 						100,
 						0,
-						200,
+						600,
 						"Copyright (C) 2015 - 2016 by Stefan Rothe",
-						"small",
+						"medium",
 						null
 					]
 				},
@@ -37,9 +37,9 @@ loadFiles.push(
 					"#c": "TextLabel",
 					"#a": [
 						20,
-						140,
+						120,
 						0,
-						200,
+						600,
 						"This library is licenced under the GNU Lesser General Public Licence version 3.",
 						"small",
 						null
@@ -49,9 +49,9 @@ loadFiles.push(
 					"#c": "TextLabel",
 					"#a": [
 						20,
-						200,
+						160,
 						0,
-						180,
+						600,
 						"Silicon Tracer conversion, additional components (C) 2026 Dennis Möhlmann",
 						"small",
 						null
@@ -75,7 +75,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x00",
@@ -528,7 +529,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x02",
@@ -981,7 +983,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x03",
@@ -1388,9 +1391,11 @@ loadFiles.push(
 						0,
 						0,
 						1,
-						1
+						1,
+						"dec"
 					],
-					"name": ""
+					"name": "",
+					"inputFormat": "dec"
 				},
 				{
 					"#c": "Wire",
@@ -1642,7 +1647,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x04",
@@ -1955,7 +1961,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x05",
@@ -2084,9 +2091,11 @@ loadFiles.push(
 						0,
 						0,
 						1,
-						1
+						1,
+						"dec"
 					],
-					"name": ""
+					"name": "",
+					"inputFormat": "dec"
 				},
 				{
 					"#c": "Wire",
@@ -2454,7 +2463,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x08",
@@ -2907,7 +2917,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x10",
@@ -3310,7 +3321,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x11",
@@ -3713,7 +3725,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x13",
@@ -4108,7 +4121,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x14",
@@ -4421,7 +4435,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x20",
@@ -4816,11 +4831,12 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x21",
-			"description": "",
+			"description": "dual 4-input AND gate",
 			"uid": "u6f30794292c544ff89ffcd80057b42f4",
 			"data": [
 				{
@@ -5211,11 +5227,12 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x25",
-			"description": "",
+			"description": "dual 4-input NOR gate with strobe",
 			"uid": "u82edb6e37a0c4568ba119871719852f3",
 			"data": [
 				{
@@ -5531,6 +5548,18 @@ loadFiles.push(
 					]
 				},
 				{
+					"#c": "TextLabel",
+					"#a": [
+						240,
+						300,
+						0,
+						180,
+						"FIXME: strobe function missing",
+						"small",
+						4
+					]
+				},
+				{
 					"#c": "Gate",
 					"#a": [
 						250,
@@ -5606,11 +5635,12 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x27",
-			"description": "",
+			"description": "triple 3-input NOR gate",
 			"uid": "u267a4cd3ee78471a81cfd2e7be964b39",
 			"data": [
 				{
@@ -6009,11 +6039,12 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x30",
-			"description": "",
+			"description": "single 8-input NAND gate",
 			"uid": "u3e820ff7ea2544bf867243f78874f249",
 			"data": [
 				{
@@ -6375,11 +6406,12 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x32",
-			"description": "",
+			"description": "quad 2-input OR gate",
 			"uid": "ue575f8d1d90c41b886b546c4f675e50a",
 			"data": [
 				{
@@ -6828,11 +6860,12 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x42",
-			"description": "",
+			"description": "BCD to decimal decoder",
 			"uid": "u82616155635c487b8ef5bc9b4b249ffb",
 			"data": [
 				{
@@ -8299,11 +8332,12 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x51",
-			"description": "",
+			"description": "dual 2-2-input AND-OR-Invert (AOI) gate",
 			"uid": "u6abda2a48fb5413e9475537df4d6e099",
 			"data": [
 				{
@@ -8892,7 +8926,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "JK flip flop",
@@ -9249,11 +9284,12 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": false
+			"visibleInLib": false,
+			"exportName": ""
 		},
 		{
 			"label": "74x73",
-			"description": "",
+			"description": "dual J-K flip-flop, asynchronous clear",
 			"uid": "u022e9f1cdf074de6b25cf13cb8017ec4",
 			"data": [
 				{
@@ -9660,9 +9696,11 @@ loadFiles.push(
 						0,
 						0,
 						1,
-						1
+						1,
+						"dec"
 					],
-					"name": ""
+					"name": "",
+					"inputFormat": "dec"
 				},
 				{
 					"#c": "Constant",
@@ -9672,9 +9710,11 @@ loadFiles.push(
 						0,
 						0,
 						1,
-						1
+						1,
+						"dec"
 					],
-					"name": ""
+					"name": "",
+					"inputFormat": "dec"
 				},
 				{
 					"#c": "Wire",
@@ -9770,7 +9810,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "D flip flop",
@@ -10088,11 +10129,12 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": false
+			"visibleInLib": false,
+			"exportName": ""
 		},
 		{
 			"label": "74x74",
-			"description": "",
+			"description": "dual D positive edge triggered flip-flop, asynchronous clear, preset",
 			"uid": "ufb3e1cfe2af04bff8901b7dd268c252e",
 			"data": [
 				{
@@ -10485,11 +10527,12 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x76",
-			"description": "",
+			"description": "dual J-K flip-flop, asynchronous preset and clear",
 			"uid": "u3afcd7bf13af4b958cfe50a58a3fe79d",
 			"data": [
 				{
@@ -11040,11 +11083,12 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x85",
-			"description": "",
+			"description": "4-bit magnitude comparator",
 			"uid": "uffdfeb0f9f194fdebaa30efc35670c1a",
 			"data": [
 				{
@@ -13941,11 +13985,12 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x86",
-			"description": "",
+			"description": "quad 2-input XOR gate",
 			"uid": "u7f657a2e478f4a90b65539314bd08321",
 			"data": [
 				{
@@ -14394,11 +14439,12 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x109",
-			"description": "",
+			"description": "dual J-NotK positive-edge-triggered flip-flop, clear and preset",
 			"uid": "ua23ca134a525490b86bcae7531677ccb",
 			"data": [
 				{
@@ -14949,11 +14995,12 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x138",
-			"description": "",
+			"description": "3-to-8 line decoder/demultiplexer, inverting outputs",
 			"uid": "u1dfababe9f3c44bbb5dc9c3ed01e4b0c",
 			"data": [
 				{
@@ -16310,11 +16357,12 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x139",
-			"description": "",
+			"description": "dual 2-to-4 line decoder/demultiplexer, inverting outputs",
 			"uid": "u77518f39f0dd4253af6ede22b1410061",
 			"data": [
 				{
@@ -17481,11 +17529,12 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x147",
-			"description": "",
+			"description": "10-line to 4-line priority encoder",
 			"uid": "u339a7d69482d4c0ea445866306b54d73",
 			"data": [
 				{
@@ -19473,11 +19522,12 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x151",
-			"description": "",
+			"description": "8-line to 1-line data selector/multiplexer",
 			"uid": "ua82a03d995c04f91b41205c70f3c7762",
 			"data": [
 				{
@@ -20884,11 +20934,12 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x153",
-			"description": "",
+			"description": "dual 4-line to 1-line data selector/multiplexer, non-inverting outputs",
 			"uid": "u04d11bbd498e4c14992a86c1d0613769",
 			"data": [
 				{
@@ -22095,11 +22146,12 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x157",
-			"description": "",
+			"description": "quad 2-line to 1-line data selector/multiplexer, non-inverting outputs",
 			"uid": "ub92cd2c6b3a54b4686c8e2187eff564d",
 			"data": [
 				{
@@ -23116,11 +23168,12 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x161",
-			"description": "",
+			"description": "synchronous presettable 4-bit binary counter, asynchronous clear",
 			"uid": "u33a568cbf76442c7b94919259677ffb6",
 			"data": [
 				{
@@ -25263,11 +25316,12 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x163",
-			"description": "",
+			"description": "synchronous presettable 4-bit binary counter, synchronous clear",
 			"uid": "u12aa694961c64d1daffdaebe22b7c4fd",
 			"data": [
 				{
@@ -27570,11 +27624,12 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x181",
-			"description": "",
+			"description": "4-bit arithmetic logic unit and function generator",
 			"uid": "ucabb902fdb0a4be582e0ea9d632777bc",
 			"data": [
 				{
@@ -31993,7 +32048,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x238",
@@ -33194,7 +33250,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x244",
@@ -33913,7 +33970,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x247",
@@ -36723,7 +36781,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x253",
@@ -37872,7 +37931,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x257",
@@ -38969,7 +39029,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x273",
@@ -40148,7 +40209,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x283",
@@ -42579,7 +42641,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "D latch",
@@ -42897,7 +42960,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": false
+			"visibleInLib": false,
+			"exportName": ""
 		},
 		{
 			"label": "74x373",
@@ -44228,7 +44292,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x374",
@@ -45569,7 +45634,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x377",
@@ -46768,7 +46834,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x573",
@@ -48099,7 +48166,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x574",
@@ -49440,7 +49508,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x595",
@@ -51927,7 +51996,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x4049",
@@ -52240,7 +52310,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x4075",
@@ -52643,7 +52714,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x4078",
@@ -53068,7 +53140,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x4511",
@@ -56209,7 +56282,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x241",
@@ -56928,7 +57002,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x540",
@@ -57627,7 +57702,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x541",
@@ -58326,7 +58402,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x245",
@@ -59957,7 +60034,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x18",
@@ -60272,7 +60350,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x19",
@@ -60585,11 +60664,12 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x24",
-			"description": "",
+			"description": "quad 2-input NAND gate",
 			"uid": "u982db6ebc0fb46ab8fbaba067822fcfb",
 			"data": [
 				{
@@ -60878,11 +60958,12 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "74x34",
-			"description": "",
+			"description": "hex buffer gate",
 			"uid": "u101d0b600f234161b1893e7e28a4d43a",
 			"data": [
 				{
@@ -61191,7 +61272,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		},
 		{
 			"label": "T flip-flop",
@@ -61370,11 +61452,12 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": false
+			"visibleInLib": false,
+			"exportName": ""
 		},
 		{
 			"label": "74x193",
-			"description": "",
+			"description": "synchronous presettable up/down 4-bit binary counter, clear",
 			"uid": "u10e3582fcdaa468b8d9ca167c6e49a1e",
 			"data": [
 				{
@@ -63949,7 +64032,8 @@ loadFiles.push(
 				}
 			},
 			"lid": null,
-			"visibleInLib": true
+			"visibleInLib": true,
+			"exportName": ""
 		}
 	],
 	"libraries": {},
