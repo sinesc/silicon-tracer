@@ -131,11 +131,13 @@ class CustomComponent extends VirtualComponent {
 
     // Generates port outline for the circuit's component representation.
     static #generatePorts(circuit, parity, gap, spacing) {
+        const SIDE_MAP = Component.SIDE_MAP;
+        const SIDES = Component.SIDES;
         // pre-populate outline with custom placed ports
         const usedPorts = new Set();
         const validPorts = circuit.items.filter((p) => p instanceof Port && p.name !== '').map((p) => p.name).toArray();
-        const outline = { 'left': [], 'right': [], 'top': [], 'bottom': [] };
-        for (const side of [ 'top', 'right', 'bottom', 'left' ]) {
+        const outline = Object.map(SIDE_MAP, () => []);
+        for (const side of SIDES) {
             const customPortList = circuit.portConfig.placement[side].trim();
             if (customPortList !== '') {
                 const portNames = customPortList.split(',').map((s) => s.trim());
@@ -153,38 +155,39 @@ class CustomComponent extends VirtualComponent {
         // collect remaining ports into their default sides
         for (const item of circuit.items) {
             if (item instanceof Port && !usedPorts.has(item.name)) {
-                if (item.name !== '') {
-                    usedPorts.add(item.name);
-                }
+                if (item.name === '') continue;
+                usedPorts.add(item.name);
                 // side of the component-port on port-components is opposite of where the port-component is facing
-                const side = Component.SIDES[(item.rotation + 2) % 4];
+                const side = SIDES[(item.rotation + 2) % 4];
                 // keep track of position so we can arrange ports on component by position in schematic
-                const sort = side === 'left' || side === 'right' ? item.y : item.x;
+                const sort = item[SIDE_MAP[side].axis];
                 outline[side].push([ sort, item.name ]);
             }
         }
         // determine if edges need to be even or odd length (for rotation to work properly, edges need to be either all odd or all even length)
-        let height = Math.max(1, outline.left.length, outline.right.length);
-        let width = Math.max(1, outline.top.length, outline.bottom.length);
-        const even = parity === 'auto' ? Math.max(width, height) % 2 === 0 : parity === 'even';
+        const size = {
+            height: Math.max(1, outline.left.length, outline.right.length),
+            width: Math.max(1, outline.top.length, outline.bottom.length),
+        };
+        const even = parity === 'auto' ? Math.max(size.width, size.height) % 2 === 0 : parity === 'even';
         // adjust width and height to both be either even or odd
         if (parity !== 'none') {
-            height += even !== (height % 2 === 0) ? 1 : 0;
-            width += even !== (width % 2 === 0) ? 1 : 0;
+            size.height += even !== (size.height % 2 === 0) ? 1 : 0;
+            size.width += even !== (size.width % 2 === 0) ? 1 : 0;
         }
         // also ensure minimum allowed component size is met
-        height = Math.max(even ? 2 : 1, height);
-        width = Math.max(even ? 2 : 1, width);
+        size.height = Math.max(even ? 2 : 1, size.height);
+        size.width = Math.max(even ? 2 : 1, size.width);
         // arrange ports as specified
         for (const side of Object.keys(outline)) {
             let ports = outline[side];
-            // separate custom ports (strings) from auto-ports (arrays)
+            // separate custom ports (strings) from auto-ports ([ position, name ])
             const customSidePorts = [];
             const autoPorts = [];
             for (const p of ports) {
                 if (typeof p === 'string') {
                     customSidePorts.push(p !== '' ? p : null);
-                } else {
+                } else if (p[1] !== '') {
                     autoPorts.push(p);
                 }
             }
@@ -193,7 +196,8 @@ class CustomComponent extends VirtualComponent {
             const autoPortsOnly = autoPorts.map(([sort, label]) => label);
             // determine expected length of side (number of required ports) and actual number of ports
             const totalPorts = customSidePorts.length + autoPortsOnly.length;
-            const length = side === 'left' || side === 'right' ? height : width;
+            //const length = side === 'left' || side === 'right' ? size.height : size.width;
+            const length = size[SIDE_MAP[side].length];
             const available = length - totalPorts;
             // prepare additional ports to insert on the outside and/or center (or wherever configured) of the side
             const edgePorts = (new Array(Math.floor(available / 2))).fill(null);

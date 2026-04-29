@@ -181,22 +181,20 @@ class Component extends GridItem {
     static TYPE_LABEL = null;           // base type label, used in menu entries
     static TYPE_LABEL_LONG = null;      // long type label, used in hover-infos (grid and menu), fallback to base type label, per instance override via get typeLabel()
     static TYPE_DESCRIPTION = null;     // description, used in hover-info for menu entries
-
     static HOTKEYS = '<i>Drag</i> Move, <i>SHIFT+Drag</i> Move and adjust wire length, <i>ALT+Drop</i> Accept ghost wires, <i>R</i> Rotate, <i>DEL</i> Delete, ' + GridItem.HOTKEYS;
 
     static EDIT_DIALOG = [
         { name: 'rotation', label: 'Rotation', type: 'select', options: { 0: "Default", 1: "90°", 2: "180°", 3: "270°" }, apply: (v, f) => parseInt(v) },
     ];
 
-    static SIDES = [ 'top', 'right', 'bottom', 'left' ];
     static PORT_SIZE = 14;
-
-    static #OPPOSING_SIDES = [
-        { side: 'left',   other: 'right',  axis: 'y' },
-        { side: 'right',  other: 'left',   axis: 'y' },
-        { side: 'top',    other: 'bottom', axis: 'x' },
-        { side: 'bottom', other: 'top',    axis: 'x' },
-    ];
+    static SIDES = [ 'top', 'right', 'bottom', 'left' ];
+    static SIDE_MAP = {
+        top:    { side: 'top',    other: 'bottom', axis: 'x', length: 'width' },
+        right:  { side: 'right',  other: 'left',   axis: 'y', length: 'height' },
+        bottom: { side: 'bottom', other: 'top',    axis: 'x', length: 'width' },
+        left:   { side: 'left',   other: 'right',  axis: 'y', length: 'height' },
+    };
 
     static #MAX_GHOST_DISTANCE = 3;
     static #INNER_MARGIN = 5;
@@ -231,7 +229,7 @@ class Component extends GridItem {
         }
         const ports = { left: [], right: [], top: [], bottom: [], ...portNames };
         // ensure same number of ports on opposing sides of the component by filling up the shorter side with null ports
-        for (const { side, other } of Component.#OPPOSING_SIDES) {
+        for (const { side, other } of Object.values(Component.SIDE_MAP)) {
             while (ports[side].length < ports[other].length) {
                 ports[side].push(null);
             }
@@ -732,7 +730,7 @@ class Component extends GridItem {
     #updateGhostWires(alignedX, alignedY) {
         this.#clearGhostWires();
         for (const neighbor of this.grid.items.filter(i => i instanceof Component && i !== this).toArray()) {
-            for (const { side, other, axis } of Component.#OPPOSING_SIDES) {
+            for (const { side, other, axis } of Object.values(Component.SIDE_MAP)) {
                 // Compute gap between facing edges, must be within limit.
                 let gap;
                 if (side === 'right') {
