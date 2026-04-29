@@ -114,7 +114,7 @@ class Port extends SimulationComponent {
             // update port names in circuit placement overrides
             const placement = this.grid.circuit.portConfig.placement;
             for (const side of Component.SIDES) {
-                placement[side] = placement[side].split(',').map((n) => n.trim() === previousName ? this.name : n).join(',');
+                placement[side] = placement[side].split(',').map((n) => n.trim() === previousName && previousName !== '' ? this.name : n).join(',');
             }
             this.redraw();
             this.app.grid.trackAction('Edit port');
