@@ -545,7 +545,7 @@ body.no-focus #focus-hint:has(~div.grid:hover) {
     outline: 1px solid var(--button-border-hover-color);
 }
 .dialog-container .dialog-row-mask input.dialog-error, .dialog-container .dialog-row-mask select.dialog-error {
-    outline-color: var(--error-text-color);
+    outline-color: var(--error-text-color) !important;
 }
 .dialog-container .dialog-row-mask input::selection {
     background: var(--button-bg-color);
