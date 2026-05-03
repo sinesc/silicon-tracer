@@ -178,6 +178,7 @@ class Action {
         // Build step 2 dialog fields.
         const step2Fields = [
             { text: 'The following circuits have no reachable dependents. Select which ones are to be deleted. Circuits that are solely depended on by these will also be deleted.', separator: 'after' },
+            { text: 'Be sure to exclude any root circuits you want to keep.', separator: 'after' },
         ];
         const step2Defaults = {};
         for (const group of selectedGroups) {
