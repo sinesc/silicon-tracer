@@ -64,12 +64,12 @@ class Power extends SimulationComponent {
     // Returns the symbol text displayed in the component.
     get topMarkings() {
         if (this.#mode === 'ground') {
-            return '⏚';
-        }
-        if (this.#mode === 'power') {
+            return 'V<span>0</span>'; // ⏚
+        } else if (this.#mode === 'power') {
             return 'V<span>cc</span>';
+        } else {
+            return 'x';
         }
-        return 'x';
     }
 
     // Override top-markings with the gate type.

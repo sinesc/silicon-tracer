@@ -1437,12 +1437,12 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
     display: none !important;
 }
 .component[data-component-type="power"][data-power-mode="ground"] > .component-inner {
-    color: var(--wire-color1-high);
+    color: #888;
 }
 .component[data-component-type="power"][data-power-mode="power"] > .component-inner {
-    color: var(--wire-color3-high);
+    color: #fff;
 }
-.component[data-component-type="power"][data-power-mode="power"] > .component-inner > span > span {
+.component[data-component-type="power"] > .component-inner > span > span {
     font-size: calc(var(--zoom-factor) / 100 * 12px);
     margin-left: calc(var(--zoom-factor) / 100 * -4px);
 }
