@@ -107,9 +107,9 @@
     --selection-brightness: 0.85;
     /*--highlight-hue: 40deg;*/
     --highlight-brightness: 1.8;
-    --font-size-normal: 1em;
-    --font-size-small: 0.8em;
-    --font-size-large: 1.4em;
+    --font-size-small: 12px;
+    --font-size-normal: 14px;
+    --font-size-large: 20px;
     --component-rotate-duration: 0.15s;
     --component-color-transition-duration: 0.15s;
     --component-delete-duration: 0.25s;
@@ -965,14 +965,15 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
     background-image: radial-gradient(circle, #888 1px, var(--grid-bg-color) 1px);
 }
 .grid[data-zoom] {
-    --zoom-factor: attr(data-zoom type(<number>));
-    --wire-thickness: calc(3px * var(--zoom-factor) / 100);
+    --zoom-factor: calc(attr(data-zoom type(<number>)) / 100);
+    --wire-thickness: calc(3px * var(--zoom-factor));
 }
 .grid.grid-zoom-below-100 {
     background-image: radial-gradient(circle, #333 1px, var(--grid-bg-color) 1px);
 }
-.grid.grid-zoom-50 {
-    background-image: radial-gradient(circle, #222 1px, var(--grid-bg-color) 1px);
+.grid.grid-zoom-below-55 {
+    background-image: none;
+    background-color: var(--grid-bg-color);
 }
 .grid.grid-zoom-100 {
     background-image: radial-gradient(circle, #444 1px, var(--grid-bg-color) 1px);
@@ -1155,17 +1156,17 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
     border-radius: 6px;
 }
 .text > .inner {
-    padding: 5px;
+    padding: calc(5px * var(--zoom-factor));
     display: inline-block;
 }
-.text.size-small > .inner {
-    font-size: calc(var(--zoom-factor) / 100 * 12px);
+.text.size-small {
+    font-size: calc(var(--zoom-factor) * var(--font-size-small));
 }
-.text.size-medium > .inner {
-    font-size: calc(var(--zoom-factor) / 100 * 16px);
+.text.size-medium {
+    font-size: calc(var(--zoom-factor) * var(--font-size-normal));
 }
-.text.size-large > .inner {
-    font-size: calc(var(--zoom-factor) / 100 * 24px);
+.text.size-large {
+    font-size: calc(var(--zoom-factor) * var(--font-size-large));
 }
 .text.text-rotate-animation {
     transition: transform var(--component-rotate-duration);
@@ -1206,19 +1207,19 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
     color: var(--muted-text-color);
     text-align: center;
     box-sizing: border-box;
-    margin: 5px; /* fixme: needs to match component, should just be set there */
-    width: calc(100% - 10px);
-    height: calc(100% - 10px);
+    margin: calc(var(--zoom-factor) * 5px); /* fixme: needs to match component, should just be set there */
+    width: calc(100% - var(--zoom-factor) * 10px);
+    height: calc(100% - var(--zoom-factor) * 10px);
     overflow: hidden;
     text-shadow: 1px 1px 2px black;
-    font-size: var(--font-size-small);
+    font-size: calc(var(--zoom-factor) * var(--font-size-small));
 }
 .component .component-inner:hover, .component:has(.component-port:hover) .component-inner {
     background-color: var(--component-body-hover-color);
     border-color: var(--component-border-hover-color);
     color: var(--text-color);
 }
-.grid-zoom-below-65 .component-inner span {
+.grid-zoom-below-55 .component-inner span {
     display: none;
 }
 .component-port {
@@ -1226,8 +1227,8 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
     z-index: 14;
     position: absolute;
     background-color: var(--component-port-border-color);
-    border-radius: calc(3px * var(--zoom-factor) / 100);
-    font-size: var(--font-size-small);
+    border-radius: calc(3px * var(--zoom-factor));
+    font-size: calc(var(--zoom-factor) * var(--font-size-small));
     text-align: center;
     color: var(--muted-text-color);
     border: 1px solid var(--component-port-body-color);
@@ -1254,11 +1255,12 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
     border: 1px solid var(--overlay-border-color);
     border-radius: 3px;
     box-sizing: border-box;
+    font-size: calc(var(--zoom-factor) * var(--font-size-small));
     color: var(--muted-text-color);
     opacity: 0;
     transition: opacity var(--component-color-transition-duration);
 }
-.grid-zoom-below-125 .component-port-label {
+.grid-zoom-below-125 .component-port-label { /* TODO: WHAT IS THIS ABOUT */
     display: none;
 }
 .component:hover, .component.keyboard-focused {
@@ -1277,7 +1279,7 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
  * Probe
  */
 .component.probe .component-inner {
-    border-radius: calc(20px * var(--zoom-factor) / 100);
+    border-radius: calc(20px * var(--zoom-factor));
 }
 
 /*
@@ -1344,8 +1346,9 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
     box-sizing: border-box;
     color: var(--muted-text-color);
     font-weight: bold;
+    font-size: calc(var(--zoom-factor) * var(--font-size-normal));
 }
-.grid-zoom-below-85 .component > .port-name  {
+.grid-zoom-below-55 .component > .port-name  {
     display: none !important;
 }
 .component:has(> [data-net-color="0"]) {
@@ -1420,7 +1423,7 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
     background: none;
     border-color: transparent;
     box-shadow: none;
-    font-size: calc(var(--zoom-factor) / 100 * 18px);
+    font-size: calc(var(--zoom-factor) * var(--font-size-normal));
     font-weight: bold;
     line-height: 1 !important;
     display: flex;
@@ -1442,9 +1445,9 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
 .component[data-component-type="power"][data-power-mode="power"] > .component-inner {
     color: #fff;
 }
-.component[data-component-type="power"] > .component-inner > span > span {
-    font-size: calc(var(--zoom-factor) / 100 * 12px);
-    margin-left: calc(var(--zoom-factor) / 100 * -4px);
+.component[data-component-type="power"] > .component-inner span.sub {
+    font-size: calc(var(--zoom-factor) * var(--font-size-small));
+    margin-left: calc(var(--zoom-factor) * -3px);
 }
 .component[data-component-type="power"][data-power-mode="nc"] > .component-inner {
     color: var(--wire-color4-high);
@@ -1475,7 +1478,7 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
  * Gates
  */
 .component.gate > .component-inner {
-    border-radius: calc(var(--zoom-factor) / 100 * 30px);
+    border-radius: calc(var(--zoom-factor) * 30px);
 }
 .component.gate[data-component-rotation="0"] > .component-inner {
     border-bottom-left-radius: 3px;
@@ -1518,8 +1521,8 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
 .wire::after {
     content: '';
     position: absolute;
-    inset-block: calc(-4px * var(--zoom-factor) / 100);
-    inset-inline: calc(-4px * var(--zoom-factor) / 100);
+    inset-block: calc(-4px * var(--zoom-factor));
+    inset-inline: calc(-4px * var(--zoom-factor));
 }
 .wire-h {
     height: var(--wire-thickness);

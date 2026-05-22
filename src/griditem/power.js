@@ -64,9 +64,9 @@ class Power extends SimulationComponent {
     // Returns the symbol text displayed in the component.
     get topMarkings() {
         if (this.#mode === 'ground') {
-            return 'V<span>0</span>'; // ⏚
+            return 'V<span class="sub">0</span>'; // ⏚
         } else if (this.#mode === 'power') {
-            return 'V<span>cc</span>';
+            return 'V<span class="sub">cc</span>';
         } else {
             return 'x';
         }

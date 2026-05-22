@@ -251,7 +251,7 @@ class TextLabel extends GridItem {
     // Measures the natural pixel width of the text at current font settings.
     #computeWidth() {
         TextLabel.#ctx.font = getComputedStyle(this.#inner).font;
-        const padding = 5 * 2; // compensate padding on `.text > .inner` padding
+        const padding = 5 * 2 * this.grid.zoom; // compensate padding on `.text > .inner` padding
         return Math.ceil(Math.max(...this.#text.split('\n').map(line => TextLabel.#ctx.measureText(line).width))) + padding;
     }
 

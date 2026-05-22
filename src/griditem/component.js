@@ -657,10 +657,10 @@ class Component extends GridItem {
         this.element.setAttribute('data-component-rotation', this.rotation);
 
         if ((this.width < this.height || (this.width === this.height && this.#ports[this.rotatedTop].length === 0 && this.#ports[this.rotatedBottom].length === 0)) && v.width < 200) {
-            this.#inner.style.lineHeight = (v.width- (Component.#INNER_MARGIN * 2)) + "px";
+            this.#inner.style.lineHeight = (v.width - (Component.#INNER_MARGIN * 2 * this.grid.zoom)) + "px";
             this.#inner.style.writingMode = 'vertical-rl';
         } else {
-            this.#inner.style.lineHeight = (v.height - (Component.#INNER_MARGIN * 2)) + "px";
+            this.#inner.style.lineHeight = (v.height - (Component.#INNER_MARGIN * 2 * this.grid.zoom)) + "px";
             this.#inner.style.writingMode = 'horizontal-tb';
         }
 

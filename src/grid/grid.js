@@ -6,7 +6,7 @@ class Grid {
     static SPACING = 20;
     static STATUS_DELAY = 500;
 
-    static #ZOOM_LEVELS = [ 0.5, 0.65, 0.85, 1.0, 1.25, 1.50, 1.75, 2.0, 2.5, 3.0 ];
+    static #ZOOM_LEVELS = [ 0.2, 0.3, 0.4, 0.55, 0.7, 0.85, 1.0, 1.25, 1.50, 1.75, 2.0, 2.5, 3.0 ];
 
     #app;
     #element;
@@ -287,9 +287,10 @@ class Grid {
         if (this.#pending.bgPattern) {
 
             // add below/above/current zoom level classes to grid to enable zoom based styling
-            if (!this.#element.classList.contains('grid-zoom-' + (this.zoom * 100))) {
+            const currentZoom = Math.round(this.zoom * 100);
+            if (!this.#element.classList.contains('grid-zoom-' + currentZoom)) {
                 for (const zoom of Grid.#ZOOM_LEVELS) {
-                    const name = zoom * 100;
+                    const name = Math.round(zoom * 100);
                     this.#element.classList.remove('grid-zoom-above-' + name);
                     this.#element.classList.remove('grid-zoom-' + name);
                     this.#element.classList.remove('grid-zoom-below-' + name);
@@ -302,8 +303,7 @@ class Grid {
                     }
                 }
             }
-
-            this.#element.setAttribute('data-zoom', this.zoom * 100);
+            this.#element.setAttribute('data-zoom', currentZoom);
 
             // create background grid pattern
             const spacing = Grid.SPACING * this.zoom;
