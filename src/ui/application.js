@@ -309,7 +309,7 @@ class Application {
     #initToolbar() {
 
         // Makes combined switch to/drag onto grid buttons for circuits/components
-        const makeSwitchAndDragButtons = (menu, uid) => {
+        const makeSwitchAndDragButtons = (menu, menuRoot, uid) => {
             const info = CustomComponent.descriptorInfo({ '#u': uid });
             const isSwitchable = uid === this.grid.circuit.uid; // TBD: may not even want to block this case since switching to the already on the grid circuit also switches the simulation, which might be what the user wants
             const isPlaceable = uid !== this.grid.circuit.uid && !this.circuits.subcircuitUIDs(uid).has(this.grid.circuit.uid); // prevent placing super- into sub-components -> infinite recursion
@@ -320,7 +320,7 @@ class Application {
             }
             // select for grid
             const switchButton = menu.createActionButton(info.label, info.hoverMessage + (isSwitchable ? 'Currently on the grid.' : '<i>Click</i> Edit on the grid.'), () => {
-                menu.close();
+                menuRoot.close();
                 Action.selectCircuit(this, uid);
             });
             switchButton.node.classList.add(isPlaceable ? 'toolbar-circuit-select' : 'toolbar-circuit-select-fullrow');
@@ -456,7 +456,7 @@ class Application {
             circuitMenu.createSeparator();
             // Switch circuit. Generate menu items for each circuit.
             for (const [ uid ] of circuitList) {
-                makeSwitchAndDragButtons(circuitMenu, uid);
+                makeSwitchAndDragButtons(circuitMenu, circuitMenu, uid);
             }
         });
 
@@ -534,7 +534,7 @@ class Application {
                     const componentList = this.circuits.list(lid);
                     // Switch component. Generate menu items for each component.
                     for (const [ uid ] of componentList) {
-                        makeSwitchAndDragButtons(libraryMenu, uid);
+                        makeSwitchAndDragButtons(libraryMenu, componentMenu, uid);
                     }
                 });
             }
