@@ -1260,8 +1260,8 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
     opacity: 0;
     transition: opacity var(--component-color-transition-duration);
 }
-.grid-zoom-below-125 .component-port-label { /* TODO: WHAT IS THIS ABOUT */
-    display: none;
+.grid-zoom-below-85 .component .component-port-label {
+    display: none !important;
 }
 .component:hover, .component.keyboard-focused {
     z-index: 12; /* required for labels to pop over other components */
