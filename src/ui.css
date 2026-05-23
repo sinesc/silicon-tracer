@@ -4,7 +4,7 @@
     --wire-color-lightness: 50%;
     --wire-color-chroma: 0.25;
     --wire-high-factor: 1.25;
-    --wire-low-factor: 0.55;
+    --wire-low-factor: 0.65;
     --wire-null-factor: 0.4;
     --wire-null-alpha: 0.75;
     --wire-high-alpha: 0.75;
@@ -1352,6 +1352,7 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
     display: none !important;
 }
 .component:has(> [data-net-color="0"]) {
+    --net-color-low: var(--wire-color0-low);
     --net-color-high: var(--wire-color0-high);
     --net-color-high-alpha: var(--wire-color0-high-alpha);
 }
@@ -1590,7 +1591,7 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
  */
 /* per-color variable mappings (also used by .component:has() for status outlines) */
 [data-net-color=""] { --net-color: var(--wire-colorD); --net-color-null: var(--wire-colorD-null); --net-color-low: var(--wire-colorD-low); --net-color-high: var(--wire-colorD-high); --net-color-high-alpha: var(--wire-colorD-high-alpha); }
-[data-net-color="0"] { --net-color: var(--wire-color0); --net-color-null: var(--wire-color0-null); --net-color-high: var(--wire-color0-high); --net-color-high-alpha: var(--wire-color0-high-alpha); }
+[data-net-color="0"] { --net-color: var(--wire-color0); --net-color-null: var(--wire-color0-null); --net-color-low: var(--wire-color0-low); --net-color-high: var(--wire-color0-high); --net-color-high-alpha: var(--wire-color0-high-alpha); }
 [data-net-color="1"] { --net-color: var(--wire-color1); --net-color-null: var(--wire-color1-null); --net-color-low: var(--wire-color1-low); --net-color-high: var(--wire-color1-high); --net-color-high-alpha: var(--wire-color1-high-alpha); }
 [data-net-color="2"] { --net-color: var(--wire-color2); --net-color-null: var(--wire-color2-null); --net-color-low: var(--wire-color2-low); --net-color-high: var(--wire-color2-high); --net-color-high-alpha: var(--wire-color2-high-alpha); }
 [data-net-color="3"] { --net-color: var(--wire-color3); --net-color-null: var(--wire-color3-null); --net-color-low: var(--wire-color3-low); --net-color-high: var(--wire-color3-high); --net-color-high-alpha: var(--wire-color3-high-alpha); }
