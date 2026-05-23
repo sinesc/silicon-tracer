@@ -6,7 +6,7 @@ class Grid {
     static SPACING = 20;
     static STATUS_DELAY = 500;
 
-    static #ZOOM_LEVELS = [ 0.2, 0.3, 0.4, 0.55, 0.7, 0.85, 1.0, 1.25, 1.50, 1.75, 2.0, 2.5, 3.0 ];
+    static #ZOOM_LEVELS = [ 0.2, 0.3, 0.4, 0.55, 0.7, 0.85, 1.0, 1.25, 1.50, 1.75, 2.0 ];
 
     #app;
     #element;
