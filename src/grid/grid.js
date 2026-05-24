@@ -48,6 +48,22 @@ class Grid {
         this.#trimBox = new TrimBox(this, this.#element);
         this.#debugElement = html(this.#element, 'div', 'debug-info');
         this.#passive = passive;
+        this.#worldElement.addEventListener('mouseover', (e) => {
+            const wire = e.target.closest('.wire[data-wire-net], .wire-junction[data-wire-net]');
+            const index = wire?.getAttribute('data-wire-net');
+            if (!index) return;
+            for (const el of this.#worldElement.querySelectorAll(`.wire[data-wire-net="${index}"], .wire-junction[data-wire-net="${index}"]`)) {
+                el.classList.add('wire-net-hover');
+            }
+        });
+        this.#worldElement.addEventListener('mouseout', (e) => {
+            const wire = e.target.closest('.wire[data-wire-net], .wire-junction[data-wire-net]');
+            const index = wire?.getAttribute('data-wire-net');
+            if (!index) return;
+            for (const el of this.#worldElement.querySelectorAll(`.wire[data-wire-net="${index}"], .wire-junction[data-wire-net="${index}"]`)) {
+                el.classList.remove('wire-net-hover');
+            }
+        });
         if (!passive) {
             this.#initHotkeys();
             this.#element.onmousedown = this.#handleDragStart.bind(this);
@@ -347,7 +363,7 @@ class Grid {
                 item.renderNetState();
             }
 
-            // rebuild junction dots after topology changes, or just reposition after pan/zoom
+            // rebuild junction dots after topology changes, or just reposition after zoom
             if (this.#pending.junctionRebuild) {
                 this.#rebuildJunctions();
                 this.#pending.junctionRebuild = false;
@@ -637,12 +653,13 @@ class Grid {
     #applyNetColors() {
         const netList = NetList.identify(this.#circuit);
         // match port colors with attached wire colors, ensure consistent color across entire net
-        for (const net of netList.nets) {
+        for (const [ index, net ] of pairs(netList.nets)) {
             // find net color (when dragging from unconnected wire to connected wire the new wire will have color null)
             const applyColor = net.wires.values().map((nw) => this.#circuit.itemByGID(nw.gid)).find((w) => w.color !== null)?.color ?? this.#netColor;
             for (const { gid } of net.wires) {
                 const wire = this.#circuit.itemByGID(gid);
                 wire.color = applyColor;
+                wire.element.setAttribute('data-wire-net', index);
                 wire.renderFlags |= GridItem.NEEDS_DETAIL_RENDER;
             }
             for (const port of net.ports) {
@@ -659,6 +676,7 @@ class Grid {
         for (const netWire of netList.unconnected.wires) {
             const wire = this.#circuit.itemByGID(netWire.gid);
             wire.color = null;
+            wire.element.setAttribute('data-wire-net', '');
         }
         // clear color of unconnected ports
         for (const port of netList.unconnected.ports) {
@@ -728,7 +746,7 @@ class Grid {
         this.#worldElement.style.transform = `translate(${tx}px, ${ty}px)`;
     }
 
-    // Updates only the visual positions of existing junction elements after a pan or zoom.
+    // Updates only the visual positions of existing junction elements after zoom.
     #updateJunctionPositions() {
         for (const { element, x, y } of this.#junctionElements.values()) {
             element.style.left = x * this.zoom + 'px';
@@ -749,6 +767,10 @@ class Grid {
             const color = wire.color ?? '';
             if (element.getAttribute('data-net-color') !== String(color)) {
                 element.setAttribute('data-net-color', color);
+            }
+            const netIndex = wire.element.getAttribute('data-wire-net') ?? '';
+            if (element.getAttribute('data-wire-net') !== netIndex) {
+                element.setAttribute('data-wire-net', netIndex);
             }
         }
     }
