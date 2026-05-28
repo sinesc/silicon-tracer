@@ -15000,7 +15000,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x138",
-			"description": "3-to-8 line decoder/demultiplexer, inverting outputs",
+			"description": "3-to-8 line decoder, inverting outputs",
 			"uid": "u1dfababe9f3c44bbb5dc9c3ed01e4b0c",
 			"data": [
 				{
@@ -16362,7 +16362,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x139",
-			"description": "dual 2-to-4 line decoder/demultiplexer, inverting outputs",
+			"description": "dual 2-to-4 line decoder, inverting outputs",
 			"uid": "u77518f39f0dd4253af6ede22b1410061",
 			"data": [
 				{
@@ -19527,7 +19527,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x151",
-			"description": "8-line to 1-line data selector/multiplexer",
+			"description": "8-line to 1-line data selector",
 			"uid": "ua82a03d995c04f91b41205c70f3c7762",
 			"data": [
 				{
@@ -20939,7 +20939,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x153",
-			"description": "dual 4-line to 1-line data selector/multiplexer, non-inverting outputs",
+			"description": "dual 4-line to 1-line data selector, non-inverting outputs",
 			"uid": "u04d11bbd498e4c14992a86c1d0613769",
 			"data": [
 				{
@@ -22151,7 +22151,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x157",
-			"description": "quad 2-line to 1-line data selector/multiplexer, non-inverting outputs",
+			"description": "quad 2-line to 1-line data selector, non-inverting outputs",
 			"uid": "ub92cd2c6b3a54b4686c8e2187eff564d",
 			"data": [
 				{
@@ -32053,7 +32053,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x238",
-			"description": "",
+			"description": "3-to-8 line decoder, active high outputs",
 			"uid": "u00b72aa7fe4e43a8a36c9b596b0e3d32",
 			"data": [
 				{
@@ -32090,7 +32090,7 @@ loadFiles.push(
 						1130,
 						1
 					],
-					"name": "nOE0"
+					"name": "#OE0"
 				},
 				{
 					"#c": "Port",
@@ -32099,7 +32099,7 @@ loadFiles.push(
 						1190,
 						1
 					],
-					"name": "nOE1"
+					"name": "#OE1"
 				},
 				{
 					"#c": "Port",
@@ -33246,7 +33246,7 @@ loadFiles.push(
 					"top": ",",
 					"right": ",Y0,Y1,Y2,Y3,Y4,Y5,Y6",
 					"bottom": ",",
-					"left": "A0,A1,A2,nOE0,nOE1,OE2,Y7,"
+					"left": "A0,A1,A2,#OE0,#OE1,OE2,Y7,"
 				}
 			},
 			"lid": null,
@@ -33255,7 +33255,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x244",
-			"description": "",
+			"description": "octal buffer",
 			"uid": "uc8d556edf4f040518ae5d2c2f4a04dab",
 			"data": [
 				{
@@ -33975,7 +33975,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x247",
-			"description": "",
+			"description": "open-collector BCD to 7-segment decoder/driver",
 			"uid": "u5636db40c4cf425285d0ff902184d315",
 			"data": [
 				{
@@ -36786,7 +36786,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x253",
-			"description": "",
+			"description": "dual 4-line to 1-line data selector",
 			"uid": "u57d81f7656484409a5dae3d5432e8c20",
 			"data": [
 				{
@@ -37936,7 +37936,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x257",
-			"description": "",
+			"description": "quad 2-line to 1-line data selector",
 			"uid": "u5a8987507fa54b55b784e40e09a87f19",
 			"data": [
 				{
@@ -39034,7 +39034,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x273",
-			"description": "",
+			"description": "octal D-type edge-triggered flip-flops, asynchronous clear",
 			"uid": "u088af83034a2449881e03e09b1273f1e",
 			"data": [
 				{
@@ -40214,7 +40214,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x283",
-			"description": "",
+			"description": "4-bit binary full adder",
 			"uid": "ubf6227d2977d482fa7dd358bce302bb3",
 			"data": [
 				{
@@ -42965,7 +42965,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x373",
-			"description": "",
+			"description": "octal D-type transparent latch",
 			"uid": "u3b27a02c424f42479e6bac21e41593c9",
 			"data": [
 				{
@@ -44297,7 +44297,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x374",
-			"description": "",
+			"description": "octal D-type edge-triggered flip-flops",
 			"uid": "ud4de77a32eb84cc78f8ca92b470695f1",
 			"data": [
 				{
@@ -45639,7 +45639,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x377",
-			"description": "",
+			"description": "octal D-type edge-triggered flip-flops, clock enable",
 			"uid": "u71fcbac7943640da8cc6d4c2569c50ab",
 			"data": [
 				{
@@ -46839,7 +46839,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x573",
-			"description": "",
+			"description": "octal D-type transparent latch",
 			"uid": "ub6257f68faa54d759f59fd7520d3fe6a",
 			"data": [
 				{
@@ -48171,7 +48171,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x574",
-			"description": "",
+			"description": "octal D-type edge-triggered flip-flop",
 			"uid": "u151d29398ded4ef2b266bfb9199c65d6",
 			"data": [
 				{
@@ -49513,7 +49513,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x595",
-			"description": "",
+			"description": "8-bit shift registers, serial-in, parallel-out, output latches, output enable",
 			"uid": "uffab4481f2c7465092504f7087f00f7e",
 			"data": [
 				{
@@ -52001,7 +52001,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x4049",
-			"description": "",
+			"description": "hex inverting buffer",
 			"uid": "u0323cee05e6f46959de1374aefb89d85",
 			"data": [
 				{
@@ -52315,7 +52315,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x4075",
-			"description": "",
+			"description": "triple 3-input OR gate",
 			"uid": "u716e8cd5d97144d2ae04bb4f729e001a",
 			"data": [
 				{
@@ -52719,7 +52719,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x4078",
-			"description": "",
+			"description": "single 8-input OR/NOR gate",
 			"uid": "u49e225a7e7774889a2f1ae982a504054",
 			"data": [
 				{
@@ -53145,7 +53145,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x4511",
-			"description": "",
+			"description": "BCD to 7-segment decoder",
 			"uid": "uf76543cc753e428392401f3fb2663acb",
 			"data": [
 				{
@@ -56287,7 +56287,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x241",
-			"description": "",
+			"description": "octal buffer, complementary enable",
 			"uid": "u214854f7140043b98f7cb5473895afd2",
 			"data": [
 				{
@@ -57007,7 +57007,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x540",
-			"description": "",
+			"description": "octal buffer, inverting outputs",
 			"uid": "ua5778eae09074c8aab2206cb3484b8b1",
 			"data": [
 				{
@@ -57707,7 +57707,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x541",
-			"description": "",
+			"description": "octal buffer",
 			"uid": "udfeb78404a5f4336a9b4543d01803586",
 			"data": [
 				{
@@ -58407,7 +58407,7 @@ loadFiles.push(
 		},
 		{
 			"label": "74x245",
-			"description": "",
+			"description": "octal bus transceiver",
 			"uid": "u1b784402b1ad426f93be8c57d3c25d24",
 			"data": [
 				{
@@ -61614,7 +61614,7 @@ loadFiles.push(
 					"#a": [
 						90,
 						790,
-						40,
+						100,
 						"h",
 						1
 					]
@@ -61684,7 +61684,7 @@ loadFiles.push(
 					"#a": [
 						110,
 						750,
-						20,
+						80,
 						"h",
 						4
 					]
@@ -61707,26 +61707,6 @@ loadFiles.push(
 						120,
 						"v",
 						2
-					]
-				},
-				{
-					"#c": "Gate",
-					"#a": [
-						130,
-						730,
-						0,
-						"not",
-						1
-					]
-				},
-				{
-					"#c": "Gate",
-					"#a": [
-						130,
-						770,
-						0,
-						"not",
-						1
 					]
 				},
 				{
@@ -61772,26 +61752,6 @@ loadFiles.push(
 				{
 					"#c": "Wire",
 					"#a": [
-						170,
-						750,
-						20,
-						"h",
-						1
-					]
-				},
-				{
-					"#c": "Wire",
-					"#a": [
-						170,
-						790,
-						20,
-						"h",
-						1
-					]
-				},
-				{
-					"#c": "Wire",
-					"#a": [
 						190,
 						450,
 						500,
@@ -61815,7 +61775,7 @@ loadFiles.push(
 						190,
 						730,
 						0,
-						"or",
+						"nand",
 						2
 					]
 				},
@@ -62283,7 +62243,7 @@ loadFiles.push(
 					"#a": [
 						510,
 						790,
-						40,
+						100,
 						"h",
 						1
 					]
@@ -62333,49 +62293,9 @@ loadFiles.push(
 					"#a": [
 						530,
 						750,
-						20,
+						80,
 						"h",
 						4
-					]
-				},
-				{
-					"#c": "Gate",
-					"#a": [
-						550,
-						730,
-						0,
-						"not",
-						1
-					]
-				},
-				{
-					"#c": "Gate",
-					"#a": [
-						550,
-						770,
-						0,
-						"not",
-						1
-					]
-				},
-				{
-					"#c": "Wire",
-					"#a": [
-						590,
-						750,
-						20,
-						"h",
-						1
-					]
-				},
-				{
-					"#c": "Wire",
-					"#a": [
-						590,
-						790,
-						20,
-						"h",
-						1
 					]
 				},
 				{
@@ -62384,7 +62304,7 @@ loadFiles.push(
 						610,
 						730,
 						0,
-						"or",
+						"nand",
 						2
 					]
 				},
@@ -62883,7 +62803,7 @@ loadFiles.push(
 					"#a": [
 						930,
 						790,
-						40,
+						100,
 						"h",
 						1
 					]
@@ -62933,49 +62853,9 @@ loadFiles.push(
 					"#a": [
 						950,
 						750,
-						20,
+						80,
 						"h",
 						4
-					]
-				},
-				{
-					"#c": "Gate",
-					"#a": [
-						970,
-						730,
-						0,
-						"not",
-						1
-					]
-				},
-				{
-					"#c": "Gate",
-					"#a": [
-						970,
-						770,
-						0,
-						"not",
-						1
-					]
-				},
-				{
-					"#c": "Wire",
-					"#a": [
-						1010,
-						750,
-						20,
-						"h",
-						1
-					]
-				},
-				{
-					"#c": "Wire",
-					"#a": [
-						1010,
-						790,
-						20,
-						"h",
-						1
 					]
 				},
 				{
@@ -62984,7 +62864,7 @@ loadFiles.push(
 						1030,
 						730,
 						0,
-						"or",
+						"nand",
 						2
 					]
 				},
@@ -63443,7 +63323,7 @@ loadFiles.push(
 					"#a": [
 						1350,
 						790,
-						40,
+						100,
 						"h",
 						1
 					]
@@ -63493,49 +63373,9 @@ loadFiles.push(
 					"#a": [
 						1370,
 						750,
-						20,
+						80,
 						"h",
 						4
-					]
-				},
-				{
-					"#c": "Gate",
-					"#a": [
-						1390,
-						730,
-						0,
-						"not",
-						1
-					]
-				},
-				{
-					"#c": "Gate",
-					"#a": [
-						1390,
-						770,
-						0,
-						"not",
-						1
-					]
-				},
-				{
-					"#c": "Wire",
-					"#a": [
-						1430,
-						750,
-						20,
-						"h",
-						1
-					]
-				},
-				{
-					"#c": "Wire",
-					"#a": [
-						1430,
-						790,
-						20,
-						"h",
-						1
 					]
 				},
 				{
@@ -63544,7 +63384,7 @@ loadFiles.push(
 						1450,
 						730,
 						0,
-						"or",
+						"nand",
 						2
 					]
 				},
