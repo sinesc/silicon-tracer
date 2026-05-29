@@ -1547,7 +1547,7 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
     opacity: 0;
 }
 .wire-junction {
-    --junction-size: calc(7 / 3 * var(--wire-thickness));
+    --junction-size: calc(9 / 3 * var(--wire-thickness));
     z-index: 11;
     position: absolute;
     border-radius: 50%;
