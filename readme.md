@@ -15,24 +15,23 @@ It is fully usable **offline** (see Releases for a bundled version with all code
 - **Transparent ports/tunnels/wires/splitters**: These translate to nothing but nets in the simulation engine. E.g. no directionality on ports.
 - Basic **single channel gates** with configurable number of inputs.
 - **Misc standard components** like full adders, muxes, latches, ...
-- **RAM** and **ROM** components.
+- **RAM** and **ROM** components with content load/save and **hex editor**.
 - **Tri-state** components, e.g. buffer, inverter, ...
 - **Text elements**: Support different font sizes, rotation and color.
 - Load/save via **local file picker**. Requires Chrome/Edge/Opera, not yet supported in Firefox.
 - Context specific **hotkey controlled UI** with currently available hotkeys always shown in the bottom right corner of the screen. For ease of use Hotkeys are clustered around WASD.
 - Customizable component toolbar.
 - Undo/redo system.
+- Forward/backward navigation history.
 - Component selection, copy&paste, drag&drop, rotation (including selections), deletion, editing.
-- Wire trimming (ALT + mouse drag to select wire segments to trim).
+- Wire trimming (ALT + mouse drag to select wire segments to trim), wire extension (SHIFT + mouse drag extends wires to keep component connected)
 - Basic simulation statistics like gate and network counts, longest signal path.
+- Simulation subcomponent tree-view.
 
 ### Todo
-- RAM/ROM editing UI
 - Standard gate/component symbols, currently everything is boxes
 - More 74x components
 - EDA export, gate refactoring
-- Simulation subcomponent overview (e.g. tree view)
-- Navigation history (i.e. forward/back)
 
 ### Known issues
 - Gates feeding back into themselves (e.g. in and RS flip-flop) can trigger oscillations.
