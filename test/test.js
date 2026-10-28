@@ -221,17 +221,18 @@ test("break on conflict (clock-driven)", () => {
 
     // After the break, the simulation is stuck at the conflicting state (count 9).
     // Tick one step at a time until the conflict clears (counter advances to count 10).
-    // One clock period (~10000 ticks) is needed to advance past count 9.
+    // One clock period (10000 ticks; the clock flips every 5000 ticks) is needed to advance past count 9.
     let cleared = false;
     for (let t = 0; t < ticksPerCycle * 2; t++) {
         if (sim.simulate(1) === 0) { cleared = true; break; }
     }
     assert(cleared, `conflict should clear once counter advances past count 9`);
 
-    // One full cycle with count 10 (q0=0) produces no conflict
-    assert(sim.simulate(ticksPerCycle) === 0, `no break at count 10`);
+    // Count 10 (binary 1010, q0=0) produces no conflict. The rising edge that advances to count 11
+    // arrives one full cycle after the edge that produced count 10, so half a cycle is safe.
+    assert(sim.simulate(ticksPerCycle / 2) === 0, `no break at count 10`);
 
-    // The next conflict (count 11, binary 1011, q0=1 q3=1) is reached shortly after
+    // The next conflict (count 11, binary 1011, q0=1 q3=1) is reached within the remainder of the cycle
     let breakAgain = false;
     for (let t = 0; t < ticksPerCycle * 2; t++) {
         if (sim.simulate(1) === 1) { breakAgain = true; break; }
@@ -239,6 +240,30 @@ test("break on conflict (clock-driven)", () => {
     assert(breakAgain, `conflict should recur at count 11 (q0 and q3 both high again)`);
 });
 
+test("clock flip interval", () => {
+    const sim = compileCircuit('data/tests.stc', 'DelayedConflict', 'js', { targetTPS: 1000 });
+    // 1 Hz clock at 1000 ticks/s → the clock output flips every 500 ticks (half a clock period).
+    const clock = sim.clocks[0];
+    const outPort = sim.ports.find((p) => p.name === clock.outputPortName);
+    const enablePort = sim.ports.find((p) => p.name === clock.enablePortName);
+    const mem = sim.mem;
+    mem[enablePort.elementIndex2] |= (1 << enablePort.bitIndex); // the fixture gates its clock, drive enable high directly
+    assert(mem[clock.limitIndex] === 500, `flip interval limit should be 500, got ${mem[clock.limitIndex]}`);
+    const bit = () => (mem[outPort.elementIndex2] & (1 << outPort.bitIndex)) !== 0 ? 1 : 0;
+    const flips = [];
+    let prev = bit();
+    for (let tick = 1; tick <= 3000 && flips.length < 4; tick++) {
+        sim.simulate(1);
+        const value = bit();
+        if (value !== prev) flips.push(tick);
+        prev = value;
+    }
+    assert(flips.length === 4, `expected 4 clock flips, got ${flips.length}`);
+    assert(flips[0] === 500, `first flip should happen at tick 500, got ${flips[0]}`);
+    for (let i = 1; i < flips.length; i++) {
+        assert(flips[i] - flips[i - 1] === 500, `flip interval should be 500 ticks, got ${flips[i] - flips[i - 1]} (flip ${i})`);
+    }
+});
 test("bus probes in subcircuit read correct values", () => {
     const sim = compileCircuit('data/tests.stc', 'ProbesInSubcircuit');
     sim.simulate(100);

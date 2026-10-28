@@ -99,7 +99,7 @@ class BackendJavascript {
         let code = '';
         code += `${counter} = ${counter} - 1;`;
         code += `if (${counter} > ${limit}) {`; // check for underflow (unsigned wrap-around)
-        code += `${counter} = ${limit};`;
+        code += `${counter} = ${limit} - 1;`; // reload one below the limit, so flips happen every `limit` ticks (reloading `limit` would take `limit + 1` ticks to wrap again)
         code += `if ((${enableElem} >>> ${enableBit}) & 1) { ${outputElem} ^= (1 << ${outputBit}); }`;
         code += `}` + this.#comment(`clock ${clock.id}`) + '\n';
         this.#tickCode += code;
