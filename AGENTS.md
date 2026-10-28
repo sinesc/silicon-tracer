@@ -27,5 +27,7 @@ Vanilla JS/HTML/CSS, no framework, no build step. Open `index.html` directly in 
 - `makedist.sh` - generate bundled html file
 
 ## Guidelines
-- use `assert*()` in public functions
-- prefer brief one line comments, only document non-self-explanatory arguments e.g. string 'enums'
+- Use `assert*()` in public functions
+- Prefer brief one line comments, only document non-self-explanatory arguments e.g. string 'enums'
+- Before committing your changes make sure the relevant tests still pass. If you encounter pre-existing test failures fix and commit these as well (separate commit). 
+- Use past tense in the commit message, e.g. "Fixed glorp widget calibration", "Added support for ACME widgets".
