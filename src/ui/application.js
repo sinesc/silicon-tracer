@@ -661,7 +661,9 @@ class Application {
         this.toolbar.createTrashZone();
     }
 
-    // Enables single-step mode (if not already) and advances the simulation by one tick.
+    // Enables single-step mode (if not already) and advances the simulation by the given number of ticks.
+    // `reason` is the break code (1 conflict / 2 condition) of a preceding step, the break code of this step is used when it is 0.
+    // Break notices are also shown while already single stepping, since a break ends the step early.
     #singleStep(ticks = 1, reason = 0) {
         if (!this.simulations.current) {
             this.simulations.select(this.circuits.current, true);
@@ -670,9 +672,11 @@ class Application {
         if (!sim) return;
         const alreadySingleStep = this.config.singleStep;
         this.config.singleStep = true;
-        sim.tick(ticks);
-        if (!alreadySingleStep) {
-            this.showNotice(reason === 1 ? 'Breaking on conflict' : (reason === 2 ? 'Breaking on condition' : 'Simulation single-step enabled' ));
+        const broke = sim.tick(ticks);
+        const breakCode = broke !== 0 ? broke : reason;
+        const notice = breakCode === 1 ? 'Breaking on conflict' : (breakCode === 2 ? 'Breaking on condition' : (alreadySingleStep ? null : 'Simulation single-step enabled'));
+        if (notice !== null) {
+            this.showNotice(notice);
             // update already open debugger menu
             if (this.#debuggerMenu.state()) {
                 this.#debuggerMenu.open();
@@ -696,8 +700,8 @@ class Application {
         const alreadySingleStep = this.config.singleStep;
         this.config.singleStep = true;
         this.showNotice(flipped
-                ? `Stepped ${Number.formatSI(ticks)} ticks to clock flip.`
-                : `No clock flip within ${Number.formatSI(ticks)} ticks.${alreadySingleStep ? '' : ' Simulation single-step enabled.'}`);
+            ? `Stepped ${Number.formatSI(ticks)} ticks to clock flip.`
+            : `No clock flip within ${Number.formatSI(ticks)} ticks.${alreadySingleStep ? '' : ' Simulation single-step enabled.'}`);
         // update already open debugger menu
         if (this.#debuggerMenu.state()) {
             this.#debuggerMenu.open();

@@ -296,6 +296,18 @@ test("step to clock flip breaks on conflict", () => {
     assert(result !== null && result.broke === 1 && result.flipped === false, `expected a conflict break, got ${JSON.stringify(result)}`);
 });
 
+test("step to clock flip breaks on condition", () => {
+    const sim = compileCircuit('data/tests.stc', 'DelayedConflict', 'js', { targetTPS: 1000, breakConditions: [ 'pConflict' ] });
+    // The probe becomes truthy at counter value 8. The step must stop with break code 2, which the UI
+    // reports as "Breaking on condition" (also while already single stepping, see Application.#singleStep).
+    let result = null;
+    for (let step = 0; step < 40; step++) {
+        result = sim.stepToClockFlip();
+        if (result.broke !== 0) break;
+    }
+    assert(result !== null && result.broke === 2 && result.flipped === false, `expected a condition break, got ${JSON.stringify(result)}`);
+});
+
 test("step to clock flip in clock-less simulation", () => {
     const sim = compileCircuit('data/tests.stc', 'ProbesInSubcircuit');
     assert(sim.clocks.length === 0, `fixture should have no clocks, got ${sim.clocks.length}`);

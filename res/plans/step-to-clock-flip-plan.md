@@ -142,7 +142,27 @@ Add next to `#singleStep`, reusing `#singleStep(0, broke)` for the break case so
 }
 ```
 
-Set `this.config.singleStep` **after** stepping and only in the non-break path: `#singleStep` decides whether to show the break reason by reading the flag *before* setting it, so pre-setting it in the break case would suppress the "Breaking on conflict" notice. `showNotice` replaces the text of the single `#notice` element, so the single-step-enabled hint has to be appended to the same message rather than shown as a second notice.
+Set `this.config.singleStep` **after** stepping and only in the non-break path: `#singleStep` manages the flag and the notices itself, so the break case delegates entirely to it. `showNotice` replaces the text of the single `#notice` element, so the single-step-enabled hint has to be appended to the same message rather than shown as a second notice.
+
+`Application.#singleStep` was adjusted accordingly (break notices must not depend on the single-step mode transition):
+
+```js
+// Enables single-step mode (if not already) and advances the simulation by the given number of ticks.
+// `reason` is the break code (1 conflict / 2 condition) of a preceding step, the break code of this step is used when it is 0.
+// Break notices are also shown while already single stepping, since a break ends the step early.
+#singleStep(ticks = 1, reason = 0) {
+    /* ... same simulation lookup and flag write as before ... */
+    const broke = sim.tick(ticks);
+    const breakCode = broke !== 0 ? broke : reason;
+    const notice = breakCode === 1 ? 'Breaking on conflict' : (breakCode === 2 ? 'Breaking on condition' : (alreadySingleStep ? null : 'Simulation single-step enabled'));
+    if (notice !== null) {
+        this.showNotice(notice);
+        if (this.#debuggerMenu.state()) this.#debuggerMenu.open();
+    }
+}
+```
+
+Without this, stepping while a break condition/conflict already matches is silent: `sim.tick()` returns the break code (which was previously discarded) and the old code only showed notices on the run-mode → single-step transition, so users in single-step mode never saw "Breaking on condition" / "Breaking on conflict".
 
 ### 5. `src/ui/application.js` — hotkey
 
@@ -164,7 +184,7 @@ Assertions (values verified by measurement):
 - First call: `{ ticks: 500, flipped: true, broke: 0 }` (needs the baseline snapshot call, see step 1).
 - Following calls: `{ ticks: 500, flipped: true, broke: 0 }` each, alternating output bit.
 - With the clock gated off: `stepToClockFlip(1000)` returns `{ ticks: 1000, flipped: false, broke: 0 }` (tick budget terminates the call, no infinite loop); re-enabling flips again after 500 ticks.
-- Break case: compile `DelayedConflict` with `breakOnConflict: true` and step repeatedly — one call returns `broke === 1` with `flipped === false` (the counter conflict at count 9 arrives after 9 counter steps = 9000 ticks, i.e. during the 18th 500-tick step).
+- Break cases: compile `DelayedConflict` with `breakOnConflict: true` (conflict at count 9, reached after 9 counter steps = 9000 ticks, i.e. during the 18th 500-tick step) and with `breakConditions: [ 'pConflict' ]` (probe truthy at count 8) — in both cases some call returns `broke === 1` / `broke === 2` with `flipped === false`.
 - Clock-less simulation (`data/tests.stc` label `ProbesInSubcircuit`, `clocks.length === 0`): `stepToClockFlip(100)` returns `{ ticks: 0, flipped: false, broke: 0 }`.
 
 Run `node test/test.js` and make sure the suite is green before committing. UI files are stubbed out by the harness, so also `node --check src/ui/application.js src/ui/simulations.js`.
