@@ -201,7 +201,8 @@ class Simulation {
         }
     }
 
-    // Declares a clock with the given frequency at the given simulation ticks per second. Suffix is appended to the clock's `enable` input and `c` output.
+    // Declares a clock with the given frequency (in Hz) at the given simulation ticks per second. A frequency of 0 means
+    // that `tps` is used as the number of simulation ticks between two output flips. Suffix is appended to the clock's `enable` input and `c` output.
     declareClock(frequency, tps, suffix) {
         assert.number(frequency);
         assert.integer(tps);
@@ -223,16 +224,25 @@ class Simulation {
         if (frequency !== null) clock.frequency = frequency;
         if (tps !== null) clock.tps = tps;
         if (clock.limitIndex !== null) {
-            const ticks = frequency === 0 ? tps : Math.floor(clock.tps / clock.frequency / 2);
+            const ticks = this.#clockFlipTicks(clock);
             this.#backend.setClockParam(clock.limitIndex, ticks);
+            // restart the counter so the new interval applies immediately
+            this.#backend.setClockParam(clock.counterIndex, ticks - 1);
         }
     }
 
-    // Updates all clocks in the circuit for the given TPS.
+    // Number of ticks between two output flips of a clock. A frequency of 0 means the clock's tps value is used as the tick interval.
+    #clockFlipTicks(clock) {
+        return clock.frequency === 0 ? clock.tps : Math.floor(clock.tps / clock.frequency / 2);
+    }
+
+    // Updates all frequency based clocks in the circuit for the given TPS. Clocks with a frequency of 0 are tick based and are not affected.
     updateClocks(tps) {
         assert.integer(tps);
         for (let index = 0; index < this.#clocks.length; ++index) {
-            this.setClockFrequency(index, null, tps);
+            if (this.#clocks[index].frequency !== 0) {
+                this.setClockFrequency(index, null, tps);
+            }
         }
     }
 
@@ -423,9 +433,10 @@ class Simulation {
                 this.setConstValue(index, constant.initialValue);
             }
             for (const clock of this.#clocks) {
-                const ticks = Math.floor(clock.tps / clock.frequency / 2);
+                const ticks = this.#clockFlipTicks(clock);
                 this.#backend.setClockParam(clock.limitIndex, ticks);
-                this.#backend.setClockParam(clock.counterIndex, ticks);
+                // the counter triggers a flip on unsigned underflow, so it starts one tick below the limit to flip every `ticks` ticks
+                this.#backend.setClockParam(clock.counterIndex, ticks - 1);
             }
             this.#initMemoryData();
             return false;

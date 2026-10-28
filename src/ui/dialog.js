@@ -14,6 +14,7 @@
 //   apply:     transform element value to result value
 //   postCheck: second validation after apply
 //   restore:   transform data value to initial element value (counterpart to apply)
+//   exclusive: group name; fields sharing a group name require exactly one field of the group to have a value while all others must be empty
 function dialog(title, fields, data, extraOptions) {
     const { context, extraClass, cancelable, onChange } = Object.assign({ context: null, extraClass: null, cancelable: true, onChange: () => null }, extraOptions);
     assert.string(title),
@@ -49,6 +50,7 @@ function dialog(title, fields, data, extraOptions) {
         const result = {};
         const errors = [];
         const changed = [];
+        const exclusiveGroups = { };
         for (const { element, field } of values(form)) {
             const check = field.check ?? validations[field.type].check;
             if (check.call(context, element.value, field)) {
@@ -65,6 +67,15 @@ function dialog(title, fields, data, extraOptions) {
                 }
             } else {
                 errors.push(field.name);
+            }
+            if (field.exclusive) {
+                (exclusiveGroups[field.exclusive] ??= [ ]).push(field.name);
+            }
+        }
+        // an exclusive group is valid only if exactly one of its fields has a value
+        for (const names of values(exclusiveGroups)) {
+            if (names.filter((name) => result[name] != null).length !== 1) {
+                errors.push(...names);
             }
         }
         return errors.length === 0 ? [ result, changed, null  ] : [ null, null, errors ];

@@ -76,6 +76,7 @@ const APPLICATION_STUB = `
             breakConditions: [],
             targetTPS: 10000,
             debug: false,
+            placementDefaults: { clock: { rotation: 0, frequency: 1, ticks: null } },
         };
         grid = { trackAction() {}, setCircuit() {}, setCircuitLabel() {}, setSimulationLabel() {} };
         toolbar = { loadPins() {} };
