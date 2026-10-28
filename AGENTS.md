@@ -24,6 +24,10 @@ Vanilla JS/HTML/CSS, no framework, no build step. Open `index.html` directly in 
 ## Testing & Dev Tools
 - `node test/test.js` - run unit tests (test data in `test/data/`)
 - `node util/dump.js --help` - inspect circuit nets and compiled simulation code, try this when asked to debug circuit issues
+- `node util/nets.js <file.stc> <label> [--expand]` - print nets with connected component ports (readable netlist of a circuit)
+- `node util/circuit2txt.js <file.stc> <label> [--wires]` - print circuit items as a compact positional listing
+- `node util/merge.js <out.stc> <a.stc> <b.stc> ...` - merge .stc files (dedup by uid), e.g. combine a circuit with `res/libs/74SeriesLogic.stc` so all subcircuits resolve
+- `node util/simrun.js <file.stc> <label> --script=<script.js>` - compile a circuit and run a headless simulation scenario against it (drive ports/buttons, step ticks, read ports/probes/memories); see `--help`
 - `makedist.sh` - generate bundled html file
 
 ## Guidelines
