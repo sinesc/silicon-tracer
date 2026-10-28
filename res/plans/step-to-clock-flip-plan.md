@@ -25,7 +25,7 @@ No new simulation semantics are needed; all logic fits in one engine method.
 
 ### 1. `src/sim/simulation.js` — engine method
 
-Add after `simulate()` (public API, assert-guarded). Bulk-steps in jumps sized to the earliest flip attempt, so a 1 Hz clock at 10000 tps costs ~2 `simulate()` calls, not 5000.
+Add after `simulate()` (public API, assert-guarded). Bulk-steps in jumps sized to the earliest flip attempt, so a 1 Hz clock at 10000 tps costs 1 `simulate()` call, not 5000.
 
 ```js
 // Steps the simulation until any clock output toggles, at most maxTicks ticks.
@@ -34,6 +34,7 @@ Add after `simulate()` (public API, assert-guarded). Bulk-steps in jumps sized t
 stepToClockFlip(maxTicks = 1000000) {
     assert.integer(maxTicks);
     if (this.#clocks.length === 0) return { ticks: 0, flipped: false, broke: 0 };
+    this.#clockOutputChanged(); // establish the baseline clock output state before stepping (otherwise the first flip is only detected on the second jump)
     const mem = this.#backend.mem;
     let stepped = 0;
     while (stepped < maxTicks) {
@@ -104,7 +105,7 @@ In the Debugger menu, right after the `Step once` button block (`const stepButto
 ```js
 // Advance to the next clock output flip. Only meaningful when the simulation has clocks.
 const hasClock = (this.simulations.current?.engine.clocks.length ?? 0) > 0;
-const stepFlipButton = debuggerMenu.createActionButton('Step to clock flip', 'Advance simulation to the next output flip of any clock. Hotkey: <i>Ctrl+T</i>.', () => {
+const stepFlipButton = debuggerMenu.createActionButton('Step to clock flip', 'Advance simulation to the next output flip of any clock. Hotkey: <i>Ctrl+.</i>.', () => {
     this.#stepToClockFlip();
 });
 stepFlipButton.node.classList.toggle('toolbar-menu-button-disabled', !hasClock);
@@ -117,54 +118,56 @@ stepFlipButton.node.classList.toggle('toolbar-menu-button-disabled', !hasClock);
 Add next to `#singleStep`, reusing `#singleStep(0, broke)` for the break case so single-step mode + reason notice behave exactly like an ordinary break:
 
 ```js
-// Enables single-step mode (if not already) and advances to the next clock output flip.
+// Enables single-step mode (if not already) and advances the simulation to the next output flip of any clock.
 #stepToClockFlip() {
     if (!this.simulations.current) {
         this.simulations.select(this.circuits.current, true);
     }
     const sim = this.simulations.current;
     if (!sim) return;
-    const alreadySingleStep = this.config.singleStep;
-    this.config.singleStep = true;
     const { ticks, flipped, broke } = sim.stepToClockFlip();
     if (broke !== 0) {
+        // Break mid-step: entering single-step mode and reporting the break reason is #singleStep's job.
         this.#singleStep(0, broke);
-    } else if (flipped) {
-        this.showNotice(`Stepped ${Number.formatSI(ticks)} ticks to clock flip.`, 3);
-    } else {
-        this.showNotice(`No clock flip within ${Number.formatSI(ticks)} ticks.`, 3);
+        return;
     }
-    if (!alreadySingleStep && broke === 0 && !flipped) this.showNotice('Simulation single-step enabled', 3);
+    const alreadySingleStep = this.config.singleStep;
+    this.config.singleStep = true;
+    this.showNotice(flipped
+        ? `Stepped ${Number.formatSI(ticks)} ticks to clock flip.`
+        : `No clock flip within ${Number.formatSI(ticks)} ticks.${alreadySingleStep ? '' : ' Simulation single-step enabled.'}`);
     if (this.#debuggerMenu.state()) {
         this.#debuggerMenu.open(); // update enabled/disabled state of the open menu
     }
 }
 ```
 
-Do not set `this.config.singleStep` before calling `#singleStep(0, broke)` in the break case; `#singleStep` manages that flag itself. Restructure the snippet above if needed so the break case only calls `this.#singleStep(0, broke)` (the flag write before it is harmless — `#singleStep` sets it to true anyway).
+Set `this.config.singleStep` **after** stepping and only in the non-break path: `#singleStep` decides whether to show the break reason by reading the flag *before* setting it, so pre-setting it in the break case would suppress the "Breaking on conflict" notice. `showNotice` replaces the text of the single `#notice` element, so the single-step-enabled hint has to be appended to the same message rather than shown as a second notice.
 
 ### 5. `src/ui/application.js` — hotkey
 
-In `#initHotkeys()`, next to the existing `'t'` hotkey:
+In `#initHotkeys()`, next to the existing `'t'` hotkey. `Ctrl+T` is browser-reserved (new tab; `preventDefault` cannot suppress it in Chrome), so pick an unreserved combination:
 
 ```js
-this.registerHotkey('ctrl+t', 'down', null, () => {
+// 'ctrl+t' is browser-reserved (new tab), so the step-to-flip hotkey uses an unreserved combination.
+this.registerHotkey([ 'ctrl+.', 'ctrl+,' ], 'down', null, () => {
     this.#stepToClockFlip();
 });
 ```
 
 ## Testing
 
-Add an engine-level test to `test/test.js` (engine lives in `src/sim/simulation.js`, which the harness loads; `src/ui/simulations.js` is not loaded there, so call `engine.stepToClockFlip` on the object returned by `compileCircuit`). Use fixture `data/tests.stc` label `DelayedConflict` (1 Hz clock) with `targetTPS: 1000` → `limit = 500`. Its clock enable is driven by circuit state, so drive the enable port directly: look up `engine.ports` for `clock.enablePortName` and set `mem[elementIndex2] |= (1 << bitIndex)`.
+Add engine-level tests to `test/test.js` (the engine lives in `src/sim/simulation.js`, which the harness loads; `src/ui/simulations.js` is not loaded there, so call `stepToClockFlip` on the object returned by `compileCircuit`). Use fixture `data/tests.stc` label `DelayedConflict` (1 Hz clock) with `targetTPS: 1000` → `limit = 500`. That fixture drives the clock's `enable` input from a constant named `enable`, so gate the clock with `sim.setConstValue(sim.getConstId('enable'), 0 | 1)` — writing the enable port element in `sim.mem` does not stick, it is re-driven every tick.
 
 Assertions (values verified by measurement):
-- First call after forcing enable high: `{ ticks: 500, flipped: true, broke: 0 }`.
+- `sim.clocks.length === 1` for `DelayedConflict`.
+- First call: `{ ticks: 500, flipped: true, broke: 0 }` (needs the baseline snapshot call, see step 1).
 - Following calls: `{ ticks: 500, flipped: true, broke: 0 }` each, alternating output bit.
-- With enable low again (clear the bit): `stepToClockFlip(1000)` returns `{ ticks: 1000, flipped: false, broke: 0 }` (guard terminates, no infinite loop).
-- With a simulation with clocks: `engine.clocks.length > 0` is the condition the UI uses; assert it for `DelayedConflict` and assert `engine.clocks.length === 0` for a clock-less fixture (e.g. `data/minimal.json` path used by existing tests).
-- Break case: compile `DelayedConflict` with `breakOnConflict: true` (see existing test `break on conflict (clock-driven)`), enable the clock, then `stepToClockFlip()` returns `broke === 1` with `flipped === false`.
+- With the clock gated off: `stepToClockFlip(1000)` returns `{ ticks: 1000, flipped: false, broke: 0 }` (tick budget terminates the call, no infinite loop); re-enabling flips again after 500 ticks.
+- Break case: compile `DelayedConflict` with `breakOnConflict: true` and step repeatedly — one call returns `broke === 1` with `flipped === false` (the counter conflict at count 9 arrives after 9 counter steps = 9000 ticks, i.e. during the 18th 500-tick step).
+- Clock-less simulation (`data/tests.stc` label `ProbesInSubcircuit`, `clocks.length === 0`): `stepToClockFlip(100)` returns `{ ticks: 0, flipped: false, broke: 0 }`.
 
-Run `node test/test.js` and make sure the suite is green before committing.
+Run `node test/test.js` and make sure the suite is green before committing. UI files are stubbed out by the harness, so also `node --check src/ui/application.js src/ui/simulations.js`.
 
 ## Commit
 

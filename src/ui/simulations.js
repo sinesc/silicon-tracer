@@ -219,6 +219,12 @@ Simulations.Simulation = class {
         return this.#engine.simulate(ticks);
     }
 
+    // Steps to the next output flip of any clock, at most maxTicks ticks. Returns { ticks, flipped, broke }.
+    stepToClockFlip(maxTicks = 1000000) {
+        assert.integer(maxTicks);
+        return this.#engine.stepToClockFlip(maxTicks);
+    }
+
     // Returns whether the simulation includes the given circuit.
     includes(circuit) {
         assert.class(Circuit, circuit);

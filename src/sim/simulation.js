@@ -93,6 +93,9 @@ class Simulation {
     // Declared clocks.
     #clocks = [];
 
+    // Snapshot of clock output bits used to detect output flips (null = no tick stepped since the last snapshot).
+    #clockFlipBits = null;
+
     // Computed simulation memory layout, operations, etc...
     #layout = { netToInputBitmap: null, netToInputSignalBitmap: null, outputToNetBitmap: null, operations: null, pullMasks: null };
 
@@ -455,6 +458,41 @@ class Simulation {
         return this.#compiledTicks(ticks);
     }
 
+    // Steps the simulation to the next output flip of any clock, at most maxTicks ticks.
+    // Returns { ticks, flipped, broke }: ticks = number of ticks stepped (a lower bound when a break fired),
+    // flipped = a clock output toggled, broke = 1 (conflict) / 2 (condition) / 0 (no break).
+    stepToClockFlip(maxTicks = 1000000) {
+        assert.integer(maxTicks);
+        if (this.#clocks.length === 0) return { ticks: 0, flipped: false, broke: 0 };
+        this.#clockOutputChanged(); // establish the baseline clock output state before stepping
+        const mem = this.#backend.mem;
+        let stepped = 0;
+        while (stepped < maxTicks) {
+            // Jump to the earliest clock counter underflow, which is the tick where the next flip can happen.
+            // All clocks are considered, so no candidate flip tick is ever skipped. The cap keeps a very fast
+            // disabled clock from forcing 1-tick stepping while a slow clock is waiting for its flip.
+            let jump = Math.min(maxTicks - stepped, 100000);
+            for (const clock of this.#clocks) jump = Math.min(jump, mem[clock.counterIndex] + 1);
+            jump = Math.max(1, jump);
+            const broke = this.simulate(jump);
+            if (broke !== 0) return { ticks: stepped, flipped: false, broke };
+            stepped += jump;
+            if (this.#clockOutputChanged()) return { ticks: stepped, flipped: true, broke: 0 };
+        }
+        return { ticks: stepped, flipped: false, broke: 0 };
+    }
+
+    // Updates the clock output bit snapshot and returns whether any clock output changed since the last call.
+    #clockOutputChanged() {
+        const bits = this.#clocks.map((clock) => {
+            const port = this.#ports.byName[clock.outputPortName];
+            return this.#backend.getBit(port.elementIndex2, port.bitIndex);
+        });
+        const changed = this.#clockFlipBits !== null && bits.some((bit, index) => bit !== this.#clockFlipBits[index]);
+        this.#clockFlipBits = bits;
+        return changed;
+    }
+
     // Steps through the compiled simulation line by line, optionally invoking the JS debugger each step.
     simulateStep(triggerDebugger) {
         if (!this.#compiledStep.iterator) {
@@ -489,6 +527,7 @@ class Simulation {
         }
         // reset memory data to initial values
         this.#initMemoryData();
+        this.#clockFlipBits = null;
     }
 
     // Sets the value of a defined constant by its id.

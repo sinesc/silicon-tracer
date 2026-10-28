@@ -632,6 +632,12 @@ class Application {
                 this.#singleStep();
             });
             stepButton.node.classList.toggle('toolbar-menu-button-disabled', !this.config.singleStep);
+            // Advance to the next clock output flip. Only meaningful when the simulation has clocks.
+            const hasClock = (this.simulations.current?.engine.clocks.length ?? 0) > 0;
+            const stepFlipButton = debuggerMenu.createActionButton('Step to clock flip', 'Advance simulation to the next output flip of any clock. Hotkey: <i>Ctrl+.</i>.', () => {
+                this.#stepToClockFlip();
+            });
+            stepFlipButton.node.classList.toggle('toolbar-menu-button-disabled', !hasClock);
             // Break-on-condition expressions.
             debuggerMenu.createSeparator();
             debuggerMenu.createActionButton('Add condition...', 'Break simulation on a custom probe expression.', async () => {
@@ -674,6 +680,30 @@ class Application {
         }
     }
 
+    // Enables single-step mode (if not already) and advances the simulation to the next output flip of any clock.
+    #stepToClockFlip() {
+        if (!this.simulations.current) {
+            this.simulations.select(this.circuits.current, true);
+        }
+        const sim = this.simulations.current;
+        if (!sim) return;
+        const { ticks, flipped, broke } = sim.stepToClockFlip();
+        if (broke !== 0) {
+            // Break mid-step: entering single-step mode and reporting the break reason is #singleStep's job.
+            this.#singleStep(0, broke);
+            return;
+        }
+        const alreadySingleStep = this.config.singleStep;
+        this.config.singleStep = true;
+        this.showNotice(flipped
+                ? `Stepped ${Number.formatSI(ticks)} ticks to clock flip.`
+                : `No clock flip within ${Number.formatSI(ticks)} ticks.${alreadySingleStep ? '' : ' Simulation single-step enabled.'}`);
+        // update already open debugger menu
+        if (this.#debuggerMenu.state()) {
+            this.#debuggerMenu.open();
+        }
+    }
+
     // Updates the undo/redo button labels and enabled state.
     refreshUndoButtons() {
         if (!this.#undoButton || !this.#redoButton) return;
@@ -699,6 +729,10 @@ class Application {
         });
         this.registerHotkey('t', 'down', null, () => {
             this.#singleStep();
+        });
+        // 'ctrl+t' is browser-reserved (new tab), so the step-to-flip hotkey uses an unreserved combination.
+        this.registerHotkey([ 'ctrl+.', 'ctrl+,' ], 'down', null, () => {
+            this.#stepToClockFlip();
         });
         this.registerHotkey('ctrl+z', 'down', null, () => {
             Action.undo(this);

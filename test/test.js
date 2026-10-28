@@ -264,6 +264,44 @@ test("clock flip interval", () => {
         assert(flips[i] - flips[i - 1] === 500, `flip interval should be 500 ticks, got ${flips[i] - flips[i - 1]} (flip ${i})`);
     }
 });
+
+test("step to clock flip", () => {
+    const sim = compileCircuit('data/tests.stc', 'DelayedConflict', 'js', { targetTPS: 1000 });
+    // 1 Hz clock at 1000 ticks/s → the output flips every 500 ticks. The fixture drives the clock's
+    // enable input from a constant named 'enable', so gating that constant gates the clock.
+    assert(sim.clocks.length === 1, `DelayedConflict should have exactly one clock, got ${sim.clocks.length}`);
+    const enable = sim.getConstId('enable');
+    let result = sim.stepToClockFlip();
+    assert(result.ticks === 500 && result.flipped === true && result.broke === 0, `first step should flip after 500 ticks, got ${JSON.stringify(result)}`);
+    result = sim.stepToClockFlip();
+    assert(result.ticks === 500 && result.flipped === true && result.broke === 0, `second step should flip after 500 ticks, got ${JSON.stringify(result)}`);
+    sim.setConstValue(enable, 0);
+    result = sim.stepToClockFlip(1000);
+    assert(result.ticks === 1000 && result.flipped === false && result.broke === 0, `gated clock should exhaust the tick budget, got ${JSON.stringify(result)}`);
+    sim.setConstValue(enable, 1);
+    result = sim.stepToClockFlip();
+    assert(result.ticks === 500 && result.flipped === true && result.broke === 0, `re-enabled clock should flip after 500 ticks, got ${JSON.stringify(result)}`);
+});
+
+test("step to clock flip breaks on conflict", () => {
+    const sim = compileCircuit('data/tests.stc', 'DelayedConflict', 'js', { targetTPS: 1000, breakOnConflict: true });
+    // Clock-driven counter: the counter advances on every rising clock edge (every 1000 ticks) and the
+    // clock output flips every 500 ticks. The conflict at count 9 must terminate a step with a break
+    // instead of the step running to its tick budget.
+    let result = null;
+    for (let step = 0; step < 40; step++) {
+        result = sim.stepToClockFlip();
+        if (result.broke !== 0) break;
+    }
+    assert(result !== null && result.broke === 1 && result.flipped === false, `expected a conflict break, got ${JSON.stringify(result)}`);
+});
+
+test("step to clock flip in clock-less simulation", () => {
+    const sim = compileCircuit('data/tests.stc', 'ProbesInSubcircuit');
+    assert(sim.clocks.length === 0, `fixture should have no clocks, got ${sim.clocks.length}`);
+    const result = sim.stepToClockFlip(100);
+    assert(result.ticks === 0 && result.flipped === false && result.broke === 0, `clock-less simulation should step nothing, got ${JSON.stringify(result)}`);
+});
 test("bus probes in subcircuit read correct values", () => {
     const sim = compileCircuit('data/tests.stc', 'ProbesInSubcircuit');
     sim.simulate(100);
