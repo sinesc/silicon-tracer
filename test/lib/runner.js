@@ -168,6 +168,29 @@ vm.runInContext(`
         if (typeof values === 'string') return Uint8Array.fromHex(values);
         return new Uint8Array(values);
     }
+
+    // Builds a circuit with nested Group boxes and items inside/outside, serializes it and
+    // round-trips the serialized form back through Circuits.unserialize. Returns plain (realm-independent) data.
+    function _groupAnnotationRoundTrip() {
+        const app = new Application();
+        const circuit = app.circuits.current;
+        circuit.clearItems();
+        circuit.addItem(new Group(app, 100, 100, 400, 300, 'Outer'));
+        circuit.addItem(new Group(app, 120, 120, 100, 100, 'Inner'));
+        circuit.addItem(new Gate(app, 140, 140, 0, 'and', 2));
+        circuit.addItem(new Wire(app, 140, 240, 60, 'h'));
+        circuit.addItem(new TextLabel(app, 120, 440, 0, 100, 'outside'));
+        const serialized = circuit.serialize();
+        const app2 = new Application();
+        app2.circuits.unserialize(JSON.parse(JSON.stringify({ circuits: [ serialized ], currentUID: circuit.uid })), null, false, []);
+        const items = [ ...app2.circuits.byUID(circuit.uid).items ];
+        return {
+            data: JSON.parse(JSON.stringify(serialized.data)),
+            itemsWithGroupProp: items.filter((i) => i['_group'] !== undefined).length,
+            wireWidth: items.find((i) => i instanceof Wire).width,
+            itemCount: items.length,
+        };
+    }
 `, context);
 
 let passed = 0;

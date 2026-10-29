@@ -1,6 +1,6 @@
 # Plan: Annotate components inside `Group` boxes on save (`"_group": <label>`)
 
-> Status: Planned. The Change 1 + Change 2 code and the test below were validated with a scratch implementation (all unit tests passed, 28/28) and then reverted; the Change 3 cosmetic filter is already applied in `util/circuit2txt.js`.
+> Status: Implemented. `Change 1` + `Change 2` are in place, the unit test "group annotation on save" passes (`node test/test.js`), and `util/circuit2txt.js` prints the annotation (see Change 3).
 
 Goal: when a circuit is serialized to file, every grid item that sits inside a `Group` box gets an extra key `"_group": "<group label>"` in its serialized object. The key is purely informational for humans reading `.stc` files. Loading must ignore it completely: no runtime property, no simulation effect, no visual effect.
 
@@ -81,15 +81,36 @@ if (!isError) {
 
 No other code inspects serialized item keys, so nothing else needs a guard.
 
-## Change 3 (cosmetic): `util/circuit2txt.js`
+## Change 3: `util/circuit2txt.js`
 
-The extra-key listing filters on `k[0] !== '#'`; extend it so the positional listing stays compact:
+Group boxes usually describe what the contained elements are for (e.g. a "Debug" cluster of extra components), so the annotation is useful context for anyone reading a circuit listing — in particular for models processing `.stc` files. `_group` is therefore listed explicitly as a trailing `[group: "label"]` marker instead of appearing among the generic extra keys:
 
 ```js
-const extra = Object.entries(item).filter(([ k ]) => k[0] !== '#' && k[0] !== '_').map(([ k, v ]) => `${k}=${JSON.stringify(v)}`);
+const extra = Object.entries(item).filter(([ k ]) => k[0] !== '#' && k[0] !== '_').map(([ k, v ]) => `${k}=${JSON.stringify(v)}`); // ignore serialization internals and informational-only keys (shown separately)
+items.push({ type, x: args[0], y: args[1], args: args.slice(2), extra, group: item['_group'] ?? null });
+
+for (const item of items) {
+    const parts = [
+        `${item.type.padEnd(15)} ${String(item.x).padStart(4)},${String(item.y).padStart(4)}`,
+        item.args.map(a => JSON.stringify(a)).join(' '),
+        item.extra.join(' '),
+        item.group === null ? '' : `[group: ${JSON.stringify(item.group)}]`,
+    ].filter((part) => part !== '');
+    console.log(parts.join(' '));
+}
 ```
 
-`util/dump.js --mode=raw` keeps showing `_group`, which is the desired inspection view.
+Example output (nested boxes `Outer` > `Inner`):
+
+```
+Group            100, 100 400 300 "Outer" "small" null null
+Group            120, 120 100 100 "Inner" "small" null null [group: "Outer"]
+Gate             130, 130 0 "and" 2 [group: "Inner"]
+Wire             130, 230 60 "h" null [group: "Outer"]
+TextLabel        120, 440 0 100 "outside" "small" null
+```
+
+Old files (saved before this feature) simply have no marker. `util/dump.js --mode=raw` shows the raw JSON including `_group`.
 
 ## Tests
 
@@ -153,5 +174,5 @@ Run: `node test/test.js` (all tests must pass; pre-existing failures must be fix
 
 1. In browser: draw a `Group` box, put gates/wires/labels inside it, place one label outside, nest a second group inside the first, save with `Ctrl+S`.
 2. `node util/dump.js --mode=raw res/examples/<file>.stc <label>` → items inside boxes show `"_group": "<label>"`, the outer box itself shows none, the nested box shows the outer label, items outside show none.
-3. Reload the file: layout is unchanged, no console errors, no phantom properties (components behave identically; `node util/circuit2txt.js <file>.stc <label> --wires` output is unchanged compared to a pre-feature file).
+3. Reload the file: layout is unchanged, no console errors, no phantom properties (components behave identically; `node util/circuit2txt.js <file>.stc <label> --wires` shows the `[group: "label"]` markers).
 4. Re-saving produces byte-identical annotation output (annotation is derived purely from positions), and moving an item out of the box removes the key on next save.

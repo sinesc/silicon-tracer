@@ -23,6 +23,20 @@ test("fract", () => {
     assert(negative < -0.29 && negative > -0.31)
 });
 
+test("group annotation on save", () => {
+    const { data, itemsWithGroupProp, wireWidth, itemCount } = c._groupAnnotationRoundTrip();
+    const find = (cls, x, y) => data.find((d) => d['#c'] === cls && d['#a'][0] === x && d['#a'][1] === y);
+
+    assert(find('Group', 100, 100)['_group'] === undefined, 'outer group is not annotated');
+    assert(find('Group', 120, 120)['_group'] === 'Outer', 'inner group is annotated with enclosing label');
+    assert(find('Gate', 130, 130)['_group'] === 'Inner', 'gate in nested group uses innermost label');
+    assert(find('Wire', 130, 230)['_group'] === 'Outer', 'wire inside outer group is annotated');
+    assert(find('TextLabel', 120, 440)['_group'] === undefined, 'item outside all groups has no _group key');
+    assert(itemCount === 5, `all items round-tripped, got ${itemCount}`);
+    assert(itemsWithGroupProp === 0, 'loaded items carry no _group property');
+    assert(wireWidth === 60, `wire round-trips unchanged, got ${wireWidth}`);
+});
+
 console.log('\nSimulation tests:');
 
 test("reset functionality", () => {

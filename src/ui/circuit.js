@@ -214,8 +214,16 @@ class Circuit {
 
     // Serializes the circuit for saving to file.
     serialize() {
+        const groups = this.#data.filter((i) => i instanceof Group);
         // sort wires/components by location to minimize diff against previous save (if any)
-        const data = this.#data.map((item) => item.serialize()).sort((a, b) => {
+        const data = this.#data.map((item) => {
+            const serialized = item.serialize();
+            const groupLabel = Circuit.#enclosingGroupLabel(groups, item);
+            if (groupLabel !== null) {
+                serialized['_group'] = groupLabel; // informational only, ignored on load (see GridItem.unserialize)
+            }
+            return serialized;
+        }).sort((a, b) => {
             const x = a['#a'][0] - b['#a'][0];
             if (x !== 0) return x;
             const y = a['#a'][1] - b['#a'][1];
@@ -227,6 +235,26 @@ class Circuit {
             }
         });
         return { label: this.label, description: this.description, uid: this.uid, data, gridConfig: this.gridConfig, portConfig: this.portConfig, lid: this.#lid, visibleInLib: this.visibleInLib, exportName: this.exportName };
+    }
+
+    // Returns the label of the innermost group box whose rect strictly contains the center point of item, or null. Groups never annotate themselves.
+    static #enclosingGroupLabel(groups, item) {
+        assert.array(groups, false, (g) => assert.class(Group, g));
+        assert.class(GridItem, item);
+        const cx = item.x + item.width / 2;
+        const cy = item.y + item.height / 2;
+        let best = null;
+        for (const group of groups) {
+            if (group === item) {
+                continue;
+            }
+            if (cx <= group.x || cx >= group.x + group.width) continue;
+            if (cy <= group.y || cy >= group.y + group.height) continue;
+            if (best === null || group.width * group.height < best.width * best.height) {
+                best = group;
+            }
+        }
+        return best?.label ?? null;
     }
 
     // Unserializes circuit from decoded JSON-object and adds it to Circuits. Dependencies of CustomComponents will also be added.

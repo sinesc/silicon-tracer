@@ -6,7 +6,8 @@ const fs = require('fs');
 const path = require('path');
 
 const USAGE = `Usage: node util/circuit2txt.js <circuit-stc-file> <circuit-label> [--wires] [--sort=<pos|type>]
-  Prints one line per grid item. Wires are omitted unless --wires is given.`;
+  Prints one line per grid item. Wires are omitted unless --wires is given.
+  Items inside a Group box are annotated with [group: "label"] (save-time annotation, ignored when loading).`;
 
 const args = process.argv.slice(2);
 if (args.includes('--help')) {
@@ -36,8 +37,8 @@ for (const item of circuit.data) {
     const type = item['#c'];
     if (type === 'Wire' && !showWires) continue;
     const args = item['#a'] ?? [];
-    const extra = Object.entries(item).filter(([ k ]) => k[0] !== '#' && k[0] !== '_').map(([ k, v ]) => `${k}=${JSON.stringify(v)}`); // ignore serialization internals and informational-only keys
-    items.push({ type, x: args[0], y: args[1], args: args.slice(2), extra });
+    const extra = Object.entries(item).filter(([ k ]) => k[0] !== '#' && k[0] !== '_').map(([ k, v ]) => `${k}=${JSON.stringify(v)}`); // ignore serialization internals and informational-only keys (shown separately)
+    items.push({ type, x: args[0], y: args[1], args: args.slice(2), extra, group: item['_group'] ?? null });
 }
 if (sortMode === 'type') {
     items.sort((a, b) => a.type.localeCompare(b.type) || a.y - b.y || a.x - b.x);
@@ -46,5 +47,11 @@ if (sortMode === 'type') {
 }
 console.log(`# ${circuit.label}: ${circuit.description ?? ''}`);
 for (const item of items) {
-    console.log(`${item.type.padEnd(15)} ${String(item.x).padStart(4)},${String(item.y).padStart(4)}  ${item.args.map(a => JSON.stringify(a)).join(' ')} ${item.extra.join(' ')}`);
+    const parts = [
+        `${item.type.padEnd(15)} ${String(item.x).padStart(4)},${String(item.y).padStart(4)}`,
+        item.args.map(a => JSON.stringify(a)).join(' '),
+        item.extra.join(' '),
+        item.group === null ? '' : `[group: ${JSON.stringify(item.group)}]`,
+    ].filter((part) => part !== '');
+    console.log(parts.join(' '));
 }

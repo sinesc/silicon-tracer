@@ -88,7 +88,8 @@ class GridItem {
         // set remaining properties
         if (!isError) {
             for (const [ k, v ] of Object.entries(item)) {
-                if (k.slice(0, 1) !== '#') {
+                // '#' keys are serialization internals, '_' keys are informational-only (e.g. '_group') and are ignored
+                if (k.slice(0, 1) !== '#' && k.slice(0, 1) !== '_') {
                     instance[k] = v;
                 }
             }
