@@ -1,5 +1,7 @@
 # Plan: `Group` GridItem
 
+> Status: Phase 1 implemented (commit `05ac906`). Phase 2 (resize handle) not yet implemented.
+
 Purely visual grid item that renders a fieldset-style labeled box (label floating over the top-left border). No effect on simulation. Modeled after `TextLabel` (`src/griditem/textlabel.js`), which is the reference for lifecycle, dialog, drag, and rendering patterns.
 
 Phase 1: the Group item itself. Phase 2 (follow-up): corner drag handle for resizing.
