@@ -14,7 +14,7 @@ Phase 1: the Group item itself. Phase 2 (follow-up): corner drag handle for resi
 - Background color: same as TextLabel plus black. Stored internally as integer `null` (default/white) | `0..9` | `10` (`Group.COLOR_BG_BLACK`); the dialog uses the codes `'-' | 'c0'..'c9' | 'k'`.
 - Fill renders at 25% opacity; border in same color at 50% opacity. Black background uses a dark grey border (`#666` at 50%) so the box stays visible.
 - Groups render below all other grid items: `z-index: 10` (components are 11, text 12, wires 13+).
-- Box interior is click-through (`pointer-events: none`); only the label (and the resize handle) receive mouse events, so components inside a group remain selectable. Drag/select is done via the label.
+- The box (`.group` element, `pointer-events: all`) is a hover target across its whole area, so the drag handle shows while the mouse is anywhere over the box. Clicks on the empty interior are forwarded: `link()` installs an `onmousedown` handler that (only when `e.target` is the group element itself) disables the group's hit-testing, finds the element below via `document.elementFromPoint`, restores hit-testing, and re-dispatches a synthetic `mousedown` to it. Components, wires, rubber-band selection and middle-button pan therefore work inside the box. Moving the box itself is only possible via the label.
 
 ## New file: `src/griditem/group.js`
 
@@ -138,7 +138,7 @@ Reuse the existing `[data-net-color="n"] { --net-color: ... }` mapping (n = `''`
     z-index: 10;                 /* below components (11), text (12), wires (13) */
     position: absolute;
     box-sizing: border-box;
-    pointer-events: none;        /* interior click-through */
+    pointer-events: all;         /* whole-box hover target; interior mousedowns are forwarded (see Phase 2 section) */
 }
 .group > .group-fill {
     position: absolute;
@@ -208,9 +208,8 @@ No simulation/netlist changes: Group has no ports, and netlist construction only
       border-bottom-right-radius: 3px;
       background: linear-gradient(135deg, transparent 55%, var(--component-preview-color) 55%, var(--component-preview-color) 70%, transparent 70%, transparent 85%, var(--component-preview-color) 85%);
   }
-  /* .group has pointer-events: none so it never matches :hover itself; use :has() on interactive children */
-  .group:has(.group-label:hover) > .group-resize,
-  .group:has(.group-resize:hover) > .group-resize,
+  /* .group is hit-testable (pointer-events: all), so :hover matches anywhere over the box */
+  .group:hover > .group-resize,
   .group.resizing > .group-resize,
   .group.selected > .group-resize { display: block; }
   ```
@@ -235,6 +234,7 @@ No simulation/netlist changes: Group has no ports, and netlist construction only
 
   (The handle sits at the group's bottom-right, so the new extents follow the cursor position directly; `align()` snaps width/height to SPACING multiples, minimum 1 SPACING. The width/height setters set `NEEDS_FULL_RENDER`.)
 - `unlink()` removes the handle element; in `link()` create it before registering: `this.#resizeHandle = html(this.#element, 'div', 'group-resize'); this.registerMouseAction(this.#resizeHandle, { type: 'resize' });`
+- Interior mousedown forwarding (in `link()`): `this.#element.onmousedown` re-dispatches a synthetic `MouseEvent('mousedown', ...)` (same clientX/Y, button/buttons, modifiers) to `document.elementFromPoint(clientX, clientY)`, computed while `this.#element.style.pointerEvents = 'none'` temporarily. The guard `e.target !== this.#element` returns early for label/handle hits (their handlers stop propagation, and hits on items inside the box never target the group element). Nested groups chain the same handler.
 
 ## Verification
 

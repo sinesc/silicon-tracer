@@ -65,6 +65,24 @@ class Group extends GridItem {
         this.registerMouseAction(this.#labelEl, { type: 'component', grabOffsetX: null, grabOffsetY: null });
         this.#resizeHandle = html(this.#element, 'div', 'group-resize');
         this.registerMouseAction(this.#resizeHandle, { type: 'resize' });
+        // Empty-interior mousedown: forward the event to the element below the group so clicks, drags and
+        // grid panning pass through the box (the group itself is a hover target for the drag handle).
+        this.#element.onmousedown = (e) => {
+            if (e.target !== this.#element) {
+                return; // label and drag handle have their own handlers which stop propagation
+            }
+            e.preventDefault();
+            e.stopPropagation();
+            this.#element.style.pointerEvents = 'none'; // exclude self from hit-testing
+            const target = document.elementFromPoint(e.clientX, e.clientY);
+            this.#element.style.pointerEvents = '';
+            target?.dispatchEvent(new MouseEvent('mousedown', {
+                bubbles: true, cancelable: true, view: window,
+                clientX: e.clientX, clientY: e.clientY,
+                button: e.button, buttons: e.buttons,
+                shiftKey: e.shiftKey, ctrlKey: e.ctrlKey, altKey: e.altKey, metaKey: e.metaKey,
+            }));
+        };
         this.grid.addVisual(this.#element);
     }
 

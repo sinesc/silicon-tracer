@@ -1199,7 +1199,7 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
     z-index: 10; /* below components (11), text (12), wires (13) */
     position: absolute;
     box-sizing: border-box;
-    pointer-events: none; /* interior clicks pass through to items inside the group */
+    pointer-events: all; /* whole box is a hover target (drag-handle visibility); mousedown on empty interior is forwarded to the element below (see Group.link), so items inside the group remain clickable */
     cursor: default;
 }
 .group > .group-fill {
@@ -1250,9 +1250,8 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
     border-bottom-right-radius: 3px;
     background: linear-gradient(135deg, transparent 55%, var(--component-preview-color) 55%, var(--component-preview-color) 70%, transparent 70%, transparent 85%, var(--component-preview-color) 85%);
 }
-/* Note: .group has pointer-events: none so it never matches :hover itself; match interactive children via :has() instead. */
-.group:has(.group-label:hover) > .group-resize,
-.group:has(.group-resize:hover) > .group-resize,
+/* Show drag handle while the mouse is anywhere over the box (.group is hit-testable), while resizing, or while selected. */
+.group:hover > .group-resize,
 .group.resizing > .group-resize,
 .group.selected > .group-resize {
     display: block;
