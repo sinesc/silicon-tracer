@@ -1181,7 +1181,7 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
 .text[data-text-rotation="3"] > .inner {
     transform: rotate(270deg);
 }
-.component-drop-preview, .text-drop-preview  {
+.component-drop-preview, .text-drop-preview, .group-drop-preview  {
     z-index: 9;
     position: absolute;
     border-radius: 8px;
@@ -1191,6 +1191,55 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
 .component-rotate-animation {
     transition: transform var(--component-rotate-duration), left var(--component-rotate-duration), top var(--component-rotate-duration);
     transform: rotate(90deg);
+}
+/*
+ * Group box (visual fieldset, renders below all other grid items)
+ */
+.group {
+    z-index: 10; /* below components (11), text (12), wires (13) */
+    position: absolute;
+    box-sizing: border-box;
+    pointer-events: none; /* interior clicks pass through to items inside the group */
+    cursor: default;
+}
+.group > .group-fill {
+    position: absolute;
+    inset: 0;
+    box-sizing: border-box;
+    border: 1px solid color-mix(in srgb, var(--net-color) 50%, transparent);
+    background-color: color-mix(in srgb, var(--net-color) 25%, transparent);
+    pointer-events: none;
+}
+.group > .group-fill[data-bg-color="k"] {
+    --net-color: #000; /* black background */
+    border-color: color-mix(in srgb, #666 50%, transparent); /* dark grey border so the box stays visible */
+}
+.group > .group-label {
+    position: absolute;
+    top: 0;
+    left: 8px;
+    transform: translateY(-50%); /* float over the top border like a fieldset legend */
+    padding: 0 calc(4px * var(--zoom-factor));
+    background-color: var(--grid-bg-color); /* masks the border line behind the label */
+    pointer-events: all; /* drag/select handle */
+    cursor: default;
+}
+.group.size-small {
+    font-size: calc(var(--zoom-factor) * var(--font-size-small));
+}
+.group.size-medium {
+    font-size: calc(var(--zoom-factor) * var(--font-size-normal));
+}
+.group.size-large {
+    font-size: calc(var(--zoom-factor) * var(--font-size-large));
+}
+.group.selected > .group-fill {
+    outline: 1px dotted white;
+    outline-offset: 2px;
+}
+.group-drop-preview {
+    width: 0;
+    height: 0;
 }
 .component-delete-animation {
     transition: opacity var(--component-delete-duration);

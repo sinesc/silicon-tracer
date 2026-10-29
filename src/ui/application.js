@@ -10,6 +10,7 @@ class Application {
         { descriptor: { '#c': 'Tunnel' } },
         { descriptor: { '#c': 'Probe' } },
         { descriptor: { '#c': 'TextLabel' } },
+        { descriptor: { '#c': 'Group' } },
         { descriptor: { '#c': 'Gate', '#t': 'buffer' } },
         { descriptor: { '#c': 'Gate', '#t': 'not' } },
         { descriptor: { '#c': 'Gate', '#t': 'and' } },
@@ -53,6 +54,7 @@ class Application {
             gate: { rotation: 0, numInputs: 2 },
             builtin: { rotation: 0, },
             textlabel: { rotation: 0, },
+            group: { width: 240, height: 120, fontSize: 'small', color: '-', bgColor: '-' },
             constant: { rotation: 1, },
             switch: { rotation: 0, },
             button: { rotation: 0, },
@@ -475,6 +477,7 @@ class Application {
                 routingMenu.createPinnableComponentButton((grid, x, y) => grid.addItem(new Probe(this, x, y, defaults.probe.rotation), false), { '#c': 'Probe' });
                 routingMenu.createPinnableComponentButton((grid, x, y) => grid.addItem(new Splitter(this, x, y, defaults.splitter.rotation, defaults.splitter.numSplits), false), { '#c': 'Splitter' });
                 routingMenu.createPinnableComponentButton((grid, x, y) => grid.addItem(new TextLabel(this, x, y, defaults.textlabel.rotation), false), { '#c': 'TextLabel' });
+                routingMenu.createPinnableComponentButton(Group.fromDescriptor(this, { '#c': 'Group' }, { }), { '#c': 'Group' });
                 routingMenu.createPinnableComponentButton((grid, x, y) => grid.addItem(new Tunnel(this, x, y, defaults.tunnel.rotation), false), { '#c': 'Tunnel' });
             });
 
