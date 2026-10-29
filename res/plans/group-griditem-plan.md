@@ -1,6 +1,6 @@
 # Plan: `Group` GridItem
 
-> Status: Phase 1 implemented (commit `05ac906`). Phase 2 (resize handle) not yet implemented.
+> Status: Phase 1 and Phase 2 implemented. Phase 2 also added `border-radius: 3px` on the box fill (matching components).
 
 Purely visual grid item that renders a fieldset-style labeled box (label floating over the top-left border). No effect on simulation. Modeled after `TextLabel` (`src/griditem/textlabel.js`), which is the reference for lifecycle, dialog, drag, and rendering patterns.
 
@@ -11,10 +11,10 @@ Phase 1: the Group item itself. Phase 2 (follow-up): corner drag handle for resi
 - Width/height are stored in grid units (1 px at zoom 1), snapped to grid multiples. Defaults: 240 × 120.
 - No rotation (a rectangle looks the same rotated; skip all rotation code paths).
 - Text color: same values as TextLabel (`'-'` = default white, `'c0'..'c9'`).
-- Background color: same as TextLabel plus black (`'k'`). Stored internally as the dialog string code (`null`/`'c0'..` → keep raw code string; simplest: store `#bgColor` as string `'-' | 'c0'..'c9' | 'k'`).
+- Background color: same as TextLabel plus black. Stored internally as integer `null` (default/white) | `0..9` | `10` (`Group.COLOR_BG_BLACK`); the dialog uses the codes `'-' | 'c0'..'c9' | 'k'`.
 - Fill renders at 25% opacity; border in same color at 50% opacity. Black background uses a dark grey border (`#666` at 50%) so the box stays visible.
 - Groups render below all other grid items: `z-index: 10` (components are 11, text 12, wires 13+).
-- Box interior is click-through (`pointer-events: none`); only the label (and later the resize handle) receive mouse events, so components inside a group remain selectable. Drag/select is done via the label.
+- Box interior is click-through (`pointer-events: none`); only the label (and the resize handle) receive mouse events, so components inside a group remain selectable. Drag/select is done via the label.
 
 ## New file: `src/griditem/group.js`
 
@@ -201,30 +201,40 @@ No simulation/netlist changes: Group has no ports, and netlist construction only
       display: none;
       position: absolute;
       right: 0; bottom: 0;
-      width: 10px; height: 10px;
+      width: max(8px, calc(12px * var(--zoom-factor)));
+      height: max(8px, calc(12px * var(--zoom-factor)));
       cursor: nwse-resize;
       pointer-events: all;
-      background: linear-gradient(135deg, transparent 50%, var(--component-preview-color) 50%);
+      border-bottom-right-radius: 3px;
+      background: linear-gradient(135deg, transparent 55%, var(--component-preview-color) 55%, var(--component-preview-color) 70%, transparent 70%, transparent 85%, var(--component-preview-color) 85%);
   }
-  .group:hover > .group-resize, .group.selected > .group-resize { display: block; }
+  /* .group has pointer-events: none so it never matches :hover itself; use :has() on interactive children */
+  .group:has(.group-label:hover) > .group-resize,
+  .group:has(.group-resize:hover) > .group-resize,
+  .group.resizing > .group-resize,
+  .group.selected > .group-resize { display: block; }
   ```
-- In `onDrag(x, y, status, what)`, handle `what.type === 'resize'` before the component branch:
+- In `onDrag(x, y, status, what)`, handle `what.type === 'resize'` **before** `super.onDrag()` (the base implementation moves the whole selection, which would drag the box away with the cursor):
 
   ```js
-  } else if (what.type === 'resize') {
-      const [ w, h ] = this.align(x - this.x + Grid.SPACING / 2, y - this.y + Grid.SPACING / 2);
-      this.width = Math.max(Grid.SPACING, w - this.x);
-      this.height = Math.max(Grid.SPACING, h - this.y);
-      this.renderFlags |= GridItem.NEEDS_FULL_RENDER;
+  if (what.type === 'resize') {
+      if (status === 'start') {
+          this.#element.classList.add('resizing'); // keep handle visible while cursor leaves the box
+      }
+      const [ snappedX, snappedY ] = this.align(x, y);   // Group.align snaps to grid points (n*SPACING)
+      this.width = Math.max(Grid.SPACING, snappedX - this.x);
+      this.height = Math.max(Grid.SPACING, snappedY - this.y);
       if (status === 'stop') {
-          this.grid.trackAction('Resize group');
+          this.#element.classList.remove('resizing');
           this.redraw();
+          this.grid.trackAction('Resize group');
       }
       return true;
   }
   ```
 
-  (The handle sits at the group's bottom-right, so the new extents follow the cursor position directly; `align()` snaps width/height to SPACING multiples.)
+  (The handle sits at the group's bottom-right, so the new extents follow the cursor position directly; `align()` snaps width/height to SPACING multiples, minimum 1 SPACING. The width/height setters set `NEEDS_FULL_RENDER`.)
+- `unlink()` removes the handle element; in `link()` create it before registering: `this.#resizeHandle = html(this.#element, 'div', 'group-resize'); this.registerMouseAction(this.#resizeHandle, { type: 'resize' });`
 
 ## Verification
 

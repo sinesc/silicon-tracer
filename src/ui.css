@@ -1208,6 +1208,7 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
     box-sizing: border-box;
     border: 1px solid color-mix(in srgb, var(--net-color) 50%, transparent);
     background-color: color-mix(in srgb, var(--net-color) 25%, transparent);
+    border-radius: 3px;
     pointer-events: none;
 }
 .group > .group-fill[data-bg-color="k"] {
@@ -1236,6 +1237,25 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
 .group.selected > .group-fill {
     outline: 1px dotted white;
     outline-offset: 2px;
+}
+.group > .group-resize {
+    display: none;
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: max(8px, calc(12px * var(--zoom-factor)));
+    height: max(8px, calc(12px * var(--zoom-factor)));
+    cursor: nwse-resize;
+    pointer-events: all;
+    border-bottom-right-radius: 3px;
+    background: linear-gradient(135deg, transparent 55%, var(--component-preview-color) 55%, var(--component-preview-color) 70%, transparent 70%, transparent 85%, var(--component-preview-color) 85%);
+}
+/* Note: .group has pointer-events: none so it never matches :hover itself; match interactive children via :has() instead. */
+.group:has(.group-label:hover) > .group-resize,
+.group:has(.group-resize:hover) > .group-resize,
+.group.resizing > .group-resize,
+.group.selected > .group-resize {
+    display: block;
 }
 .group-drop-preview {
     width: 0;

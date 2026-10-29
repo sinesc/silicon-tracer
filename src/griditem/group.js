@@ -24,6 +24,7 @@ class Group extends GridItem {
     #element;
     #fill;
     #labelEl;
+    #resizeHandle;
     #dropPreview;
     #fontSize;
     #color;
@@ -62,11 +63,15 @@ class Group extends GridItem {
         this.#labelEl = html(this.#element, 'span', 'group-label');
         this.setHoverMessage(this.#labelEl, () => `<b>${this.typeLabel}</b>. <i>E</i> Edit, ${Component.HOTKEYS}.`, { type: 'hover' });
         this.registerMouseAction(this.#labelEl, { type: 'component', grabOffsetX: null, grabOffsetY: null });
+        this.#resizeHandle = html(this.#element, 'div', 'group-resize');
+        this.registerMouseAction(this.#resizeHandle, { type: 'resize' });
         this.grid.addVisual(this.#element);
     }
 
     // Removes the component from the grid.
     unlink() {
+        this.#resizeHandle?.remove();
+        this.#resizeHandle = null;
         this.#labelEl?.remove();
         this.#labelEl = null;
         this.#fill?.remove();
@@ -169,7 +174,21 @@ class Group extends GridItem {
 
     // Called while a registered visual is being dragged.
     onDrag(x, y, status, what) {
-        if (super.onDrag(x, y, status, what)) {
+        if (what.type === 'resize') {
+            // resize box: snap bottom right corner of box to cursor grid point
+            if (status === 'start') {
+                this.#element.classList.add('resizing'); // keep drag handle visible while cursor leaves the box
+            }
+            const [ snappedX, snappedY ] = this.align(x, y);
+            this.width = Math.max(Grid.SPACING, snappedX - this.x);
+            this.height = Math.max(Grid.SPACING, snappedY - this.y);
+            if (status === 'stop') {
+                this.#element.classList.remove('resizing');
+                this.redraw();
+                this.grid.trackAction('Resize group');
+            }
+            return true;
+        } else if (super.onDrag(x, y, status, what)) {
             return true;
         } else if (what.type === 'component') {
             this.onMove(x, y, status, what);
