@@ -36,7 +36,7 @@ for (const item of circuit.data) {
     const type = item['#c'];
     if (type === 'Wire' && !showWires) continue;
     const args = item['#a'] ?? [];
-    const extra = Object.entries(item).filter(([ k ]) => k[0] !== '#').map(([ k, v ]) => `${k}=${JSON.stringify(v)}`);
+    const extra = Object.entries(item).filter(([ k ]) => k[0] !== '#' && k[0] !== '_').map(([ k, v ]) => `${k}=${JSON.stringify(v)}`); // ignore serialization internals and informational-only keys
     items.push({ type, x: args[0], y: args[1], args: args.slice(2), extra });
 }
 if (sortMode === 'type') {
