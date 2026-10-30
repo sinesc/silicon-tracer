@@ -191,6 +191,53 @@ vm.runInContext(`
             itemCount: items.length,
         };
     }
+
+    // Builds a circuit with counted parts, excluded items, an exported custom component and
+    // non-exported custom components (one with a nested gate, one referencing itself). Returns
+    // the raw count entries from countParts().
+    function _countPartsFixture() {
+        const app = new Application();
+
+        const exported = new Circuit(app, 'Chip');   // exported custom component
+        exported.exportName = '74x74';
+        app.circuits.add(exported);
+
+        const inner = new Circuit(app, 'Inner');     // non-exported, contains one gate
+        app.circuits.add(inner);
+        inner.addItem(new Gate(app, 100, 100, 0, 'and', 3));
+
+        const cyclic = new Circuit(app, 'Cyclic');   // non-exported, contains itself
+        app.circuits.add(cyclic);
+        cyclic.addItem(new CustomComponent(app, 100, 100, 0, cyclic.uid));
+        cyclic.addItem(new Builtin(app, 200, 100, 0, 'srlatch'));
+
+        const circuit = new Circuit(app, 'Main');
+        app.circuits.add(circuit);
+        circuit.addItem(new Gate(app, 100, 100, 0, 'and', 3));
+        circuit.addItem(new Gate(app, 200, 100, 0, 'and', 3));
+        circuit.addItem(new Gate(app, 300, 100, 0, 'nor', 2));
+        circuit.addItem(new Builtin(app, 400, 100, 0, 'dflipflop'));
+        circuit.addItem(new SegmentDisplay(app, 500, 100, 0));
+        circuit.addItem(new PullResistor(app, 600, 100, 0, 'up'));
+        circuit.addItem(new Memory(app, 700, 100, 0, 'rom', 8, 8));
+        circuit.addItem(new CustomComponent(app, 800, 100, 0, exported.uid));
+        circuit.addItem(new CustomComponent(app, 900, 100, 0, inner.uid));
+        circuit.addItem(new CustomComponent(app, 1000, 100, 0, cyclic.uid));
+        // excluded items
+        circuit.addItem(new Wire(app, 100, 200, 60, 'h'));
+        circuit.addItem(new TextLabel(app, 100, 300, 0, 100, 'note'));
+        circuit.addItem(new Splitter(app, 100, 400, 0, 2));
+        circuit.addItem(new Tunnel(app, 100, 500, 0));
+        circuit.addItem(new Probe(app, 100, 600, 0, 'probe'));
+        circuit.addItem(new Power(app, 100, 700, 0, 'ground'));
+        circuit.addItem(new Port(app, 100, 800, 0));
+        circuit.addItem(new Clock(app, 100, 900, 0));
+        circuit.addItem(new Button(app, 100, 1000, 0));
+        circuit.addItem(new Switch(app, 100, 1100, 0));
+        circuit.addItem(new Constant(app, 100, 1200, 0));
+        circuit.addItem(new Group(app, 400, 200, 100, 100, 'Box'));
+        return [ ...countParts(app, circuit).entries() ];
+    }
 `, context);
 
 let passed = 0;

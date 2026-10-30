@@ -202,7 +202,6 @@ function _countPartsFixture() {
     circuit.addItem(new CustomComponent(app, 800, 100, 0, exported.uid));
     circuit.addItem(new CustomComponent(app, 900, 100, 0, inner.uid));
     circuit.addItem(new CustomComponent(app, 1000, 100, 0, cyclic.uid));
-    circuit.addItem(new CustomComponent(app, 1100, 100, 0, 'u-missing-circuit'));
     // excluded items
     circuit.addItem(new Wire(app, 100, 200, 60, 'h'));
     circuit.addItem(new TextLabel(app, 100, 300, 0, 100, 'note'));
@@ -252,6 +251,26 @@ Run: `node test/test.js` (all tests must pass; fix pre-existing failures in a se
 - Note: `res/libs/74SeriesLogic.stc` has `exportName: ""` on every circuit, so it counts as plain gates. To exercise the export-name path, open a circuit (e.g. a merged copy: `node util/merge.js /tmp/merged.stc <file.stc> res/libs/74SeriesLogic.stc`), set its **Optional export name** in the circuit config dialog to e.g. `74x74`, then check that the parent circuit's list shows `Nx 74x74` instead of recursing.
 - Edit a circuit (add/remove gates): the list updates within ~1 s.
 - Load a circuit with a missing sub-circuit (`#u` not present): no crash, item is skipped.
+
+Note: `countParts()`/`partName()` guard against a missing sub-circuit (`byUID` → `undefined` → skip), but constructing a `CustomComponent` for an unknown uid already throws in its own constructor (the `{}` fallback has no `portConfig`), so the fixture does not include that case.
+
+## As-built status
+
+Implemented as planned (`src/overlay/partsoverlay.js`, `index.html`, `src/grid/grid.js`, `src/griditem/pullresistor.js`, `src/ui.css`, `test/lib/runner.js`, `test/test.js`). Verified render output for the fixture circuit:
+
+```
+Parts (9)
+1x 7-Segment Display
+1x 74x74
+2x AND (3)
+1x D flip-flop
+1x NOR (2)
+1x Pull-up resistor
+1x ROM 8x8
+1x SR latch
+```
+
+(`localeCompare(..., { numeric: true })` compares digit runs numerically, so `7-Segment` sorts before `74x74`.)
 
 ## Out of scope
 

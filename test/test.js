@@ -37,6 +37,22 @@ test("group annotation on save", () => {
     assert(wireWidth === 60, `wire round-trips unchanged, got ${wireWidth}`);
 });
 
+test("parts overlay counting", () => {
+    const parts = new Map(c._countPartsFixture());
+    assert(parts.get('AND (3)') === 3, `2x own gate + 1x from non-exported sub-circuit, got ${parts.get('AND (3)')}`);
+    assert(parts.get('NOR (2)') === 1, `1x 2-input NOR, got ${parts.get('NOR (2)')}`);
+    assert(parts.get('D flip-flop') === 1, `builtin counted by label, got ${parts.get('D flip-flop')}`);
+    assert(parts.get('7-Segment Display') === 1, `segment display counted, got ${parts.get('7-Segment Display')}`);
+    assert(parts.get('Pull-up resistor') === 1, `pull resistor counted, got ${parts.get('Pull-up resistor')}`);
+    assert(parts.get('ROM 8x8') === 1, `memory counted, got ${parts.get('ROM 8x8')}`);
+    assert(parts.get('74x74') === 1, `exported custom component counts as its export name, got ${parts.get('74x74')}`);
+    assert(parts.get('SR latch') === 1, `self-referencing sub-circuit counts its own parts once, got ${parts.get('SR latch')}`);
+    assert(!parts.has('Inner') && !parts.has('Cyclic') && !parts.has('Chip'), 'non-exported custom components are recursed into, not listed');
+    assert([ 'Wire', 'TextLabel', 'Group', 'Splitter', 'Tunnel', 'Probe', 'Power', 'Port', 'Clock', 'Button', 'Switch', 'Constant' ]
+        .every((name) => !parts.has(name)), 'non-part items are excluded');
+    assert(parts.size === 8, `exactly the expected part groups, got ${[ ...parts.keys() ].join(', ')}`);
+});
+
 console.log('\nSimulation tests:');
 
 test("reset functionality", () => {

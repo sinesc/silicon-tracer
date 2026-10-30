@@ -1051,6 +1051,13 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
 .dependents-item:hover {
     color: color-mix(in srgb, var(--text-color) 70%, transparent);
 }
+/* parts overlay list */
+.grid-info .parts-list {
+    max-height: 240px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    pointer-events: auto;
+}
 /* simulation tree view overlay */
 .graph-tree {
     line-height: 1.4;

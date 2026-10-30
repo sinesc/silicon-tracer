@@ -44,6 +44,8 @@ class PullResistor extends SimulationComponent {
         return this.#direction.toUpperFirst();
     }
 
+    get direction() { return this.#direction; }
+
     // Returns { title, fields, data } for the edit dialog given a descriptor and defaults.
     static editDialogConfig(_descriptor, defaults = {}) {
         return {
