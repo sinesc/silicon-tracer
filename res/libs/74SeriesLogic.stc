@@ -530,7 +530,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC00"
 		},
 		{
 			"label": "74x02",
@@ -984,7 +984,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC02"
 		},
 		{
 			"label": "74x03",
@@ -1648,7 +1648,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC03"
 		},
 		{
 			"label": "74x04",
@@ -1962,7 +1962,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC04"
 		},
 		{
 			"label": "74x05",
@@ -2464,7 +2464,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC05"
 		},
 		{
 			"label": "74x08",
@@ -2918,7 +2918,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC08"
 		},
 		{
 			"label": "74x10",
@@ -3322,7 +3322,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC10"
 		},
 		{
 			"label": "74x11",
@@ -3726,7 +3726,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC11"
 		},
 		{
 			"label": "74x13",
@@ -4122,7 +4122,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC13"
 		},
 		{
 			"label": "74x14",
@@ -4436,7 +4436,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC14"
 		},
 		{
 			"label": "74x20",
@@ -4832,7 +4832,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC20"
 		},
 		{
 			"label": "74x21",
@@ -5228,7 +5228,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC21"
 		},
 		{
 			"label": "74x25",
@@ -5636,7 +5636,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC25"
 		},
 		{
 			"label": "74x27",
@@ -6040,7 +6040,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC27"
 		},
 		{
 			"label": "74x30",
@@ -6407,7 +6407,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC30"
 		},
 		{
 			"label": "74x32",
@@ -6861,7 +6861,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC32"
 		},
 		{
 			"label": "74x42",
@@ -8333,7 +8333,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC42"
 		},
 		{
 			"label": "74x51",
@@ -8927,7 +8927,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC51"
 		},
 		{
 			"label": "JK flip flop",
@@ -9811,7 +9811,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC73"
 		},
 		{
 			"label": "D flip flop",
@@ -10528,7 +10528,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC74"
 		},
 		{
 			"label": "74x76",
@@ -11084,7 +11084,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC76"
 		},
 		{
 			"label": "74x85",
@@ -13986,7 +13986,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC85"
 		},
 		{
 			"label": "74x86",
@@ -14440,7 +14440,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC86"
 		},
 		{
 			"label": "74x109",
@@ -14996,7 +14996,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC109"
 		},
 		{
 			"label": "74x138",
@@ -16358,7 +16358,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC138"
 		},
 		{
 			"label": "74x139",
@@ -17530,7 +17530,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC139"
 		},
 		{
 			"label": "74x147",
@@ -19523,7 +19523,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC147"
 		},
 		{
 			"label": "74x151",
@@ -20935,7 +20935,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC151"
 		},
 		{
 			"label": "74x153",
@@ -22147,7 +22147,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC153"
 		},
 		{
 			"label": "74x157",
@@ -23169,7 +23169,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC157"
 		},
 		{
 			"label": "74x161",
@@ -25317,7 +25317,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC161"
 		},
 		{
 			"label": "74x163",
@@ -27625,7 +27625,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC163"
 		},
 		{
 			"label": "74x181",
@@ -32049,7 +32049,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC181"
 		},
 		{
 			"label": "74x238",
@@ -33251,7 +33251,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC238"
 		},
 		{
 			"label": "74x244",
@@ -33971,7 +33971,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC244"
 		},
 		{
 			"label": "74x247",
@@ -36782,7 +36782,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC247"
 		},
 		{
 			"label": "74x253",
@@ -37932,7 +37932,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC253"
 		},
 		{
 			"label": "74x257",
@@ -39030,7 +39030,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC257"
 		},
 		{
 			"label": "74x273",
@@ -40210,7 +40210,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC273"
 		},
 		{
 			"label": "74x283",
@@ -42642,7 +42642,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC283"
 		},
 		{
 			"label": "D latch",
@@ -44293,7 +44293,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC373"
 		},
 		{
 			"label": "74x374",
@@ -45635,7 +45635,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC374"
 		},
 		{
 			"label": "74x377",
@@ -46835,7 +46835,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC377"
 		},
 		{
 			"label": "74x573",
@@ -48167,7 +48167,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC573"
 		},
 		{
 			"label": "74x574",
@@ -49509,7 +49509,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC574"
 		},
 		{
 			"label": "74x595",
@@ -51997,7 +51997,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC595"
 		},
 		{
 			"label": "74x4049",
@@ -52311,7 +52311,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC4049"
 		},
 		{
 			"label": "74x4075",
@@ -52715,7 +52715,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC4075"
 		},
 		{
 			"label": "74x4078",
@@ -53141,7 +53141,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC4078"
 		},
 		{
 			"label": "74x4511",
@@ -56283,7 +56283,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC4511"
 		},
 		{
 			"label": "74x241",
@@ -57003,7 +57003,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC241"
 		},
 		{
 			"label": "74x540",
@@ -57703,7 +57703,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC540"
 		},
 		{
 			"label": "74x541",
@@ -58403,7 +58403,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC541"
 		},
 		{
 			"label": "74x245",
@@ -60035,7 +60035,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC245"
 		},
 		{
 			"label": "74x18",
@@ -60351,7 +60351,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC18"
 		},
 		{
 			"label": "74x19",
@@ -60665,7 +60665,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC19"
 		},
 		{
 			"label": "74x24",
@@ -60959,7 +60959,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC24"
 		},
 		{
 			"label": "74x34",
@@ -61273,7 +61273,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC34"
 		},
 		{
 			"label": "T flip-flop",
@@ -63873,7 +63873,7 @@ loadFiles.push(
 			},
 			"lid": null,
 			"visibleInLib": true,
-			"exportName": ""
+			"exportName": "SN74HC193"
 		}
 	],
 	"libraries": {},
