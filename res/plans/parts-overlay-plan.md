@@ -248,7 +248,7 @@ Run: `node test/test.js` (all tests must pass; fix pre-existing failures in a se
 ### 7. Manual verification
 
 - Open the app, load e.g. `res/examples/` circuits: the section shows `Parts (<total>)` and the sorted list; collapse via the header arrow; state persists across sessions.
-- Note: `res/libs/74SeriesLogic.stc` has `exportName: ""` on every circuit, so it counts as plain gates. To exercise the export-name path, open a circuit (e.g. a merged copy: `node util/merge.js /tmp/merged.stc <file.stc> res/libs/74SeriesLogic.stc`), set its **Optional export name** in the circuit config dialog to e.g. `74x74`, then check that the parent circuit's list shows `Nx 74x74` instead of recursing.
+- `res/libs/74SeriesLogic.stc` sets `exportName: "SN74HC<digits>"` on its 59 `74x…` circuits (added in commit `5f9150e`), so circuits built from that library list chips like `2x SN74HC00`. The non-chip helper circuits (`README`, `JK flip flop`, `D flip flop`, `D latch`, `T flip-flop`) keep an empty export name and are therefore recursed into. To exercise the export-name path: `node util/merge.js /tmp/merged.stc <file.stc> res/libs/74SeriesLogic.stc` and inspect a circuit that instantiates the chips.
 - Edit a circuit (add/remove gates): the list updates within ~1 s.
 - Load a circuit with a missing sub-circuit (`#u` not present): no crash, item is skipped.
 
