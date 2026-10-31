@@ -16,12 +16,12 @@
     --wire-colorE2: oklch(50% 0.5 90); /* conflict/error */
     --wire-color0: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 180);
     --wire-color1: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 145);
-    --wire-color2: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 115);
+    --wire-color2: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 110);
     --wire-color3: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 90 );
-    --wire-color4: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 50 );
+    --wire-color4: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 65 );
     --wire-color5: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 350);
-    --wire-color6: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 320);
-    --wire-color7: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 290);
+    --wire-color6: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 305);
+    --wire-color7: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 280);
     --wire-color8: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 260);
     --wire-color9: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 215);
 
