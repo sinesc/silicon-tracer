@@ -621,7 +621,7 @@ class Application {
             });
             debuggerMenu.createSeparator();
             // Toggle single-step mode. When enabled, T advances by one tick.
-            const stepToggle = debuggerMenu.createToggleButton('Single step', 'Pause simulation and step one tick at a time using hotkey <i>T</i>.', this.config.singleStep, (enabled) => {
+            const stepToggle = debuggerMenu.createToggleButton('Single step', 'Pause simulation and step one tick/clock flip at a time using hotkeys <i>T</i>/<i>U</i>.', this.config.singleStep, (enabled) => {
                 if (enabled) {
                     this.#singleStep(0);
                 } else {
@@ -637,7 +637,7 @@ class Application {
             stepButton.node.classList.toggle('toolbar-menu-button-disabled', !this.config.singleStep);
             // Advance to the next clock output flip. Only meaningful when the simulation has clocks.
             const hasClock = (this.simulations.current?.engine.clocks.length ?? 0) > 0;
-            const stepFlipButton = debuggerMenu.createActionButton('Step to clock flip', 'Advance simulation to the next output flip of any clock. Hotkey: <i>Ctrl+.</i>.', () => {
+            const stepFlipButton = debuggerMenu.createActionButton('Step to clock flip', 'Advance simulation to the next output flip of any clock. Hotkey: <i>U</i>.', () => {
                 this.#stepToClockFlip();
             });
             stepFlipButton.node.classList.toggle('toolbar-menu-button-disabled', !hasClock);
@@ -738,7 +738,7 @@ class Application {
             this.#singleStep();
         });
         // 'ctrl+t' is browser-reserved (new tab), so the step-to-flip hotkey uses an unreserved combination.
-        this.registerHotkey([ 'ctrl+.', 'ctrl+,' ], 'down', null, () => {
+        this.registerHotkey('u', 'down', null, () => {
             this.#stepToClockFlip();
         });
         this.registerHotkey('ctrl+z', 'down', null, () => {
