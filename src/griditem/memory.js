@@ -44,6 +44,11 @@ class Memory extends SimulationComponent {
         this.#relabelDataPorts();
     }
 
+    // Returns the memory's type label string.
+    get typeLabel() {
+        return this.#memType === 'rom' ? 'ROM' : 'RAM';
+    }
+
     // Override top-markings with memory configuration details.
     get topMarkings() {
         return `${this.#memType.toUpperCase()} ${this.#addressWidth}x${this.#dataWidth}`;
