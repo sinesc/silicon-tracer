@@ -1055,7 +1055,7 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
 .grid-info .parts-list {
     max-height: 240px;
     overflow-y: auto;
-    scrollbar-width: thin;
+    scrollbar-width: none;
     pointer-events: auto;
 }
 /* simulation tree view overlay */
