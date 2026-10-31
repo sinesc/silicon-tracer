@@ -9326,7 +9326,7 @@ loadFiles.push(
 						330,
 						1
 					],
-					"name": "CLR1"
+					"name": "#CLR1"
 				},
 				{
 					"#c": "Port",
@@ -9362,7 +9362,7 @@ loadFiles.push(
 						730,
 						1
 					],
-					"name": "CLR2"
+					"name": "#CLR2"
 				},
 				{
 					"#c": "Wire",
@@ -9806,7 +9806,7 @@ loadFiles.push(
 					"top": ",",
 					"right": "J1,R1,Q1,,K2,Q2,R2",
 					"bottom": ",",
-					"left": "CLK1,CLR1,K1,,CLK2,CLR2,J2"
+					"left": "CLK1,#CLR1,K1,,CLK2,#CLR2,J2"
 				}
 			},
 			"lid": null,
@@ -10144,7 +10144,7 @@ loadFiles.push(
 						10,
 						1
 					],
-					"name": "SET1"
+					"name": "#SET1"
 				},
 				{
 					"#c": "Port",
@@ -10171,7 +10171,7 @@ loadFiles.push(
 						250,
 						1
 					],
-					"name": "CLR1"
+					"name": "#CLR1"
 				},
 				{
 					"#c": "Port",
@@ -10180,7 +10180,7 @@ loadFiles.push(
 						330,
 						1
 					],
-					"name": "SET2"
+					"name": "#SET2"
 				},
 				{
 					"#c": "Port",
@@ -10207,7 +10207,7 @@ loadFiles.push(
 						570,
 						1
 					],
-					"name": "CLR2"
+					"name": "#CLR2"
 				},
 				{
 					"#c": "Wire",
@@ -10521,9 +10521,9 @@ loadFiles.push(
 				"parity": "none",
 				"placement": {
 					"top": ",",
-					"right": ",CLR2,SET2,D2,CLK2,Q2,R2",
+					"right": ",#CLR2,#SET2,D2,CLK2,Q2,R2",
 					"bottom": ",",
-					"left": "CLR1,D1,CLK1,SET1,Q1,R1,"
+					"left": "#CLR1,D1,CLK1,#SET1,Q1,R1,"
 				}
 			},
 			"lid": null,
@@ -10542,7 +10542,7 @@ loadFiles.push(
 						10,
 						1
 					],
-					"name": "SET1"
+					"name": "#SET1"
 				},
 				{
 					"#c": "Port",
@@ -10578,7 +10578,7 @@ loadFiles.push(
 						330,
 						1
 					],
-					"name": "CLR1"
+					"name": "#CLR1"
 				},
 				{
 					"#c": "Port",
@@ -10587,7 +10587,7 @@ loadFiles.push(
 						410,
 						1
 					],
-					"name": "SET2"
+					"name": "#SET2"
 				},
 				{
 					"#c": "Port",
@@ -10623,7 +10623,7 @@ loadFiles.push(
 						730,
 						1
 					],
-					"name": "CLR2"
+					"name": "#CLR2"
 				},
 				{
 					"#c": "Wire",
@@ -11079,7 +11079,7 @@ loadFiles.push(
 					"top": ",",
 					"right": "K1,Q1,R1,,K2,Q2,R2,J2",
 					"bottom": ",",
-					"left": "CLK1,SET1,CLR1,J1,,CLK2,SET2,CLR2"
+					"left": "CLK1,#SET1,#CLR1,J1,,CLK2,#SET2,#CLR2"
 				}
 			},
 			"lid": null,
@@ -14454,7 +14454,7 @@ loadFiles.push(
 						10,
 						1
 					],
-					"name": "SET1"
+					"name": "#SET1"
 				},
 				{
 					"#c": "Port",
@@ -14490,7 +14490,7 @@ loadFiles.push(
 						330,
 						1
 					],
-					"name": "CLR1"
+					"name": "#CLR1"
 				},
 				{
 					"#c": "Port",
@@ -14499,7 +14499,7 @@ loadFiles.push(
 						410,
 						1
 					],
-					"name": "SET2"
+					"name": "#SET2"
 				},
 				{
 					"#c": "Port",
@@ -14535,7 +14535,7 @@ loadFiles.push(
 						730,
 						1
 					],
-					"name": "CLR2"
+					"name": "#CLR2"
 				},
 				{
 					"#c": "Wire",
@@ -14989,9 +14989,9 @@ loadFiles.push(
 				"parity": "none",
 				"placement": {
 					"top": ",",
-					"right": ",CLR2,J2,K2,CLK2,SET2,Q2,R2",
+					"right": ",#CLR2,J2,K2,CLK2,#SET2,Q2,R2",
 					"bottom": ",",
-					"left": "CLR1,J1,K1,CLK1,SET1,Q1,R1,"
+					"left": "#CLR1,J1,K1,CLK1,#SET1,Q1,R1,"
 				}
 			},
 			"lid": null,
@@ -16390,7 +16390,7 @@ loadFiles.push(
 						370,
 						1
 					],
-					"name": "OEA"
+					"name": "#OEA"
 				},
 				{
 					"#c": "Port",
@@ -16417,7 +16417,7 @@ loadFiles.push(
 						790,
 						1
 					],
-					"name": "OEB"
+					"name": "#OEB"
 				},
 				{
 					"#c": "Wire",
@@ -17523,9 +17523,9 @@ loadFiles.push(
 				"parity": "none",
 				"placement": {
 					"top": ",",
-					"right": ",OEB,B0,B1,Z0,Z1,Z2,Z3",
+					"right": ",#OEB,B0,B1,Z0,Z1,Z2,Z3",
 					"bottom": ",",
-					"left": "OEA,A0,A1,Y0,Y1,Y2,Y3,"
+					"left": "#OEA,A0,A1,Y0,Y1,Y2,Y3,"
 				}
 			},
 			"lid": null,
@@ -17544,7 +17544,7 @@ loadFiles.push(
 						10,
 						1
 					],
-					"name": "D1"
+					"name": "#D1"
 				},
 				{
 					"#c": "Port",
@@ -17553,7 +17553,7 @@ loadFiles.push(
 						90,
 						1
 					],
-					"name": "D2"
+					"name": "#D2"
 				},
 				{
 					"#c": "Port",
@@ -17562,7 +17562,7 @@ loadFiles.push(
 						170,
 						1
 					],
-					"name": "D3"
+					"name": "#D3"
 				},
 				{
 					"#c": "Port",
@@ -17571,7 +17571,7 @@ loadFiles.push(
 						250,
 						1
 					],
-					"name": "D4"
+					"name": "#D4"
 				},
 				{
 					"#c": "Port",
@@ -17580,7 +17580,7 @@ loadFiles.push(
 						330,
 						1
 					],
-					"name": "D5"
+					"name": "#D5"
 				},
 				{
 					"#c": "Port",
@@ -17589,7 +17589,7 @@ loadFiles.push(
 						410,
 						1
 					],
-					"name": "D6"
+					"name": "#D6"
 				},
 				{
 					"#c": "Port",
@@ -17598,7 +17598,7 @@ loadFiles.push(
 						490,
 						1
 					],
-					"name": "D7"
+					"name": "#D7"
 				},
 				{
 					"#c": "Port",
@@ -17607,7 +17607,7 @@ loadFiles.push(
 						570,
 						1
 					],
-					"name": "D8"
+					"name": "#D8"
 				},
 				{
 					"#c": "Port",
@@ -17616,7 +17616,7 @@ loadFiles.push(
 						650,
 						1
 					],
-					"name": "D9"
+					"name": "#D9"
 				},
 				{
 					"#c": "Wire",
@@ -19516,9 +19516,9 @@ loadFiles.push(
 				"parity": "none",
 				"placement": {
 					"top": ",",
-					"right": ",,Y4,D3,D2,D1,D9,Y1",
+					"right": ",,Y4,#D3,#D2,#D1,#D9,Y1",
 					"bottom": ",",
-					"left": "D4,D5,D6,D7,D8,Y3,Y2,"
+					"left": "#D4,#D5,#D6,#D7,#D8,Y3,Y2,"
 				}
 			},
 			"lid": null,
@@ -19564,7 +19564,7 @@ loadFiles.push(
 						270,
 						1
 					],
-					"name": "OE"
+					"name": "#OE"
 				},
 				{
 					"#c": "Port",
@@ -20930,7 +20930,7 @@ loadFiles.push(
 					"top": ",",
 					"right": ",E,F,G,J,S0,S1,S2",
 					"bottom": ",",
-					"left": "D,C,B,A,Y,Z,OE,"
+					"left": "D,C,B,A,Y,Z,#OE,"
 				}
 			},
 			"lid": null,
@@ -20967,7 +20967,7 @@ loadFiles.push(
 						210,
 						1
 					],
-					"name": "OE1"
+					"name": "#OE1"
 				},
 				{
 					"#c": "Port",
@@ -21012,7 +21012,7 @@ loadFiles.push(
 						830,
 						1
 					],
-					"name": "OE2"
+					"name": "#OE2"
 				},
 				{
 					"#c": "Port",
@@ -22140,9 +22140,9 @@ loadFiles.push(
 				"parity": "none",
 				"placement": {
 					"top": ",",
-					"right": ",OE2,S0,D2,C2,B2,A2,Y2",
+					"right": ",#OE2,S0,D2,C2,B2,A2,Y2",
 					"bottom": ",",
-					"left": "OE1,S1,D1,C1,B1,A1,Y1,"
+					"left": "#OE1,S1,D1,C1,B1,A1,Y1,"
 				}
 			},
 			"lid": null,
@@ -22242,7 +22242,7 @@ loadFiles.push(
 						730,
 						1
 					],
-					"name": "OE"
+					"name": "#OE"
 				},
 				{
 					"#c": "Wire",
@@ -23162,7 +23162,7 @@ loadFiles.push(
 				"parity": "none",
 				"placement": {
 					"top": ",",
-					"right": ",OE,A4,B4,Y4,A3,B3,Y3",
+					"right": ",#OE,A4,B4,Y4,A3,B3,Y3",
 					"bottom": ",",
 					"left": "S0,A1,B1,Y1,A2,B2,Y2,"
 				}
@@ -23192,7 +23192,7 @@ loadFiles.push(
 						90,
 						1
 					],
-					"name": "CLR"
+					"name": "#CLR"
 				},
 				{
 					"#c": "Port",
@@ -25312,7 +25312,7 @@ loadFiles.push(
 					"top": ",",
 					"right": ",TC,Q1,Q2,Q3,Q4,CET,LE",
 					"bottom": ",",
-					"left": "CLR,CLK,D1,D2,D3,D4,CEP,"
+					"left": "#CLR,CLK,D1,D2,D3,D4,CEP,"
 				}
 			},
 			"lid": null,
@@ -25340,7 +25340,7 @@ loadFiles.push(
 						90,
 						1
 					],
-					"name": "CE"
+					"name": "#CE"
 				},
 				{
 					"#c": "Port",
@@ -27620,7 +27620,7 @@ loadFiles.push(
 					"top": ",",
 					"right": ",TC,Q1,Q2,Q3,Q4,CET,LE",
 					"bottom": ",",
-					"left": "CE,CLK,D1,D2,D3,D4,CEP,"
+					"left": "#CE,CLK,D1,D2,D3,D4,CEP,"
 				}
 			},
 			"lid": null,
@@ -33301,7 +33301,7 @@ loadFiles.push(
 						330,
 						1
 					],
-					"name": "OEA"
+					"name": "#OEA"
 				},
 				{
 					"#c": "Port",
@@ -33346,7 +33346,7 @@ loadFiles.push(
 						730,
 						1
 					],
-					"name": "OEB"
+					"name": "#OEB"
 				},
 				{
 					"#c": "Wire",
@@ -33964,9 +33964,9 @@ loadFiles.push(
 				"parity": "none",
 				"placement": {
 					"top": ",",
-					"right": ",OEB,Y1,B4,Y2,B3,Y3,B2,Y4,B1",
+					"right": ",#OEB,Y1,B4,Y2,B3,Y3,B2,Y4,B1",
 					"bottom": ",",
-					"left": "OEA,A1,Z4,A2,Z3,A3,Z2,A4,Z1,"
+					"left": "#OEA,A1,Z4,A2,Z3,A3,Z2,A4,Z1,"
 				}
 			},
 			"lid": null,
@@ -34030,7 +34030,7 @@ loadFiles.push(
 						410,
 						1
 					],
-					"name": "RBI"
+					"name": "#RBI"
 				},
 				{
 					"#c": "Port",
@@ -36777,7 +36777,7 @@ loadFiles.push(
 					"top": ",",
 					"right": ",Qg,Yf,Ya,Yb,Yc,Yd,Ye",
 					"bottom": ",",
-					"left": "D2,D3,LT,BI,RBI,D4,D1,"
+					"left": "D2,D3,LT,BI,#RBI,D4,D1,"
 				}
 			},
 			"lid": null,
@@ -37786,7 +37786,7 @@ loadFiles.push(
 						130,
 						2
 					],
-					"name": "OE2"
+					"name": "#OE2"
 				},
 				{
 					"#c": "Gate",
@@ -37833,7 +37833,7 @@ loadFiles.push(
 						830,
 						0
 					],
-					"name": "OE1"
+					"name": "#OE1"
 				},
 				{
 					"#c": "Wire",
@@ -37925,9 +37925,9 @@ loadFiles.push(
 				"parity": "none",
 				"placement": {
 					"top": ",",
-					"right": ",OE2,A,C23,C22,C21,C20,Y2",
+					"right": ",#OE2,A,C23,C22,C21,C20,Y2",
 					"bottom": ",",
-					"left": "OE1,B,C13,C12,C11,C10,Y1,"
+					"left": "#OE1,B,C13,C12,C11,C10,Y1,"
 				}
 			},
 			"lid": null,
@@ -38027,7 +38027,7 @@ loadFiles.push(
 						730,
 						1
 					],
-					"name": "OE"
+					"name": "#OE"
 				},
 				{
 					"#c": "Wire",
@@ -39023,7 +39023,7 @@ loadFiles.push(
 				"parity": "none",
 				"placement": {
 					"top": ",",
-					"right": ",OE,A4,B4,Y4,A3,B3,Y3",
+					"right": ",#OE,A4,B4,Y4,A3,B3,Y3",
 					"bottom": ",",
 					"left": "S0,A1,B1,Y1,A2,B2,Y2,"
 				}
@@ -39044,7 +39044,7 @@ loadFiles.push(
 						10,
 						1
 					],
-					"name": "CLR"
+					"name": "#CLR"
 				},
 				{
 					"#c": "Port",
@@ -40205,7 +40205,7 @@ loadFiles.push(
 					"top": ",",
 					"right": ",Y8,D8,D7,Y7,Y6,D6,D5,Y5,CLK",
 					"bottom": ",",
-					"left": "CLR,Y1,D1,D2,Y2,Y3,D3,D4,Y4,"
+					"left": "#CLR,Y1,D1,D2,Y2,Y3,D3,D4,Y4,"
 				}
 			},
 			"lid": null,
@@ -42975,7 +42975,7 @@ loadFiles.push(
 						10,
 						1
 					],
-					"name": "OE"
+					"name": "#OE"
 				},
 				{
 					"#c": "Port",
@@ -44288,7 +44288,7 @@ loadFiles.push(
 					"top": ",",
 					"right": ",Q8,D8,D7,Q7,Q6,D6,D5,Q5,LE",
 					"bottom": ",",
-					"left": "OE,Q1,D1,D2,Q2,Q3,D3,D4,Q4,"
+					"left": "#OE,Q1,D1,D2,Q2,Q3,D3,D4,Q4,"
 				}
 			},
 			"lid": null,
@@ -44307,7 +44307,7 @@ loadFiles.push(
 						10,
 						1
 					],
-					"name": "OE"
+					"name": "#OE"
 				},
 				{
 					"#c": "Port",
@@ -45630,7 +45630,7 @@ loadFiles.push(
 					"top": ",",
 					"right": ",Q8,D8,D7,Q7,Q6,D6,D5,Q5,CLK",
 					"bottom": ",",
-					"left": "OE,Q1,D1,D2,Q2,Q3,D3,D4,Q4,"
+					"left": "#OE,Q1,D1,D2,Q2,Q3,D3,D4,Q4,"
 				}
 			},
 			"lid": null,
@@ -46849,7 +46849,7 @@ loadFiles.push(
 						10,
 						1
 					],
-					"name": "OE"
+					"name": "#OE"
 				},
 				{
 					"#c": "Port",
@@ -48162,7 +48162,7 @@ loadFiles.push(
 					"top": ",",
 					"right": ",Q1,Q2,Q3,Q4,Q5,Q6,Q7,Q8,LE",
 					"bottom": ",",
-					"left": "OE,D1,D2,D3,D4,D5,D6,D7,D8,"
+					"left": "#OE,D1,D2,D3,D4,D5,D6,D7,D8,"
 				}
 			},
 			"lid": null,
@@ -48181,7 +48181,7 @@ loadFiles.push(
 						10,
 						1
 					],
-					"name": "OE"
+					"name": "#OE"
 				},
 				{
 					"#c": "Port",
@@ -49504,7 +49504,7 @@ loadFiles.push(
 					"top": ",",
 					"right": ",Q1,Q2,Q3,Q4,Q5,Q6,Q7,Q8,CLK",
 					"bottom": ",",
-					"left": "OE,D1,D2,D3,D4,D5,D6,D7,D8,"
+					"left": "#OE,D1,D2,D3,D4,D5,D6,D7,D8,"
 				}
 			},
 			"lid": null,
@@ -49523,7 +49523,7 @@ loadFiles.push(
 						10,
 						1
 					],
-					"name": "OE"
+					"name": "#OE"
 				},
 				{
 					"#c": "Port",
@@ -49559,7 +49559,7 @@ loadFiles.push(
 						310,
 						1
 					],
-					"name": "CLR"
+					"name": "#CLR"
 				},
 				{
 					"#c": "Wire",
@@ -51990,7 +51990,7 @@ loadFiles.push(
 				"parity": "none",
 				"placement": {
 					"top": ",",
-					"right": ",Q1,D,OE,LCLK,SCLK,CLR,Q8S",
+					"right": ",Q1,D,#OE,LCLK,SCLK,#CLR,Q8S",
 					"bottom": ",",
 					"left": "Q2,Q3,Q4,Q5,Q6,Q7,Q8,"
 				}
@@ -57017,7 +57017,7 @@ loadFiles.push(
 						10,
 						1
 					],
-					"name": "G1"
+					"name": "#G1"
 				},
 				{
 					"#c": "Port",
@@ -57026,7 +57026,7 @@ loadFiles.push(
 						50,
 						1
 					],
-					"name": "G2"
+					"name": "#G2"
 				},
 				{
 					"#c": "Port",
@@ -57696,9 +57696,9 @@ loadFiles.push(
 				"parity": "none",
 				"placement": {
 					"top": ",",
-					"right": ",G2,Q1,Q2,Q3,Q4,Q5,Q6,Q7,Q8",
+					"right": ",#G2,Q1,Q2,Q3,Q4,Q5,Q6,Q7,Q8",
 					"bottom": "",
-					"left": "G1,D1,D2,D3,D4,D5,D6,D7,D8,"
+					"left": "#G1,D1,D2,D3,D4,D5,D6,D7,D8,"
 				}
 			},
 			"lid": null,
@@ -57717,7 +57717,7 @@ loadFiles.push(
 						10,
 						1
 					],
-					"name": "G1"
+					"name": "#G1"
 				},
 				{
 					"#c": "Port",
@@ -57726,7 +57726,7 @@ loadFiles.push(
 						50,
 						1
 					],
-					"name": "G2"
+					"name": "#G2"
 				},
 				{
 					"#c": "Port",
@@ -58396,9 +58396,9 @@ loadFiles.push(
 				"parity": "none",
 				"placement": {
 					"top": ",",
-					"right": ",G2,Q1,Q2,Q3,Q4,Q5,Q6,Q7,Q8",
+					"right": ",#G2,Q1,Q2,Q3,Q4,Q5,Q6,Q7,Q8",
 					"bottom": "",
-					"left": "G1,D1,D2,D3,D4,D5,D6,D7,D8,"
+					"left": "#G1,D1,D2,D3,D4,D5,D6,D7,D8,"
 				}
 			},
 			"lid": null,
