@@ -315,7 +315,7 @@ class Action {
     // Add a break condition expression via dialog.
     static async addBreakCondition(app) {
         assert.class(Application, app);
-        const EXPRESSION_HELP = 'Probe labels are available as variables, e.g. <code>!pA &amp;&amp; (pB || pC)</code>. Undriven probes return <code>null</code>, conflicting probes <code>-1</code>.';
+        const EXPRESSION_HELP = 'Probe labels are available as variables, e.g. <code>!pA &amp;&amp; (pB || pC)</code>. Probes in subcircuits use their grid label with instance suffix, e.g. <code>pA@2 === 0xFF</code>. Undriven probes return <code>null</code>, conflicting probes <code>-1</code>.';
         const result = await dialog('Add break condition', [
             { text: 'Enter an expression.' + EXPRESSION_HELP },
             { label: 'Expression', name: 'expression', type: 'string', check: (v) => v.trim() !== '' }
@@ -455,7 +455,7 @@ class Action {
         assert.class(Application, app);
         assert.integer(i);
         assert.string(expr);
-        const EXPRESSION_HELP = 'Probe labels are available as variables, e.g. <code>!pA &amp;&amp; (pB || pC)</code>. Undriven probes return <code>null</code>, conflicting probes <code>-1</code>.';
+        const EXPRESSION_HELP = 'Probe labels are available as variables, e.g. <code>!pA &amp;&amp; (pB || pC)</code>. Probes in subcircuits use their grid label with instance suffix, e.g. <code>pA@2 === 0xFF</code>. Undriven probes return <code>null</code>, conflicting probes <code>-1</code>.';
         const result = await dialog('Edit break condition', [
             { text: 'Edit the expression below. Clear expression and confirm to delete. ' + EXPRESSION_HELP },
             { label: 'Expression', name: 'expression', type: 'string' }

@@ -210,8 +210,11 @@ class BackendJavascript {
     // single-bit probes are 0/1/-1/null, multi-bit probes (arrays) are combined into an integer (LSB = index 0).
     emitBreakOnCondition(expr, probeMap) {
         const names = Object.keys(probeMap).filter((n) => n).sort((a, b) => b.length - a.length);
-        // Replace unknown identifiers with 0 before probe substitution (silently ignore missing probes).
-        let translated = expr.replace(/\b[a-zA-Z_$][\w$]*\b/g, (m) => Object.hasOwn(probeMap, m) ? m : '0');
+        // Replace known probes with placeholder tokens first (subcircuit probe names carry a '@<instanceId>'
+        // suffix which the identifier regex below cannot span), then replace the remaining identifiers with 0
+        // (silently ignore missing probes), finally restore the probe expressions from the placeholder tokens.
+        const replacements = new Map();
+        let translated = expr;
         for (const name of names) {
             const p = probeMap[name];
             let replacement;
@@ -245,8 +248,12 @@ class BackendJavascript {
                     : value;
                 replacement = `(${driven} ? (${withConflict}) : null)`;
             }
-            translated = translated.replace(new RegExp('\\b' + name + '\\b', 'g'), replacement);
+            const token = `\u0000${replacements.size}\u0000`;
+            replacements.set(token, replacement);
+            translated = translated.replace(new RegExp('\\b' + name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'g'), token);
         }
+        translated = translated.replace(/\b[a-zA-Z_$][\w$]*\b/g, '0');
+        for (const [token, replacement] of replacements) translated = translated.replaceAll(token, replacement);
         try { new Function('mem', `return (${translated})`); }
         catch { return; }
         this.#tickCode += `if (${translated}) { return 2; }` + this.#comment('break on condition') + '\n';

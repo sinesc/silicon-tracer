@@ -353,6 +353,14 @@ test("bus probes in subcircuit read correct values", () => {
     assert(sim.getProbeValue('p16@1') === 3340, `p16@1 should be 3340, got ${sim.getProbeValue('p16@1')}`);
 });
 
+test("break condition with subcircuit probes", () => {
+    // Multi-bit probes in a subcircuit instance are referenced by their '@<instanceId>' grid label.
+    const sim = compileCircuit('data/tests.stc', 'ProbesInSubcircuit', 'js', { targetTPS: 1000, breakConditions: [ 'p4@1 === 3 && p8@1 === 6' ] });
+    assert(sim.simulate(100) === 2, `expected a condition break (2), got ${sim.simulate(100)}`);
+    const control = compileCircuit('data/tests.stc', 'ProbesInSubcircuit', 'js', { targetTPS: 1000, breakConditions: [ 'p4@1 === 4' ] });
+    assert(control.simulate(100) === 0, `non-matching condition should not break, got ${control.simulate(100)}`);
+});
+
 console.log('\nMemory (ROM/RAM) tests:');
 
 test("ROM read with 2-bit address and 8-bit data", () => {
