@@ -340,21 +340,22 @@ class Circuit {
         }
     }
 
-    // Clears all net conflict driver marks on this circuit's component ports.
-    clearConflictDrivers() {
+    // Clears all net conflict marks (component outlines and port marks) of this circuit.
+    clearNetConflicts() {
         for (const component of this.#data) {
-            if (!component.ports) continue;
-            for (const port of component.ports) {
+            if (component.containsConflict !== undefined) component.containsConflict = false; // Component subclasses only
+            for (const port of (component.ports ?? [])) {
                 port.conflictDriver = false;
             }
         }
     }
 
     // Applies net conflict marks (Simulation.resolveNetConflictDriversByNet(): net id => driving engine port names)
-    // to this circuit instance's ports: the driving ports themselves, plus CustomComponent ports of ancestor
-    // instances whose subtree contains a driver of a conflicted net (these lead into the conflict when followed).
+    // to this circuit instance: driving output ports of a conflicted net, the CustomComponent ports of ancestor
+    // instances whose subtree contains a driver of a conflicted net (these lead into the conflict when followed),
+    // and an outline mark on CustomComponents whose subtree contains a driver of a conflicted net.
     // Engine port names equal NetList.NetPort.uniqueName ('<name>@<gid>@<instanceId>_<channel>').
-    markConflictDrivers(netList, subCircuitInstance, conflictDrivers) {
+    markNetConflicts(netList, subCircuitInstance, conflictDrivers) {
         assert.class(NetList, netList);
         assert.integer(subCircuitInstance);
         assert.class(Map, conflictDrivers);
@@ -377,9 +378,13 @@ class Circuit {
             }
             for (const port of net.ports) {
                 if (!drivers.has(port.uniqueName)) continue;
-                // walk up the instance chain from every driver's instance and mark the port of the sub-circuit we came from
+                // walk up the instance chain from every driver's instance and mark the sub-circuit we came from
                 for (let child = port.instanceId; netList.instances[child].parentInstanceId !== null; ) {
                     const parent = netList.instances[child].parentInstanceId;
+                    if (parent === subCircuitInstance) {
+                        const component = this.itemByGID(netList.instances[child].gid); // outlines the component whose sub-circuit contains the conflict
+                        if (component) component.containsConflict = true;
+                    }
                     const pathPort = descend.get(parent + ':' + netList.instances[child].gid);
                     if (pathPort && pathPort.instanceId === subCircuitInstance) mark(pathPort);
                     child = parent;

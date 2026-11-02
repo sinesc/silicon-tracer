@@ -1,4 +1,4 @@
-// Ad-hoc smoke test: Circuit.markConflictDrivers marks the driving output ports of a conflicted net.
+// Ad-hoc smoke test: Circuit.markNetConflicts marks the driving output ports of a conflicted net.
 // Run with: node test/smoke_conflict_marks.js
 const { context } = require('./lib/runner');
 const vm = require('vm');
@@ -22,8 +22,8 @@ const code = `
     const netOutput = engine.getProbeNetIds('pOutput')[0];
 
     const applyMarks = (instanceId) => {
-        netList.instances[instanceId].circuit.clearConflictDrivers();
-        netList.instances[instanceId].circuit.markConflictDrivers(netList, instanceId, engine.resolveNetConflictDriversByNet());
+        netList.instances[instanceId].circuit.clearNetConflicts();
+        netList.instances[instanceId].circuit.markNetConflicts(netList, instanceId, engine.resolveNetConflictDriversByNet());
     };
 
     // Conflict: both buffers driving the pOutput net

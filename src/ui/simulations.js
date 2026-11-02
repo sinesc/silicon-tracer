@@ -191,7 +191,7 @@ Simulations.Simulation = class {
             const circuit = this.#netList.instances[this.#instanceId].circuit
             if (reattach && this.#attached) {
                 circuit.attachSimulation(this.#netList, this.#instanceId);
-                this.updateConflictDriverMarks();
+                this.updateConflictMarks();
             }
             this.#app.grid.markSimulationRecompiled();
             return true;
@@ -210,18 +210,18 @@ Simulations.Simulation = class {
         this.#app.grid.circuitOverlay.setInstanceId(instanceId);
         this.#instanceId = instanceId;
         circuit.attachSimulation(this.#netList, instanceId);
-        this.updateConflictDriverMarks();
+        this.updateConflictMarks();
         this.#app.history.record();
     }
 
-    // Recomputes conflict-driver port highlights for the circuit instance currently shown on the grid (only marks in single-step mode with net conflict checking enabled, clears marks otherwise).
+    // Recomputes net conflict marks (driving/path port outlines and outlines of components containing a conflict) for the circuit instance currently shown on the grid (only marks in single-step mode with net conflict checking enabled, clears marks otherwise).
     // Only the current instance is marked because one Circuit (and thus its ComponentPorts) backs all instances of a sub-circuit.
-    updateConflictDriverMarks() {
+    updateConflictMarks() {
         if (!this.#netList) return;
         const circuit = this.#netList.instances[this.#instanceId].circuit;
-        circuit.clearConflictDrivers();
+        circuit.clearNetConflicts();
         const enabled = this.#app.config.singleStep && this.#app.config.checkNetConflicts && !!this.#engine;
-        if (enabled) circuit.markConflictDrivers(this.#netList, this.#instanceId, this.#engine.resolveNetConflictDriversByNet());
+        if (enabled) circuit.markNetConflicts(this.#netList, this.#instanceId, this.#engine.resolveNetConflictDriversByNet());
     }
 
     // Ticks the current simulation for the given amount of ticks.
@@ -248,7 +248,7 @@ Simulations.Simulation = class {
         this.checkDirty(false);
         this.#circuit.attachSimulation(this.#netList, 0);
         this.#instanceId = 0;
-        this.updateConflictDriverMarks();
+        this.updateConflictMarks();
         this.#app.grid.simulationOverlay.setLabel(this.#circuit.label);
         this.#app.grid.markSimulationRecompiled();
         this.#attached = true;

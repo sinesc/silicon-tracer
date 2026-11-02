@@ -44,8 +44,8 @@ const code = `
 
     const instanceOf = (label) => netList.instances.findIndex((i) => i.circuit.label === label);
     const mark = (instanceId) => {
-        for (const instance of netList.instances) instance.circuit.clearConflictDrivers();
-        netList.instances[instanceId].circuit.markConflictDrivers(netList, instanceId, engine.resolveNetConflictDriversByNet());
+        for (const instance of netList.instances) instance.circuit.clearNetConflicts();
+        netList.instances[instanceId].circuit.markNetConflicts(netList, instanceId, engine.resolveNetConflictDriversByNet());
     };
     const markedPorts = (circuit) => {
         const result = [];

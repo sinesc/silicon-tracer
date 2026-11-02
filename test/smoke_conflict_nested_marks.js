@@ -1,4 +1,4 @@
-// Ad-hoc smoke test: conflict marks follow a conflict into sub-circuits (Circuit.markConflictDrivers marks
+// Ad-hoc smoke test: conflict marks follow a conflict into sub-circuits (Circuit.markNetConflicts marks
 // CustomComponent ports whose subtree contains drivers of a conflicted net).
 // Run with: node test/smoke_conflict_nested_marks.js
 const { context } = require('./lib/runner');
@@ -20,8 +20,8 @@ const code = `
     // instance ids of the sub-circuits (instance 0 is the root circuit)
     const instanceOf = (label) => netList.instances.findIndex((i) => i.circuit.label === label);
     const mark = (instanceId) => {
-        for (const instance of netList.instances) instance.circuit.clearConflictDrivers();
-        netList.instances[instanceId].circuit.markConflictDrivers(netList, instanceId, engine.resolveNetConflictDriversByNet());
+        for (const instance of netList.instances) instance.circuit.clearNetConflicts();
+        netList.instances[instanceId].circuit.markNetConflicts(netList, instanceId, engine.resolveNetConflictDriversByNet());
     };
     const markedPorts = (circuit) => {
         const result = [];

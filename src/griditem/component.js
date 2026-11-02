@@ -16,7 +16,7 @@ class ComponentPort {
     // Net-id for this item. Directly set by Circuit.attachSimulation()
     netIds = null;
 
-    conflictDriver = false; // true when this port is part of a net conflict: an output port driving a conflicted net, or a CustomComponent port leading into a sub-circuit net with conflict drivers (set by Circuit.markConflictDrivers)
+    conflictDriver = false; // true when this port is part of a net conflict: an output port driving a conflicted net, or a CustomComponent port leading into a sub-circuit net with conflict drivers (set by Circuit.markNetConflicts)
 
     numChannels = null;
     ioType = null;
@@ -201,6 +201,8 @@ class Component extends GridItem {
     static #MAX_GHOST_DISTANCE = 3;
     static #INNER_MARGIN = 5;
 
+    containsConflict = false; // true when a net conflict exists somewhere in this component's sub-circuit (set by Circuit.markNetConflicts, CustomComponents only)
+
     #element;
     #inner;
     #dropPreview;
@@ -315,6 +317,7 @@ class Component extends GridItem {
     // Detach component ports from simulation.
     detachSimulation() {
         this.simIds = [];
+        this.containsConflict = false;
         for (const item of this.ports) {
             item.netIds = null;
             item.conflictDriver = false;
@@ -705,6 +708,7 @@ class Component extends GridItem {
             }
             item.element.classList.toggle('net-conflict-driver', item.conflictDriver);
         }
+        this.element?.classList.toggle('net-conflict-component', this.containsConflict);
     }
 
     // Returns default button label and hover message for component factory buttons.
