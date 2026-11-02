@@ -580,6 +580,31 @@ class Simulation {
         return null;
     }
 
+    // Returns whether the net with the given id is currently in conflict state.
+    getNetConflict(id) {
+        assert.integer(id);
+        const net = this.#nets.all[id] ?? error('Unknown net');
+        if (net.elementIndexC === null) return false; // net conflicts not compiled/enabled
+        return (this.#backend.mem[net.elementIndexC] & (1 << net.bitIndex)) !== 0;
+    }
+
+    // Returns a Set of port names of output ports that drive a net currently in conflict state.
+    resolveNetConflictDrivers() {
+        const drivers = new Set();
+        const mem = this.#backend.mem;
+        for (const net of this.#nets.all) {
+            if (net.elementIndexC === null) continue;
+            if ((mem[net.elementIndexC] & (1 << net.bitIndex)) === 0) continue; // no conflict on this net
+            for (const portName of net.ports) {
+                const port = this.#ports.byName[portName];
+                if (!port || port.ioType !== 'o' || port.elementIndex2 === null) continue;
+                const driven = port.elementIndex3 === null || (mem[port.elementIndex3] & (1 << port.bitIndex)) !== 0;
+                if (driven) drivers.add(portName);
+            }
+        }
+        return drivers;
+    }
+
     // Returns a list of defined nets.
     get nets() {
         return this.#nets.all;

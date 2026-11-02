@@ -46,13 +46,11 @@ New method, mirrors the port-linking loop of `attachSimulation`:
 
 ```js
 // Applies net conflict driver marks (from Simulation.resolveNetConflictDrivers()) to component ports of this circuit's instance.
-// enginePorts is Simulation.ports (array of engine port objects); simIds[gid] holds engine port ids (null for undeclared channels).
-markConflictDrivers(netList, subCircuitInstance, driverPortNames, enginePorts) {
+// Driver names are engine port names, which equal NetList.NetPort.uniqueName ('<name>@<gid>@<instanceId>_<channel>').
+markConflictDrivers(netList, subCircuitInstance, driverPortNames) {
     assert.class(NetList, netList);
     assert.integer(subCircuitInstance);
     assert.class(Set, driverPortNames);
-    assert.array(enginePorts);
-    const simIds = netList.instances[subCircuitInstance].simIds;
     for (const component of this.#data) {
         if (!component.ports) continue;
         for (const port of component.ports) {
@@ -61,12 +59,9 @@ markConflictDrivers(netList, subCircuitInstance, driverPortNames, enginePorts) {
     }
     for (const net of netList.nets) {
         if (net.netId === null) continue;
-        for (const { name, gid, instanceId, channel } of net.ports) {
+        for (const { name, gid, instanceId, uniqueName } of net.ports) {
             if (instanceId !== subCircuitInstance) continue;
-            const ids = simIds[gid];
-            const portId = Array.isArray(ids) ? ids[channel] : ids;
-            if (portId === null || portId === undefined) continue;
-            if (!driverPortNames.has(enginePorts[portId]?.name)) continue;
+            if (!driverPortNames.has(uniqueName)) continue;
             const component = this.itemByGID(gid);
             const port = component?.portByName(name);
             if (port) port.conflictDriver = true;
@@ -105,7 +100,7 @@ updateConflictDriverMarks() {
     const enabled = this.#app.config.singleStep && this.#app.config.checkNetConflicts && !!this.#engine;
     const drivers = enabled ? this.#engine.resolveNetConflictDrivers() : new Set();
     for (const [ instanceId, instance ] of this.#netList.instances.entries()) {
-        instance.circuit.markConflictDrivers(this.#netList, instanceId, drivers, this.#engine.ports);
+        instance.circuit.markConflictDrivers(this.#netList, instanceId, drivers);
     }
 }
 ```

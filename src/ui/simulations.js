@@ -191,6 +191,7 @@ Simulations.Simulation = class {
             const circuit = this.#netList.instances[this.#instanceId].circuit
             if (reattach && this.#attached) {
                 circuit.attachSimulation(this.#netList, this.#instanceId);
+                this.updateConflictDriverMarks();
             }
             this.#app.grid.markSimulationRecompiled();
             return true;
@@ -209,7 +210,18 @@ Simulations.Simulation = class {
         this.#app.grid.circuitOverlay.setInstanceId(instanceId);
         this.#instanceId = instanceId;
         circuit.attachSimulation(this.#netList, instanceId);
+        this.updateConflictDriverMarks();
         this.#app.history.record();
+    }
+
+    // Recomputes conflict-driver port highlights for all circuit instances of this simulation (only marks in single-step mode with net conflict checking enabled, clears marks otherwise).
+    updateConflictDriverMarks() {
+        if (!this.#netList) return;
+        const enabled = this.#app.config.singleStep && this.#app.config.checkNetConflicts && !!this.#engine;
+        const drivers = enabled ? this.#engine.resolveNetConflictDrivers() : new Set();
+        for (const [ instanceId, instance ] of this.#netList.instances.entries()) {
+            instance.circuit.markConflictDrivers(this.#netList, instanceId, drivers);
+        }
     }
 
     // Ticks the current simulation for the given amount of ticks.
@@ -236,6 +248,7 @@ Simulations.Simulation = class {
         this.checkDirty(false);
         this.#circuit.attachSimulation(this.#netList, 0);
         this.#instanceId = 0;
+        this.updateConflictDriverMarks();
         this.#app.grid.simulationOverlay.setLabel(this.#circuit.label);
         this.#app.grid.markSimulationRecompiled();
         this.#attached = true;

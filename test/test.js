@@ -125,6 +125,55 @@ test("net conflicts", () => {
     assert(sim.getProbeValue('pOutput') === -1, `pOutput should be -1 (conflict) when both enables are active, got ${sim.getProbeValue('pOutput')}`);
 });
 
+test("conflict driver port resolution", () => {
+    const sim = compileCircuit('data/tests.stc', 'ConflictBuffer');
+    const cInput   = sim.getConstId('cInput');
+    const cEnable1 = sim.getConstId('cEnable1');
+    const cEnable2 = sim.getConstId('cEnable2');
+    const netOutput = sim.getProbeNetIds('pOutput')[0];
+    // Output ports of the pOutput net, filtered by driven state (elementIndex3 signal bit; null = always driven)
+    const drivenOutputsOfOutputNet = () => {
+        const mem = sim.mem;
+        return new Set(sim.nets[netOutput].ports.filter((name) => {
+            const port = sim.ports.find((p) => p.name === name);
+            return port.ioType === 'o' && port.elementIndex2 !== null &&
+                (port.elementIndex3 === null || (mem[port.elementIndex3] & (1 << port.bitIndex)) !== 0);
+        }));
+    };
+    const drivers = () => sim.resolveNetConflictDrivers();
+
+    // No conflict (second buffer disabled/undriven): no conflict flags, no drivers
+    sim.setConstValue(cEnable1, 1);
+    sim.setConstValue(cEnable2, 0);
+    sim.simulate(5);
+    assert(sim.getNetConflict(netOutput) === false, `no conflict expected with only cEnable1 active`);
+    assert(drivers().size === 0, `driver set should be empty without conflicts, got ${[...drivers()]}`);
+
+    // Conflict: both buffer3 outputs enabled and driving → exactly the driven net outputs are drivers (disabled buffer on undriven net not included)
+    sim.setConstValue(cEnable1, 1);
+    sim.setConstValue(cEnable2, 1);
+    sim.simulate(5);
+    assert(sim.getNetConflict(netOutput) === true, `conflict expected with both enables active`);
+    const expected = drivenOutputsOfOutputNet();
+    assert(expected.size === 2, `pOutput net should have exactly 2 driven outputs, got ${[...expected]}`);
+    assert(drivers().size === expected.size && [...expected].every((name) => drivers().has(name)), `driver set should be ${[...expected]}, got ${[...drivers()]}`);
+
+    // Conflict resolved → marks disappear again
+    sim.setConstValue(cEnable1, 0);
+    sim.setConstValue(cEnable2, 0);
+    sim.simulate(5);
+    assert(sim.getNetConflict(netOutput) === false, `no conflict expected with both enables inactive`);
+    assert(drivers().size === 0, `driver set should be empty after conflict resolved, got ${[...drivers()]}`);
+
+    // Single-driver nets never produce drivers (no false positives)
+    const simGate = compileCircuit('data/tests.stc', 'ConflictGate');
+    simGate.setConstValue(simGate.getConstId('cA'), 1);
+    simGate.setConstValue(simGate.getConstId('cB'), 1);
+    simGate.simulate(5);
+    assert(simGate.getProbeValue('pQ') === 1, `pQ should be 1, got ${simGate.getProbeValue('pQ')}`);
+    assert(simGate.resolveNetConflictDrivers().size === 0, `driver set should be empty for single-driver nets, got ${[...simGate.resolveNetConflictDrivers()]}`);
+});
+
 test("pull resistors drive undriven nets", () => {
     const sim = compileCircuit('data/tests.stc', 'Pullresistors');
     // Circuit: three toggle switches (d2, d1, d0) each with a pull-down resistor and probe (p2, p1, p0).

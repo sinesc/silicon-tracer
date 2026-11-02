@@ -340,6 +340,30 @@ class Circuit {
         }
     }
 
+    // Applies net conflict driver marks (from Simulation.resolveNetConflictDrivers()) to component ports of this circuit's instance.
+    // Driver names are engine port names, which equal NetList.NetPort.uniqueName ('<name>@<gid>@<instanceId>_<channel>').
+    markConflictDrivers(netList, subCircuitInstance, driverPortNames) {
+        assert.class(NetList, netList);
+        assert.integer(subCircuitInstance);
+        assert.class(Set, driverPortNames);
+        for (const component of this.#data) {
+            if (!component.ports) continue;
+            for (const port of component.ports) {
+                port.conflictDriver = false; // cleared here, re-marked below
+            }
+        }
+        for (const net of netList.nets) {
+            if (net.netId === null) continue;
+            for (const { name, gid, instanceId, uniqueName } of net.ports) {
+                if (instanceId !== subCircuitInstance) continue;
+                if (!driverPortNames.has(uniqueName)) continue;
+                const component = this.itemByGID(gid);
+                const port = component?.portByName(name);
+                if (port) port.conflictDriver = true;
+            }
+        }
+    }
+
     // Detaches all items from the simulation by unsetting the item's netId.
     detachSimulation() {
         for (const item of this.#data) {

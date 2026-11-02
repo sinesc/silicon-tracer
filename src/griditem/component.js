@@ -16,6 +16,8 @@ class ComponentPort {
     // Net-id for this item. Directly set by Circuit.attachSimulation()
     netIds = null;
 
+    conflictDriver = false; // true when this output port is marked as driving a conflicted net (set by Circuit.markConflictDrivers)
+
     numChannels = null;
     ioType = null;
 
@@ -315,6 +317,7 @@ class Component extends GridItem {
         this.simIds = [];
         for (const item of this.ports) {
             item.netIds = null;
+            item.conflictDriver = false;
         }
     }
 
@@ -700,6 +703,7 @@ class Component extends GridItem {
             if (item.element.getAttribute('data-net-state') !== state) {
                 item.element.setAttribute('data-net-state', state);
             }
+            item.element.classList.toggle('net-conflict-driver', item.conflictDriver);
         }
     }
 

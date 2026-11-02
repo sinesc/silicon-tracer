@@ -14,6 +14,7 @@
     --wire-colorT: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 105); /* manual toggle */
     --wire-colorE1: oklch(80% 0.5 45); /* conflict/error */
     --wire-colorE2: oklch(50% 0.5 90); /* conflict/error */
+    --net-conflict-driver-color: orange; /* output port driving a conflicted net */
     --wire-color0: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 180);
     --wire-color1: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 145);
     --wire-color2: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 110);
@@ -1320,6 +1321,11 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
     transition: filter var(--component-color-transition-duration), color var(--component-color-transition-duration);
     color: var(--text-color);
     filter: brightness(1.75) saturate(0.5);
+}
+/* output port actively driving a conflicted net */
+.component-port.net-conflict-driver {
+    outline: calc(3px * var(--zoom-factor)) solid var(--net-conflict-driver-color);
+    outline-offset: calc(1px * var(--zoom-factor));
 }
 .component-port-label {
     pointer-events: none;
