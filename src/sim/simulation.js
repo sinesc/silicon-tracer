@@ -588,13 +588,15 @@ class Simulation {
         return (this.#backend.mem[net.elementIndexC] & (1 << net.bitIndex)) !== 0;
     }
 
-    // Returns a Set of port names of output ports that drive a net currently in conflict state.
-    resolveNetConflictDrivers() {
-        const drivers = new Set();
+    // Returns a Map of conflicted engine net id => Set of engine port names of output ports driving that net.
+    // Nets with conflicts but no non-pull drivers appear with an empty Set.
+    resolveNetConflictDriversByNet() {
+        const result = new Map();
         const mem = this.#backend.mem;
         for (const net of this.#nets.all) {
-            if (net.elementIndexC === null) continue;
+            if (net.elementIndexC === null) continue; // net conflicts not compiled/enabled
             if ((mem[net.elementIndexC] & (1 << net.bitIndex)) === 0) continue; // no conflict on this net
+            const drivers = new Set();
             for (const portName of net.ports) {
                 const port = this.#ports.byName[portName];
                 if (!port || port.ioType !== 'o' || port.elementIndex2 === null) continue;
@@ -602,6 +604,16 @@ class Simulation {
                 const driven = port.elementIndex3 === null || (mem[port.elementIndex3] & (1 << port.bitIndex)) !== 0;
                 if (driven) drivers.add(portName);
             }
+            result.set(net.id, drivers);
+        }
+        return result;
+    }
+
+    // Returns a Set of port names of output ports that drive a net currently in conflict state.
+    resolveNetConflictDrivers() {
+        const drivers = new Set();
+        for (const names of this.resolveNetConflictDriversByNet().values()) {
+            for (const name of names) drivers.add(name);
         }
         return drivers;
     }

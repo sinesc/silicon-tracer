@@ -174,6 +174,21 @@ test("conflict driver port resolution", () => {
     assert(simGate.resolveNetConflictDrivers().size === 0, `driver set should be empty for single-driver nets, got ${[...simGate.resolveNetConflictDrivers()]}`);
 });
 
+test("conflict drivers grouped by net in nested circuits", () => {
+    const sim = compileCircuit('data/conflict-nesting.stc', 'Outer');
+    sim.simulate(5);
+    const byNet = sim.resolveNetConflictDriversByNet();
+    assert(byNet.size === 1, `expected exactly 1 conflicted net, got ${byNet.size}`);
+    const [ netId, drivers ] = [ ...byNet.entries() ][0];
+    assert(sim.getNetConflict(netId) === true, `net ${netId} should be in conflict state`);
+    assert(drivers.size === 2, `expected 2 conflict drivers, got ${[...drivers]}`);
+    // all drivers live in instance 1 (the InnerConflict sub-circuit); the root instance contributes none
+    assert([...drivers].every((n) => /@1_0$/.test(n)), `expected drivers only in instance 1, got ${[...drivers]}`);
+    // resolveNetConflictDrivers() must keep returning the union of all driver names
+    const union = sim.resolveNetConflictDrivers();
+    assert(union.size === 2 && [...drivers].every((n) => union.has(n)), `resolveNetConflictDrivers() should return the union, got ${[...union]}`);
+});
+
 test("pull resistors are not conflict drivers", () => {
     const sim = createSimulationWithBackend('js');
     sim.declareConst(1, '@cst0@0_0');                      // always drives the net

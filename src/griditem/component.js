@@ -16,7 +16,7 @@ class ComponentPort {
     // Net-id for this item. Directly set by Circuit.attachSimulation()
     netIds = null;
 
-    conflictDriver = false; // true when this output port is marked as driving a conflicted net (set by Circuit.markConflictDrivers)
+    conflictDriver = false; // true when this port is part of a net conflict: an output port driving a conflicted net, or a CustomComponent port leading into a sub-circuit net with conflict drivers (set by Circuit.markConflictDrivers)
 
     numChannels = null;
     ioType = null;

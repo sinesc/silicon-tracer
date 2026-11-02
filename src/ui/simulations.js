@@ -214,14 +214,14 @@ Simulations.Simulation = class {
         this.#app.history.record();
     }
 
-    // Recomputes conflict-driver port highlights for all circuit instances of this simulation (only marks in single-step mode with net conflict checking enabled, clears marks otherwise).
+    // Recomputes conflict-driver port highlights for the circuit instance currently shown on the grid (only marks in single-step mode with net conflict checking enabled, clears marks otherwise).
+    // Only the current instance is marked because one Circuit (and thus its ComponentPorts) backs all instances of a sub-circuit.
     updateConflictDriverMarks() {
         if (!this.#netList) return;
+        const circuit = this.#netList.instances[this.#instanceId].circuit;
+        circuit.clearConflictDrivers();
         const enabled = this.#app.config.singleStep && this.#app.config.checkNetConflicts && !!this.#engine;
-        const drivers = enabled ? this.#engine.resolveNetConflictDrivers() : new Set();
-        for (const [ instanceId, instance ] of this.#netList.instances.entries()) {
-            instance.circuit.markConflictDrivers(this.#netList, instanceId, drivers);
-        }
+        if (enabled) circuit.markConflictDrivers(this.#netList, this.#instanceId, this.#engine.resolveNetConflictDriversByNet());
     }
 
     // Ticks the current simulation for the given amount of ticks.

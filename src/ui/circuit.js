@@ -340,26 +340,50 @@ class Circuit {
         }
     }
 
-    // Applies net conflict driver marks (from Simulation.resolveNetConflictDrivers()) to component ports of this circuit's instance.
-    // Driver names are engine port names, which equal NetList.NetPort.uniqueName ('<name>@<gid>@<instanceId>_<channel>').
-    markConflictDrivers(netList, subCircuitInstance, driverPortNames) {
-        assert.class(NetList, netList);
-        assert.integer(subCircuitInstance);
-        assert.class(Set, driverPortNames);
+    // Clears all net conflict driver marks on this circuit's component ports.
+    clearConflictDrivers() {
         for (const component of this.#data) {
             if (!component.ports) continue;
             for (const port of component.ports) {
-                port.conflictDriver = false; // cleared here, re-marked below
+                port.conflictDriver = false;
             }
         }
+    }
+
+    // Applies net conflict marks (Simulation.resolveNetConflictDriversByNet(): net id => driving engine port names)
+    // to this circuit instance's ports: the driving ports themselves, plus CustomComponent ports of ancestor
+    // instances whose subtree contains a driver of a conflicted net (these lead into the conflict when followed).
+    // Engine port names equal NetList.NetPort.uniqueName ('<name>@<gid>@<instanceId>_<channel>').
+    markConflictDrivers(netList, subCircuitInstance, conflictDrivers) {
+        assert.class(NetList, netList);
+        assert.integer(subCircuitInstance);
+        assert.class(Map, conflictDrivers);
         for (const net of netList.nets) {
             if (net.netId === null) continue;
-            for (const { name, gid, instanceId, uniqueName } of net.ports) {
-                if (instanceId !== subCircuitInstance) continue;
-                if (!driverPortNames.has(uniqueName)) continue;
-                const component = this.itemByGID(gid);
-                const port = component?.portByName(name);
+            const drivers = conflictDrivers.get(net.netId);
+            if (!drivers || drivers.size === 0) continue;
+            // descend ports (CustomComponent ports) of this net, keyed by 'parentInstanceId:customComponentGid'
+            const descend = new Map();
+            for (const port of net.ports) {
+                if (port.type === 'descend') descend.set(port.instanceId + ':' + port.gid, port);
+            }
+            const mark = (netPort) => {
+                const component = this.itemByGID(netPort.gid);
+                const port = component?.portByName(netPort.name);
                 if (port) port.conflictDriver = true;
+            };
+            for (const port of net.ports) {
+                if (port.instanceId === subCircuitInstance && drivers.has(port.uniqueName)) mark(port); // actual driver on the conflicted net
+            }
+            for (const port of net.ports) {
+                if (!drivers.has(port.uniqueName)) continue;
+                // walk up the instance chain from every driver's instance and mark the port of the sub-circuit we came from
+                for (let child = port.instanceId; netList.instances[child].parentInstanceId !== null; ) {
+                    const parent = netList.instances[child].parentInstanceId;
+                    const pathPort = descend.get(parent + ':' + netList.instances[child].gid);
+                    if (pathPort && pathPort.instanceId === subCircuitInstance) mark(pathPort);
+                    child = parent;
+                }
             }
         }
     }

@@ -1,0 +1,529 @@
+loadFiles.push(
+{
+	"version": 4,
+	"label": "conflict-nesting",
+	"currentUID": "uaaf85c8663874f418cf955b7f392e41d",
+	"circuits": [
+		{
+			"label": "InnerConflict",
+			"description": "",
+			"uid": "u12248701e8b4465391d137158aedd8d6",
+			"data": [
+				{
+					"#c": "Port",
+					"#a": [
+						330,
+						210,
+						1
+					],
+					"name": "a"
+				},
+				{
+					"#c": "Port",
+					"#a": [
+						330,
+						250,
+						1
+					],
+					"name": "b"
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						410,
+						230,
+						40,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						410,
+						270,
+						40,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Builtin",
+					"#a": [
+						450,
+						210,
+						0,
+						"buffer3"
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						450,
+						230,
+						20,
+						"v",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						450,
+						250,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Builtin",
+					"#a": [
+						450,
+						250,
+						0,
+						"not3"
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						450,
+						270,
+						20,
+						"v",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						450,
+						290,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						490,
+						230,
+						40,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						490,
+						270,
+						40,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						530,
+						230,
+						20,
+						"v",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						530,
+						250,
+						40,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						530,
+						250,
+						20,
+						"v",
+						1
+					]
+				},
+				{
+					"#c": "Port",
+					"#a": [
+						570,
+						230,
+						3
+					],
+					"name": "q"
+				}
+			],
+			"gridConfig": {
+				"zoom": 1.25,
+				"offsetX": 0,
+				"offsetY": 0
+			},
+			"portConfig": {
+				"spacing": 0,
+				"gap": "middle",
+				"parity": "auto",
+				"placement": {
+					"top": "",
+					"right": "",
+					"bottom": "",
+					"left": ""
+				}
+			},
+			"lid": null,
+			"visibleInLib": true,
+			"exportName": ""
+		},
+		{
+			"label": "InnerOk",
+			"description": "",
+			"uid": "udd9bd505b87e43ac8afabe49d2bd9e29",
+			"data": [
+				{
+					"#c": "Port",
+					"#a": [
+						210,
+						270,
+						1
+					],
+					"name": "a"
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						290,
+						290,
+						40,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Switch",
+					"#a": [
+						310,
+						210,
+						1,
+						"toggle",
+						0,
+						0
+					],
+					"name": ""
+				},
+				{
+					"#c": "Power",
+					"#a": [
+						320,
+						200,
+						0,
+						"power"
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						330,
+						250,
+						40,
+						"v",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						330,
+						290,
+						40,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Gate",
+					"#a": [
+						370,
+						270,
+						0,
+						"not",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						410,
+						290,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Port",
+					"#a": [
+						430,
+						270,
+						3
+					],
+					"name": "q"
+				}
+			],
+			"gridConfig": {
+				"zoom": 1.5,
+				"offsetX": 62.10476190476223,
+				"offsetY": -14.427705627705606
+			},
+			"portConfig": {
+				"spacing": 0,
+				"gap": "middle",
+				"parity": "auto",
+				"placement": {
+					"top": "",
+					"right": "",
+					"bottom": "",
+					"left": ""
+				}
+			},
+			"lid": null,
+			"visibleInLib": true,
+			"exportName": ""
+		},
+		{
+			"label": "Outer",
+			"description": "",
+			"uid": "uaaf85c8663874f418cf955b7f392e41d",
+			"data": [
+				{
+					"#c": "Button",
+					"#a": [
+						350,
+						210,
+						0,
+						"toggle",
+						0,
+						1
+					],
+					"name": ""
+				},
+				{
+					"#c": "Button",
+					"#a": [
+						350,
+						270,
+						0,
+						"toggle",
+						0,
+						1
+					],
+					"name": ""
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						390,
+						230,
+						40,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						390,
+						290,
+						40,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						430,
+						230,
+						20,
+						"v",
+						1
+					]
+				},
+				{
+					"#c": "CustomComponent",
+					"#a": [
+						430,
+						230,
+						0,
+						"u12248701e8b4465391d137158aedd8d6",
+						"auto",
+						"middle",
+						0
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						430,
+						270,
+						20,
+						"v",
+						1
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						490,
+						270,
+						40,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "CustomComponent",
+					"#a": [
+						530,
+						250,
+						0,
+						"udd9bd505b87e43ac8afabe49d2bd9e29",
+						"auto",
+						"middle",
+						0
+					]
+				},
+				{
+					"#c": "Wire",
+					"#a": [
+						570,
+						270,
+						20,
+						"h",
+						1
+					]
+				},
+				{
+					"#c": "Port",
+					"#a": [
+						590,
+						250,
+						3
+					],
+					"name": "o"
+				}
+			],
+			"gridConfig": {
+				"zoom": 1.25,
+				"offsetX": 0,
+				"offsetY": 0
+			},
+			"portConfig": {
+				"spacing": 0,
+				"gap": "middle",
+				"parity": "auto",
+				"placement": {
+					"top": "",
+					"right": "",
+					"bottom": "",
+					"left": ""
+				}
+			},
+			"lid": null,
+			"visibleInLib": true,
+			"exportName": ""
+		}
+	],
+	"libraries": {},
+	"toolbar": [
+		{
+			"descriptor": {
+				"#c": "Port"
+			}
+		},
+		{
+			"descriptor": {
+				"#c": "Splitter"
+			}
+		},
+		{
+			"descriptor": {
+				"#c": "Tunnel"
+			}
+		},
+		{
+			"descriptor": {
+				"#c": "Probe"
+			}
+		},
+		{
+			"descriptor": {
+				"#c": "TextLabel"
+			}
+		},
+		{
+			"descriptor": {
+				"#c": "Group"
+			}
+		},
+		{
+			"descriptor": {
+				"#c": "Gate",
+				"#t": "buffer"
+			}
+		},
+		{
+			"descriptor": {
+				"#c": "Gate",
+				"#t": "not"
+			}
+		},
+		{
+			"descriptor": {
+				"#c": "Gate",
+				"#t": "and"
+			}
+		},
+		{
+			"descriptor": {
+				"#c": "Gate",
+				"#t": "nand"
+			}
+		},
+		{
+			"descriptor": {
+				"#c": "Gate",
+				"#t": "or"
+			}
+		},
+		{
+			"descriptor": {
+				"#c": "Gate",
+				"#t": "nor"
+			}
+		},
+		{
+			"descriptor": {
+				"#c": "Gate",
+				"#t": "xor"
+			}
+		},
+		{
+			"descriptor": {
+				"#c": "Gate",
+				"#t": "xnor"
+			}
+		}
+	]
+}
+)

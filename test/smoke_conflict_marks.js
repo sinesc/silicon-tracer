@@ -21,7 +21,10 @@ const code = `
     const cEnable2 = engine.getConstId('cEnable2');
     const netOutput = engine.getProbeNetIds('pOutput')[0];
 
-    const applyMarks = () => engine.resolveNetConflictDrivers();
+    const applyMarks = (instanceId) => {
+        netList.instances[instanceId].circuit.clearConflictDrivers();
+        netList.instances[instanceId].circuit.markConflictDrivers(netList, instanceId, engine.resolveNetConflictDriversByNet());
+    };
 
     // Conflict: both buffers driving the pOutput net
     engine.setConstValue(cInput, 1);
@@ -29,7 +32,7 @@ const code = `
     engine.setConstValue(cEnable2, 1);
     engine.simulate(5);
     if (engine.getNetValue(netOutput) !== -1) throw new Error('expected net conflict');
-    circuit.markConflictDrivers(netList, 0, applyMarks());
+    applyMarks(0);
     let marked = [];
     for (const item of circuit.items) {
         for (const port of (item.ports ?? [])) {
@@ -52,7 +55,7 @@ const code = `
     engine.setConstValue(cEnable1, 0);
     engine.setConstValue(cEnable2, 0);
     engine.simulate(5);
-    circuit.markConflictDrivers(netList, 0, applyMarks());
+    applyMarks(0);
     for (const item of circuit.items) {
         for (const port of (item.ports ?? [])) {
             if (port.conflictDriver) throw new Error('marks should be cleared after conflict resolution, leftover on ' + item.label + '.' + port.name);
