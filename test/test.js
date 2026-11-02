@@ -174,6 +174,21 @@ test("conflict driver port resolution", () => {
     assert(simGate.resolveNetConflictDrivers().size === 0, `driver set should be empty for single-driver nets, got ${[...simGate.resolveNetConflictDrivers()]}`);
 });
 
+test("pull resistors are not conflict drivers", () => {
+    const sim = createSimulationWithBackend('js');
+    sim.declareConst(1, '@cst0@0_0');                      // always drives the net
+    sim.declareGate('and', 2, '@gt0@0_0');                 // inputs undriven → output 1 drives the net → conflict with constant
+    sim.declarePullResistor('down', '@pul0@0_0');          // only drives undriven nets → must never be a driver
+    sim.declareProbe('pConflict', '@prb0@0_0');            // must be declared before declareNet() to register its net id
+    sim.declareNet(['q@cst0@0_0', 'q@gt0@0_0', 'q@pul0@0_0', 'input@prb0@0_0']);
+    sim.compile(); // checkNetConflicts defaults to true
+    sim.simulate(5);
+
+    assert(sim.getProbeValue('pConflict') === -1, `net should be in conflict state, got ${sim.getProbeValue('pConflict')}`);
+    const drivers = [...sim.resolveNetConflictDrivers()].sort();
+    assert(drivers.length === 2 && drivers[0] === 'q@cst0@0_0' && drivers[1] === 'q@gt0@0_0', `drivers should be exactly the constant and gate outputs (no pull resistor), got ${drivers}`);
+});
+
 test("pull resistors drive undriven nets", () => {
     const sim = compileCircuit('data/tests.stc', 'Pullresistors');
     // Circuit: three toggle switches (d2, d1, d0) each with a pull-down resistor and probe (p2, p1, p0).

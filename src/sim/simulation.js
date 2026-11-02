@@ -598,6 +598,7 @@ class Simulation {
             for (const portName of net.ports) {
                 const port = this.#ports.byName[portName];
                 if (!port || port.ioType !== 'o' || port.elementIndex2 === null) continue;
+                if (port.isPull) continue; // pull resistors never cause conflicts (they only drive undriven nets)
                 const driven = port.elementIndex3 === null || (mem[port.elementIndex3] & (1 << port.bitIndex)) !== 0;
                 if (driven) drivers.add(portName);
             }

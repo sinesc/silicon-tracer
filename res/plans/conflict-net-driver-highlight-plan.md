@@ -30,6 +30,7 @@ resolveNetConflictDrivers() {
         for (const portName of net.ports) {
             const port = this.#ports.byName[portName];
             if (!port || port.ioType !== 'o' || port.elementIndex2 === null) continue;
+            if (port.isPull) continue; // pull resistors never cause conflicts (they only drive undriven nets)
             const driven = port.elementIndex3 === null || (mem[port.elementIndex3] & (1 << port.bitIndex)) !== 0;
             if (driven) drivers.add(portName);
         }
@@ -136,7 +137,7 @@ New rule after the `.component-port` block:
 
 - Highlight appears only while `singleStep` and `checkNetConflicts` are both active (conflicted nets are only rendered/detected with conflicts enabled, and per-step lookup keeps free-run performance unchanged).
 - Marks are recomputed at every single step, at simulation recompile/reattach, and on toggle changes; cleared when simulation is detached, conflicts are disabled, or single-step is disabled.
-- Nets in conflict mark every driving output port: gate/builtin/constant/clock/RAM outputs, tri-state outputs with enabled output signal (enabled `buffer3`/`not3`/`mux3`/`demux3`/`switch`/memory `oe`), i.e. any output port whose driven bit is set. Input ports, undriven (high-impedance) outputs, and ports on non-conflicted nets are never marked.
+- Nets in conflict mark every driving output port: gate/builtin/constant/clock/RAM outputs, tri-state outputs with enabled output signal (enabled `buffer3`/`not3`/`mux3`/`demux3`/`switch`/memory `oe`), i.e. any output port whose driven bit is set. Pull resistor outputs are excluded (they only drive undriven nets and can never cause a conflict). Input ports, undriven (high-impedance) outputs, and ports on non-conflicted nets are never marked.
 
 ## Tests — `test/test.js`
 
@@ -146,7 +147,8 @@ Extend the existing simulation unit tests (runner compiles circuits with `checkN
    - After `simulate(5)` with `cEnable1=1, cEnable2=0` (no conflict): `sim.resolveNetConflictDrivers().size === 0`.
    - With both enables high (`pOutput === -1` conflict): driver set contains exactly the engine `q` port names of the drivers of the `pOutput` net (names of the form `q@<gid>@0_0`); the `q` of the disabled (`enable=0`) buffer on the undriven `pIntermediate` net is **not** included.
 2. Circuit `ConflictGate` (existing): with no conflict the driver set is empty (single-driver nets are not marked, no false positives).
-3. Run `node test/test.js`; all tests pass.
+3. Hand-built sim (`pull resistors are not conflict drivers`): constant + AND gate + pull-down resistor + probe on one net; net is in conflict and the driver set contains exactly the constant and gate outputs, never the pull resistor output.
+4. Run `node test/test.js`; all tests pass.
 
 ## Manual verification
 
