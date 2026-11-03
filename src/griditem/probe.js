@@ -106,8 +106,10 @@ class Probe extends DisplayComponent {
             this.rotation = config.rotation;
             this.displayFormat = config.displayFormat;
             // Re-check size in case display format changed the desired left count.
-            const channels = this.#input.netIds?.length ?? 1;
-            this.#resizeToChannels(channels);
+            // Only possible while channel count is known (i.e. while simulating).
+            if (this.#input.netIds) {
+                this.#resizeToChannels(this.#input.netIds.length);
+            }
             this.#prevLabel = null;
             this.redraw(config._changed.some((c) => c === 'name' || c === 'rotation' || c === 'displayFormat'));
             this.grid.trackAction('Edit probe');
@@ -177,13 +179,17 @@ class Probe extends DisplayComponent {
     renderNetState() {
         super.renderNetState();
 
-        // Auto-resize to fit connected channel count.
-        const channels = this.#input.netIds?.length ?? 1;
-        const desiredCount = DisplayComponent.lookupSize(channels, this.#effectiveDisplayFormat(channels));
-        if (desiredCount !== this.#prevLeftCount) {
-            this.#resizeToChannels(channels);
-            this.grid?.markTopologyChanged();
-            return;
+        // Auto-resize to fit connected channel count. Skipped when channel count is unknown
+        // (no simulation attached): falling back to 1 channel here would shrink wider probes
+        // on every load and make saved probe size/position oscillate between saves.
+        const netIds = this.#input.netIds;
+        if (netIds) {
+            const desiredCount = DisplayComponent.lookupSize(netIds.length, this.#effectiveDisplayFormat(netIds.length));
+            if (desiredCount !== this.#prevLeftCount) {
+                this.#resizeToChannels(netIds.length);
+                this.grid?.markTopologyChanged();
+                return;
+            }
         }
 
         // Render the current state of the input net(s).
