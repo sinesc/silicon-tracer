@@ -74,6 +74,7 @@ class Grid {
             this.dependentsOverlay = this.registerOverlay(-1, new DependentsOverlay(app));
             this.simulationOverlay = this.registerOverlay(1000, new SimulationOverlay(app));
             this.monitorOverlay = this.registerOverlay(100, new MonitorOverlay(app));
+            this.pinsOverlay = this.registerOverlay(100, new PinsOverlay(app));
             this.graphOverlay = this.registerOverlay(1000, new GraphOverlay(app));
             this.#searchBar = new SearchBar(app, this.#element);
         }
@@ -284,6 +285,7 @@ class Grid {
 
             if (this.#pending.monitorRefresh) {
                 this.monitorOverlay.refresh();
+                this.pinsOverlay.refresh();
                 this.#pending.monitorRefresh = false;
             }
 

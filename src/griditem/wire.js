@@ -77,6 +77,17 @@ class Wire extends GridItem {
         this.#element?.classList.toggle('selected', status);
     }
 
+    // Return whether the element is highlighted.
+    get highlighted() {
+        return this.#element?.classList.contains('highlighted') ?? false;
+    }
+
+    // Apply/remove highlight effect.
+    set highlighted(status) {
+        assert.bool(status);
+        this.#element?.classList.toggle('highlighted', status);
+    }
+
     // Returns the DOM element used by the wire.
     get element() {
         return this.#element;
@@ -151,6 +162,9 @@ class Wire extends GridItem {
 
     // Hover hotkey actions
     onHotkey(key, action, what) {
+        if (super.onHotkey(key, action, what)) {
+            return true;
+        }
         if (action !== 'down') {
             return;
         }

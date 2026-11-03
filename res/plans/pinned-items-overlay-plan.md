@@ -1,5 +1,7 @@
 # Pinned Items Overlay — Implementation Plan
 
+**Status: Implemented** (see `src/overlay/pinsoverlay.js` and the `git log` for this feature). Deviations from the plan below are marked *(as-built)*.
+
 ## Goal
 
 Add a "Pinned" info-box overlay listing all pinned grid items. Any `GridItem` on the grid (except `WireBuilder`) can be pinned/unpinned by hovering over it and pressing `p`. Clicking a list entry opens the *containing* circuit on the grid — as the correct simulation instance if the pinned item is part of the current simulation. Purpose: quick access to deeply nested items (e.g. inspect a memory inside a sub-circuit) during a simulation.
@@ -58,10 +60,10 @@ Follow the `MonitorOverlay` structure (cached-HTML `dirty()`/`render()`, `#lastH
   <div class="info-section">Pinned</div>
   <div class="pin-item" data-idx="N">…label… <span class="pin-unpin" data-idx="N">✕</span></div>
   ```
-  Label: item type/name + containing circuit for orientation, e.g. `Memory ROM` + dim suffix `ALU@7` (instance label from `sim.instances[iid].circuit.label` + `@iid` suffix when a sim instance applies, else plain circuit label; `Wire` → `'Wire'` since it has no `typeLabel`). Use `item.typeLabel` + `item.name` where available.
+  Label: item type/name + containing circuit for orientation, e.g. `Memory ROM` + dim suffix `ALU@7` (instance label from `sim.instances[iid].circuit.label` + `@iid` suffix when a sim instance applies, else plain circuit label; `Wire` → `'Wire'` since it has no `typeLabel`). Use `item.typeLabel` + `item.name` where available. *(as-built: root instance `@0` shows no suffix, matching `CircuitOverlay`; context in `.pin-context` span; unpin in `.pin-unpin` span, hidden until row hover.)*
 - `render(node)` — sets innerHTML, then wires delegated handlers on the list wrapper (as `GraphOverlay` does): `onclick` (`✕` → remove entry; row → `#openPin(entry)`), `onmouseover`/`onmouseout` → `#setHovered(idx)` toggling `item.highlighted` (guard: only when `item.grid !== null`, i.e. item is on the visible grid; skip items without a `highlighted` setter).
 - `#openPin(entry)` — the 3-step open logic from Design.
-- `refresh()` — called after simulation recompile (see step 4); re-resolves all entries and re-validates `instanceId` (`sim.instances[instanceId]?.circuit.uid === circuitUid`, else re-find first matching instance). Same role as `MonitorOverlay.refresh()`.
+- `refresh()` — called after simulation recompile (see step 4); re-resolves all entries and re-validates `instanceId` (`sim.instances[instanceId]?.circuit.uid === circuitUid`, else re-find first matching instance). Same role as `MonitorOverlay.refresh()`. *(as-built: entry resolution/pruning actually happens in `#buildHtml()` on every dirty/render cycle; `refresh()` only re-validates instance ids. `togglePin()` ignores unlinked items.)*
 
 ### 4. `src/grid/grid.js` — register & refresh
 

@@ -138,6 +138,9 @@ class TextLabel extends GridItem {
 
     // Hover hotkey actions
     onHotkey(key, action, what) {
+        if (super.onHotkey(key, action, what)) {
+            return true;
+        }
         if (action !== 'down') {
             return;
         }

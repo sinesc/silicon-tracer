@@ -3,7 +3,7 @@
 // Base class for grid items.
 class GridItem {
 
-    static HOTKEYS = '<i>Click</i> Select, <i>SHIFT/CTRL+Click</i> Add/remove from selection';
+    static HOTKEYS = '<i>Click</i> Select, <i>SHIFT/CTRL+Click</i> Add/remove from selection, <i>P</i> Pin';
     static #SELECTION_MARGIN = 5;       // Bounding box inset during selection.
 
     static CLASSES = {};                // Serializable GridItem subclasses. Registration at the bottom of each subclass file.
@@ -230,7 +230,12 @@ class GridItem {
     }
 
     // Implement to handle hover hotkey events. Should call parent and exit early on true result.
-    onHotkey(key, action, ...args) {
+    // Note: only 'hover' type pins, 'hover-port' (component port dots) targets the containing component and must not pin.
+    onHotkey(key, action, what) {
+        if (key === 'p' && action === 'down' && what?.type === 'hover') {
+            this.grid.pinsOverlay.togglePin(this);
+            return true;
+        }
         return false;
     }
 

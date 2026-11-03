@@ -1059,6 +1059,27 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
     scrollbar-width: none;
     pointer-events: auto;
 }
+/* pinned items overlay list */
+.pin-item {
+    cursor: pointer;
+    pointer-events: auto;
+    color: color-mix(in srgb, var(--text-color) 50%, transparent);
+}
+.pin-item:hover {
+    color: color-mix(in srgb, var(--text-color) 70%, transparent);
+}
+.pin-item .pin-context {
+    font-weight: normal;
+    color: color-mix(in srgb, var(--text-color) 30%, transparent);
+}
+.pin-item .pin-unpin {
+    display: none;
+    font-weight: normal;
+}
+.pin-item:hover .pin-unpin {
+    display: inline;
+    color: color-mix(in srgb, var(--text-color) 70%, transparent);
+}
 /* simulation tree view overlay */
 .graph-tree {
     line-height: 1.4;
@@ -1604,6 +1625,9 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
 .wire.selected {
     outline: 1px dotted white;
     filter: grayscale(100%) sepia(100%) hue-rotate(var(--selection-hue)) brightness(var(--selection-brightness));
+}
+.wire.highlighted {
+    filter: brightness(var(--highlight-brightness));
 }
 /* extends clickable area around wires */
 .wire::after {
