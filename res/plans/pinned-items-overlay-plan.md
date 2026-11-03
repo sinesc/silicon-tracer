@@ -53,7 +53,7 @@ Only `what.type === 'hover'` may pin. The hover-target type cleanly separates th
 
 Follow the `MonitorOverlay` structure (cached-HTML `dirty()`/`render()`, `#lastHtml` compare):
 
-- `togglePin(item)` — `assert.class(GridItem, item)`; look up existing entry by `gid`; remove it, else push `{ circuitUid: item.grid.circuit.uid, gid: item.gid, instanceId }` with `instanceId` captured as described in Design.
+- `togglePin(item)` — `assert.class(GridItem, item)`; look up existing entry by `gid` **and `instanceId`** *(as-built: instance included in the toggle key — one GridItem backs every instance of a sub-circuit, so the same item can be pinned once per instance, e.g. NOT@1 and NOT@2)*; remove it, else push `{ circuitUid: item.grid.circuit.uid, gid: item.gid, instanceId }` with `instanceId` captured as described in Design.
 - `#resolve(entry)` — returns `{ circuit, item }` or `null` (circuit or item gone).
 - `#buildHtml()` — `''` if list empty (after dropping unresolvable entries); otherwise:
   ```html
@@ -82,7 +82,7 @@ Follow the `MonitorOverlay` structure (cached-HTML `dirty()`/`render()`, `#lastH
 
 - `Component.onHotkey`/`Group`/`TextLabel`/`Wire` currently `return` early for `action !== 'down'` *before* any parent call — super must be chained first, not last.
 - SearchBar highlights use the same `highlighted` class; clearing a search can visually drop a pin hover highlight — acceptable, cosmetic.
-- One `Circuit` object backs *all* simulation instances of a sub-circuit (`NetList`), so a pinned item inside a doubly-instantiated sub-circuit is inherently ambiguous; the pin-time captured `instanceId` disambiguates it as precisely as possible.
+- One `Circuit` object backs *all* simulation instances of a sub-circuit (`NetList`), so a pinned item inside a doubly-instantiated sub-circuit is inherently ambiguous; pins are therefore keyed `(gid, instanceId)` and the pin-time captured `instanceId` disambiguates each pin precisely (`res/dev/subcircuit-pin.stc` exercises this: NOT gate pinned in `Subcircuit@1` and `Subcircuit@2` are two separate list rows).
 - Hover hotkeys require the grid hover target (`Grid.#hotkeyTarget`), so `p` only works while the mouse is over the item's registered hover element and the grid is not read-only/passive.
 - Component port dots must not pin their component — enforced solely by the `what.type === 'hover'` check; do not loosen it to also accept `'hover-port'`.
 - `unsetCircuit()`/`setCircuit()` reset `lastRenderTime` on all overlay sections, so the Pinned list re-renders on circuit switches without waiting for the interval.

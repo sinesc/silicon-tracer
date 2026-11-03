@@ -6,19 +6,19 @@ class PinsOverlay extends Overlay {
     #lastHtml = undefined;
     #cachedHtml = null;
 
-    // Adds or removes the given grid item from the pin list.
+    // Adds or removes the given grid item from the pin list. Items are pinned per simulation instance: a Circuit (and its items) backs all instances of a sub-circuit, so the same item can be pinned once per instance.
     togglePin(item) {
         assert.class(GridItem, item);
         if (!item.grid) return;
-        const existing = this.#pins.findIndex((p) => p.gid === item.gid);
-        if (existing >= 0) {
-            this.#pins.splice(existing, 1);
-            return;
-        }
         const circuit = item.grid.circuit;
         const sim = this.app.simulations.current;
         // capture the attached simulation instance if the item's circuit is the simulation instance currently shown on the grid
         const instanceId = sim && sim.instances[sim.instanceId] && sim.instances[sim.instanceId].circuit === circuit ? sim.instanceId : null;
+        const existing = this.#pins.findIndex((p) => p.gid === item.gid && p.instanceId === instanceId);
+        if (existing >= 0) {
+            this.#pins.splice(existing, 1);
+            return;
+        }
         this.#pins.push({ circuitUid: circuit.uid, gid: item.gid, instanceId });
     }
 
