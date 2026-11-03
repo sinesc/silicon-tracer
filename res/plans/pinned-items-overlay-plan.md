@@ -24,7 +24,7 @@ Add a "Pinned" info-box overlay listing all pinned grid items. Any `GridItem` on
 ```js
 // Implement to handle hover hotkey events. Should call parent and exit early on true result.
 onHotkey(key, action, what) {
-    if (key === 'p' && action === 'down' && (what?.type === 'hover' || what?.type === 'hover-port')) {
+    if (key === 'p' && action === 'down' && what?.type === 'hover') {
         this.grid.pinsOverlay.togglePin(this);
         return true;
     }
@@ -32,7 +32,7 @@ onHotkey(key, action, what) {
 }
 ```
 
-Accept both hover target types so ports (registered with `{ type: 'hover-port' }`) are pinnable. Extend the hint: `static HOTKEYS = '<i>Click</i> Select, <i>SHIFT/CTRL+Click</i> Add/remove from selection, <i>P</i> Pin';` — `Component.HOTKEYS` and the Wire hover message already interpolate `GridItem.HOTKEYS`, so the hint propagates to nearly all items for free.
+Only `what.type === 'hover'` may pin. The hover-target type cleanly separates the two port representations: circuit `Port` grid items register their `inner` element with `{ type: 'hover' }` (port.js `link()`), so they are pinnable; component-port DOM elements (`.component-port` created in `Component`) register with `{ type: 'hover-port' }` and target the *component* item, so pressing `p` over a gate/memory port dot does nothing (only the component body pins). No extra exclusion logic needed. Extend the hint: `static HOTKEYS = '<i>Click</i> Select, <i>SHIFT/CTRL+Click</i> Add/remove from selection, <i>P</i> Pin';` — `Component.HOTKEYS` and the Wire hover message already interpolate `GridItem.HOTKEYS`, so the hint propagates to nearly all items for free.
 
 `'p'` is not used by any other hotkey (grid: ctrl+f/a/v/c/x, r, Delete, arrows, e, w, 0-9; app: t, u, e, ctrl+s/z/y; hover targets: r, Delete, e, E, m, M, w, 0-3).
 
@@ -82,6 +82,7 @@ Follow the `MonitorOverlay` structure (cached-HTML `dirty()`/`render()`, `#lastH
 - SearchBar highlights use the same `highlighted` class; clearing a search can visually drop a pin hover highlight — acceptable, cosmetic.
 - One `Circuit` object backs *all* simulation instances of a sub-circuit (`NetList`), so a pinned item inside a doubly-instantiated sub-circuit is inherently ambiguous; the pin-time captured `instanceId` disambiguates it as precisely as possible.
 - Hover hotkeys require the grid hover target (`Grid.#hotkeyTarget`), so `p` only works while the mouse is over the item's registered hover element and the grid is not read-only/passive.
+- Component port dots must not pin their component — enforced solely by the `what.type === 'hover'` check; do not loosen it to also accept `'hover-port'`.
 - `unsetCircuit()`/`setCircuit()` reset `lastRenderTime` on all overlay sections, so the Pinned list re-renders on circuit switches without waiting for the interval.
 
 ## Testing
