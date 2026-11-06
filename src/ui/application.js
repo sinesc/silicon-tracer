@@ -407,6 +407,11 @@ class Application {
             this.#redoButton = editMenu.createActionButton('Redo', 'Redo last undone change. Hotkey: <i>CTRL+Y</i>.', () => Action.redo(this));
             this.refreshUndoButtons();
             editMenu.createSeparator();
+            editMenu.createActionButton('Find...', 'Search components in and across circuits. Hotkey: <i>CTRL+F</i>.', () => {
+                editMenu.close();
+                this.grid.openSearch();
+            });
+            editMenu.createSeparator();
             const cutButton = editMenu.createActionButton('Cut', 'Cut selected items. Hotkey: <i>CTRL+X</i>.', () => Action.cutSelection(this));
             const copyButton = editMenu.createActionButton('Copy', 'Copy selected items to clipboard. Hotkey: <i>CTRL+C</i>.', () => Action.copySelection(this));
             const pasteButton = editMenu.createActionButton('Paste', 'Paste items from clipboard. Hotkey: <i>CTRL+V</i>.', () => Action.pasteSelection(this));

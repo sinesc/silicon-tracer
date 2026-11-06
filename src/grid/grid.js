@@ -240,6 +240,11 @@ class Grid {
         return [ mouseGridX, mouseGridY ];
     }
 
+    // Opens the component search bar.
+    openSearch() {
+        this.#searchBar.open();
+    }
+
     // Pans to bring item into the visible area.
     panToItem(item) {
         const gw = this.#element.offsetWidth;
