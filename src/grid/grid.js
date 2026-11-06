@@ -840,6 +840,7 @@ class Grid {
         });
         this.#app.registerHotkey(null, 'down', (e) => e.key >= '0' && e.key <= '9', (e) => {
             this.#netColor = parseInt(e.key);
+            this.markNetColorsChanged(); // nets without wires (directly connected ports) take the default net color
             this.#app.updateStatus();
         });
     }
