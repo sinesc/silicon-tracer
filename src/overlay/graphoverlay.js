@@ -37,12 +37,17 @@ class GraphOverlay extends Overlay {
         let childrenHtml = '';
         // Show root children, one level below the active instance, and the path nodes in between.
         const showAllChildren = instanceId === 0 || instanceId === activeInstanceId;
+        const childIds = [];
         for (let id = 0; id < instances.length; id++) {
             if (instances[id] && instances[id].parentInstanceId === instanceId) {
                 if (showAllChildren || pathIds.has(id)) {
-                    childrenHtml += this.#buildTree(instances, id, activeInstanceId, pathIds);
+                    childIds.push(id);
                 }
             }
+        }
+        childIds.sort((a, b) => instances[a].circuit.label.localeCompare(instances[b].circuit.label));
+        for (const id of childIds) {
+            childrenHtml += this.#buildTree(instances, id, activeInstanceId, pathIds);
         }
         return `<li${active} data-iid="${instanceId}">${label}${childrenHtml ? `<ul>${childrenHtml}</ul>` : ''}</li>`;
     }
