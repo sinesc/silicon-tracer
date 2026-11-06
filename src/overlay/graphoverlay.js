@@ -17,16 +17,17 @@ class GraphOverlay extends Overlay {
         }
     }
 
-    #buildTree(instances, instanceId, showLibs, activeInstanceId) {
+    #buildTree(instances, instanceId, activeInstanceId) {
         const instance = instances[instanceId];
         if (!instance) return '';
-        if (!showLibs && instance.circuit.lid !== null) return '';
+        // Circuits with an export name are shown as opaque; their sub-instances are hidden.
+        if (instanceId !== 0 && instance.circuit.exportName) return '';
         const label = `${instance.circuit.label}@${instanceId}`;
         const active = instanceId === activeInstanceId ? ' class="graph-tree-active"' : '';
         let childrenHtml = '';
         for (let id = 0; id < instances.length; id++) {
             if (instances[id] && instances[id].parentInstanceId === instanceId) {
-                childrenHtml += this.#buildTree(instances, id, showLibs, activeInstanceId);
+                childrenHtml += this.#buildTree(instances, id, activeInstanceId);
             }
         }
         return `<li${active} data-iid="${instanceId}">${label}${childrenHtml ? `<ul>${childrenHtml}</ul>` : ''}</li>`;
@@ -37,8 +38,7 @@ class GraphOverlay extends Overlay {
         if (!sim) return '';
         const instances = sim.instances;
         if (!instances || instances.length <= 1) return '';
-        const rootIsLib = instances[0].circuit.lid !== null;
-        const tree = this.#buildTree(instances, 0, rootIsLib, sim.instanceId);
+        const tree = this.#buildTree(instances, 0, sim.instanceId);
         return `<div class="info-section">Simulation graph</div>` +
             `<div class="graph-tree"><ul>${tree}</ul></div>`;
     }
