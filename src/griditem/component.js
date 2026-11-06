@@ -120,7 +120,7 @@ class ComponentPort {
         assert.string(label);
         assert.bool(containPort);
         assert.bool(force);
-        if (label.length <= 1 && !force) {
+        if (!label.length || (label.length <= 1 && !force)) { // force only lifts the 1-char rule, never renders an empty (invisible) label box
             element.style.display = 'none';
         } else {
             const visualPortSize = Component.PORT_SIZE * component.grid.zoom;
