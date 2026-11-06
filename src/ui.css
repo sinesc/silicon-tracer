@@ -1225,7 +1225,7 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
  * Group box (visual fieldset, renders below all other grid items)
  */
 .group {
-    z-index: 10; /* below components (11), text (12), wires (13) */
+    z-index: 8; /* below wires (10) and all other grid items; must stay below .wire or the box's pointer-events would steal wire mouseover/mousedown hits (net hover highlighting) for wires created before the group (equal z-index breaks ties by DOM order) */
     position: absolute;
     box-sizing: border-box;
     pointer-events: all; /* whole box is a hover target (drag-handle visibility); mousedown on empty interior is forwarded to the element below (see Group.link), so items inside the group remain clickable */
