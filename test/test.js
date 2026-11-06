@@ -440,6 +440,46 @@ test("break condition with subcircuit probes", () => {
     assert(control.simulate(100) === 0, `non-matching condition should not break, got ${control.simulate(100)}`);
 });
 
+test("d flip-flop rising-edge timing (input backup ordering)", () => {
+    // Clock flips every 2 ticks (tick-based clock), data = 1. The FF must toggle q exactly once
+    // per rising edge of its clock input, with one tick of gate delay (net -> input -> output -> net).
+    const sim = createSimulationWithBackend('js');
+    sim.declareClock(0, 2, '@c0');
+    sim.declareConst(1, '@d0');
+    sim.declareBuiltin('dflipflop', '@ff0');
+    sim.declareGate('buffer', 1, '@b1');
+    sim.declareGate('buffer', 1, '@b0');
+    sim.declareProbe('pq', '@pr0_0');
+    sim.declareNet([ 'q@d0', 'data@ff0' ]);
+    sim.declareNet([ 'c@c0', 'clock@ff0', 'a@b1' ]);
+    sim.declareNet([ 'q@ff0', 'a@b0', 'input@pr0_0' ]);
+    sim.compile();
+
+    // the enable input port is not driven by a net in this synthetic circuit -> set it directly
+    const clockPort = sim.ports.find((p) => p.name === 'c@c0');
+    const ffClockPort = sim.ports.find((p) => p.name === 'clock@ff0');
+    sim.mem[sim.ports.find((p) => p.name === 'enable@c0').elementIndex2] |= (1 << sim.ports.find((p) => p.name === 'enable@c0').bitIndex);
+    const getBit = (p) => (sim.mem[p.elementIndex2] & (1 << p.bitIndex)) ? 1 : 0;
+
+    let prevFFClock = 0, risingEdgeTick = -1;
+    let q = null, firstRiseSeenTick = -1;
+    for (let tick = 1; tick <= 20 && firstRiseSeenTick < 0; tick++) {
+        sim.simulate(1);
+        const ffClock = getBit(ffClockPort);
+        if (ffClock === 1 && prevFFClock === 0 && risingEdgeTick < 0) risingEdgeTick = tick;
+        prevFFClock = ffClock;
+        q = sim.getProbeValue('pq');
+        if (q === 1) firstRiseSeenTick = tick;
+    }
+    assert(risingEdgeTick > 0, 'FF clock input never saw a rising edge');
+    assert(firstRiseSeenTick > 0, 'q never became 1 (edge detection broken?)');
+    assert(firstRiseSeenTick === risingEdgeTick, `q should rise on the tick of the rising edge, got edge at ${risingEdgeTick}, q at ${firstRiseSeenTick}`);
+
+    // q must stay stable (no glitches) while the clock keeps toggling with data unchanged
+    sim.simulate(40);
+    assert(sim.getProbeValue('pq') === 1, `q should stay 1, got ${sim.getProbeValue('pq')}`);
+});
+
 console.log('\nMemory (ROM/RAM) tests:');
 
 test("ROM read with 2-bit address and 8-bit data", () => {

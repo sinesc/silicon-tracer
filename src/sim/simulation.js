@@ -5,10 +5,10 @@
  *
  * PORT: Ports are inputs or outputs of components (e.g. gates, constants, built-ins). They are the connection points between components and nets. All ports have unique names (a concatenation of a given name and the component suffix).
  * NET: Nets connect component ports. Ports can either output to a net or read input from it. The state of a net can be "0", "1" or "not set" (when there are no active output to the net).
- * GATE: Gates are circuit components with ports and define a logic function for each of their output ports, e.g. for an AND gate: `q = a & b`. Each simulation tick a gate first reads from its inputs, computes the result and writes
- * it to the output. Only then do the inputs read from the nets they are attached to. This is done to simulate gate delay. Gate functions are defined in GATE_MAP. Gate output ports are binary with the only possible states being "0" and "1".
+ * GATE: Gates are circuit components with ports and define a logic function for each of their output ports, e.g. for an AND gate: `q = a & b`. Each simulation tick a gate first reads its inputs from the nets they are attached to, computes the
+ * result and writes it to its output ports. Only then do the nets update from the output ports, so a gate's new output is only visible on its net on the next tick. This is done to simulate a one tick gate delay. Gate functions are defined in GATE_MAP. Gate output ports are binary with the only possible states being "0" and "1".
  * BUILTIN: Builtins are basic digital components that - like gates - have ports that connect to nets. Their functions are defined in BUILTIN_MAP. Builtin output ports support Tri-state logic, their outputs can be "0", "1" or "high impedance" ("not set").
- * Like gates they read from their inputs before the inputs read from the nets they are attached to in order to simulate delay.
+ * Like gates they read their inputs from the nets before the nets update from the outputs, so they also have a one tick delay. Edge-triggered builtins detect edges by comparing the (fresh) input against a backup of the previous tick's input state.
  *
  * APPROACH: We store the states of all nets and ports in one single typed array where each bit of each element stores the state of a port or a net. We keep track of the bit/element locations in `#ports` and `#nets`. The `elementIndex2` property contains the `#mem` element
  * index of a net/port and `bitIndex` the bit-index within the element. For tri-state logic we use an additional `#mem` array element to store whether the port/net is high-impedance(0) or driven(1) and keep track of the location in `elementIndex3` (bit-index is the same).
@@ -1103,6 +1103,7 @@ class Simulation {
                     if (!operations[operationId]) {
                         const dest = { type: 'backup', index: port.elementIndexP, srcIndex: port.elementIndex2 };
                         operations[operationId] = this.#backend.compileLogic(dest, '', ports, 'backup previous state for edge detection');
+                        operations[operationId].isBackup = true; // emitted before inputs are updated from nets (see #compileTick)
                     }
                 }
             }
@@ -1150,17 +1151,13 @@ class Simulation {
     // Compiles code for a single simulation tick.
     #compileTick() {
 
-        // step 1: generate code to compute output values from inputs and update clocks
+        // step 1: backup previous input states for edge detection. Must run before inputs are updated from nets in step 2,
+        // otherwise edge detection (+/- operators) would compare the new input state against itself and never fire.
         for (const operation of values(this.#layout.operations)) {
-            this.#backend.emitLogic(operation);
-        }
-        for (const clock of this.#clocks) {
-            const enablePort = this.#ports.byName[clock.enablePortName];
-            const outputPort = this.#ports.byName[clock.outputPortName];
-            this.#backend.emitClock(clock, enablePort, outputPort);
+            if (operation.isBackup) this.#backend.emitLogic(operation);
         }
 
-        // step2: set inputs from nets
+        // step 2: set inputs from nets
         const inputGrouped = this.#groupBitmapsByDest(this.#layout.netToInputBitmap);
         for (const [destElementIndex, group] of pairs(inputGrouped)) {
             this.#backend.emitNetToInput(destElementIndex, group, 'net to input');
@@ -1170,7 +1167,17 @@ class Simulation {
             this.#backend.emitNetToInput(destElementIndex, group, 'net to input signal');
         }
 
-        // step 2.5: memory access (ROM/RAM)
+        // step 3: generate code to compute output values from inputs and update clocks
+        for (const operation of values(this.#layout.operations)) {
+            if (!operation.isBackup) this.#backend.emitLogic(operation);
+        }
+        for (const clock of this.#clocks) {
+            const enablePort = this.#ports.byName[clock.enablePortName];
+            const outputPort = this.#ports.byName[clock.outputPortName];
+            this.#backend.emitClock(clock, enablePort, outputPort);
+        }
+
+        // step 3.5: memory access (ROM/RAM)
         for (const memory of this.#memories) {
             const addrPorts = memory.addressPortNames.map((n) => this.#ports.byName[n]);
             const dataOutPorts = memory.dataOutPortNames.map((n) => this.#ports.byName[n]);
@@ -1191,7 +1198,7 @@ class Simulation {
             this.#backend.emitMemoryOutputEnable(memory, dataOutPorts, oePort);
         }
 
-        // step3: set nets values and signal state from outputs
+        // step 4: set nets values and signal state from outputs
         const outputBitmaps = this.#layout.outputToNetBitmap;
         const valueGrouped = this.#groupBitmapsByDest(outputBitmaps, 'destElementIndex2');
         for (const [destElementIndex, group] of pairs(valueGrouped)) {
@@ -1203,7 +1210,7 @@ class Simulation {
             this.#backend.emitOutputToNet(destElementIndex, group, 'signal', 'output to net signal');
         }
 
-        // step 4: detect net conflicts (more than one active driver on the same net)
+        // step 5: detect net conflicts (more than one active driver on the same net)
         if (this.#checkNetConflicts) {
             const conflictGrouped = this.#groupBitmapsByDest(outputBitmaps, 'destElementIndexC');
             for (const [destElementIndex, group] of pairs(conflictGrouped)) {
@@ -1215,7 +1222,7 @@ class Simulation {
             }
         }
 
-        // step 5: break on user-defined probe conditions
+        // step 6: break on user-defined probe conditions
         if (this.#breakConditions.length > 0) {
             const probeMap = {};
             for (const probe of Object.values(this.#probes.byName)) {
@@ -1236,7 +1243,7 @@ class Simulation {
             }
         }
 
-        // step 6: apply pull resistors if their nets arent'd driven yet
+        // step 7: apply pull resistors if their nets aren't driven yet
         this.#backend.emitPullResistors(this.#layout.pullMasks);
     }
 
