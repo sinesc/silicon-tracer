@@ -7,15 +7,15 @@ Vanilla JS/HTML/CSS, no framework, no build step. Open `index.html` directly in 
 
 ## Source Layout
 - `src/common.js` - shared utilities: `File`, `Point`, `assert*()` (parameter validation), `keys()` & `values()` & `pairs()` iteration helpers, ...
-- `src/ui/` - UI components: `toolbar.js` (toolbar/menu), `componenttoolbar.js`, `dialog.js`, `circuit.js` & `circuits.js` (`Circuit` and `Circuits` management), `simulations.js` (`Simulation`, `Simulations`), `undostack.js`, `action.js`, `hexeditor.js`, `navigationhistory.js`, `searchbar.js`
+- `src/ui/` - UI components: `toolbar.js` (toolbar/menu), `dialog.js` (reusable dialog), `circuit.js` & `circuits.js` (`Circuit` and `Circuits` management), `simulations.js` (`Simulation`, `Simulations`), ...
 - `src/grid/` - grid engine: `grid.js` (component placement), `selection.js`, `wirebuilder.js`, `trimbox.js`
-- `src/griditem/` - circuit components: `wire.js`, `gate.js`, `builtin.js` (flip-flops, latches, ...), `memory.js` (ROM, RAM), `port.js`, `customcomponent.js` (custom circuits as components), `probe.js`, `button.js`, `clock.js`, `component.js`, `constant.js`, `griditem.js`, `power.js`, `pullresistor.js`, `segmentdisplay.js`, `splitter.js`, `switch.js`, `textlabel.js`, `tunnel.js`
-- `src/overlay/` - informational canvas overlays: `overlay.js`, `circuitoverlay.js`, `simulationoverlay.js`, `dependentsoverlay.js`, `graphoverlay.js`, `monitoroverlay.js`
+- `src/griditem/` - circuit components: `wire.js`, `gate.js`, `builtin.js` (flip-flops, latches, ...), `memory.js` (ROM, RAM), `customcomponent.js` (custom circuits as components), ...
+- `src/overlay/` - informational canvas overlays: `overlay.js` (base class), `circuitoverlay.js` (circuit details), `simulationoverlay.js` (simulation details), ...
 - `src/sim/netlist.js` - builds nets/ports graph from circuit wires and components
 - `src/sim/simulation.js` - simulation engine, compiles nets/port logic
 - `src/sim/backend/javascript.js` - JS compilation backend
 - `src/sim/backend/wasm.js` / `wasm_emitter.js` - WASM backend (ignore this, incomplete/outdated)
-- `src/external/logisim.js` - LogiSim file importer
+- `src/external/logisim.js` - LogiSim file importer, `external` folder is dedicated to imports/exports
 
 ## Circuit Files (.stc format)
 - `res/examples/` - example circuits (basics, misc, 8bit)
@@ -33,5 +33,3 @@ Vanilla JS/HTML/CSS, no framework, no build step. Open `index.html` directly in 
 ## Guidelines
 - Use `assert*()` in public functions
 - Prefer brief one line comments, only document non-self-explanatory arguments e.g. string 'enums'
-- Before committing your changes make sure the relevant tests still pass. If you encounter pre-existing test failures fix and commit these as well (separate commit). 
-- Use past tense in the commit message, e.g. "Fixed glorp widget calibration", "Added support for ACME widgets".
