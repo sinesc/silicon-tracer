@@ -95,12 +95,12 @@ vm.runInContext(`
                 }
             }
         }
-        return { sim, info: { consts, ports, probes, memories, clocks, gids, labels: netList.instances.map((i) => i.circuit.label) } };
+        return { sim, info: { consts, ports, probes, memories, clocks, gids, labels: netList.instances.map((i) => i.circuit.label) }, netList };
     }
 `, context);
 
 // builds the api object around a compiled simulation (also usable programmatically via module.exports)
-function buildApi(sim, info) {
+function buildApi(sim, info, netList) {
 const state = { ticks: 0 };
 
 function constIdOf(nameOrId) {
@@ -180,6 +180,19 @@ const api = {
         }
         return r;
     },
+    netIdsOfProbe(name) {
+        // Probe pins are not part of the compiled sim's nets; find them in the netlist instead
+        // (net ids there match sim net ids, same assumption as portNetId). Returns [{netId, ch}, ...].
+        const probe = info.probes.find((p) => p.name === name && p.instanceId === 0);
+        if (!probe) throw new Error(`No probe named "${name}"`);
+        const r = [];
+        for (const net of netList.nets) {
+            for (const p of net.ports) {
+                if (p.gid === probe.gid && p.instanceId === 0) r.push({ netId: net.netId, ch: p.channel ?? 0 });
+            }
+        }
+        return r;
+    },
     read(name) {
         // reads a (possibly multi-bit) root port as an integer, LSB (ch 0) first; null if not driven
         const entry = info.ports.find(p => p.name === name && p.instanceId === 0);
@@ -235,8 +248,8 @@ return api;
 function createSimulation(stcText, circuitLabel, config = {}) {
     // compileSimulation() inside _simSetup already compiles the tick function (a second
     // sim.compile() call re-generates the memory layout and breaks the compiled tick code).
-    const { sim, info } = context._simSetup(stcText, circuitLabel, config);
-    return { sim, info, api: buildApi(sim, info) };
+    const { sim, info, netList } = context._simSetup(stcText, circuitLabel, config);
+    return { sim, info, api: buildApi(sim, info, netList) };
 }
 
 module.exports = { createSimulation, buildApi };
