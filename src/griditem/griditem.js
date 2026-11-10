@@ -4,7 +4,7 @@
 class GridItem {
 
     static HOTKEYS = '<i>Click</i> Select, <i>SHIFT/CTRL+Click</i> Add/remove from selection, <i>P</i> Pin';
-    static #SELECTION_MARGIN = 5;       // Bounding box inset during selection.
+    static SELECTION_MARGIN = 5;        // Bounding box inset during selection (also used by subclasses overriding selectionBounds).
 
     static CLASSES = {};                // Serializable GridItem subclasses. Registration at the bottom of each subclass file.
     static #DEBUG_GID = 0;              // Used to generate stable GIDs for debugging purposes.
@@ -332,7 +332,7 @@ class GridItem {
 
     // Returns the inset bounding box used for area selection. Subclasses may override.
     get selectionBounds() {
-        const m = GridItem.#SELECTION_MARGIN;
+        const m = GridItem.SELECTION_MARGIN;
         return { x: this.x + m, y: this.y + m, width: this.width - m * 2, height: this.height - m * 2 };
     }
 

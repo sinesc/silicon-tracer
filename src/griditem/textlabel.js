@@ -25,6 +25,7 @@ class TextLabel extends GridItem {
     #text;
     #rotation;
     #computedWidth = {};
+    #contentBox = null;     // rendered text box { width, height } in grid coordinates, updated by renderFull
 
     constructor(app, x, y, rotation, maxLength = 180, text = 'Placeholder text. Press e to edit.', fontSize = 'small', color = null) {
         assert.integer(rotation);
@@ -62,6 +63,7 @@ class TextLabel extends GridItem {
 
     // Removes the component from the grid.
     unlink() {
+        this.#contentBox = null;
         this.#inner?.remove();
         this.#inner = null;
         this.grid.removeVisual(this.#element);
@@ -112,15 +114,20 @@ class TextLabel extends GridItem {
         this.#rotation = value & 3;
     }
 
-    // Returns the effective bounding box for area selection, accounting for rotation.
+    // Returns the bounding box for area selection. Selection follows the visible text: the rendered
+    // box is content wide (clamped to the configured max. width) and auto-high, so a drag selection
+    // only has to contain the text itself, not the invisible max. width box.
     get selectionBounds() {
+        const w = this.#contentBox?.width ?? this.width;   // not rendered yet: fall back to the logical box
+        const h = this.#contentBox?.height ?? this.height;
+        const m = Math.min(GridItem.SELECTION_MARGIN, w / 4, h / 4); // tight box: keep the inset proportional
+        let x = this.x + m, y = this.y + m, width = w - m * 2, height = h - m * 2;
         if (this.#rotation === 1 || this.#rotation === 3) {
-            const b = super.selectionBounds;
-            const cx = this.x + this.width / 2;
-            const cy = this.y + this.height / 2;
-            return { x: cx - b.height / 2, y: cy - b.width / 2, width: b.height, height: b.width };
+            // CSS rotates only the inner span, around the center of the unrotated box
+            const cx = this.x + w / 2, cy = this.y + h / 2;
+            [ x, y, width, height ] = [ cx - height / 2, cy - width / 2, height, width ];
         }
-        return super.selectionBounds;
+        return { x, y, width, height };
     }
 
     // Snap to grid points (n*SPACING) rather than the default midpoints (n*SPACING - SPACING/2)
@@ -271,6 +278,9 @@ class TextLabel extends GridItem {
         this.renderDetail(); // apply font classes before measuring
         this.#computedWidth[`z${this.grid.zoom}`] ??= this.#computeWidth();
         this.#element.style.width = Math.min(this.#computedWidth[`z${this.grid.zoom}`], v.width) + 'px';
+        // cache the rendered box in grid coordinates for area selection (offsetWidth/Height force a layout read)
+        const w = this.#element.offsetWidth, h = this.#element.offsetHeight;
+        this.#contentBox = (w && h) ? { width: w / this.grid.zoom, height: h / this.grid.zoom } : null;
         return true;
     }
 
