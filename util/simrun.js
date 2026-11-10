@@ -28,6 +28,8 @@ const USAGE = `Usage: node util/simrun.js <circuit-stc-file> <circuit-label> --s
     api.netOf(name)             Net id of a (root circuit) port by name
     api.netByGidIo(gid, io)     Net id of the net carrying component gid's io port
     api.gidOf('nor @1050,310')  Gid of a component by (partial) 'name @x,y' label text
+    api.write(name, value)      Drive a root input port, multi-bit ports take an integer (LSB first)
+    api.read(name)              Read a (multi-bit) root port as integer (LSB first), null if not driven
     api.mem(id)                 Read a memory's data as Uint8Array
     api.setMem(id, values)      Write a memory's data from an array/hex string
     api.setClock(id, {frequency, tps})  Change clock parameters
@@ -71,8 +73,8 @@ vm.runInContext(`
                 const kind = item.constructor.name;
                 const tag = kind === 'Port' ? 'port' : kind === 'Button' ? 'button' : kind === 'Constant' ? 'constant' : null;
                 if (tag !== null && item instanceof Port && item.disregard(instanceId)) continue;
-                if (tag === 'port') ports.push({ name: item.name, netId: null, constId: id, instanceId });
-                if (tag !== null) consts.push({ id, kind: tag, name: item.name || (tag + '@' + loc(item)), instanceId });
+                if (tag === 'port') ports.push({ name: item.name, netId: null, constId: id, gid: item.gid, ids, instanceId });
+                if (tag !== null) consts.push({ id, ids, gid: item.gid, kind: tag, name: item.name || (tag + '@' + loc(item)), instanceId });
                 if (item instanceof Probe) probes.push({ name: item.name || ('probe@' + loc(item)), gid: item.gid, instanceId });
                 if (item instanceof Memory) memories.push({ id, kind: 'memory', instanceId, pos: loc(item) });
                 if (item instanceof Clock) clocks.push({ id, instanceId, pos: loc(item) });
@@ -97,30 +99,8 @@ vm.runInContext(`
     }
 `, context);
 
-const args = process.argv.slice(2);
-if (args.includes('--help')) {
-    console.log(USAGE);
-    process.exit(0);
-}
-const positional = args.filter(a => !a.startsWith('--'));
-const scriptArg = args.find(a => a.startsWith('--script='));
-const tpsArg = args.find(a => a.startsWith('--tps='));
-const dumpArg = args.find(a => a.startsWith('--dump='));
-if (positional.length < 2 || !scriptArg) {
-    console.error(USAGE);
-    process.exit(1);
-}
-
-const circuitFile = path.resolve(process.cwd(), positional[0]);
-const circuitLabel = positional[1];
-const text = fs.readFileSync(circuitFile, 'utf-8');
-const config = {};
-if (tpsArg) config.targetTPS = parseInt(tpsArg.replace('--tps=', ''), 10);
-
-// compileSimulation() inside _simSetup already compiles the tick function (a second
-// sim.compile() call re-generates the memory layout and breaks the compiled tick code).
-const { sim, info } = context._simSetup(text, circuitLabel, config);
-
+// builds the api object around a compiled simulation (also usable programmatically via module.exports)
+function buildApi(sim, info) {
 const state = { ticks: 0 };
 
 function constIdOf(nameOrId) {
@@ -187,6 +167,39 @@ const api = {
     netOf(name) {
         return portNetId(name);
     },
+    netIdsOfGid(gid, instanceId = 0) {
+        // collects the net ids of all bit channels of a (multi-bit) component gid: [{netId, ch}, ...]
+        const r = [];
+        for (let i = 0; i < sim.nets.length; i++) {
+            for (const p of sim.nets[i].ports) {
+                const s = p.split('@');
+                if (s[1] === gid && s[2].startsWith(instanceId + '_')) {
+                    r.push({ netId: i, ch: parseInt(s[2].split('_')[1], 10) });
+                }
+            }
+        }
+        return r;
+    },
+    read(name) {
+        // reads a (possibly multi-bit) root port as an integer, LSB (ch 0) first; null if not driven
+        const entry = info.ports.find(p => p.name === name && p.instanceId === 0);
+        if (!entry) throw new Error(`No port named "${name}"`);
+        const bits = api.netIdsOfGid(entry.gid).map(b => ({ ch: b.ch, v: sim.getNetValue(b.netId) }));
+        if (bits.length === 0) return null;
+        let v = 0;
+        for (const b of bits) {
+            if (b.v === null) return null;
+            v |= b.v << b.ch;
+        }
+        return v;
+    },
+    write(name, value) {
+        // drives a (possibly multi-bit) root input const/port, LSB (ch 0) first
+        const entry = info.consts.find(c => c.name === name && c.instanceId === 0);
+        if (!entry) throw new Error(`No input const named "${name}"`);
+        const ids = Array.isArray(entry.ids) ? entry.ids : [entry.id];
+        ids.forEach((id, ch) => sim.setConstValue(id, value === null ? null : (value >> ch) & 1));
+    },
     step(n = 1) {
         const r = sim.simulate(n);
         state.ticks += n;
@@ -214,10 +227,47 @@ const api = {
     },
 };
 
-const scriptPath = path.resolve(process.cwd(), scriptArg.replace('--script=', ''));
-const code = fs.readFileSync(scriptPath, 'utf-8');
-new Function('api', 'sim', code)(api, sim);
+return api;
+}
 
-if (dumpArg) {
-    fs.writeFileSync(path.resolve(process.cwd(), dumpArg.replace('--dump=', '')), JSON.stringify(api.dump ?? null, null, 2) + '\n');
+// compiles the named circuit (subcircuits must be in the same file) from .stc text and
+// returns { sim, info, api }. config overrides go to the simulation (see USAGE defaults).
+function createSimulation(stcText, circuitLabel, config = {}) {
+    // compileSimulation() inside _simSetup already compiles the tick function (a second
+    // sim.compile() call re-generates the memory layout and breaks the compiled tick code).
+    const { sim, info } = context._simSetup(stcText, circuitLabel, config);
+    return { sim, info, api: buildApi(sim, info) };
+}
+
+module.exports = { createSimulation, buildApi };
+
+if (require.main === module) {
+    const args = process.argv.slice(2);
+    if (args.includes('--help')) {
+        console.log(USAGE);
+        process.exit(0);
+    }
+    const positional = args.filter(a => !a.startsWith('--'));
+    const scriptArg = args.find(a => a.startsWith('--script='));
+    const tpsArg = args.find(a => a.startsWith('--tps='));
+    const dumpArg = args.find(a => a.startsWith('--dump='));
+    if (positional.length < 2 || !scriptArg) {
+        console.error(USAGE);
+        process.exit(1);
+    }
+    const circuitFile = path.resolve(process.cwd(), positional[0]);
+    const circuitLabel = positional[1];
+    const text = fs.readFileSync(circuitFile, 'utf-8');
+    const config = {};
+    if (tpsArg) config.targetTPS = parseInt(tpsArg.replace('--tps=', ''), 10);
+
+    const { sim, api } = createSimulation(text, circuitLabel, config);
+
+    const scriptPath = path.resolve(process.cwd(), scriptArg.replace('--script=', ''));
+    const code = fs.readFileSync(scriptPath, 'utf-8');
+    new Function('api', 'sim', code)(api, sim);
+
+    if (dumpArg) {
+        fs.writeFileSync(path.resolve(process.cwd(), dumpArg.replace('--dump=', '')), JSON.stringify(api.dump ?? null, null, 2) + '\n');
+    }
 }
