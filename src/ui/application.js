@@ -585,6 +585,13 @@ class Application {
                 Action.stopSimulation(this);
             });
             stopButton.node.classList.toggle('toolbar-menu-button-disabled', !sim);
+            // Restart current simulation from its initial state.
+            const restartButton = simulationMenu.createActionButton(sim ? `Restart "${sim.label}"` : 'Restart simulation', 'Restart the currently running simulation from its initial state.', () => {
+                simulationMenu.close();
+                const sim = this.simulations.current;
+                if (sim) sim.reset();
+            });
+            restartButton.node.classList.toggle('toolbar-menu-button-disabled', !sim);
             // Configure simulation speed.
             simulationMenu.createActionButton(`Set ticks/s limit (${Number.formatSI(this.config.targetTPS)})...`, 'Configure simulation speed.', async () => {
                 simulationMenu.close();

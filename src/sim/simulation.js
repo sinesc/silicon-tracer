@@ -505,7 +505,7 @@ class Simulation {
         }
     }
 
-    // Resets simulation memory.
+    // Resets the simulation to its initial state, as after compile(); constant values set via setConstValue are kept.
     reset() {
         const clearBit = (elementIndex, bitIndex) => {
             if (elementIndex !== null) {
@@ -525,9 +525,18 @@ class Simulation {
             clearBit(port.elementIndex3, port.bitIndex);
             clearBit(port.elementIndexP, port.bitIndex);
         }
+        // reset clock counters to their initial state (mirrors compile())
+        for (const clock of this.#clocks) {
+            const ticks = this.#clockFlipTicks(clock);
+            this.#backend.setClockParam(clock.limitIndex, ticks);
+            // the counter triggers a flip on unsigned underflow, so it starts one tick below the limit to flip every `ticks` ticks
+            this.#backend.setClockParam(clock.counterIndex, ticks - 1);
+        }
         // reset memory data to initial values
         this.#initMemoryData();
         this.#clockFlipBits = null;
+        // discard any partially executed single step so stepping restarts from the tick's beginning
+        this.#compiledStep = { generator: null, iterator: null };
     }
 
     // Sets the value of a defined constant by its id.

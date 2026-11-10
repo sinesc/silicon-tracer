@@ -224,6 +224,12 @@ Simulations.Simulation = class {
         if (enabled) circuit.markNetConflicts(this.#netList, this.#instanceId, this.#engine.resolveNetConflictDriversByNet());
     }
 
+    // Restarts the simulation from its initial state.
+    reset() {
+        this.#engine.reset();
+        this.updateConflictMarks();
+    }
+
     // Ticks the current simulation for the given amount of ticks.
     // Returns 1 if a break-on-conflict fired mid-run, 0 otherwise.
     tick(ticks) {
