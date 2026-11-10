@@ -138,7 +138,15 @@ class Probe extends DisplayComponent {
         assert.class(Simulation, engine);
         assert.string(probeName);
         assert.string(displayFormat);
-        return Probe.#displayValue(engine, engine.getProbeNetIds(probeName), displayFormat);
+        return Probe.getNetIdsDisplayValue(engine, engine.getProbeNetIds(probeName), displayFormat);
+    }
+
+    // Returns the formatted value for a list of net-ids (as set by Circuit.attachSimulation, LSB first).
+    static getNetIdsDisplayValue(engine, netIds, displayFormat = 'auto') {
+        assert.class(Simulation, engine);
+        assert.array(netIds, true);
+        assert.string(displayFormat);
+        return Probe.#displayValue(engine, netIds, displayFormat);
     }
 
     // Returns formatted probe value.

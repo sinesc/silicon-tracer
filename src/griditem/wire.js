@@ -43,7 +43,9 @@ class Wire extends GridItem {
         const message = () => {
             const channels = this.netIds?.length ?? 1;
             const kind = channels === 1 ? 'Wire' : `<b>${channels}-bit</b> bus`;
-            return `${kind}. <i>Drag</i> Branch off new wire. <i>SHIFT+Drag</i> Move wire. <i>DEL</i> Delete, <i>0</i> - <i>9</i> Set net color, ${GridItem.HOTKEYS}.`;
+            const engine = this.app.simulations?.current?.engine;
+            const value = engine && this.netIds ? ` (${Probe.getNetIdsDisplayValue(engine, this.netIds)})` : '';
+            return `${kind}${value}. <i>Drag</i> Branch off new wire. <i>SHIFT+Drag</i> Move wire. <i>DEL</i> Delete, <i>0</i> - <i>9</i> Set net color, ${GridItem.HOTKEYS}.`;
         };
         this.setHoverMessage(this.#element, message, { type: 'hover' });
         this.grid.addVisual(this.#element);

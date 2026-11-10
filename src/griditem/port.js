@@ -28,7 +28,9 @@ class Port extends SimulationComponent {
         super.link(grid);
         this.setHoverMessage(this.inner, () => {
             const isRootCircuit = this.grid?.circuit?.uid === this.app.simulations.current?.uid;
-            const label = this.name !== '' ? `Port <b>${this.name}</b>` : (isRootCircuit ? 'Port (no name)' : 'Inactive port (needs a network name)');
+            const engine = this.app.simulations?.current?.engine;
+            const value = engine && this.#port.netIds ? ` (${Probe.getNetIdsDisplayValue(engine, this.#port.netIds)})` : '';
+            const label = this.name !== '' ? `Port <b>${this.name}</b>${value}` : (isRootCircuit ? 'Port (no name)' : 'Inactive port (needs a network name)');
             return `${label}. <i>1</i> Set high, <i>2</i> Set low, <i>3</i> Unset, <i>E</i> Edit, ${Component.HOTKEYS}.`;
         }, { type: 'hover' });
         this.#labelElement = html(this.element, 'div', 'port-name');

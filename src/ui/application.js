@@ -147,6 +147,7 @@ class Application {
         this.#status.locked = lock ?? false;
         if (this.#status.timer) {
             clearTimeout(this.#status.timer);
+            this.#status.timer = null;
         }
         this.#status.message = message;
         const messageText = String.isString(message) ? message : (Function.isFunction(message) ? message() : null);
@@ -168,6 +169,7 @@ class Application {
     updateStatus() {
         if (this.#status.timer) {
             clearTimeout(this.#status.timer);
+            this.#status.timer = null;
         }
         const message = this.#status.message;
         const messageText = String.isString(message) ? message : (Function.isFunction(message) ? message() : null);
@@ -183,6 +185,7 @@ class Application {
         this.#status.locked = false;
         if (this.#status.timer) {
             clearTimeout(this.#status.timer);
+            this.#status.timer = null;
         }
         this.#status.element.classList.add('app-status-faded');
         this.#status.timer = setTimeout(() => this.setStatus(), Grid.STATUS_DELAY);
@@ -255,6 +258,10 @@ class Application {
                 rl.ticksCounted += ticksActual;
                 rl.ticksFraction -= Math.trunc(rl.ticksFraction);       // subtract applied number of fractional ticks from remaining fractional ticks
             }
+        }
+        // refresh live (function-based) hover status messages while simulating, e.g. wire/port value display
+        if (this.simulations.current && Function.isFunction(this.#status.message) && !this.#status.timer) {
+            this.updateStatus();
         }
         // compute load (time spent computing/time available)
         const elapsedTime = performance.now() - renderStart;
