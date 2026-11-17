@@ -56,12 +56,26 @@ Facts verified in `src/ui/toolbar.js` / `src/ui/componenttoolbar.js` / `src/ui.c
 - Menu contents are rebuilt on every open; sub-menu open/closed state is restored by textual path (`Toolbar.root.#states`), so reopening the Debugger menu after a rebuild keeps **Conditions** open.
 - `ToolbarItem.open()`/`close()` = `state(true/false)`; calling `open()` on an already-open menu re-runs its `openAction`, i.e. it is the existing "refresh an open menu" idiom used by the Debugger toggles and by `#singleStep()`/`#stepToClockFlip()`.
 - The circuit select/place row layout is pure CSS: `.toolbar-circuit-select { margin-right: 30px; }` and `.toolbar-circuit-place { … 30px wide, position:absolute; right:0 }` — the absolute button is anchored to the menu's inner `.toolbar`, which is `position: relative` only for the **root** menu container (`.toolbar-menu-container.toolbar-menu-root > .toolbar`). A category's inner `.toolbar` is *not* positioned, so it needs `position: relative` before an absolutely positioned child can align to the row.
-- Button labels and hover messages are inserted via `innerHTML` (`html()` in `src/common.js`, `#createToggleButton`), so a literal `❌` label and `<i>` markup in hover messages work (same as the existing condition rows, which already inject the raw expression as HTML).
+- Button labels and hover messages are inserted via `innerHTML` (`html()` in `src/common.js`, `#createToggleButton`), so a literal `❌` label and `<i>` markup in hover messages work — but that also means the existing condition rows inject the **raw user expression as HTML**, which is a bug (an expression containing `<`, `>` or `&` is swallowed/mis-rendered and any markup in it is executed). Fix: add an `escapeHTML()` helper and escape every user-supplied string that goes into a label/hover message. The expression is pure user text, so escaping it loses nothing (hover messages deliberately keep `<i>`/`<b>` markup for the *fixed* wording around the escaped value).
 - Condition mutation convention (from `Action.addBreakCondition` / `Action.editBreakCondition`): change `app.config.breakConditions`, then `app.simulations.markDirty(null)`. No undo tracking, no `haveChanges`.
 
 ## Implementation
 
-### 1. `src/ui/application.js` — Debugger menu
+### 0. `src/common.js` — HTML escaping helper
+
+Add next to `html()` (top-level function, assert-guarded like the rest of `common.js`):
+
+```js
+// Escapes text for safe use as innerHTML contents.
+function escapeHTML(text) {
+    assert.stringable(text);
+    return String(text).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+}
+```
+
+`common.js` is loaded before all other sources (no import/export in this project), so the function is globally available in `src/ui/*.js`.
+
+Scope of this change: escape the break-condition expressions (the code being rewritten here). Other user texts rendered through the same path (circuit/simulation labels in the Circuit / Simulation / Component menus, pin labels) have the same class of bug but are **not** touched here — they need escaping inside `GridItem.descriptorInfo()` and friends to be done consistently; note it as a follow-up.
 
 Replace the separator + flat condition loop shown above (the block introduced by the `// Break-on-condition expressions.` comment, keeping the `Add condition...` button and the separator *above* it):
 
@@ -78,12 +92,13 @@ if (this.config.breakConditions.length > 0) {
         conditionsMenu.clear();
         for (let i = 0; i < this.config.breakConditions.length; i++) {
             const expr = this.config.breakConditions[i];
-            const editButton = conditionsMenu.createActionButton(expr, 'Click to edit. Clear expression and confirm to delete.', async () => {
+            const safeExpr = escapeHTML(expr); // button labels and hover messages are set via innerHTML
+            const editButton = conditionsMenu.createActionButton(safeExpr, 'Click to edit. Clear expression and confirm to delete.', async () => {
                 debuggerMenu.close();
                 await Action.editBreakCondition(this, i, expr);
             });
             editButton.node.classList.add('toolbar-condition-edit');
-            const deleteButton = conditionsMenu.createActionButton('&#10060;', `Delete break condition: <b>${expr}</b>`, () => {
+            const deleteButton = conditionsMenu.createActionButton('&#10060;', `Delete break condition: <b>${safeExpr}</b>`, () => {
                 this.config.breakConditions.splice(i, 1);
                 this.simulations.markDirty(null);
                 debuggerMenu.open(); // rebuild the open menu; drops the category when the list became empty
@@ -97,7 +112,8 @@ if (this.config.breakConditions.length > 0) {
 Notes:
 - `debuggerMenu.open()` is the existing refresh-while-open idiom; it rebuilds the whole Debugger menu (including **Conditions**) so the shifted indices and the empty-list case are handled by the rebuild itself.
 - `'&#10060;'` renders ❌ (matches the `&#9094;` used for the circuit place button).
-- Keep the hover message of the edit action free of the "clear to delete" wording change if preferred — the wording above matches the actual dialog text in `Action.editBreakCondition`.
+- The edit/delete hover messages contain intentional markup (`<i>`, `<b>`) around the escaped expression — escape only the interpolated value, never the whole message.
+- The category's own hover message is a fixed string, no escaping needed.
 
 ### 2. `src/ui.css` — row layout for condition entries
 
@@ -126,7 +142,7 @@ Extend the existing `/* Circuit select/place */` rules with the category-nested 
 }
 ```
 
-Long condition expressions wrap inside the row (menu containers already have `min-width: 150px` and the root menu scrolls at `max-height`); no extra handling needed.
+Long condition expressions wrap inside the row (menu containers already have `min-width: 150px` and the root menu scrolls at `max-height`); no extra handling needed. Escaping only lengthens the text slightly (`<` → `&lt;`), which does not change the wrapping behaviour.
 
 ## Edge cases / behaviour checklist
 
@@ -147,4 +163,5 @@ Long condition expressions wrap inside the row (menu containers already have `mi
    - ❌ deletes immediately, menu stays open and refreshes; after deleting the last one the category is gone.
    - Clicking the row text (not ❌) opens the edit dialog; clearing it still deletes.
    - Conditions still break the simulation when **Break on condition** is on (add e.g. `pA === 1`, run with a Probe `pA`, confirm the "Breaking on condition" notice).
+   - Escaping: add a condition such as `a<b && c>d` (or one containing `<img src=x onerror=alert(1)>`) and confirm it is displayed **literally** in the row and in the ❌ hover message, with no markup interpretation.
 3. Commit.
