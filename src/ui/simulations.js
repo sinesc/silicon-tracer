@@ -19,9 +19,9 @@ class Simulations {
         return simulations;
     }
 
-    // Returns all live simulation instances.
+    // Returns all live simulation instances as an array (note: values() is a generator and would be single-use).
     get all() {
-        return values(this.#simulations);
+        return [...values(this.#simulations)];
     }
 
     // Clear all simulations.
