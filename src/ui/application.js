@@ -785,7 +785,11 @@ class Application {
         assert.object(snapshot);
         const circuit = this.circuits.byUID(sim.uid);
         if (!circuit) return; // owning circuit is gone (snapshots die with the simulation anyway)
-        Action.selectSimulation(this, sim.uid); // switches to the circuit and attaches the simulation (checkDirty recompile may run first)
+        // select/attach the owning simulation (checkDirty recompile may run first) like Action.selectSimulation does,
+        // but WITHOUT resetting single-step mode: restoring must not silently resume (or pause) execution
+        this.circuits.select(sim.uid);
+        this.simulations.select(this.circuits.current, true);
+        this.history.record();
         if (!sim.engine.canRestoreStateSnapshot(snapshot.state)) {
             this.showNotice(`Cannot restore snapshot "${sim.label}: ${snapshot.name}": the simulation structure changed.`);
             return; // keep the snapshot, an Undo can make it restorable again
