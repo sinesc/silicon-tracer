@@ -668,15 +668,28 @@ class Application {
                 debuggerMenu.close();
                 await Action.addBreakCondition(this);
             });
+            // Condition list category; only shown while at least one condition is defined.
             if (this.config.breakConditions.length > 0) {
-                debuggerMenu.createSeparator();
-            }
-            for (let i = 0; i < this.config.breakConditions.length; i++) {
-                const expr = this.config.breakConditions[i];
-                debuggerMenu.createActionButton(expr, 'Click to edit. Clear expression to delete.', async () => {
-                    debuggerMenu.close();
-                    await Action.editBreakCondition(this, i, expr);
+                const conditionsCategory = debuggerMenu.createMenuCategory('Conditions', 'Defined break conditions. <i>Click</i> an entry to edit it, <i>❌</i> to delete it.', (conditionsMenu) => {
+                    conditionsMenu.clear();
+                    for (let i = 0; i < this.config.breakConditions.length; i++) {
+                        const expr = this.config.breakConditions[i];
+                        const safeExpr = escapeHTML(expr); // button labels and hover messages are set via innerHTML
+                        // The absolutely positioned side button must precede its row entry (its static position is below the preceding in-flow entry).
+                        const deleteButton = conditionsMenu.createActionButton('&#10060;', `Delete break condition: <b>${safeExpr}</b>`, () => {
+                            this.config.breakConditions.splice(i, 1);
+                            this.simulations.markDirty(null);
+                            debuggerMenu.open(); // rebuild the open menu; drops the category when the list became empty
+                        });
+                        deleteButton.node.classList.add('toolbar-condition-delete');
+                        const editButton = conditionsMenu.createActionButton(safeExpr, 'Click to edit. Clear expression and confirm to delete.', async () => {
+                            debuggerMenu.close();
+                            await Action.editBreakCondition(this, i, expr);
+                        });
+                        editButton.node.classList.add('toolbar-condition-edit');
+                    }
                 });
+                conditionsCategory.subToolbar.node.classList.add('toolbar-condition-rows'); // CSS anchor + row layout for the condition entries
             }
         });
 

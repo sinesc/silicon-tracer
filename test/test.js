@@ -23,6 +23,12 @@ test("fract", () => {
     assert(negative < -0.29 && negative > -0.31)
 });
 
+test("escapeHTML", () => {
+    assert(c.escapeHTML('a<b && c>d "x" & y') === 'a&lt;b &amp;&amp; c&gt;d &quot;x&quot; &amp; y', 'escapes markup and ampersands');
+    assert(c.escapeHTML('<img src=x onerror=alert(1)>').includes('&lt;img') === true, 'no raw markup survives');
+    assert(c.escapeHTML('plain 123') === 'plain 123', 'plain text unchanged');
+});
+
 test("group annotation on save", () => {
     const { data, itemsWithGroupProp, wireWidth, itemCount } = c._groupAnnotationRoundTrip();
     const find = (cls, x, y) => data.find((d) => d['#c'] === cls && d['#a'][0] === x && d['#a'][1] === y);

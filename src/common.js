@@ -379,6 +379,12 @@ function comparePriority(a, b, priorities) {
     }
 }
 
+// Escapes text for safe use as innerHTML contents.
+function escapeHTML(text) {
+    assert.stringable(text);
+    return String(text).replace(/[<>&"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' })[c]);
+}
+
 // Creates an HTML element.
 function html(parent = null, type = 'div', classNames = null, contents = null) {
     assert.class(Node, parent, true);
