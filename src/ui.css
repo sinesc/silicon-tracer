@@ -778,16 +778,19 @@ div.circuit-preview > div.grid > div.grid-info {
 .toolbar > .toolbar-menu-button > .toolbar-menu-container.toolbar-menu-category {
     background-color: var(--button-bg-color);
 }
-/* Row plus square side-button: circuit select/place, break-condition edit/delete */
-.toolbar > .toolbar-menu-button > .toolbar-menu-container > .toolbar > .toolbar-menu-category > .toolbar-menu-container > .toolbar.toolbar-condition-rows {
+/* Row plus square side-button: circuit select/place, break-condition edit/delete, snapshot restore/delete */
+.toolbar > .toolbar-menu-button > .toolbar-menu-container > .toolbar > .toolbar-menu-category > .toolbar-menu-container > .toolbar.toolbar-condition-rows,
+.toolbar > .toolbar-menu-button > .toolbar-menu-container > .toolbar > .toolbar-menu-category > .toolbar-menu-container > .toolbar.toolbar-snapshot-rows {
     position: relative; /* anchor for the absolutely positioned delete buttons */
 }
 .toolbar > .toolbar-menu-button > .toolbar-menu-container > .toolbar > .toolbar-circuit-select,
-.toolbar > .toolbar-menu-button > .toolbar-menu-container > .toolbar > .toolbar-menu-category > .toolbar-menu-container > .toolbar.toolbar-condition-rows > .toolbar-condition-edit {
+.toolbar > .toolbar-menu-button > .toolbar-menu-container > .toolbar > .toolbar-menu-category > .toolbar-menu-container > .toolbar.toolbar-condition-rows > .toolbar-condition-edit,
+.toolbar > .toolbar-menu-button > .toolbar-menu-container > .toolbar > .toolbar-menu-category > .toolbar-menu-container > .toolbar.toolbar-snapshot-rows > .toolbar-snapshot-entry {
     margin-right: 30px;
 }
 .toolbar > .toolbar-menu-button > .toolbar-menu-container > .toolbar > .toolbar-circuit-place,
-.toolbar > .toolbar-menu-button > .toolbar-menu-container > .toolbar > .toolbar-menu-category > .toolbar-menu-container > .toolbar.toolbar-condition-rows > .toolbar-condition-delete {
+.toolbar > .toolbar-menu-button > .toolbar-menu-container > .toolbar > .toolbar-menu-category > .toolbar-menu-container > .toolbar.toolbar-condition-rows > .toolbar-condition-delete,
+.toolbar > .toolbar-menu-button > .toolbar-menu-container > .toolbar > .toolbar-menu-category > .toolbar-menu-container > .toolbar.toolbar-snapshot-rows > .toolbar-snapshot-delete {
     border: 2px solid var(--button-border-color);
     border-radius: 3px;
     margin: 0;
@@ -801,14 +804,16 @@ div.circuit-preview > div.grid > div.grid-info {
     line-height: 1.2;
 }
 /* The ❌ emoji is a wide glyph: at the large font size it is ~25px wide, overflows the 30px box and gives the menu a horizontal scrollbar. */
-.toolbar > .toolbar-menu-button > .toolbar-menu-container > .toolbar > .toolbar-menu-category > .toolbar-menu-container > .toolbar.toolbar-condition-rows > .toolbar-condition-delete {
+.toolbar > .toolbar-menu-button > .toolbar-menu-container > .toolbar > .toolbar-menu-category > .toolbar-menu-container > .toolbar.toolbar-condition-rows > .toolbar-condition-delete,
+.toolbar > .toolbar-menu-button > .toolbar-menu-container > .toolbar > .toolbar-menu-category > .toolbar-menu-container > .toolbar.toolbar-snapshot-rows > .toolbar-snapshot-delete {
     font-size: var(--font-size-normal);
     height: 28px; /* same total height as a row entry (border-box: 24px content + 2px border) */
     line-height: 24px;
     text-align: center;
 }
-/* Expressions often contain no break opportunities (long identifiers, '&&'): cap the row width, wrap and break anywhere so a long condition cannot push the menu (and its delete buttons) off screen. (body sets white-space: nowrap globally.) */
-.toolbar > .toolbar-menu-button > .toolbar-menu-container > .toolbar > .toolbar-menu-category > .toolbar-menu-container > .toolbar.toolbar-condition-rows > .toolbar-condition-edit {
+/* Expressions/snapshot labels often contain no break opportunities (long identifiers, circuit names): cap the row width, wrap and break anywhere so a long entry cannot push the menu (and its delete buttons) off screen. (body sets white-space: nowrap globally.) */
+.toolbar > .toolbar-menu-button > .toolbar-menu-container > .toolbar > .toolbar-menu-category > .toolbar-menu-container > .toolbar.toolbar-condition-rows > .toolbar-condition-edit,
+.toolbar > .toolbar-menu-button > .toolbar-menu-container > .toolbar > .toolbar-menu-category > .toolbar-menu-container > .toolbar.toolbar-snapshot-rows > .toolbar-snapshot-entry {
     white-space: normal;
     overflow-wrap: anywhere;
     max-width: calc(min(60vw, 400px) - 30px); /* 30px = the side button */

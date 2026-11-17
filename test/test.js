@@ -486,6 +486,110 @@ test("d flip-flop rising-edge timing (input backup ordering)", () => {
     assert(sim.getProbeValue('pq') === 1, `q should stay 1, got ${sim.getProbeValue('pq')}`);
 });
 
+console.log('\nSimulation snapshot tests:');
+
+test("simulation state snapshot capture and restore", () => {
+    // D-FF with tick-based clock (flips every 2 ticks) and data = 1: capture after q went 1,
+    // drop q again by driving data to 0, then restore and verify the state is back.
+    const sim = createSimulationWithBackend('js');
+    sim.declareClock(0, 2, '@c0');
+    sim.declareConst(1, '@d0', 'data');
+    sim.declareBuiltin('dflipflop', '@ff0');
+    sim.declareProbe('pq', '@pr0_0');
+    sim.declareNet([ 'q@d0', 'data@ff0' ]);
+    sim.declareNet([ 'c@c0', 'clock@ff0' ]);
+    sim.declareNet([ 'q@ff0', 'input@pr0_0' ]);
+    sim.compile();
+    // the clock enable input is not driven by a net in this synthetic circuit -> set it directly
+    const en = sim.ports.find((p) => p.name === 'enable@c0');
+    sim.mem[en.elementIndex2] |= (1 << en.bitIndex);
+
+    let ticks = 0;
+    while (sim.getProbeValue('pq') !== 1 && ticks < 50) { sim.simulate(1); ++ticks; }
+    assert(sim.getProbeValue('pq') === 1, 'q should become 1 while data is 1');
+
+    const snap = sim.createStateSnapshot();
+
+    // change state: drive data to 0 and let q fall on the next rising clock edge
+    sim.setConstValue(sim.getConstId('data'), 0);
+    ticks = 0;
+    while (sim.getProbeValue('pq') !== 0 && ticks < 50) { sim.simulate(1); ++ticks; }
+    assert(sim.getProbeValue('pq') === 0, 'q should fall after data was driven to 0');
+
+    assert(sim.canRestoreStateSnapshot(snap), 'snapshot should be compatible with its own simulation');
+    sim.restoreStateSnapshot(snap);
+    assert(sim.getProbeValue('pq') === 1, 'probe should be back at the snapshot state');
+    assert(sim.getConstValue(sim.getConstId('data')) === 1, 'constant values live in mem and are part of the snapshot');
+    sim.simulate(10);
+    assert(sim.getProbeValue('pq') === 1, `q should stay 1 when continuing from the restored state (data restored to 1), got ${sim.getProbeValue('pq')}`);
+});
+
+test("simulation state snapshot restores RAM data", () => {
+    // tiny RAM circuit: snapshot after a write, overwrite the entry, restore, verify old data is back.
+    const sim = createSimulationWithBackend('js');
+    const suffix = '@ram0@0_0';
+    sim.declareConst(0, '@a0@0_0', 'a0');
+    sim.declareConst(0, '@we@0_0', 'we');
+    sim.declareConst(1, '@oe@0_0', 'oe');
+    sim.declareConst(0, '@di0@0_0', 'di0');
+    declareMemory(sim, 'ram', 1, 1, '00', suffix);
+    sim.declareProbe('pd', '@pr0');
+    sim.declareNet([ 'q@a0@0_0', 'a0' + suffix ]);
+    sim.declareNet([ 'q@we@0_0', 'we' + suffix ]);
+    sim.declareNet([ 'q@oe@0_0', 'oe' + suffix ]);
+    sim.declareNet([ 'q@di0@0_0', 'di0' + suffix ]);
+    sim.declareNet([ 'do0' + suffix, 'input@pr0' ]);
+    sim.compile();
+    const entry1 = () => (sim.getMemoryData(0)[0] >>> 1) & 1; // dataWidth 1: entry 1 is bit 1 of the packed byte
+
+    // write 1 to entry 1
+    sim.setConstValue(sim.getConstId('a0'), 1);
+    sim.setConstValue(sim.getConstId('di0'), 1);
+    sim.setConstValue(sim.getConstId('we'), 1);
+    sim.simulate(1);
+    sim.setConstValue(sim.getConstId('we'), 0);
+    sim.simulate(1);
+    assert(entry1() === 1, 'RAM entry 1 should hold the written 1');
+
+    const snap = sim.createStateSnapshot();
+
+    sim.setConstValue(sim.getConstId('di0'), 0);
+    sim.setConstValue(sim.getConstId('we'), 1);
+    sim.simulate(1);
+    sim.setConstValue(sim.getConstId('we'), 0);
+    sim.simulate(1);
+    assert(entry1() === 0, 'RAM entry 1 should have been overwritten with 0');
+
+    sim.restoreStateSnapshot(snap);
+    assert(entry1() === 1, 'restored snapshot should bring back the RAM contents');
+});
+
+test("snapshot compatibility check", () => {
+    const simA = createSimulationWithBackend('js');
+    simA.declareConst(1, '@d0');
+    simA.declareGate('buffer', 1, '@b0');
+    simA.declareProbe('pq', '@pr0_0');
+    simA.declareNet([ 'q@d0', 'a@b0' ]);
+    simA.declareNet([ 'q@b0', 'input@pr0_0' ]);
+    simA.compile();
+    const snap = simA.createStateSnapshot();
+    assert(simA.canRestoreStateSnapshot(snap), 'a simulation must accept its own snapshot');
+
+    const simB = createSimulationWithBackend('js');
+    simB.declareConst(1, '@d0');
+    simB.declareGate('buffer', 1, '@b0');
+    simB.declareGate('not', 1, '@n0');
+    simB.declareProbe('pq', '@pr0_0');
+    simB.declareNet([ 'q@d0', 'a@b0' ]);
+    simB.declareNet([ 'q@b0', 'a@n0' ]);
+    simB.declareNet([ 'q@n0', 'input@pr0_0' ]);
+    simB.compile();
+    assert(!simB.canRestoreStateSnapshot(snap), 'a snapshot from a different circuit structure must not be compatible');
+    let threw = false;
+    try { simB.restoreStateSnapshot(snap); } catch (e) { threw = true; }
+    assert(threw, 'restoring an incompatible snapshot must throw');
+});
+
 console.log('\nMemory (ROM/RAM) tests:');
 
 test("ROM read with 2-bit address and 8-bit data", () => {

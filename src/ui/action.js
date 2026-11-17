@@ -471,4 +471,20 @@ class Action {
         }
         return false;
     }
+
+    // Captures the current simulation state as a named session snapshot.
+    static async createSnapshot(app) {
+        assert.class(Application, app);
+        const sim = app.simulations.current;
+        if (!sim) return;
+        sim.checkDirty(true); // sync the engine with the current circuit first so the snapshot matches what is on screen
+        const result = await dialog('Create snapshot', [
+            { text: `Capture the current state of simulation "<b>${escapeHTML(sim.label)}</b>". Snapshots are kept until the circuit is closed.` },
+            { label: 'Snapshot name', name: 'name', type: 'string', check: (v) => v.trim() !== '' }
+        ], { name: `Snapshot ${sim.snapshots.length + 1}` });
+        if (result) {
+            sim.createSnapshot(result.name.trim());
+            app.showNotice(`Snapshot "${sim.label}: ${result.name.trim()}" created.`);
+        }
+    }
 }

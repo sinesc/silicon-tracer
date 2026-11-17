@@ -691,6 +691,37 @@ class Application {
                 });
                 conditionsCategory.subToolbar.node.classList.add('toolbar-condition-rows'); // CSS anchor + row layout for the condition entries
             }
+            // Simulation snapshots.
+            debuggerMenu.createSeparator();
+            const snapshotButton = debuggerMenu.createActionButton('Create snapshot...', 'Capture the current simulation state as a restorable snapshot. Snapshots are kept until the circuit is closed.', async () => {
+                debuggerMenu.close();
+                await Action.createSnapshot(this);
+            });
+            snapshotButton.node.classList.toggle('toolbar-menu-button-disabled', !this.simulations.current);
+            // Snapshot list category; only shown while at least one snapshot exists.
+            const simulations = this.simulations.all;
+            if (simulations.some((sim) => sim.snapshots.length > 0)) {
+                const snapshotsCategory = debuggerMenu.createMenuCategory('Snapshots', 'Saved simulation states. <i>Click</i> an entry to restore it, <i>❌</i> to delete it.', (snapshotsMenu) => {
+                    snapshotsMenu.clear();
+                    for (const sim of simulations) {
+                        for (const snapshot of sim.snapshots) {
+                            const safeLabel = `${escapeHTML(sim.label)}: ${escapeHTML(snapshot.name)}`; // button labels and hover messages are set via innerHTML
+                            // The absolutely positioned side button must precede its row entry (its static position is below the preceding in-flow entry).
+                            const deleteButton = snapshotsMenu.createActionButton('&#10060;', `Delete snapshot: <b>${safeLabel}</b>`, () => {
+                                sim.deleteSnapshot(snapshot);
+                                debuggerMenu.open(); // rebuild the open menu; drops the category when the list became empty
+                            });
+                            deleteButton.node.classList.add('toolbar-snapshot-delete');
+                            const restoreButton = snapshotsMenu.createActionButton(safeLabel, `Restore simulation state: ${safeLabel}`, () => {
+                                debuggerMenu.close();
+                                this.#restoreSnapshot(sim, snapshot);
+                            });
+                            restoreButton.node.classList.add('toolbar-snapshot-entry');
+                        }
+                    }
+                });
+                snapshotsCategory.subToolbar.node.classList.add('toolbar-snapshot-rows'); // CSS anchor + row layout for the snapshot entries
+            }
         });
 
         // Add dropzone for custom toolbar elements
@@ -745,6 +776,22 @@ class Application {
         if (this.#debuggerMenu.state()) {
             this.#debuggerMenu.open();
         }
+    }
+
+    // Restores a simulation snapshot: selects/attaches the owning simulation first (applies any pending recompile),
+    // then writes the captured state back into the engine.
+    #restoreSnapshot(sim, snapshot) {
+        assert.class(Simulations.Simulation, sim);
+        assert.object(snapshot);
+        const circuit = this.circuits.byUID(sim.uid);
+        if (!circuit) return; // owning circuit is gone (snapshots die with the simulation anyway)
+        Action.selectSimulation(this, sim.uid); // switches to the circuit and attaches the simulation (checkDirty recompile may run first)
+        if (!sim.engine.canRestoreStateSnapshot(snapshot.state)) {
+            this.showNotice(`Cannot restore snapshot "${sim.label}: ${snapshot.name}": the simulation structure changed.`);
+            return; // keep the snapshot, an Undo can make it restorable again
+        }
+        sim.restoreSnapshot(snapshot);
+        this.showNotice(`Restored snapshot "${sim.label}: ${snapshot.name}".`);
     }
 
     // Updates the undo/redo button labels and enabled state.

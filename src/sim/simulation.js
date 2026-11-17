@@ -539,6 +539,28 @@ class Simulation {
         this.#compiledStep = { generator: null, iterator: null };
     }
 
+    // Captures the complete current simulation state (all net/port/const/clock/memory bits in mem) for later restore.
+    createStateSnapshot() {
+        return { key: this.#structuralKey(), mem: this.#backend.mem.slice() };
+    }
+
+    // Returns whether a snapshot created by createStateSnapshot() can be restored into this simulation.
+    canRestoreStateSnapshot(snapshot) {
+        assert.object(snapshot);
+        return snapshot.key === this.#structuralKey();
+    }
+
+    // Restores a snapshot created by createStateSnapshot(). Layout must match (see canRestoreStateSnapshot).
+    restoreStateSnapshot(snapshot) {
+        assert.object(snapshot);
+        assert(snapshot.key === this.#structuralKey(), 'Snapshot does not match the current simulation layout');
+        assert(snapshot.mem.length === this.#backend.mem.length, 'Snapshot memory size mismatch');
+        this.#backend.mem.set(snapshot.mem);
+        this.#clockFlipBits = null;
+        // discard any partially executed single step so stepping restarts from the tick's beginning (mirrors reset())
+        this.#compiledStep = { generator: null, iterator: null };
+    }
+
     // Sets the value of a defined constant by its id.
     setConstValue(id, value) {
         assert.integer(id);

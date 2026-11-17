@@ -19,6 +19,11 @@ class Simulations {
         return simulations;
     }
 
+    // Returns all live simulation instances.
+    get all() {
+        return values(this.#simulations);
+    }
+
     // Clear all simulations.
     clear() {
         this.#currentSimulation = null;
@@ -106,6 +111,7 @@ Simulations.Simulation = class {
     #dirty = true;
     #attached = false;
     #stats;
+    #snapshots = []; // session-only state snapshots: { name, state } (state from engine.createStateSnapshot())
 
     constructor(app, circuit) {
         assert.class(Application, app);
@@ -227,6 +233,30 @@ Simulations.Simulation = class {
     // Restarts the simulation from its initial state.
     reset() {
         this.#engine.reset();
+        this.updateConflictMarks();
+    }
+
+    // Returns this simulation's snapshots (session-only, not serialized).
+    get snapshots() {
+        return this.#snapshots;
+    }
+
+    // Captures the current simulation state under the given name.
+    createSnapshot(name) {
+        assert.string(name);
+        this.#snapshots.push({ name, state: this.#engine.createStateSnapshot() });
+    }
+
+    // Removes the given snapshot.
+    deleteSnapshot(snapshot) {
+        assert.object(snapshot);
+        this.#snapshots.splice(this.#snapshots.indexOf(snapshot), 1);
+    }
+
+    // Restores the given snapshot into this simulation. Caller must have checked engine.canRestoreStateSnapshot().
+    restoreSnapshot(snapshot) {
+        assert.object(snapshot);
+        this.#engine.restoreStateSnapshot(snapshot.state);
         this.updateConflictMarks();
     }
 
