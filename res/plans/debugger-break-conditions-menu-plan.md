@@ -137,17 +137,32 @@ Extend the existing `/* Circuit select/place */` rules with the category-nested 
 .toolbar > .toolbar-menu-button > .toolbar-menu-container > .toolbar > .toolbar-menu-category > .toolbar-menu-container > .toolbar.toolbar-condition-rows > .toolbar-condition-delete {
     border: 2px solid var(--button-border-color);
     border-radius: 3px;
-    font-size: var(--font-size-large);
-    line-height: 1.2;
     margin: 0;
     min-width: 30px;
     width: 30px;
     position: absolute;
     right: 0;
 }
+.toolbar > .toolbar-menu-button > .toolbar-menu-container > .toolbar > .toolbar-circuit-place {
+    font-size: var(--font-size-large);
+    line-height: 1.2;
+}
+/* The ❌ emoji is a wide glyph: at the large font size it is ~25px wide, overflows the 30px box and gives the menu a horizontal scrollbar. */
+.toolbar > .toolbar-menu-button > .toolbar-menu-container > .toolbar > .toolbar-menu-category > .toolbar-menu-container > .toolbar.toolbar-condition-rows > .toolbar-condition-delete {
+    font-size: var(--font-size-normal);
+    height: 28px; /* same total height as a row entry (border-box: 24px content + 2px border) */
+    line-height: 24px;
+    text-align: center;
+}
+/* Expressions often contain no break opportunities (long identifiers, '&&'): cap the row width, wrap and break anywhere so a long condition cannot push the menu (and its delete buttons) off screen. (body sets white-space: nowrap globally.) */
+.toolbar > .toolbar-menu-button > .toolbar-menu-container > .toolbar > .toolbar-menu-category > .toolbar-menu-container > .toolbar.toolbar-condition-rows > .toolbar-condition-edit {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    max-width: calc(min(60vw, 400px) - 30px); /* 30px = the side button */
+}
 ```
 
-Long condition expressions wrap inside the row (menu containers already have `min-width: 150px` and the root menu scrolls at `max-height`); no extra handling needed. Escaping only lengthens the text slightly (`<` → `&lt;`), which does not change the wrapping behaviour.
+Measured glyph widths at `font-size: 20px` (`--font-size-large`) in Chromium: `❌` U+274C = **25px** (emoji presentation), `❌\uFE0E` (text presentation) = 15.2px, `✖` U+2716 = 16.8px. The 30px box has only 26px of content width (2px border each side), so the emoji at the large size overflowed: the button reported `scrollWidth 30 > clientWidth 26`, which (the root menu's inner `.toolbar` has `overflow-y: auto`, so `overflow-x` computes to `auto`) produced a **horizontal scrollbar in the menu**, and `text-align: left` (set by the menu-button rule) left the glyph uncentred. The dedicated rule keeps the emoji (colored ❌) at `--font-size-normal` (~17.5px wide), centres it and fixes the height to the 28px row height (`line-height: 2` × 14px of the entries; `line-height: 1.2` × 20px + 4px border = 28px for the circuit place button). Verified: `scrollWidth == clientWidth` on the condition rows, button 28px tall at the same y as its row, glyph 6px from the top and bottom edges.
 
 Why a class instead of a blanket `position: relative` on every `.toolbar-menu-container > .toolbar`: the 74-series library menus put `.toolbar-circuit-place` buttons inside menu categories; those previously anchored to the root menu container (the only positioned ancestor), so making every category toolbar a positioning anchor would silently shift them. `ToolbarItem.subToolbar.node` is the inner `.toolbar` div (the `.toolbar-menu-container` div is its parent), hence the `.toolbar.toolbar-condition-rows` compound selector.
 
@@ -171,9 +186,11 @@ Why a class instead of a blanket `position: relative` on every `.toolbar-menu-co
    - Clicking the row text (not ❌) opens the edit dialog; clearing it still deletes.
    - Conditions still break the simulation when **Break on condition** is on (add e.g. `pA === 1`, run with a Probe `pA`, confirm the "Breaking on condition" notice).
    - Escaping: add a condition such as `a<b && c>d` (or one containing `<img src=x onerror=alert(1)>`) and confirm it is displayed **literally** in the row and in the ❌ hover message, with no markup interpretation.
+   - ❌ glyph: centered in its 30px box, box the same height as the row entry, no horizontal scrollbar in the menu (`scrollWidth == clientWidth` on the condition rows).
+   - Long expression with no break opportunities (e.g. `some.very.long.expression_that_wraps_inside_the_menu_row && another_operand_here && yet_more_text_to_wrap`): the menu stays within the viewport (capped at `min(60vw, 400px)`), the row wraps to several lines and each ❌ stays visible at the right edge.
    - No regression in the Circuit menu and in the Component → library menus (`⇤` place buttons still aligned).
 3. Commit.
 
 ## Status: implemented
 
-All of the above is implemented (`src/common.js` `escapeHTML()`, `src/ui/application.js` Debugger menu, `src/ui.css`) plus a `test("escapeHTML")` unit test in `test/test.js`. Verified with `node test/test.js` (35 passed) and headless-Chromium scripted UI runs (`file://index.html`): empty list → no category/no separator; three conditions incl. `a<b && c>d` and `<img src=x onerror=console.log("INJECTED")>` rendered literally with no script execution and no page errors; ❌ deletes the right entry and refreshes the open menu; edit dialog prefilled and clearing it deletes; condition rows and side buttons measured at identical y positions (272/300); Circuit menu place button still aligned.
+All of the above is implemented (`src/common.js` `escapeHTML()`, `src/ui/application.js` Debugger menu, `src/ui.css`) plus a `test("escapeHTML")` unit test in `test/test.js`. A follow-up commit also fixed the ❌ rendering: the emoji was 25px wide inside a 26px content box (horizontal scrollbar in the menu) and left-aligned; it is now `--font-size-normal`, centred, with the button height pinned to the row height, and condition rows wrap at `min(60vw, 400px)` instead of running off screen. Verified with `node test/test.js` (35 passed) and headless-Chromium scripted UI runs (`file://index.html`): empty list → no category/no separator; three conditions incl. `a<b && c>d` and `<img src=x onerror=console.log("INJECTED")>` rendered literally with no script execution and no page errors; ❌ deletes the right entry and refreshes the open menu; edit dialog prefilled and clearing it deletes; condition rows and side buttons measured at identical y positions (272/300); Circuit menu place button still aligned.
