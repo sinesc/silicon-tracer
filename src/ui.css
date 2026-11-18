@@ -14,7 +14,7 @@
     --wire-colorT: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 105); /* manual toggle */
     --wire-colorE1: oklch(80% 0.5 45); /* conflict/error */
     --wire-colorE2: oklch(50% 0.5 90); /* conflict/error */
-    --net-conflict-driver-color: orange; /* output port driving a conflicted net */
+    --net-conflict-driver-color: oklch(80% 0.5 45); /* output port driving a conflicted net */
     --wire-color0: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 180);
     --wire-color1: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 145);
     --wire-color2: oklch(var(--wire-color-lightness) var(--wire-color-chroma) 110);
