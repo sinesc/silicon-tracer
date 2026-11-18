@@ -18,6 +18,8 @@ class ComponentPort {
 
     conflictDriver = false; // true when this port is part of a net conflict: an output port driving a conflicted net, or a CustomComponent port leading into a sub-circuit net with conflict drivers (set by Circuit.markNetConflicts)
 
+    netDriver = false; // true when this output port currently actively drives its net (low or high, not high-impedance), or a CustomComponent port leading into a sub-circuit containing such a driver (set by Circuit.markDrivers)
+
     numChannels = null;
     ioType = null;
 
@@ -321,6 +323,7 @@ class Component extends GridItem {
         for (const item of this.ports) {
             item.netIds = null;
             item.conflictDriver = false;
+            item.netDriver = false;
         }
     }
 
@@ -710,6 +713,7 @@ class Component extends GridItem {
                 item.element.setAttribute('data-net-state', state);
             }
             item.element.classList.toggle('net-conflict-driver', item.conflictDriver);
+            item.element.classList.toggle('net-driver', item.netDriver);
         }
         this.element?.classList.toggle('net-conflict-component', this.containsConflict);
     }

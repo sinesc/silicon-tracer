@@ -197,7 +197,7 @@ Simulations.Simulation = class {
             const circuit = this.#netList.instances[this.#instanceId].circuit
             if (reattach && this.#attached) {
                 circuit.attachSimulation(this.#netList, this.#instanceId);
-                this.updateConflictMarks();
+                this.updateMarks();
             }
             this.#app.grid.markSimulationRecompiled();
             return true;
@@ -216,24 +216,30 @@ Simulations.Simulation = class {
         this.#app.grid.circuitOverlay.setInstanceId(instanceId);
         this.#instanceId = instanceId;
         circuit.attachSimulation(this.#netList, instanceId);
-        this.updateConflictMarks();
+        this.updateMarks();
         this.#app.history.record();
     }
 
-    // Recomputes net conflict marks (driving/path port outlines and outlines of components containing a conflict) for the circuit instance currently shown on the grid (only marks in single-step mode with net conflict checking enabled, clears marks otherwise).
+    // Recomputes net-related port marks for the circuit instance currently shown on the grid: conflict marks (driving/path port
+    // outlines and outlines of components containing a conflict, only in single-step mode with net conflict checking enabled)
+    // and net-driver marks (outlines of ports currently driving their net, in single-step mode regardless of conflict checking;
+    // all cleared otherwise).
     // Only the current instance is marked because one Circuit (and thus its ComponentPorts) backs all instances of a sub-circuit.
-    updateConflictMarks() {
+    updateMarks() {
         if (!this.#netList) return;
         const circuit = this.#netList.instances[this.#instanceId].circuit;
         circuit.clearNetConflicts();
-        const enabled = this.#app.config.singleStep && this.#app.config.checkNetConflicts && !!this.#engine;
-        if (enabled) circuit.markNetConflicts(this.#netList, this.#instanceId, this.#engine.resolveNetConflictDriversByNet());
+        circuit.clearNetDrivers();
+        if (this.#app.config.singleStep && this.#engine) {
+            if (this.#app.config.checkNetConflicts) circuit.markNetConflicts(this.#netList, this.#instanceId, this.#engine.resolveNetConflictDriversByNet());
+            circuit.markDrivers(this.#netList, this.#instanceId, this.#engine.resolveNetDriversByNet());
+        }
     }
 
     // Restarts the simulation from its initial state.
     reset() {
         this.#engine.reset();
-        this.updateConflictMarks();
+        this.updateMarks();
     }
 
     // Returns this simulation's snapshots (session-only, not serialized).
@@ -257,7 +263,7 @@ Simulations.Simulation = class {
     restoreSnapshot(snapshot) {
         assert.object(snapshot);
         this.#engine.restoreStateSnapshot(snapshot.state);
-        this.updateConflictMarks();
+        this.updateMarks();
     }
 
     // Ticks the current simulation for the given amount of ticks.
@@ -285,7 +291,7 @@ Simulations.Simulation = class {
         this.checkDirty(false);
         this.#circuit.attachSimulation(this.#netList, 0);
         this.#instanceId = 0;
-        this.updateConflictMarks();
+        this.updateMarks();
         this.#app.grid.simulationOverlay.setLabel(this.#circuit.label);
         this.#app.grid.markSimulationRecompiled();
         this.#attached = true;

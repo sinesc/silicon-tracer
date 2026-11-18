@@ -623,7 +623,7 @@ class Application {
                 if (enabled) {
                     this.simulations.select(this.circuits.current, this.config.autoCompile);
                 }
-                this.simulations.current?.updateConflictMarks();
+                this.simulations.current?.updateMarks();
                 debuggerMenu.open();
             });
             // Pause simulation when a net conflict is detected.
@@ -647,7 +647,7 @@ class Application {
                     this.#singleStep(0);
                 } else {
                     this.config.singleStep = false;
-                    this.simulations.current?.updateConflictMarks();
+                    this.simulations.current?.updateMarks();
                 }
                 debuggerMenu.open();
             });
@@ -755,7 +755,7 @@ class Application {
                 this.#debuggerMenu.open();
             }
         }
-        sim.updateConflictMarks();
+        sim.updateMarks();
     }
 
     // Enables single-step mode (if not already) and advances the simulation to the next output flip of any clock.
@@ -776,7 +776,7 @@ class Application {
         this.showNotice(flipped
             ? `Stepped ${Number.formatSI(ticks)} ticks to clock flip.`
             : `No clock flip within ${Number.formatSI(ticks)} ticks.${alreadySingleStep ? '' : ' Simulation single-step enabled.'}`);
-        sim.updateConflictMarks();
+        sim.updateMarks();
         // update already open debugger menu
         if (this.#debuggerMenu.state()) {
             this.#debuggerMenu.open();

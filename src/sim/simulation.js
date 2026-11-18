@@ -651,6 +651,37 @@ class Simulation {
         return drivers;
     }
 
+    // Returns a Map of engine net id => Set of engine port names of output ports currently actively driving that net
+    // (driven bit set, i.e. not high-impedance). Nets currently in conflict state are excluded (those use the
+    // conflict-driver marks instead, which take precedence), as are pull ports (they only drive undriven nets)
+    // and non-driving high-impedance outputs.
+    resolveNetDriversByNet() {
+        const result = new Map();
+        const mem = this.#backend.mem;
+        for (const net of this.#nets.all) {
+            if (net.elementIndexC !== null && (mem[net.elementIndexC] & (1 << net.bitIndex)) !== 0) continue; // conflicted net
+            const drivers = new Set();
+            for (const portName of net.ports) {
+                const port = this.#ports.byName[portName];
+                if (!port || port.ioType !== 'o' || port.elementIndex2 === null) continue;
+                if (port.isPull) continue;
+                const driven = port.elementIndex3 === null || (mem[port.elementIndex3] & (1 << port.bitIndex)) !== 0;
+                if (driven) drivers.add(portName);
+            }
+            if (drivers.size > 0) result.set(net.id, drivers);
+        }
+        return result;
+    }
+
+    // Returns a Set of port names of output ports that currently actively drive a non-conflicted net.
+    resolveNetDrivers() {
+        const drivers = new Set();
+        for (const names of this.resolveNetDriversByNet().values()) {
+            for (const name of names) drivers.add(name);
+        }
+        return drivers;
+    }
+
     // Returns a list of defined nets.
     get nets() {
         return this.#nets.all;
