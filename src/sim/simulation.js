@@ -453,15 +453,17 @@ class Simulation {
     }
 
     // Runs the simulation for the given number of ticks.
-    // Returns 1 if a break-on-conflict fired mid-run, 0 otherwise.
-    simulate(ticks = 1) {
-        return this.#compiledTicks(ticks);
+    // Returns 1 if a break-on-conflict fired mid-run, 2 if a break-on-condition fired, 0 otherwise.
+    // Truthy ignoreBreaks skips all break checks (breakpoints are silently ignored for these ticks).
+    simulate(ticks = 1, ignoreBreaks = false) {
+        return this.#compiledTicks(ticks, ignoreBreaks ? 1 : 0);
     }
 
     // Steps the simulation to the next output flip of any clock, at most maxTicks ticks.
     // Returns { ticks, flipped, broke }: ticks = number of ticks stepped (a lower bound when a break fired),
     // flipped = a clock output toggled, broke = 1 (conflict) / 2 (condition) / 0 (no break).
-    stepToClockFlip(maxTicks = 1000000) {
+    // Truthy ignoreBreaks ignores all breakpoints while stepping (broke is then always 0).
+    stepToClockFlip(maxTicks = 1000000, ignoreBreaks = false) {
         assert.integer(maxTicks);
         if (this.#clocks.length === 0) return { ticks: 0, flipped: false, broke: 0 };
         this.#clockOutputChanged(); // establish the baseline clock output state before stepping
@@ -474,7 +476,7 @@ class Simulation {
             let jump = Math.min(maxTicks - stepped, 100000);
             for (const clock of this.#clocks) jump = Math.min(jump, mem[clock.counterIndex] + 1);
             jump = Math.max(1, jump);
-            const broke = this.simulate(jump);
+            const broke = this.simulate(jump, ignoreBreaks);
             if (broke !== 0) return { ticks: stepped, flipped: false, broke };
             stepped += jump;
             if (this.#clockOutputChanged()) return { ticks: stepped, flipped: true, broke: 0 };

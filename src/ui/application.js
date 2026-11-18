@@ -32,6 +32,7 @@ class Application {
         breakOnConflict: false,
         breakOnCondition: false,
         breakConditions: [],
+        ignoreBreakpoints: false, // ignore breakpoints during "Step to clock flip"
         lockSimulation: false,
         simulationBackend: 'js',
         debugCompileComments: false,
@@ -662,6 +663,10 @@ class Application {
                 this.#stepToClockFlip();
             });
             stepFlipButton.node.classList.toggle('toolbar-menu-button-disabled', !hasClock);
+            debuggerMenu.createToggleButton('Ignore breakpoints', 'Ignore "Break on conflict" and "Break on condition" while stepping to the next clock flip.', this.config.ignoreBreakpoints, (enabled) => {
+                this.config.ignoreBreakpoints = enabled;
+                debuggerMenu.open();
+            });
             // Break-on-condition expressions.
             debuggerMenu.createSeparator();
             debuggerMenu.createActionButton('Add condition...', 'Break simulation on a custom probe expression.', async () => {
@@ -760,7 +765,7 @@ class Application {
         }
         const sim = this.simulations.current;
         if (!sim) return;
-        const { ticks, flipped, broke } = sim.stepToClockFlip();
+        const { ticks, flipped, broke } = sim.stepToClockFlip(1000000, this.config.ignoreBreakpoints);
         if (broke !== 0) {
             // Break mid-step: entering single-step mode and reporting the break reason is #singleStep's job.
             this.#singleStep(0, broke);

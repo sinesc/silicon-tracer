@@ -268,9 +268,10 @@ Simulations.Simulation = class {
     }
 
     // Steps to the next output flip of any clock, at most maxTicks ticks. Returns { ticks, flipped, broke }.
-    stepToClockFlip(maxTicks = 1000000) {
+    // Truthy ignoreBreaks ignores all breakpoints (conflict/condition) while stepping.
+    stepToClockFlip(maxTicks = 1000000, ignoreBreaks = false) {
         assert.integer(maxTicks);
-        return this.#engine.stepToClockFlip(maxTicks);
+        return this.#engine.stepToClockFlip(maxTicks, ignoreBreaks);
     }
 
     // Returns whether the simulation includes the given circuit.

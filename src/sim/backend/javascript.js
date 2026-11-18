@@ -256,14 +256,14 @@ class BackendJavascript {
         for (const [token, replacement] of replacements) translated = translated.replaceAll(token, replacement);
         try { new Function('mem', `return (${translated})`); }
         catch { return; }
-        this.#tickCode += `if (${translated}) { return 2; }` + this.#comment('break on condition') + '\n';
+        this.#tickCode += `if (!ignoreBreaks && (${translated})) { return 2; }` + this.#comment('break on condition') + '\n';
     }
 
     // Emits a break-on-conflict check: ORs all conflict elements and breaks the tick loop early if any bit is set.
     emitBreakOnConflict() {
         if (this.#conflictIndices.size === 0) return;
         const orExpr = [...this.#conflictIndices].map(i => `mem[${i}]`).join(' | ');
-        this.#tickCode += `if (${orExpr}) { return 1; }` + this.#comment('break on conflict') + '\n';
+        this.#tickCode += `if (!ignoreBreaks && (${orExpr})) { return 1; }` + this.#comment('break on conflict') + '\n';
     }
 
     // Emits pull resistors.
@@ -436,7 +436,7 @@ class BackendJavascript {
 
     // Assembles and returns the simulation tick function source code as a string.
     buildCode() {
-        let code = "'use strict';(mem) => (ticks) => {\n";
+        let code = "'use strict';(mem) => (ticks, ignoreBreaks) => {\n";
         code += this.#initCode;
         code += "ticks |= 0;\n";
         code += "for (let i = 0; i < ticks; ++i) {\n";
@@ -447,8 +447,9 @@ class BackendJavascript {
         return code;
     }
 
-    // Finalizes and returns the simulation function.
-    // The returned function returns 1 if a break-on-conflict fired, 2 if a break-on-condition fired, 0 otherwise.
+    // Finalizes and returns the simulation function: (ticks, ignoreBreaks) => break code.
+    // Returns 1 if a break-on-conflict fired, 2 if a break-on-condition fired, 0 otherwise;
+    // truthy ignoreBreaks skips all break checks (breaks silently ignored).
     compile() {
         return eval(this.buildCode())(this.#mem);
     }
@@ -459,6 +460,7 @@ class BackendJavascript {
         const debugTick = this.#tickCode.split('\n').join("\nif (yield) debugger;\n");
         let code = "'use strict';(function*(mem) {\n";
         code += this.#initCode;
+        code += "let ignoreBreaks = 0;\n"; // step generator never breaks; gate the emitted break checks off
         code += debugTick;
         code += '})';
         const generator = eval(code);

@@ -423,6 +423,24 @@ test("step to clock flip breaks on condition", () => {
     assert(result !== null && result.broke === 2 && result.flipped === false, `expected a condition break, got ${JSON.stringify(result)}`);
 });
 
+test("step to clock flip ignores breakpoints", () => {
+    // With ignoreBreaks, the same circuits that break above must step past their breakpoints and keep flipping.
+    const sim = compileCircuit('data/tests.stc', 'DelayedConflict', 'js', { targetTPS: 1000, breakOnConflict: true });
+    let result = null;
+    for (let step = 0; step < 40; step++) {
+        result = sim.stepToClockFlip(1000000, true);
+        assert(result.broke === 0, `no break expected while ignoring breakpoints, got ${JSON.stringify(result)}`);
+        if (!result.flipped) break;
+    }
+    assert(result !== null && result.flipped === true, `steps should keep flipping past the conflict, got ${JSON.stringify(result)}`);
+
+    const sim2 = compileCircuit('data/tests.stc', 'DelayedConflict', 'js', { targetTPS: 1000, breakConditions: [ 'pConflict' ] });
+    for (let step = 0; step < 10; step++) {
+        const r = sim2.stepToClockFlip(1000000, true);
+        assert(r.broke === 0 && r.flipped === true, `condition should be ignored, got ${JSON.stringify(r)}`);
+    }
+});
+
 test("step to clock flip in clock-less simulation", () => {
     const sim = compileCircuit('data/tests.stc', 'ProbesInSubcircuit');
     assert(sim.clocks.length === 0, `fixture should have no clocks, got ${sim.clocks.length}`);
