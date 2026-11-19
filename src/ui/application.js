@@ -792,7 +792,7 @@ class Application {
         // reattach=true keeps an attached simulation (incl. a sub-circuit instance) attached; a simulation that
         // is not currently shown stays detached, its restored state appears once the user selects it.
         sim.checkDirty(true);
-        this.history.record();
+        // no history.record() here: unlike the old select-then-restore flow the navigation state (circuit/simulation/instance) does not change
         if (!sim.engine.canRestoreStateSnapshot(snapshot.state)) {
             this.showNotice(`Cannot restore snapshot "${sim.label}: ${snapshot.name}": the simulation structure changed.`);
             return; // keep the snapshot, an Undo can make it restorable again
