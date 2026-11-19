@@ -783,17 +783,15 @@ class Application {
         }
     }
 
-    // Restores a simulation snapshot: selects/attaches the owning simulation first (applies any pending recompile),
-    // then writes the captured state back into the engine.
+    // Restores a simulation snapshot WITHOUT changing the displayed circuit/simulation selection:
+    // applies any pending recompile of the owning simulation, then writes the captured state back into the engine.
     #restoreSnapshot(sim, snapshot) {
         assert.class(Simulations.Simulation, sim);
         assert.object(snapshot);
-        const circuit = this.circuits.byUID(sim.uid);
-        if (!circuit) return; // owning circuit is gone (snapshots die with the simulation anyway)
-        // select/attach the owning simulation (checkDirty recompile may run first) like Action.selectSimulation does,
-        // but WITHOUT resetting single-step mode: restoring must not silently resume (or pause) execution
-        this.circuits.select(sim.uid);
-        this.simulations.select(this.circuits.current, true);
+        if (!this.circuits.byUID(sim.uid)) return; // owning circuit is gone (snapshots die with the simulation anyway)
+        // reattach=true keeps an attached simulation (incl. a sub-circuit instance) attached; a simulation that
+        // is not currently shown stays detached, its restored state appears once the user selects it.
+        sim.checkDirty(true);
         this.history.record();
         if (!sim.engine.canRestoreStateSnapshot(snapshot.state)) {
             this.showNotice(`Cannot restore snapshot "${sim.label}: ${snapshot.name}": the simulation structure changed.`);
