@@ -194,6 +194,7 @@ Simulations.Simulation = class {
         assert.bool(reattach);
         if (this.#dirty && !this.#app.config.lockSimulation) {
             this.#compile();
+            this.#validateInstanceId();
             const circuit = this.#netList.instances[this.#instanceId].circuit
             if (reattach && this.#attached) {
                 circuit.attachSimulation(this.#netList, this.#instanceId);
@@ -227,6 +228,7 @@ Simulations.Simulation = class {
     // Only the current instance is marked because one Circuit (and thus its ComponentPorts) backs all instances of a sub-circuit.
     updateMarks() {
         if (!this.#netList) return;
+        this.#validateInstanceId();
         const circuit = this.#netList.instances[this.#instanceId].circuit;
         circuit.clearNetConflicts();
         circuit.clearNetDrivers();
@@ -291,6 +293,9 @@ Simulations.Simulation = class {
         this.checkDirty(false);
         this.#circuit.attachSimulation(this.#netList, 0);
         this.#instanceId = 0;
+        // The overlay keeps its own instance id from a previous reattach(); drop it because this
+        // simulation is rooted at its own circuit and only instance 0 is attached.
+        this.#app.grid.circuitOverlay.setInstanceId(null);
         this.updateMarks();
         this.#app.grid.simulationOverlay.setLabel(this.#circuit.label);
         this.#app.grid.markSimulationRecompiled();
@@ -322,6 +327,15 @@ Simulations.Simulation = class {
             this.#computeCircuitStats();
         }
         this.#dirty = false;
+    }
+
+    // Falls back to the root instance if the current instance id no longer exists in the (recompiled)
+    // netlist, which happens when the instance tree shrank while a subcomponent instance was shown.
+    #validateInstanceId() {
+        if (!this.#netList.instances[this.#instanceId]) {
+            this.#instanceId = 0;
+            this.#app.grid.circuitOverlay.setInstanceId(null);
+        }
     }
 
     // Computes circuit statistics
