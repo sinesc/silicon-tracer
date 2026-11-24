@@ -173,7 +173,6 @@ function hexeditor(title, bitsPerValue, data, valuesPerRow = 8) {
         if (!cell) return;
         e.stopPropagation();
         if (e.key === 'Enter') { confirm?.(); return; }
-        if (e.key === 'Escape') { cancel?.(); return; }
         const r2 = parseInt(cell.dataset.r);
         const c2 = parseInt(cell.dataset.c);
         if (e.key === 'Tab') {
@@ -280,24 +279,36 @@ function hexeditor(title, bitsPerValue, data, valuesPerRow = 8) {
     document.body.appendChild(blackout);
 
     return new Promise((resolve) => {
+        // Escape closes the editor regardless of which element has focus, see dialog() for the same pattern
+        const onDocKeydown = (e) => {
+            if (e.key === 'Escape') {
+                e.stopPropagation();
+                cancel();
+            } else if (e.key.startsWith('Arrow')) {
+                e.stopPropagation();
+            }
+        };
+        const detach = () => {
+            document.removeEventListener('keydown', onDocKeydown, true);
+            window.removeEventListener('resize', handleResize);
+            editorElement.removeEventListener('wheel', handleWheel);
+            blackout.remove();
+        };
         confirm = () => {
             if (!validate()) {
-                window.removeEventListener('resize', handleResize);
-                editorElement.removeEventListener('wheel', handleWheel);
-                blackout.remove();
+                detach();
                 data.set(cloned);
                 resolve(true);
             }
         };
         cancel = () => {
-            window.removeEventListener('resize', handleResize);
-            editorElement.removeEventListener('wheel', handleWheel);
-            blackout.remove();
+            detach();
             resolve(false);
         };
         confirmElement.onclick = confirm;
         cancelElement.onclick = cancel;
         containerElement.onclick = (e) => e.stopPropagation();
         blackout.onclick = cancel;
+        document.addEventListener('keydown', onDocKeydown, true);
     });
 }
