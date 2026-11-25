@@ -1205,13 +1205,16 @@ body.dragging-from-toolbar .toolbar > .toolbar-trash-zone::before {
 .component.selected, .text.selected {
     filter: grayscale(100%) sepia(50%) hue-rotate(var(--selection-hue)) brightness(var(--selection-brightness));
 }
-.component.highlighted {
-    filter: /*grayscale(100%) sepia(50%) hue-rotate(var(--highlight-hue))*/ brightness(var(--highlight-brightness));
-}
 .component.selected, .text.selected > .inner {
     outline: 1px dotted white;
     outline-offset: -3px;
     border-radius: 6px;
+}
+.component.highlighted {
+    filter: /*grayscale(100%) sepia(50%) hue-rotate(var(--highlight-hue))*/ brightness(var(--highlight-brightness));
+}
+.text.highlighted > .inner, .group.highlighted {
+    background-color: #fff4;
 }
 .text > .inner {
     padding: calc(5px * var(--zoom-factor));

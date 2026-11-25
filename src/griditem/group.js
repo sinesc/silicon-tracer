@@ -117,6 +117,17 @@ class Group extends GridItem {
         this.#element?.classList.toggle('selected', status);
     }
 
+    // Return whether the element is highlighted.
+    get highlighted() {
+        return this.#element?.classList.contains('highlighted') ?? false;
+    }
+
+    // Apply/remove component highlight effect.
+    set highlighted(status) {
+        assert.bool(status);
+        this.#element?.classList.toggle('highlighted', status);
+    }
+
     // Return group box label text.
     get label() {
         return this.#label;
