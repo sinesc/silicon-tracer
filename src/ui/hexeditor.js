@@ -32,6 +32,7 @@ function hexeditor(title, bitsPerValue, data, valuesPerRow = 8) {
     let topRow = 0;
     let visibleRows = 1;
     let inputRows = []; // inputRows[r][c] = <input>
+    let cursorInput = null; // cell currently holding the text cursor, its value address is highlighted in the row label
     let addrElements = [];
     let confirm, cancel; // defined later in Promise, referenced via closure in delegated key handler
 
@@ -107,12 +108,22 @@ function hexeditor(title, bitsPerValue, data, valuesPerRow = 8) {
         }
     };
 
+    // print the row addresses, showing the value address of the cursor cell instead of the plain row start
+    const updateAddresses = () => {
+        for (let r = 0; r < visibleRows; r++) {
+            const rowStart = (topRow + r) * valuesPerRow;
+            const isCursor = cursorInput !== null && !cursorInput.disabled && parseInt(cursorInput.dataset.r) === r;
+            const address = isCursor ? rowStart + parseInt(cursorInput.dataset.c) : rowStart;
+            addrElements[r].textContent = address.toString(16).padStart(addrDigits, '0');
+            addrElements[r].classList.toggle('hexeditor-addr-cursor', isCursor);
+        }
+    };
+
     const refreshGrid = () => {
         scrollbarElement.max = Math.max(0, totalRows - visibleRows);
         scrollbarElement.value = topRow;
         for (let r = 0; r < visibleRows; r++) {
             const rowStart = (topRow + r) * valuesPerRow;
-            addrElements[r].textContent = rowStart.toString(16).padStart(addrDigits, '0');
             for (let c = 0; c < valuesPerRow; c++) {
                 const idx = rowStart + c;
                 const input = inputRows[r][c];
@@ -128,6 +139,7 @@ function hexeditor(title, bitsPerValue, data, valuesPerRow = 8) {
                 }
             }
         }
+        updateAddresses();
     };
 
     const scrollTo = (newTop) => {
@@ -137,6 +149,7 @@ function hexeditor(title, bitsPerValue, data, valuesPerRow = 8) {
 
     const buildGrid = () => {
         gridElement.innerHTML = '';
+        cursorInput = null; // the old cell elements are gone
         addrElements = [];
         inputRows = [];
         for (let r = 0; r < visibleRows; r++) {
@@ -248,6 +261,19 @@ function hexeditor(title, bitsPerValue, data, valuesPerRow = 8) {
         }
     };
 
+    const handleFocusIn = (e) => {
+        const cell = e.target.closest('.hexeditor-cell');
+        if (!cell) return;
+        cursorInput = cell;
+        updateAddresses();
+    };
+
+    const handleFocusOut = (e) => {
+        if (!e.target.closest?.('.hexeditor-cell')) return;
+        cursorInput = null;
+        updateAddresses();
+    };
+
     const validate = () => {
         let hasErrors = false;
         for (let r = 0; r < visibleRows; r++) {
@@ -267,6 +293,8 @@ function hexeditor(title, bitsPerValue, data, valuesPerRow = 8) {
     gridElement.addEventListener('input', handleInput);
     gridElement.addEventListener('keydown', handleNavigate);
     gridElement.addEventListener('blur', handleBlur, true);
+    gridElement.addEventListener('focusin', handleFocusIn);
+    gridElement.addEventListener('focusout', handleFocusOut);
     scrollbarElement.oninput = () => scrollTo(parseInt(scrollbarElement.value));
     window.addEventListener('resize', handleResize);
     editorElement.addEventListener('wheel', handleWheel, { passive: false });

@@ -386,6 +386,10 @@ body.no-focus #focus-hint:has(~div.grid:hover) {
     user-select: none;
     opacity: 0.7;
 }
+.hexeditor-addr-cursor { /* address of the value under the text cursor */
+    color: var(--text-color); /* #fff */
+    opacity: 1;
+}
 .hexeditor-cell {
     font-family: monospace;
     font-size: var(--font-size-normal);
