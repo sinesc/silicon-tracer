@@ -72,7 +72,7 @@ class Tunnel extends VirtualComponent {
     // Returns true if the search string matches this tunnel's name.
     match(string) {
         assert.string(string);
-        return this.name.toLowerCase().includes(string);
+        return super.match(string) || this.name.toLowerCase().includes(string);
     }
 
     // Overrides method to disable top-markings.

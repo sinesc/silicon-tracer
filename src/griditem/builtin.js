@@ -44,7 +44,7 @@ class Builtin extends SimulationComponent {
         return Builtin.META_INFO[this.type]?.label ?? this.type.toUpperFirst();
     }
 
-    // Returns the builtin's label string.
+    // Returns the component type label used mostly in hover texts when referring to what the component is.
     get typeLabel() {
         return this.topMarkings;
     }

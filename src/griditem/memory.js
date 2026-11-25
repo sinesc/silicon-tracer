@@ -44,7 +44,7 @@ class Memory extends SimulationComponent {
         this.#relabelDataPorts();
     }
 
-    // Returns the memory's type label string.
+    // Returns the component type label used mostly in hover texts when referring to what the component is.
     get typeLabel() {
         return this.#memType === 'rom' ? 'ROM' : 'RAM';
     }

@@ -371,7 +371,7 @@ class Component extends GridItem {
     // Returns true if the search string matches this component.
     match(string) {
         assert.string(string);
-        return this.topMarkings.toLowerCase().includes(string);
+        return this.topMarkings.toLowerCase().includes(string) || this.constructor.name.toLowerCase().includes(string);
     }
 
     // Return grid item rotation.
@@ -425,7 +425,7 @@ class Component extends GridItem {
         return this.#type.toUpperFirst()
     }
 
-    // Returns the component type label used in text referring to what the component is.
+    // Returns the component type label used mostly in hover texts when referring to what the component is.
     get typeLabel() {
         return this.constructor.TYPE_LABEL_LONG ?? this.constructor.TYPE_LABEL;
     }

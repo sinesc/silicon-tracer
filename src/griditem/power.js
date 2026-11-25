@@ -72,7 +72,7 @@ class Power extends SimulationComponent {
         }
     }
 
-    // Override top-markings with the gate type.
+    // Returns the component type label used mostly in hover texts when referring to what the component is.
     get typeLabel() {
         return Power.MODE_LABELS[this.#mode];
     }
@@ -84,6 +84,12 @@ class Power extends SimulationComponent {
         }
         this.element.setAttribute('data-power-mode', this.#mode);
         return true;
+    }
+
+    // Returns true if the search string matches this probe's name.
+    match(string) {
+        assert.string(string);
+        return this.typeLabel.toLowerCase().includes(string); // intentionally not chaining to parent (which would match "power" for all variants)
     }
 
     // Returns { title, fields, data } for the edit dialog.

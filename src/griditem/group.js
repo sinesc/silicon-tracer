@@ -101,7 +101,7 @@ class Group extends GridItem {
         super.unlink();
     }
 
-    // Returns the component type label used in text referring to what the component is.
+    // Returns the component type label used mostly in hover texts when referring to what the component is.
     get typeLabel() {
         return this.constructor.TYPE_LABEL_LONG ?? this.constructor.TYPE_LABEL;
     }

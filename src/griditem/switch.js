@@ -47,7 +47,7 @@ class Switch extends SimulationComponent {
         };
     }
 
-    // Returns the button's type label string.
+    // Returns the component type label used mostly in hover texts when referring to what the component is.
     get typeLabel() {
         return this.#mode === 'toggle' ? 'Toggle switch' : 'Momentary switch';
     }

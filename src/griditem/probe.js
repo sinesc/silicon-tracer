@@ -119,7 +119,7 @@ class Probe extends DisplayComponent {
     // Returns true if the search string matches this probe's name.
     match(string) {
         assert.string(string);
-        return this.name.toLowerCase().includes(string);
+        return super.match(string) || this.name.toLowerCase().includes(string);
     }
 
     // Computes the top-markings from the current net state of all attached nets.

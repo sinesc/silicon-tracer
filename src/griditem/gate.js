@@ -42,7 +42,7 @@ class Gate extends SimulationComponent {
         this.setHoverMessage(this.inner, `<b>${this.typeLabel}</b>. <i>E</i> Edit, ${Component.HOTKEYS}.`, { type: 'hover' });
     }
 
-    // Override top-markings with the gate type.
+    // Returns the component type label used mostly in hover texts when referring to what the component is.
     get typeLabel() {
         return `${this.topMarkings}-Gate`;
     }
