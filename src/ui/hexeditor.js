@@ -70,12 +70,39 @@ function hexeditor(title, bitsPerValue, data, valuesPerRow = 8) {
         return parseInt(s, 16) <= maxValue;
     };
 
+    // focuses a cell and selects its contents, so typing replaces the value
     const focusInput = (r, c) => {
         if (r >= 0 && r < visibleRows && c >= 0 && c < valuesPerRow) {
             const input = inputRows[r][c];
             if (!input.disabled) {
                 input.focus();
                 input.select();
+            }
+        }
+    };
+
+    // move focus by one value in direction dir (-1 previous, +1 next), wrapping into the previous/next row and scrolling as needed
+    const moveFocus = (r, c, dir) => {
+        if (dir < 0) {
+            if (c > 0) {
+                focusInput(r, c - 1);
+            } else if (r > 0) {
+                focusInput(r - 1, valuesPerRow - 1);
+            } else if (topRow > 0) {
+                scrollTo(topRow - 1);
+                focusInput(0, valuesPerRow - 1);
+            }
+        } else {
+            const nextIdx = (topRow + r) * valuesPerRow + c + 1;
+            if (c + 1 < valuesPerRow && nextIdx < totalValues) {
+                focusInput(r, c + 1);
+            } else if ((topRow + r + 1) * valuesPerRow < totalValues) {
+                if (r + 1 < visibleRows) {
+                    focusInput(r + 1, 0);
+                } else {
+                    scrollTo(topRow + 1);
+                    focusInput(visibleRows - 1, 0);
+                }
             }
         }
     };
@@ -177,31 +204,7 @@ function hexeditor(title, bitsPerValue, data, valuesPerRow = 8) {
         const c2 = parseInt(cell.dataset.c);
         if (e.key === 'Tab') {
             e.preventDefault();
-            if (e.shiftKey) {
-                // prev field, wrapping to prev row / scrolling up
-                if (c2 > 0) {
-                    focusInput(r2, c2 - 1);
-                } else if (r2 > 0) {
-                    focusInput(r2 - 1, valuesPerRow - 1);
-                } else if (topRow > 0) {
-                    scrollTo(topRow - 1);
-                    focusInput(0, valuesPerRow - 1);
-                }
-            } else {
-                // next field, wrapping to next row / scrolling down
-                const nextC = c2 + 1;
-                const nextIdx = (topRow + r2) * valuesPerRow + nextC;
-                if (nextC < valuesPerRow && nextIdx < totalValues) {
-                    focusInput(r2, nextC);
-                } else if ((topRow + r2 + 1) * valuesPerRow < totalValues) {
-                    if (r2 + 1 < visibleRows) {
-                        focusInput(r2 + 1, 0);
-                    } else {
-                        scrollTo(topRow + 1);
-                        focusInput(visibleRows - 1, 0);
-                    }
-                }
-            }
+            moveFocus(r2, c2, e.shiftKey ? -1 : 1);
         } else if (e.key === 'ArrowUp') {
             e.preventDefault();
             if (r2 > 0) {
@@ -222,16 +225,17 @@ function hexeditor(title, bitsPerValue, data, valuesPerRow = 8) {
                 }
             }
         } else if (e.key === 'ArrowLeft') {
-            if (e.target.selectionStart === 0 && e.target.selectionEnd === 0) {
+            // leave the cell only when the text cursor is at the left edge (or the whole value is selected), otherwise move the cursor within the value
+            const len = e.target.value.length;
+            if (e.target.selectionStart === 0 && (e.target.selectionEnd === 0 || e.target.selectionEnd === len)) {
                 e.preventDefault();
-                if (c2 > 0) focusInput(r2, c2 - 1);
+                moveFocus(r2, c2, -1);
             }
         } else if (e.key === 'ArrowRight') {
             const len = e.target.value.length;
-            if (e.target.selectionStart === len && e.target.selectionEnd === len) {
+            if (e.target.selectionEnd === len && (e.target.selectionStart === len || e.target.selectionStart === 0)) {
                 e.preventDefault();
-                const nextIdx2 = (topRow + r2) * valuesPerRow + c2 + 1;
-                if (c2 + 1 < valuesPerRow && nextIdx2 < totalValues) focusInput(r2, c2 + 1);
+                moveFocus(r2, c2, 1);
             }
         }
     };
@@ -270,13 +274,13 @@ function hexeditor(title, bitsPerValue, data, valuesPerRow = 8) {
     // initialize the grid
     visibleRows = computeVisibleRows();
     buildGrid();
-    if (totalValues > 0) focusInput(0, 0);
+    document.body.appendChild(blackout); // must be part of the document, else focus() below has no effect
+    if (totalValues > 0) focusInput(0, 0); // top/left value, its contents are selected so typing replaces the value
 
     // bottom button row
     const rowElement = html(contentElement, 'div', 'dialog-button-row');
     const cancelElement = html(rowElement, 'span', 'dialog-button dialog-cancel', 'Cancel');
     const confirmElement = html(rowElement, 'span', 'dialog-button dialog-confirm', 'Ok');
-    document.body.appendChild(blackout);
 
     return new Promise((resolve) => {
         // Escape closes the editor regardless of which element has focus, see dialog() for the same pattern
@@ -284,7 +288,9 @@ function hexeditor(title, bitsPerValue, data, valuesPerRow = 8) {
             if (e.key === 'Escape') {
                 e.stopPropagation();
                 cancel();
-            } else if (e.key.startsWith('Arrow')) {
+            } else if (e.key.startsWith('Arrow') && !e.target.closest?.('.hexeditor-cell')) {
+                // swallow arrow keys outside the cell grid so they don't trigger grid navigation hotkeys; keys inside a cell are
+                // handled by handleNavigate, which stops propagation itself (this handler runs first, capture phase on document)
                 e.stopPropagation();
             }
         };
