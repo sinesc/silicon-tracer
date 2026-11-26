@@ -675,13 +675,13 @@ class Application {
             });
             // Condition list category; only shown while at least one condition is defined.
             if (this.config.breakConditions.length > 0) {
-                const conditionsCategory = debuggerMenu.createMenuCategory('Conditions', 'Defined break conditions. <i>Click</i> an entry to edit it, <i>❌</i> to delete it.', (conditionsMenu) => {
+                const conditionsCategory = debuggerMenu.createMenuCategory('Conditions', 'Defined break conditions. <i>Click</i> an entry to edit it, <i>✕</i> to delete it.', (conditionsMenu) => {
                     conditionsMenu.clear();
                     for (let i = 0; i < this.config.breakConditions.length; i++) {
                         const expr = this.config.breakConditions[i];
                         const safeExpr = escapeHTML(expr); // button labels and hover messages are set via innerHTML
                         // The absolutely positioned side button must precede its row entry (its static position is below the preceding in-flow entry).
-                        const deleteButton = conditionsMenu.createActionButton('&#10060;', `Delete break condition: <b>${safeExpr}</b>`, () => {
+                        const deleteButton = conditionsMenu.createActionButton('✕', `Delete break condition: <b>${safeExpr}</b>`, () => {
                             this.config.breakConditions.splice(i, 1);
                             this.simulations.markDirty(null);
                             debuggerMenu.open(); // rebuild the open menu; drops the category when the list became empty
@@ -706,13 +706,13 @@ class Application {
             // Snapshot list category; only shown while at least one snapshot exists.
             const simulations = this.simulations.all;
             if (simulations.some((sim) => sim.snapshots.length > 0)) {
-                const snapshotsCategory = debuggerMenu.createMenuCategory('Snapshots', 'Saved simulation states. <i>Click</i> an entry to restore it, <i>❌</i> to delete it.', (snapshotsMenu) => {
+                const snapshotsCategory = debuggerMenu.createMenuCategory('Snapshots', 'Saved simulation states. <i>Click</i> an entry to restore it, <i>✕</i> to delete it.', (snapshotsMenu) => {
                     snapshotsMenu.clear();
                     for (const sim of simulations) {
                         for (const snapshot of sim.snapshots) {
                             const safeLabel = `${escapeHTML(sim.label)}: ${escapeHTML(snapshot.name)}`; // button labels and hover messages are set via innerHTML
                             // The absolutely positioned side button must precede its row entry (its static position is below the preceding in-flow entry).
-                            const deleteButton = snapshotsMenu.createActionButton('&#10060;', `Delete snapshot: <b>${safeLabel}</b>`, () => {
+                            const deleteButton = snapshotsMenu.createActionButton('✕', `Delete snapshot: <b>${safeLabel}</b>`, () => {
                                 sim.deleteSnapshot(snapshot);
                                 debuggerMenu.open(); // rebuild the open menu; drops the category when the list became empty
                             });
